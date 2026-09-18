@@ -14,16 +14,203 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          favorite_categories: string[]
+          full_name: string | null
+          id: string
+          theme: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          favorite_categories?: string[]
+          full_name?: string | null
+          id: string
+          theme?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          favorite_categories?: string[]
+          full_name?: string | null
+          id?: string
+          theme?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tool_launches: {
+        Row: {
+          action: string
+          id: string
+          launched_at: string
+          tool_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          id?: string
+          launched_at?: string
+          tool_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          id?: string
+          launched_at?: string
+          tool_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_launches_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tool_logs: {
+        Row: {
+          action: string
+          changes: Json | null
+          id: string
+          logged_at: string
+          tool_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          changes?: Json | null
+          id?: string
+          logged_at?: string
+          tool_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json | null
+          id?: string
+          logged_at?: string
+          tool_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tool_logs_tool_id_fkey"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tools: {
+        Row: {
+          categorie: string
+          chemin: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          description: string | null
+          favori: boolean
+          icone: string | null
+          id: string
+          last_used_at: string | null
+          launch_count: number
+          nom: string
+          sous_categorie: string | null
+          tags: string[]
+          type: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          categorie: string
+          chemin: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          favori?: boolean
+          icone?: string | null
+          id?: string
+          last_used_at?: string | null
+          launch_count?: number
+          nom: string
+          sous_categorie?: string | null
+          tags?: string[]
+          type: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          categorie?: string
+          chemin?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          description?: string | null
+          favori?: boolean
+          icone?: string | null
+          id?: string
+          last_used_at?: string | null
+          launch_count?: number
+          nom?: string
+          sous_categorie?: string | null
+          tags?: string[]
+          type?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      register_launch: {
+        Args: { _action: string; _tool_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "technicien" | "lecteur"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +337,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "technicien", "lecteur"],
+    },
   },
 } as const
