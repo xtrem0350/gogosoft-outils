@@ -1,32 +1,125 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Activity, ArrowUpRight, Boxes, Clock3, Heart, Plus } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Activity, ArrowUpRight, BadgeDollarSign, ClipboardList, Plus, UserRound } from "lucide-react";
 
+import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DEMO_TOOLS } from "@/lib/demoData";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return <Dashboard />;
-}
+  const stats = [
+    { title: "Réparations en cours", value: 12, icon: Activity, trend: "+3 ce jour", color: "success" },
+    { title: "Clients total", value: 184, icon: UserRound, trend: "+18 ce mois", color: "primary" },
+    { title: "CA du mois", value: "1 250 000 FCFA", icon: BadgeDollarSign, trend: "Simulé", color: "warning" },
+    { title: "Jours restants abonnement", value: 7, icon: ClipboardList, trend: "Essai actif", color: "danger" },
+  ];
 
-function Dashboard() {
-  const favoriteCount = DEMO_TOOLS.filter((tool) => tool.favori).length;
-  return <div className="mx-auto max-w-7xl space-y-8">
-    <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="mb-2 text-sm font-medium text-primary">Vue d'ensemble</p><h1 className="text-3xl font-bold tracking-tight">Bonjour, Thierry.</h1><p className="mt-2 text-muted-foreground">Votre atelier numérique, en un coup d'œil.</p></div><Button className="accent-gradient text-accent-foreground"><Plus /> Ajouter un outil</Button></div>
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {[{ label: "Outils catalogués", value: DEMO_TOOLS.length, icon: Boxes, note: "+12% ce mois" }, { label: "Lancements aujourd'hui", value: 24, icon: Activity, note: "+8 depuis hier" }, { label: "Outils favoris", value: favoriteCount, icon: Heart, note: "À portée de main" }, { label: "Dernière activité", value: "09:42", icon: Clock3, note: "TSM PRO" }].map(({ label, value, icon: Icon, note }) => <Card key={label} className="card-elevated border-0"><CardContent className="flex items-start justify-between p-5"><div><p className="text-sm text-muted-foreground">{label}</p><p className="mt-3 font-display text-3xl font-bold">{value}</p><p className="mt-2 text-xs text-success">{note}</p></div><div className="rounded-lg bg-primary/10 p-2.5 text-primary"><Icon className="size-5" /></div></CardContent></Card>)}
+  const recentRepairs = [
+    { id: "R-1042", client: "Amani Yao", device: "iPhone 12", status: "En cours" },
+    { id: "R-1041", client: "Kouassi Cissé", device: "Samsung A54", status: "À vérifier" },
+    { id: "R-1040", client: "Miriam N'Goran", device: "Tecno Camon 20", status: "Terminé" },
+    { id: "R-1039", client: "Soro Benoit", device: "Xiaomi Redmi Note 12", status: "En cours" },
+    { id: "R-1038", client: "Lamine Koffi", device: "Huawei P30", status: "En attente" },
+  ];
+
+  const recentClients = [
+    { name: "Amani Yao", whatsapp: "+225 01 02 03 04", repairs: 4 },
+    { name: "Kouassi Cissé", whatsapp: "+225 07 08 09 10", repairs: 3 },
+    { name: "Miriam N'Goran", whatsapp: "+225 05 11 12 13", repairs: 2 },
+    { name: "Soro Benoit", whatsapp: "+225 09 14 15 16", repairs: 5 },
+    { name: "Lamine Koffi", whatsapp: "+225 06 17 18 19", repairs: 1 },
+  ];
+
+  return (
+    <div className="mx-auto max-w-7xl space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="mb-2 text-sm font-medium text-primary">Vue d'ensemble</p>
+          <h1 className="text-3xl font-bold tracking-tight">Bonjour, Thierry.</h1>
+          <p className="mt-2 text-muted-foreground">Votre atelier de réparation, résumé en un coup d'œil.</p>
+        </div>
+
+        <Button asChild className="accent-gradient text-accent-foreground">
+          <Link to="/atelier/nouveau">
+            <Plus />
+            Nouvelle réparation
+          </Link>
+        </Button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(({ title, value, icon: Icon, trend, color }) => (
+          <StatsCard key={title} title={title} value={value} icon={Icon} trend={trend} color={color} />
+        ))}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="card-elevated border-0">
+          <CardHeader className="flex-row items-center justify-between gap-3">
+            <div>
+              <CardTitle>Réparations récentes</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">Les 5 dernières fiches de l'atelier.</p>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/atelier">
+                Voir tout
+                <ArrowUpRight />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {recentRepairs.map((repair) => (
+              <div key={repair.id} className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50">
+                <div>
+                  <p className="text-sm font-semibold">{repair.client}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {repair.device} · {repair.id}
+                  </p>
+                </div>
+                <span className="text-xs text-muted-foreground">{repair.status}</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="card-elevated border-0">
+          <CardHeader>
+            <CardTitle>Clients récents</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">Les derniers clients enregistrés.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentClients.map((client) => (
+              <div key={client.name} className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">{client.name}</p>
+                  <p className="text-xs text-muted-foreground">{client.whatsapp}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{client.repairs} réparations</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="card-elevated border-0">
+        <CardHeader>
+          <CardTitle>Actions rapides</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/atelier/nouveau">Nouvelle réparation</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/clients/nouveau">Nouveau client</Link>
+          </Button>
+          <Button variant="secondary" asChild>
+            <Link to="/abonnement">Voir l'abonnement</Link>
+          </Button>
+        </CardContent>
+      </Card>
     </div>
-    <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-      <Card className="card-elevated border-0"><CardHeader className="flex-row items-center justify-between"><div><CardTitle>Catalogue récent</CardTitle><p className="mt-1 text-sm text-muted-foreground">Les outils les plus utiles à votre équipe.</p></div><Button variant="ghost" size="sm">Voir tout <ArrowUpRight /></Button></CardHeader><CardContent className="space-y-3">{DEMO_TOOLS.slice(0, 5).map((tool) => <div key={tool.nom} className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50"><div className="flex min-w-0 items-center gap-3"><div className="rounded-md bg-muted p-2 text-primary"><Boxes className="size-4" /></div><div className="min-w-0"><p className="truncate text-sm font-semibold">{tool.nom}</p><p className="truncate text-xs text-muted-foreground">{tool.categorie} · {tool.version}</p></div></div><span className="text-xs text-muted-foreground">{tool.type}</span></div>)}</CardContent></Card>
-      <Card className="card-elevated border-0"><CardHeader><CardTitle>Activité récente</CardTitle><p className="mt-1 text-sm text-muted-foreground">Les dernières actions de l'atelier.</p></CardHeader><CardContent className="space-y-5">{["TSM PRO lancé", "SP Flash Tool ouvert", "Nouveau pilote ajouté"].map((item, index) => <div key={item} className="flex gap-3"><div className="mt-1 size-2 rounded-full bg-accent" /><div><p className="text-sm font-medium">{item}</p><p className="text-xs text-muted-foreground">Il y a {index + 1} heure{index ? "s" : ""}</p></div></div>)}</CardContent></Card>
-    </div>
-  </div>;
+  );
 }

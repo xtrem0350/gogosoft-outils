@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AbonnementRouteImport } from './routes/abonnement'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as EquipeRouteImport } from './routes/equipe'
@@ -21,11 +22,21 @@ import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
 import { Route as AtelierNouveauRouteImport } from './routes/atelier.nouveau'
+import { Route as BoutiquesIndexRouteImport } from './routes/boutiques.index'
+import { Route as BoutiquesNouveauRouteImport } from './routes/boutiques.nouveau'
+import { Route as ClientsIndexRouteImport } from './routes/clients.index'
+import { Route as ClientsIdRouteImport } from './routes/clients.$id'
+import { Route as ClientsNouveauRouteImport } from './routes/clients.nouveau'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AbonnementRoute = AbonnementRouteImport.update({
+  id: '/abonnement',
+  path: '/abonnement',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -83,6 +94,31 @@ const AtelierNouveauRoute = AtelierNouveauRouteImport.update({
   path: '/atelier/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoutiquesIndexRoute = BoutiquesIndexRouteImport.update({
+  id: '/boutiques/',
+  path: '/boutiques/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BoutiquesNouveauRoute = BoutiquesNouveauRouteImport.update({
+  id: '/boutiques/nouveau',
+  path: '/boutiques/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsIndexRoute = ClientsIndexRouteImport.update({
+  id: '/clients/',
+  path: '/clients/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsIdRoute = ClientsIdRouteImport.update({
+  id: '/clients/$id',
+  path: '/clients/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientsNouveauRoute = ClientsNouveauRouteImport.update({
+  id: '/clients/nouveau',
+  path: '/clients/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutilsIdRoute = OutilsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -91,6 +127,7 @@ const OutilsIdRoute = OutilsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -101,11 +138,17 @@ export interface FileRoutesByFullPath {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/nouveau': typeof BoutiquesNouveauRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/clients/nouveau': typeof ClientsNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
   '/atelier/': typeof AtelierIndexRoute
+  '/boutiques/': typeof BoutiquesIndexRoute
+  '/clients/': typeof ClientsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -116,12 +159,18 @@ export interface FileRoutesByTo {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/nouveau': typeof BoutiquesNouveauRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/clients/nouveau': typeof ClientsNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
   '/atelier': typeof AtelierIndexRoute
+  '/boutiques': typeof BoutiquesIndexRoute
+  '/clients': typeof ClientsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/abonnement': typeof AbonnementRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -132,13 +181,19 @@ export interface FileRoutesById {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/nouveau': typeof BoutiquesNouveauRoute
+  '/clients/$id': typeof ClientsIdRoute
+  '/clients/nouveau': typeof ClientsNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
   '/atelier/': typeof AtelierIndexRoute
+  '/boutiques/': typeof BoutiquesIndexRoute
+  '/clients/': typeof ClientsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/abonnement'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -149,11 +204,17 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/nouveau'
+    | '/clients/$id'
+    | '/clients/nouveau'
     | '/outils/$id'
     | '/atelier/'
+    | '/boutiques/'
+    | '/clients/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/abonnement'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -164,11 +225,17 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/nouveau'
+    | '/clients/$id'
+    | '/clients/nouveau'
     | '/outils/$id'
     | '/atelier'
+    | '/boutiques'
+    | '/clients'
   id:
     | '__root__'
     | '/'
+    | '/abonnement'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -179,12 +246,18 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/nouveau'
+    | '/clients/$id'
+    | '/clients/nouveau'
     | '/outils/$id'
     | '/atelier/'
+    | '/boutiques/'
+    | '/clients/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AbonnementRoute: typeof AbonnementRoute
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   EquipeRoute: typeof EquipeRoute
@@ -195,7 +268,12 @@ export interface RootRouteChildren {
   StatistiquesRoute: typeof StatistiquesRoute
   AtelierIdRoute: typeof AtelierIdRoute
   AtelierNouveauRoute: typeof AtelierNouveauRoute
+  BoutiquesNouveauRoute: typeof BoutiquesNouveauRoute
+  ClientsIdRoute: typeof ClientsIdRoute
+  ClientsNouveauRoute: typeof ClientsNouveauRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
+  BoutiquesIndexRoute: typeof BoutiquesIndexRoute
+  ClientsIndexRoute: typeof ClientsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -205,6 +283,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/abonnement': {
+      id: '/abonnement'
+      path: '/abonnement'
+      fullPath: '/abonnement'
+      preLoaderRoute: typeof AbonnementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -284,6 +369,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boutiques/': {
+      id: '/boutiques/'
+      path: '/boutiques'
+      fullPath: '/boutiques/'
+      preLoaderRoute: typeof BoutiquesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/boutiques/nouveau': {
+      id: '/boutiques/nouveau'
+      path: '/boutiques/nouveau'
+      fullPath: '/boutiques/nouveau'
+      preLoaderRoute: typeof BoutiquesNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/': {
+      id: '/clients/'
+      path: '/clients'
+      fullPath: '/clients/'
+      preLoaderRoute: typeof ClientsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/$id': {
+      id: '/clients/$id'
+      path: '/clients/$id'
+      fullPath: '/clients/$id'
+      preLoaderRoute: typeof ClientsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clients/nouveau': {
+      id: '/clients/nouveau'
+      path: '/clients/nouveau'
+      fullPath: '/clients/nouveau'
+      preLoaderRoute: typeof ClientsNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outils/$id': {
       id: '/outils/$id'
       path: '/$id'
@@ -307,6 +427,7 @@ const OutilsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AbonnementRoute: AbonnementRoute,
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   EquipeRoute: EquipeRoute,
@@ -317,7 +438,12 @@ const rootRouteChildren: RootRouteChildren = {
   StatistiquesRoute: StatistiquesRoute,
   AtelierIdRoute: AtelierIdRoute,
   AtelierNouveauRoute: AtelierNouveauRoute,
+  BoutiquesNouveauRoute: BoutiquesNouveauRoute,
+  ClientsIdRoute: ClientsIdRoute,
+  ClientsNouveauRoute: ClientsNouveauRoute,
   AtelierIndexRoute: AtelierIndexRoute,
+  BoutiquesIndexRoute: BoutiquesIndexRoute,
+  ClientsIndexRoute: ClientsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

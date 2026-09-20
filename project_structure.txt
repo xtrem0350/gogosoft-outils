@@ -3,6 +3,8 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20260920192317_859fb027-231f-479c-9c9f-57e04fa75ed1.sql
+│   │   ├── 📄 20260920000000_workshop.sql
 │   │   ├── 📄 20260918115927_f851f768-05d7-4c81-b27a-65464ac28174.sql
 │   │   └── 📄 20260918115915_542c7e2f-3dd2-423a-8297-a19d9393464f.sql
 │   ├── 📄 migrations
@@ -13,6 +15,7 @@ Structure du projet (avec glob)
 │   ├── 📁 styles/
 │   │   └── 📄 design-system.css
 │   ├── 📁 services/
+│   │   ├── 📄 workshopService.ts
 │   │   ├── 📄 toolService.ts
 │   │   ├── 📄 launchService.ts
 │   │   ├── 📄 historyService.ts
@@ -29,7 +32,10 @@ Structure du projet (avec glob)
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
 │   │   ├── 📄 categories.tsx
-│   │   └── 📄 auth.tsx
+│   │   ├── 📄 auth.tsx
+│   │   ├── 📄 atelier.nouveau.tsx
+│   │   ├── 📄 atelier.index.tsx
+│   │   └── 📄 atelier.$id.tsx
 │   ├── 📁 lib/
 │   │   ├── 📄 utils.ts
 │   │   ├── 📄 lovable-error-reporting.ts
@@ -111,9 +117,12 @@ Structure du projet (avec glob)
 │   │   │   └── 📄 ToolActions.tsx
 │   │   ├── 📄 ui
 │   │   ├── 📄 tools
+│   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 StatsCard.tsx
 │   │   ├── 📄 Sidebar.tsx
 │   │   ├── 📄 RoutePage.tsx
+│   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   └── 📄 AnimatedLogo.tsx
 │   ├── 📁 assets/
@@ -121,6 +130,7 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 profile.png
 │   │   │   └── 📄 profile.ico
 │   │   └── 📄 images
+│   ├── 📄 vite-env.d.ts
 │   ├── 📄 types
 │   ├── 📄 styles.css
 │   ├── 📄 styles

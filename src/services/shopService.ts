@@ -1,0 +1,94 @@
+/** Services de gestion des boutiques / shops pour l'espace multi-boutique SaaS. */
+import { supabase } from "@/integrations/supabase/client";
+
+export interface Shop {
+  id: string;
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+  owner_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface CreateShopData {
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+}
+
+/** Récupère toutes les boutiques de l'utilisateur courant. */
+export async function getUserShops(): Promise<Shop[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from("shops")
+    .select("*")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as Shop[];
+}
+
+/** Crée une boutique et lui associe le propriétaire. */
+export async function createShop(data: CreateShopData): Promise<Shop> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    throw new Error("Utilisateur non authentifié.");
+  }
+
+  const { data: shop, error } = await supabase
+    .from("shops")
+    .insert({ ...data, owner_id: userId })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return shop as unknown as Shop;
+}
+
+/** Récupère une boutique par son identifiant. */
+export async function getShopById(id: string): Promise<Shop | null> {
+  const { data, error } = await supabase.from("shops").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data as unknown as Shop | null) ?? null;
+}
+
+/** Met à jour les informations d'une boutique. */
+export async function updateShop(id: string, data: Partial<CreateShopData>): Promise<Shop> {
+  const { data: shop, error } = await supabase.from("shops").update(data).eq("id", id).select().single();
+  if (error) throw error;
+  return shop as unknown as Shop;
+}
+
+/** Supprime une boutique. */
+export async function deleteShop(id: string): Promise<void> {
+  const { error } = await supabase.from("shops").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** Récupère les membres d'une boutique. */
+export async function getShopMembers(shopId: string) {
+  const { data, error } = await supabase.from("shop_members").select("*").eq("shop_id", shopId);
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Ajoute un membre à une boutique. */
+export async function addShopMember(shopId: string, userId: string, role: "owner" | "technicien" = "owner") {
+  const { data, error } = await supabase
+    .from("shop_members")
+    .upsert({ shop_id: shopId, user_id: userId, role }, { onConflict: "shop_id,user_id" })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
