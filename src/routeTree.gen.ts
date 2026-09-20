@@ -10,33 +10,153 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as EquipeRouteImport } from './routes/equipe'
+import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as OutilsRouteImport } from './routes/outils'
+import { Route as ParametresRouteImport } from './routes/parametres'
+import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as StatistiquesRouteImport } from './routes/statistiques'
+import { Route as OutilsIdRouteImport } from './routes/outils.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriesRoute = CategoriesRouteImport.update({
+  id: '/categories',
+  path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EquipeRoute = EquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HistoriqueRoute = HistoriqueRouteImport.update({
+  id: '/historique',
+  path: '/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutilsRoute = OutilsRouteImport.update({
+  id: '/outils',
+  path: '/outils',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ParametresRoute = ParametresRouteImport.update({
+  id: '/parametres',
+  path: '/parametres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfilRoute = ProfilRouteImport.update({
+  id: '/profil',
+  path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatistiquesRoute = StatistiquesRouteImport.update({
+  id: '/statistiques',
+  path: '/statistiques',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutilsIdRoute = OutilsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => OutilsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/categories': typeof CategoriesRoute
+  '/equipe': typeof EquipeRoute
+  '/historique': typeof HistoriqueRoute
+  '/outils': typeof OutilsRouteWithChildren
+  '/parametres': typeof ParametresRoute
+  '/profil': typeof ProfilRoute
+  '/statistiques': typeof StatistiquesRoute
+  '/outils/$id': typeof OutilsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/categories': typeof CategoriesRoute
+  '/equipe': typeof EquipeRoute
+  '/historique': typeof HistoriqueRoute
+  '/outils': typeof OutilsRouteWithChildren
+  '/parametres': typeof ParametresRoute
+  '/profil': typeof ProfilRoute
+  '/statistiques': typeof StatistiquesRoute
+  '/outils/$id': typeof OutilsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/categories': typeof CategoriesRoute
+  '/equipe': typeof EquipeRoute
+  '/historique': typeof HistoriqueRoute
+  '/outils': typeof OutilsRouteWithChildren
+  '/parametres': typeof ParametresRoute
+  '/profil': typeof ProfilRoute
+  '/statistiques': typeof StatistiquesRoute
+  '/outils/$id': typeof OutilsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/categories'
+    | '/equipe'
+    | '/historique'
+    | '/outils'
+    | '/parametres'
+    | '/profil'
+    | '/statistiques'
+    | '/outils/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/categories'
+    | '/equipe'
+    | '/historique'
+    | '/outils'
+    | '/parametres'
+    | '/profil'
+    | '/statistiques'
+    | '/outils/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/categories'
+    | '/equipe'
+    | '/historique'
+    | '/outils'
+    | '/parametres'
+    | '/profil'
+    | '/statistiques'
+    | '/outils/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  CategoriesRoute: typeof CategoriesRoute
+  EquipeRoute: typeof EquipeRoute
+  HistoriqueRoute: typeof HistoriqueRoute
+  OutilsRoute: typeof OutilsRouteWithChildren
+  ParametresRoute: typeof ParametresRoute
+  ProfilRoute: typeof ProfilRoute
+  StatistiquesRoute: typeof StatistiquesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +168,93 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categories': {
+      id: '/categories'
+      path: '/categories'
+      fullPath: '/categories'
+      preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/equipe': {
+      id: '/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof EquipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/historique': {
+      id: '/historique'
+      path: '/historique'
+      fullPath: '/historique'
+      preLoaderRoute: typeof HistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outils': {
+      id: '/outils'
+      path: '/outils'
+      fullPath: '/outils'
+      preLoaderRoute: typeof OutilsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/parametres': {
+      id: '/parametres'
+      path: '/parametres'
+      fullPath: '/parametres'
+      preLoaderRoute: typeof ParametresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profil': {
+      id: '/profil'
+      path: '/profil'
+      fullPath: '/profil'
+      preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/statistiques': {
+      id: '/statistiques'
+      path: '/statistiques'
+      fullPath: '/statistiques'
+      preLoaderRoute: typeof StatistiquesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outils/$id': {
+      id: '/outils/$id'
+      path: '/$id'
+      fullPath: '/outils/$id'
+      preLoaderRoute: typeof OutilsIdRouteImport
+      parentRoute: typeof OutilsRoute
+    }
   }
 }
 
+interface OutilsRouteChildren {
+  OutilsIdRoute: typeof OutilsIdRoute
+}
+
+const OutilsRouteChildren: OutilsRouteChildren = {
+  OutilsIdRoute: OutilsIdRoute,
+}
+
+const OutilsRouteWithChildren =
+  OutilsRoute._addFileChildren(OutilsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  CategoriesRoute: CategoriesRoute,
+  EquipeRoute: EquipeRoute,
+  HistoriqueRoute: HistoriqueRoute,
+  OutilsRoute: OutilsRouteWithChildren,
+  ParametresRoute: ParametresRoute,
+  ProfilRoute: ProfilRoute,
+  StatistiquesRoute: StatistiquesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

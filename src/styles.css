@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import "./styles/design-system.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -219,3 +220,16 @@
     box-shadow: var(--shadow-glow);
   }
 }
+
+@keyframes logo-enter {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes logo-copy-enter {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.logo-enter { animation: logo-enter 600ms ease-out both; }
+.logo-copy-enter { animation: logo-copy-enter 450ms 200ms ease-out both; }

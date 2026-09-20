@@ -396,3 +396,53 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Deploiement sur Vercel
+
+### Prerequis
+
+- Un compte Vercel et un projet Supabase
+- Un depot Git distant (GitHub, GitLab ou Bitbucket)
+- Bun ou Node.js installe localement
+
+### Configuration locale
+
+Copiez `.env.example` vers `.env.local`, puis renseignez `VITE_SUPABASE_URL` et
+`VITE_SUPABASE_PUBLISHABLE_KEY`. Seule la cle publique Supabase doit etre utilisee dans
+le navigateur. Ne placez jamais de cle `service_role` dans une variable `VITE_*`.
+
+Les variables disponibles sont documentees dans `.env.example`. Le mode demo
+peut etre active avec `VITE_DEMO_MODE=true` lorsque Supabase n'est pas configure.
+
+### Deployer
+
+1. Poussez le projet sur votre depot Git.
+2. Dans Vercel, choisissez **Import Git Repository** et selectionnez le depot.
+3. Ajoutez `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` et `VITE_DEMO_MODE` dans
+  **Settings > Environment Variables** pour Production, Preview et Development.
+4. Ajoutez `VITE_LOCAL_AGENT_URL` uniquement en Development. Un navigateur Vercel
+  ne peut pas joindre l'agent Windows local d'un utilisateur distant.
+5. Lancez le deploiement. Vercel reutilise `vercel.json` pour les routes SPA.
+
+Le fichier `vercel.json` redirige les URLs sans extension vers l'application tout
+en laissant les fichiers statiques servis directement. Les routes `/`, `/outils`
+et `/outils/123` peuvent ainsi etre rechargees sans erreur 404.
+
+### Verification avant push
+
+```bash
+bun install
+bun run type-check
+bun run lint
+bun run build
+bun run preview
+```
+
+Ouvrez ensuite `http://localhost:4173` et testez la navigation ainsi que le
+rechargement direct d'une route interne. Apres chaque modification de variable
+d'environnement dans Vercel, redeployez le projet pour reconstruire le bundle.
+
+### Rollback
+
+Dans Vercel, ouvrez **Deployments**, choisissez le dernier deploiement stable,
+puis utilisez **... > Promote to Production**.

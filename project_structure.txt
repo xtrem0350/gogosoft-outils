@@ -1,0 +1,136 @@
+Structure du projet (avec glob)
+================================
+
+├── 📁 supabase/
+│   ├── 📁 migrations/
+│   │   ├── 📄 20260918115927_f851f768-05d7-4c81-b27a-65464ac28174.sql
+│   │   └── 📄 20260918115915_542c7e2f-3dd2-423a-8297-a19d9393464f.sql
+│   ├── 📄 migrations
+│   └── 📄 config.toml
+├── 📁 src/
+│   ├── 📁 types/
+│   │   └── 📄 database.ts
+│   ├── 📁 styles/
+│   │   └── 📄 design-system.css
+│   ├── 📁 services/
+│   │   ├── 📄 toolService.ts
+│   │   ├── 📄 launchService.ts
+│   │   ├── 📄 historyService.ts
+│   │   └── 📄 authService.ts
+│   ├── 📁 routes/
+│   │   ├── 📄 __root.tsx
+│   │   ├── 📄 README.md
+│   │   ├── 📄 index.tsx
+│   │   └── 📄 auth.tsx
+│   ├── 📁 lib/
+│   │   ├── 📄 utils.ts
+│   │   ├── 📄 lovable-error-reporting.ts
+│   │   ├── 📄 localAgent.ts
+│   │   ├── 📄 error-page.ts
+│   │   ├── 📄 error-capture.ts
+│   │   ├── 📄 demoData.ts
+│   │   └── 📄 animations.ts
+│   ├── 📁 integrations/
+│   │   ├── 📁 supabase/
+│   │   │   ├── 📄 types.ts
+│   │   │   ├── 📄 previewAuthStorage.ts
+│   │   │   ├── 📄 cron-auth.ts
+│   │   │   ├── 📄 client.ts
+│   │   │   ├── 📄 client.server.ts
+│   │   │   ├── 📄 auth-middleware.ts
+│   │   │   └── 📄 auth-attacher.ts
+│   │   ├── 📁 lovable/
+│   │   │   └── 📄 index.ts
+│   │   ├── 📄 supabase
+│   │   └── 📄 lovable
+│   ├── 📁 hooks/
+│   │   ├── 📄 useTools.ts
+│   │   ├── 📄 useTheme.tsx
+│   │   ├── 📄 useStats.ts
+│   │   ├── 📄 useAuth.tsx
+│   │   └── 📄 use-mobile.tsx
+│   ├── 📁 components/
+│   │   ├── 📁 ui/
+│   │   │   ├── 📄 tooltip.tsx
+│   │   │   ├── 📄 toggle.tsx
+│   │   │   ├── 📄 toggle-group.tsx
+│   │   │   ├── 📄 textarea.tsx
+│   │   │   ├── 📄 tabs.tsx
+│   │   │   ├── 📄 table.tsx
+│   │   │   ├── 📄 switch.tsx
+│   │   │   ├── 📄 sonner.tsx
+│   │   │   ├── 📄 slider.tsx
+│   │   │   ├── 📄 skeleton.tsx
+│   │   │   ├── 📄 sidebar.tsx
+│   │   │   ├── 📄 sheet.tsx
+│   │   │   ├── 📄 separator.tsx
+│   │   │   ├── 📄 select.tsx
+│   │   │   ├── 📄 scroll-area.tsx
+│   │   │   ├── 📄 resizable.tsx
+│   │   │   ├── 📄 radio-group.tsx
+│   │   │   ├── 📄 progress.tsx
+│   │   │   ├── 📄 popover.tsx
+│   │   │   ├── 📄 pagination.tsx
+│   │   │   ├── 📄 navigation-menu.tsx
+│   │   │   ├── 📄 menubar.tsx
+│   │   │   ├── 📄 label.tsx
+│   │   │   ├── 📄 input.tsx
+│   │   │   ├── 📄 input-otp.tsx
+│   │   │   ├── 📄 hover-card.tsx
+│   │   │   ├── 📄 form.tsx
+│   │   │   ├── 📄 dropdown-menu.tsx
+│   │   │   ├── 📄 drawer.tsx
+│   │   │   ├── 📄 dialog.tsx
+│   │   │   ├── 📄 context-menu.tsx
+│   │   │   ├── 📄 command.tsx
+│   │   │   ├── 📄 collapsible.tsx
+│   │   │   ├── 📄 checkbox.tsx
+│   │   │   ├── 📄 chart.tsx
+│   │   │   ├── 📄 carousel.tsx
+│   │   │   ├── 📄 card.tsx
+│   │   │   ├── 📄 calendar.tsx
+│   │   │   ├── 📄 button.tsx
+│   │   │   ├── 📄 breadcrumb.tsx
+│   │   │   ├── 📄 badge.tsx
+│   │   │   ├── 📄 avatar.tsx
+│   │   │   ├── 📄 aspect-ratio.tsx
+│   │   │   ├── 📄 alert.tsx
+│   │   │   ├── 📄 alert-dialog.tsx
+│   │   │   └── 📄 accordion.tsx
+│   │   ├── 📄 ui
+│   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 Sidebar.tsx
+│   │   ├── 📄 AppShell.tsx
+│   │   └── 📄 AnimatedLogo.tsx
+│   ├── 📁 assets/
+│   │   ├── 📁 images/
+│   │   │   ├── 📄 profile.png
+│   │   │   └── 📄 profile.ico
+│   │   └── 📄 images
+│   ├── 📄 types
+│   ├── 📄 styles.css
+│   ├── 📄 styles
+│   ├── 📄 start.ts
+│   ├── 📄 services
+│   ├── 📄 server.ts
+│   ├── 📄 routeTree.gen.ts
+│   ├── 📄 routes
+│   ├── 📄 router.tsx
+│   ├── 📄 lib
+│   ├── 📄 integrations
+│   ├── 📄 hooks
+│   ├── 📄 components
+│   └── 📄 assets
+├── 📄 vite.config.ts
+├── 📄 tsconfig.json
+├── 📄 supabase
+├── 📄 src
+├── 📄 README.md
+├── 📄 package.json
+├── 📄 package-lock.json
+├── 📄 liste.mjs
+├── 📄 eslint.config.js
+├── 📄 components.json
+├── 📄 bunfig.toml
+├── 📄 bun.lock
+└── 📄 AGENTS.md
