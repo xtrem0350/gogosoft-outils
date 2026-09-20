@@ -34,9 +34,9 @@ RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS
 $$;
 
 CREATE POLICY "user_roles_select_own_or_admin" ON public.user_roles FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'::public.app_role));
 CREATE POLICY "user_roles_admin_manage" ON public.user_roles FOR ALL TO authenticated
-  USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
+  USING (public.has_role(auth.uid(),'admin'::public.app_role)) WITH CHECK (public.has_role(auth.uid(),'admin'::public.app_role));
 
 CREATE TABLE public.tools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -62,12 +62,12 @@ GRANT ALL ON public.tools TO service_role;
 ALTER TABLE public.tools ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "tools_select" ON public.tools FOR SELECT TO authenticated USING (true);
 CREATE POLICY "tools_insert" ON public.tools FOR INSERT TO authenticated
-  WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'technicien'));
+  WITH CHECK (public.has_role(auth.uid(),'admin'::public.app_role) OR public.has_role(auth.uid(),'technicien'::public.app_role));
 CREATE POLICY "tools_update" ON public.tools FOR UPDATE TO authenticated
-  USING (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'technicien'))
-  WITH CHECK (public.has_role(auth.uid(),'admin') OR public.has_role(auth.uid(),'technicien'));
+  USING (public.has_role(auth.uid(),'admin'::public.app_role) OR public.has_role(auth.uid(),'technicien'::public.app_role))
+  WITH CHECK (public.has_role(auth.uid(),'admin'::public.app_role) OR public.has_role(auth.uid(),'technicien'::public.app_role));
 CREATE POLICY "tools_delete_admin" ON public.tools FOR DELETE TO authenticated
-  USING (public.has_role(auth.uid(),'admin'));
+  USING (public.has_role(auth.uid(),'admin'::public.app_role));
 
 CREATE TABLE public.tool_launches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -81,7 +81,7 @@ GRANT ALL ON public.tool_launches TO service_role;
 ALTER TABLE public.tool_launches ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "launches_insert_own" ON public.tool_launches FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY "launches_select_own_or_admin" ON public.tool_launches FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'::public.app_role));
 
 CREATE TABLE public.tool_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -96,7 +96,7 @@ GRANT ALL ON public.tool_logs TO service_role;
 ALTER TABLE public.tool_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "logs_insert_own" ON public.tool_logs FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
 CREATE POLICY "logs_select_own_or_admin" ON public.tool_logs FOR SELECT TO authenticated
-  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'));
+  USING (user_id = auth.uid() OR public.has_role(auth.uid(),'admin'::public.app_role));
 
 CREATE OR REPLACE FUNCTION public.update_updated_at_column()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$

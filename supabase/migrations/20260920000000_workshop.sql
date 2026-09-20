@@ -24,5 +24,5 @@ CREATE POLICY "Authenticated users can update workshop tickets"
   ON workshop_tickets FOR UPDATE USING (auth.role() = 'authenticated');
 CREATE POLICY "Admins can delete workshop tickets"
   ON workshop_tickets FOR DELETE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+    public.has_role(auth.uid(), 'admin'::public.app_role)
   );

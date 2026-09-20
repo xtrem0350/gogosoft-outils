@@ -21,6 +21,6 @@ ALTER TABLE public.workshop_tickets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "workshop_select" ON public.workshop_tickets FOR SELECT TO authenticated USING (true);
 CREATE POLICY "workshop_insert" ON public.workshop_tickets FOR INSERT TO authenticated WITH CHECK (true);
 CREATE POLICY "workshop_update" ON public.workshop_tickets FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "workshop_delete_admin" ON public.workshop_tickets FOR DELETE TO authenticated USING (public.has_role(auth.uid(),'admin'));
+CREATE POLICY "workshop_delete_admin" ON public.workshop_tickets FOR DELETE TO authenticated USING (public.has_role(auth.uid(),'admin'::public.app_role));
 CREATE TRIGGER workshop_tickets_set_updated_at BEFORE UPDATE ON public.workshop_tickets
 FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
