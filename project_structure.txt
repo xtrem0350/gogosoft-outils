@@ -19,8 +19,16 @@ Structure du projet (avec glob)
 │   │   └── 📄 authService.ts
 │   ├── 📁 routes/
 │   │   ├── 📄 __root.tsx
+│   │   ├── 📄 statistiques.tsx
 │   │   ├── 📄 README.md
+│   │   ├── 📄 profil.tsx
+│   │   ├── 📄 parametres.tsx
+│   │   ├── 📄 outils.tsx
+│   │   ├── 📄 outils.$id.tsx
 │   │   ├── 📄 index.tsx
+│   │   ├── 📄 historique.tsx
+│   │   ├── 📄 equipe.tsx
+│   │   ├── 📄 categories.tsx
 │   │   └── 📄 auth.tsx
 │   ├── 📁 lib/
 │   │   ├── 📄 utils.ts
@@ -97,9 +105,15 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 alert.tsx
 │   │   │   ├── 📄 alert-dialog.tsx
 │   │   │   └── 📄 accordion.tsx
+│   │   ├── 📁 tools/
+│   │   │   ├── 📄 ToolImage.tsx
+│   │   │   ├── 📄 ToolBadges.tsx
+│   │   │   └── 📄 ToolActions.tsx
 │   │   ├── 📄 ui
+│   │   ├── 📄 tools
 │   │   ├── 📄 ThemeToggle.tsx
 │   │   ├── 📄 Sidebar.tsx
+│   │   ├── 📄 RoutePage.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   └── 📄 AnimatedLogo.tsx
 │   ├── 📁 assets/
@@ -122,6 +136,7 @@ Structure du projet (avec glob)
 │   ├── 📄 components
 │   └── 📄 assets
 ├── 📄 vite.config.ts
+├── 📄 vercel.json
 ├── 📄 tsconfig.json
 ├── 📄 supabase
 ├── 📄 src

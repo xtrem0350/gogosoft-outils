@@ -7,7 +7,7 @@ const STORAGE_KEY = "gogosoft.agentUrl";
 
 /** URL par défaut de l'agent local. */
 export const DEFAULT_AGENT_URL =
-  import.meta.env.VITE_LOCAL_AGENT_URL ?? "http://localhost:4567";
+  import.meta.env['VITE_LOCAL_AGENT_URL'] ?? "http://localhost:4567";
 
 /** Retourne l'URL de l'agent local configurée par l'utilisateur. */
 export function getAgentUrl(): string {
