@@ -1,19 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { History } from "lucide-react";
-
-import { RoutePage } from "@/components/RoutePage";
 
 export const Route = createFileRoute("/historique")({ component: HistoriquePage });
 
 function HistoriquePage() {
-  return (
-    <RoutePage
-      eyebrow="Traçabilité"
-      title="Historique"
-      description="Consultez les derniers lancements et les actions réalisées dans l'atelier."
-      icon={History}
-      actionLabel="Voir les statistiques"
-      actionTo="/statistiques"
-    />
-  );
+  return <div className="p-6"><p className="text-sm font-medium text-primary">Traçabilité</p><h1 className="mt-2 text-3xl font-bold">Historique</h1><p className="mt-2 text-muted-foreground">Consultez les derniers lancements et les actions réalisées dans l'atelier.</p></div>;
 }

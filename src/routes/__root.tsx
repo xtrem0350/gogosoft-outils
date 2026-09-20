@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useLocation,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,6 +15,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/AppShell";
+
+/** Ce fichier est le SEUL endroit où AppShell est monté. Ne jamais l'utiliser dans une route enfant. */
 
 function NotFoundComponent() {
   return (
@@ -119,13 +122,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const location = useLocation();
+  const isAuthPage = location.pathname === "/auth";
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppShell>
-          <Outlet />
-        </AppShell>
+        {isAuthPage ? <Outlet /> : <AppShell><Outlet /></AppShell>}
         <Toaster position="bottom-right" />
       </AuthProvider>
     </QueryClientProvider>

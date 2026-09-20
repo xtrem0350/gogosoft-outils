@@ -1,19 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { UserRound } from "lucide-react";
-
-import { RoutePage } from "@/components/RoutePage";
 
 export const Route = createFileRoute("/profil")({ component: ProfilPage });
 
 function ProfilPage() {
-  return (
-    <RoutePage
-      eyebrow="Compte"
-      title="Profil"
-      description="Retrouvez vos informations, votre rôle et votre activité personnelle."
-      icon={UserRound}
-      actionLabel="Retour au tableau de bord"
-      actionTo="/outils"
-    />
-  );
+  return <div className="p-6"><p className="text-sm font-medium text-primary">Compte</p><h1 className="mt-2 text-3xl font-bold">Profil</h1><p className="mt-2 text-muted-foreground">Retrouvez vos informations, votre rôle et votre activité personnelle.</p></div>;
 }

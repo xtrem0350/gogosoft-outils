@@ -1,19 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Settings } from "lucide-react";
-
-import { RoutePage } from "@/components/RoutePage";
 
 export const Route = createFileRoute("/parametres")({ component: ParametresPage });
 
 function ParametresPage() {
-  return (
-    <RoutePage
-      eyebrow="Configuration"
-      title="Paramètres"
-      description="Personnalisez l'apparence et les préférences de votre espace de travail."
-      icon={Settings}
-      actionLabel="Voir le profil"
-      actionTo="/profil"
-    />
-  );
+  return <div className="p-6"><p className="text-sm font-medium text-primary">Configuration</p><h1 className="mt-2 text-3xl font-bold">Paramètres</h1><p className="mt-2 text-muted-foreground">Personnalisez l'apparence et les préférences de votre espace de travail.</p></div>;
 }

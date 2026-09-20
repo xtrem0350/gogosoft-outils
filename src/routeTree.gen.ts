@@ -18,6 +18,9 @@ import { Route as OutilsRouteImport } from './routes/outils'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
+import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
+import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
+import { Route as AtelierNouveauRouteImport } from './routes/atelier.nouveau'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +68,21 @@ const StatistiquesRoute = StatistiquesRouteImport.update({
   path: '/statistiques',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtelierIndexRoute = AtelierIndexRouteImport.update({
+  id: '/atelier/',
+  path: '/atelier/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtelierIdRoute = AtelierIdRouteImport.update({
+  id: '/atelier/$id',
+  path: '/atelier/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtelierNouveauRoute = AtelierNouveauRouteImport.update({
+  id: '/atelier/nouveau',
+  path: '/atelier/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutilsIdRoute = OutilsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -81,7 +99,10 @@ export interface FileRoutesByFullPath {
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
+  '/atelier/$id': typeof AtelierIdRoute
+  '/atelier/nouveau': typeof AtelierNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/atelier/': typeof AtelierIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -93,7 +114,10 @@ export interface FileRoutesByTo {
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
+  '/atelier/$id': typeof AtelierIdRoute
+  '/atelier/nouveau': typeof AtelierNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/atelier': typeof AtelierIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -106,7 +130,10 @@ export interface FileRoutesById {
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
+  '/atelier/$id': typeof AtelierIdRoute
+  '/atelier/nouveau': typeof AtelierNouveauRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/atelier/': typeof AtelierIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -120,7 +147,10 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/profil'
     | '/statistiques'
+    | '/atelier/$id'
+    | '/atelier/nouveau'
     | '/outils/$id'
+    | '/atelier/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -132,7 +162,10 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/profil'
     | '/statistiques'
+    | '/atelier/$id'
+    | '/atelier/nouveau'
     | '/outils/$id'
+    | '/atelier'
   id:
     | '__root__'
     | '/'
@@ -144,7 +177,10 @@ export interface FileRouteTypes {
     | '/parametres'
     | '/profil'
     | '/statistiques'
+    | '/atelier/$id'
+    | '/atelier/nouveau'
     | '/outils/$id'
+    | '/atelier/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -157,6 +193,9 @@ export interface RootRouteChildren {
   ParametresRoute: typeof ParametresRoute
   ProfilRoute: typeof ProfilRoute
   StatistiquesRoute: typeof StatistiquesRoute
+  AtelierIdRoute: typeof AtelierIdRoute
+  AtelierNouveauRoute: typeof AtelierNouveauRoute
+  AtelierIndexRoute: typeof AtelierIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -224,6 +263,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatistiquesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atelier/': {
+      id: '/atelier/'
+      path: '/atelier'
+      fullPath: '/atelier/'
+      preLoaderRoute: typeof AtelierIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atelier/$id': {
+      id: '/atelier/$id'
+      path: '/atelier/$id'
+      fullPath: '/atelier/$id'
+      preLoaderRoute: typeof AtelierIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/atelier/nouveau': {
+      id: '/atelier/nouveau'
+      path: '/atelier/nouveau'
+      fullPath: '/atelier/nouveau'
+      preLoaderRoute: typeof AtelierNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outils/$id': {
       id: '/outils/$id'
       path: '/$id'
@@ -255,6 +315,9 @@ const rootRouteChildren: RootRouteChildren = {
   ParametresRoute: ParametresRoute,
   ProfilRoute: ProfilRoute,
   StatistiquesRoute: StatistiquesRoute,
+  AtelierIdRoute: AtelierIdRoute,
+  AtelierNouveauRoute: AtelierNouveauRoute,
+  AtelierIndexRoute: AtelierIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

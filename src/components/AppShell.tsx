@@ -1,34 +1,31 @@
-import { LogOut, Search, UserRound } from "lucide-react";
-import { Outlet, useNavigate } from "@tanstack/react-router";
+import { Menu } from "lucide-react";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 
-import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { Sidebar } from "@/components/Sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { signOut } from "@/services/authService";
+import logo from "@/assets/images/profile.png";
 
-/** Structure commune des pages authentifiées. */
-export function AppShell({ children }: { children?: ReactNode }) {
-  const navigate = useNavigate();
-  async function handleSignOut() {
-    const { error } = await signOut();
-    if (error) { toast.error(error.message); return; }
-    await navigate({ to: "/auth" });
-  }
+/** Layout authentifie unique de l'application. */
+export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="surface-gradient flex h-20 items-center justify-between px-5 shadow-lg lg:px-8">
-        <AnimatedLogo />
-        <div className="flex items-center gap-1 text-white">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" aria-label="Rechercher"><Search /></Button>
+    <div className="flex h-screen bg-background">
+      <Sidebar />
+      <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+        <header className="surface-gradient flex min-h-20 items-center justify-between gap-4 px-5 shadow-lg lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="lg:hidden"><Sidebar mobileTrigger={<Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" aria-label="Ouvrir le menu"><Menu /></Button>} /></div>
+            <img src={logo} alt="GogoSoft" className="size-10 rounded-xl object-cover" />
+            <h1 className="truncate font-display text-lg font-semibold text-white">GogoSoft Tools Manager</h1>
+          </div>
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white" aria-label="Profil"><UserRound /></Button>
-          <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-white hover:bg-white/10 hover:text-white" aria-label="Se déconnecter"><LogOut /></Button>
-        </div>
-      </header>
-      <div className="flex min-h-[calc(100vh-5rem)]"><Sidebar /><main className="min-w-0 flex-1 p-5 lg:p-8">{children ?? <Outlet />}</main></div>
+        </header>
+        <div className="flex-1 p-5 lg:p-8">{children}</div>
+        <footer className="border-t border-border px-5 py-4 text-xs text-muted-foreground lg:px-8">
+          <span className="hidden sm:inline">Développé par Thierry Gogo &amp; Co</span>
+          <span className="sm:hidden">Par Thierry Gogo &amp; Co</span>
+        </footer>
+      </main>
     </div>
   );
 }

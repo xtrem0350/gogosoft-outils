@@ -1,7 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, Boxes } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEMO_TOOLS } from "@/lib/demoData";
@@ -13,8 +12,7 @@ function ToolDetailsPage() {
   const tool = DEMO_TOOLS.find((item) => item.nom === decodeURIComponent(id));
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
         <Button asChild variant="ghost" className="-ml-3">
           <Link to="/outils">
             <ArrowLeft /> Retour aux outils
@@ -43,7 +41,6 @@ function ToolDetailsPage() {
             )}
           </CardContent>
         </Card>
-      </div>
-    </AppShell>
+    </div>
   );
 }

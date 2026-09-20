@@ -2,7 +2,6 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Boxes, ClipboardList, Settings2, UsersRound } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -31,8 +30,7 @@ export function RoutePage({
   actionTo,
 }: RoutePageProps) {
   return (
-    <AppShell>
-      <div className="mx-auto max-w-7xl space-y-8">
+    <div className="mx-auto max-w-7xl space-y-8">
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="mb-2 text-sm font-medium text-primary">{eyebrow}</p>
@@ -73,7 +71,6 @@ export function RoutePage({
             ))}
           </CardContent>
         </Card>
-      </div>
-    </AppShell>
+    </div>
   );
 }

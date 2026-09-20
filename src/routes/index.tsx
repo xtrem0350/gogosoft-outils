@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Activity, ArrowUpRight, Boxes, Clock3, Heart, Plus } from "lucide-react";
 
-import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DEMO_TOOLS } from "@/lib/demoData";
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/")({
 
 // IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
-  return <AppShell><Dashboard /></AppShell>;
+  return <Dashboard />;
 }
 
 function Dashboard() {
