@@ -192,6 +192,60 @@ export type Database = {
         }
         Relationships: []
       }
+      workshop_tickets: {
+        Row: {
+          client_name: string
+          client_whatsapp: string
+          created_at: string
+          created_by: string | null
+          device_imei: string | null
+          device_model: string
+          device_os_version: string | null
+          device_processor: string | null
+          device_sn: string | null
+          diagnosis: Json | null
+          id: string
+          issues: string[]
+          notes: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_name: string
+          client_whatsapp: string
+          created_at?: string
+          created_by?: string | null
+          device_imei?: string | null
+          device_model: string
+          device_os_version?: string | null
+          device_processor?: string | null
+          device_sn?: string | null
+          diagnosis?: Json | null
+          id?: string
+          issues?: string[]
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_name?: string
+          client_whatsapp?: string
+          created_at?: string
+          created_by?: string | null
+          device_imei?: string | null
+          device_model?: string
+          device_os_version?: string | null
+          device_processor?: string | null
+          device_sn?: string | null
+          diagnosis?: Json | null
+          id?: string
+          issues?: string[]
+          notes?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
