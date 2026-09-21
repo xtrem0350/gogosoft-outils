@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, KeyRound, Mail, Phone, UserRound } from "lucide-react";
+import { ArrowRight, KeyRound, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
-import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,8 +44,8 @@ function AuthPage() {
         toast.error(result.error.message);
         return;
       }
-      toast.success("Compte créé avec succès. Vérifiez votre e-mail si nécessaire.");
-      setActiveTab("signin");
+      toast.success("Compte créé. Vous pouvez maintenant créer votre première boutique.");
+      await navigate({ to: "/boutiques/nouveau" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Inscription impossible.");
     } finally {
@@ -55,98 +54,118 @@ function AuthPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top_right,var(--accent),transparent_32%),var(--background)] px-5 py-8 lg:px-12">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center">
-        <div className="grid w-full overflow-hidden rounded-2xl border border-border/70 bg-card/90 shadow-2xl backdrop-blur lg:grid-cols-[0.9fr_1.1fr]">
-          <section className="surface-gradient flex min-h-[280px] flex-col justify-between p-8 text-white lg:p-12">
-            <AnimatedLogo />
-            <div>
-              <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-white/55">Atelier numérique</p>
-              <h1 className="max-w-sm font-display text-4xl font-bold leading-tight">Tous vos outils, au même endroit.</h1>
-              <p className="mt-4 max-w-sm text-sm leading-6 text-white/70">
-                Centralisez vos utilitaires de réparation, vos accès et l’activité de votre équipe.
-              </p>
-            </div>
-          </section>
+    <main className="relative min-h-screen overflow-hidden bg-slate-950">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
+        }}
+      />
+      <div className="absolute inset-0 bg-black/60" />
 
-          <section className="p-7 sm:p-10 lg:p-12">
-            <div className="mx-auto max-w-md">
-              <div className="mb-8">
-                <p className="text-sm font-medium text-primary">Bienvenue</p>
-                <h2 className="mt-2 text-2xl font-bold">Accéder à GogoSoft Tools</h2>
-                <p className="mt-2 text-sm text-muted-foreground">Connectez-vous pour retrouver votre espace de travail.</p>
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
+        <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md">
+          <div className="grid lg:grid-cols-[1fr_1.1fr]">
+            <section className="flex min-h-[280px] flex-col justify-between bg-slate-900/70 p-8 text-white lg:p-12">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 ring-1 ring-blue-300/40">
+                  <ShieldCheck className="h-6 w-6 text-blue-200" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-blue-200/80">GogoSoft</p>
+                  <p className="text-sm text-slate-200">Tools Manager</p>
+                </div>
               </div>
 
-              <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")} className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signin">Connexion</TabsTrigger>
-                  <TabsTrigger value="signup">Inscription</TabsTrigger>
-                </TabsList>
+              <div>
+                <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-slate-300">Atelier numérique</p>
+                <h1 className="max-w-sm text-4xl font-bold leading-tight">Tous vos outils, au même endroit.</h1>
+                <p className="mt-4 max-w-sm text-sm leading-6 text-slate-200/80">
+                  Centralisez vos réparations, vos clients, vos diagnostics et l’activité de votre équipe.
+                </p>
+              </div>
+            </section>
 
-                <TabsContent value="signin" className="space-y-4 pt-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Adresse e-mail</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signin-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="pl-9" required />
+            <section className="bg-slate-950/60 p-7 sm:p-10 lg:p-12">
+              <div className="mx-auto max-w-md">
+                <div className="mb-8">
+                  <p className="text-sm font-medium text-blue-300">Bienvenue</p>
+                  <h2 className="mt-2 text-3xl font-bold text-white">GogoSoft Tools Manager</h2>
+                  <p className="mt-2 text-sm text-slate-300">Connectez-vous pour gérer votre atelier.</p>
+                </div>
+
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 bg-white/5">
+                    <TabsTrigger value="signin" className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900">Connexion</TabsTrigger>
+                    <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900">Inscription</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="signin" className="space-y-4 pt-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email" className="text-slate-200">Adresse e-mail</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signin-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Mot de passe</Label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signin-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="pl-9" minLength={6} required />
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password" className="text-slate-200">Mot de passe</Label>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signin-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                      </div>
                     </div>
-                  </div>
 
-                  <Button className="w-full" disabled={busy} onClick={() => void handleSignIn()}>
-                    Se connecter
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </TabsContent>
+                    <Button className="w-full" disabled={busy} onClick={() => void handleSignIn()}>
+                      Se connecter
+                      <ArrowRight className="size-4" />
+                    </Button>
+                  </TabsContent>
 
-                <TabsContent value="signup" className="space-y-4 pt-5">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nom complet</Label>
-                    <div className="relative">
-                      <UserRound className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="pl-9" required />
+                  <TabsContent value="signup" className="space-y-4 pt-5">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name" className="text-slate-200">Nom complet</Label>
+                      <div className="relative">
+                        <UserRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Adresse e-mail</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="pl-9" required />
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email" className="text-slate-200">Adresse e-mail</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-phone">Téléphone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signup-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="pl-9" placeholder="+225 01 02 03 04" />
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-phone" className="text-slate-200">Téléphone</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signup-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" placeholder="+225 01 02 03 04" />
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Mot de passe</Label>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                      <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="pl-9" minLength={6} required />
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password" className="text-slate-200">Mot de passe</Label>
+                      <div className="relative">
+                        <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                        <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                      </div>
                     </div>
-                  </div>
 
-                  <Button className="w-full" disabled={busy} onClick={() => void handleSignUp()}>
-                    Créer mon compte
-                    <ArrowRight className="size-4" />
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </div>
-          </section>
+                    <Button className="w-full" disabled={busy} onClick={() => void handleSignUp()}>
+                      Créer mon compte
+                      <ArrowRight className="size-4" />
+                    </Button>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </section>
+          </div>
         </div>
       </div>
     </main>

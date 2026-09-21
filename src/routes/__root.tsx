@@ -8,14 +8,15 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import profileIcon from "../assets/images/profile.ico";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AppShell } from "@/components/AppShell";
+import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
 import { Toaster } from "@/components/ui/sonner";
-import { AppShell } from "@/components/AppShell";
 
 /** Ce fichier est le SEUL endroit où AppShell est monté. Ne jamais l'utiliser dans une route enfant. */
 
@@ -125,6 +126,16 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIsLoading(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  if (isLoading) {
+    return <SplashScreen />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
