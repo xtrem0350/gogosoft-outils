@@ -1,5 +1,6 @@
 /** Services de gestion de l'abonnement et de l'état de la licence. */
 import { supabase } from "@/integrations/supabase/client";
+import { hasActiveSession } from "@/lib/supabaseGuard";
 
 export type SubscriptionPlan = "trial" | "mensuel" | "annuel";
 export type SubscriptionStatus = "active" | "expired" | "cancelled";
@@ -14,6 +15,9 @@ export interface SubscriptionSummary {
 
 /** Récupère l'abonnement de l'utilisateur courant. */
 export async function getMySubscription(): Promise<SubscriptionSummary | null> {
+  const hasSession = await hasActiveSession();
+  console.log("[subscriptionService] called", { hasSession, shopId: null });
+  if (!hasSession) return null;
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
 
@@ -50,6 +54,7 @@ export function isSubscriptionActive(subscription: Partial<SubscriptionSummary> 
 
 /** Démarre une période d'essai. */
 export async function startTrial(userId: string): Promise<SubscriptionSummary> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("subscriptions")
     .upsert(
@@ -70,6 +75,7 @@ export async function startTrial(userId: string): Promise<SubscriptionSummary> {
 
 /** Met à niveau le plan de l'utilisateur. */
 export async function upgradePlan(userId: string, plan: SubscriptionPlan, durationDays: number): Promise<SubscriptionSummary> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const expiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from("subscriptions")

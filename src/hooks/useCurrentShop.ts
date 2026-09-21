@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { hasActiveSession } from "@/lib/supabaseGuard";
 import { getUserShops, type Shop } from "@/services/shopService";
 
 const STORAGE_KEY = "gogosoft.currentShopId";
@@ -11,7 +12,14 @@ export function useCurrentShop() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    setLoading(true);
     try {
+      if (!(await hasActiveSession())) {
+        setShops([]);
+        setShop(null);
+        window.localStorage.removeItem(STORAGE_KEY);
+        return;
+      }
       const nextShops = await getUserShops();
       setShops(nextShops);
 

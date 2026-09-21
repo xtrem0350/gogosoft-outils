@@ -1,5 +1,6 @@
 /** Services de gestion des paiements de démonstration pour l'abonnement. */
 import { supabase } from "@/integrations/supabase/client";
+import { hasActiveSession } from "@/lib/supabaseGuard";
 import { upgradePlan, type SubscriptionPlan } from "@/services/subscriptionService";
 
 export interface PaymentRecord {
@@ -16,6 +17,7 @@ export interface PaymentRecord {
 
 /** Crée un paiement simulé pour l'abonnement. */
 export async function createPayment(userId: string, plan: SubscriptionPlan, amount: number): Promise<PaymentRecord> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("payments")
     .insert({
@@ -35,6 +37,7 @@ export async function createPayment(userId: string, plan: SubscriptionPlan, amou
 
 /** Simule le paiement réussi et active le plan correspondant. */
 export async function simulatePaymentSuccess(paymentId: string): Promise<PaymentRecord> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data: payment, error: paymentError } = await supabase
     .from("payments")
     .select("*")
@@ -69,6 +72,9 @@ export async function simulatePaymentSuccess(paymentId: string): Promise<Payment
 
 /** Récupère les paiements de l'utilisateur courant. */
 export async function getMyPayments(): Promise<PaymentRecord[]> {
+  const hasSession = await hasActiveSession();
+  console.log("[paymentService] called", { hasSession, shopId: null });
+  if (!hasSession) return [];
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
 

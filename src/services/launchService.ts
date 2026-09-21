@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getAgentUrl } from "@/lib/localAgent";
+import { hasActiveSession } from "@/lib/supabaseGuard";
 import type { LaunchAction, Tool } from "@/types/database";
 
 /** Résultat d'une demande de lancement. */
@@ -36,6 +37,8 @@ async function callAgent(endpoint: "open" | "launch", chemin: string): Promise<L
 
 /** Enregistre le lancement : historique + compteur + date de dernière utilisation. */
 export async function registerLaunch(toolId: string, action: LaunchAction): Promise<void> {
+  if (!(await hasActiveSession())) return;
+  console.log("[launchService] called", { hasSession: true, shopId: null });
   const { error } = await supabase.rpc("register_launch", {
     _tool_id: toolId,
     _action: action,

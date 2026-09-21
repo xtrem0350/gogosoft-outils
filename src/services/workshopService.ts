@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
+import type { WorkshopTicket } from "@/types/database";
 
 /** Identifiants des pannes prises en charge par l'atelier. */
 export type IssueKey =
@@ -14,7 +16,7 @@ export type IssueKey =
   | "oxydation";
 
 /** Statut de suivi d'une fiche d'atelier. */
-export type WorkshopStatus = "en_attente" | "en_cours" | "termine";
+export type WorkshopStatus = WorkshopTicket["status"];
 
 /** Diagnostic calculé à partir des pannes sélectionnées. */
 export interface WorkshopDiagnosis {
@@ -22,28 +24,9 @@ export interface WorkshopDiagnosis {
   process: string[];
 }
 
-/** Fiche d'atelier telle qu'elle est stockée dans Supabase. */
-export interface WorkshopTicket {
-  id: string;
-  client_name: string;
-  client_whatsapp: string;
-  device_model: string;
-  device_processor: string | null;
-  device_imei: string | null;
-  device_sn: string | null;
-  device_os_version: string | null;
-  issues: string[];
-  status: WorkshopStatus;
-  diagnosis: WorkshopDiagnosis | null;
-  notes: string | null;
-  notified_at: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 /** Données nécessaires à la création d'une fiche. */
 export interface CreateTicketData {
+  shop_id: string;
   client_name: string;
   client_whatsapp: string;
   device_model: string;
@@ -93,49 +76,74 @@ export function generateDiagnosis(issues: IssueKey[]): WorkshopDiagnosis {
 
 /** Crée une fiche d'atelier et son diagnostic. */
 export async function createTicket(data: CreateTicketData): Promise<WorkshopTicket> {
-  const { data: auth } = await supabase.auth.getUser();
-  const payload = { ...data, diagnosis: data.diagnosis ? { tools: data.diagnosis.tools, process: data.diagnosis.process } : null, created_by: auth.user?.id ?? null };
-  const { data: ticket, error } = await supabase.from("workshop_tickets").insert(payload).select().single();
-  if (error) throw error;
-  return ticket as unknown as WorkshopTicket;
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const shopId = requireShopId(data.shop_id);
+  console.log("[workshopService] called", { hasSession: true, shopId });
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const payload: Record<string, unknown> = {
+      ...data,
+      shop_id: shopId,
+      diagnosis: data.diagnosis ? { tools: data.diagnosis.tools, process: data.diagnosis.process } : null,
+      created_by: auth.user?.id ?? null,
+    };
+    const { data: ticket, error } = await supabase.from("workshop_tickets").insert(payload).select().single();
+    if (error) throw error;
+    if (!ticket) throw new Error("Fiche atelier introuvable.");
+    return ticket as WorkshopTicket;
+  } catch (error) {
+    console.error("[workshopService] Catch:", error);
+    throw error;
+  }
 }
 
 /** Récupère toutes les fiches, de la plus récente à la plus ancienne. */
 export async function getTickets(): Promise<WorkshopTicket[]> {
-  const { data, error } = await supabase.from("workshop_tickets").select("*").order("created_at", { ascending: false });
-
-  if (error) throw error;
-
-  return ((data ?? []) as Array<Record<string, unknown>>).map((ticket) => ({
-    ...ticket,
-    diagnosed_at: null,
-    notified_at: (ticket.notified_at as string | null | undefined) ?? null,
-  })) as unknown as WorkshopTicket[];
+  const hasSession = await hasActiveSession();
+  console.log("[workshopService] called", { hasSession, shopId: null });
+  if (!hasSession) return [];
+  try {
+    const { data, error } = await supabase.from("workshop_tickets").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return ((data ?? []) as WorkshopTicket[]).map((ticket) => ({ ...ticket, notified_at: ticket["notified_at"] ?? null }));
+  } catch (error) {
+    console.error("[workshopService] Catch:", error);
+    return [];
+  }
 }
 
 /** Récupère une fiche par son identifiant. */
 export async function getTicketById(id: string): Promise<WorkshopTicket | null> {
-  const { data, error } = await supabase.from("workshop_tickets").select("*").eq("id", id).maybeSingle();
-
-  if (error) throw error;
-  if (!data) return null;
-
-  return {
-    ...(data as Record<string, unknown>),
-    diagnosed_at: null,
-    notified_at: (data as { notified_at?: string | null }).notified_at ?? null,
-  } as unknown as WorkshopTicket;
+  if (!(await hasActiveSession())) return null;
+  try {
+    const { data, error } = await supabase.from("workshop_tickets").select("*").eq("id", id).maybeSingle();
+    if (error) throw error;
+    if (!data) return null;
+    const ticket = data as WorkshopTicket;
+    return { ...ticket, notified_at: ticket["notified_at"] ?? null };
+  } catch (error) {
+    console.error("[workshopService] Catch:", error);
+    return null;
+  }
 }
 
 /** Met à jour le statut d'une fiche. */
 export async function updateTicketStatus(id: string, status: WorkshopStatus): Promise<WorkshopTicket> {
-  const { data, error } = await supabase.from("workshop_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select().single();
-  if (error) throw error;
-  return data as unknown as WorkshopTicket;
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  try {
+    const { data, error } = await supabase.from("workshop_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select().single();
+    if (error) throw error;
+    if (!data) throw new Error("Fiche atelier introuvable.");
+    return data as WorkshopTicket;
+  } catch (error) {
+    console.error("[workshopService] Catch:", error);
+    throw error;
+  }
 }
 
 /** Marque une réparation comme notifiée au client par WhatsApp. */
 export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
     const { data, error } = await supabase
       .from("workshop_tickets")
@@ -144,8 +152,9 @@ export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
       .select()
       .single();
 
-    if (error) throw error;
-    return data as unknown as WorkshopTicket;
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error("Fiche atelier introuvable.");
+    return data as WorkshopTicket;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.toLowerCase().includes("notified_at")) {
@@ -158,6 +167,12 @@ export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
 
 /** Supprime une fiche selon les politiques RLS Supabase. */
 export async function deleteTicket(id: string): Promise<void> {
-  const { error } = await supabase.from("workshop_tickets").delete().eq("id", id);
-  if (error) throw error;
+  if (!(await hasActiveSession())) return;
+  try {
+    const { error } = await supabase.from("workshop_tickets").delete().eq("id", id);
+    if (error) throw error;
+  } catch (error) {
+    console.error("[workshopService] Catch:", error);
+    throw error;
+  }
 }

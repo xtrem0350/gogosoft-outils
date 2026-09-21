@@ -1,4 +1,4 @@
-import { useLocation } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Menu } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -8,12 +8,33 @@ import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import logo from "@/assets/images/profile.png";
 
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const isExemptRoute = location.pathname === "/auth" || location.pathname === "/abonnement";
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { shopId, loading: shopLoading } = useCurrentShop();
+  const isAuthRoute = location.pathname === "/auth";
+  const isShopExemptRoute = location.pathname.startsWith("/boutiques") || location.pathname === "/abonnement" || location.pathname === "/parametres";
+  const isExemptRoute = isAuthRoute || location.pathname === "/abonnement";
+  const loading = authLoading || (!isAuthRoute && shopLoading);
+
+  if (!loading && !user && !isAuthRoute) {
+    void navigate({ to: "/auth", search: { redirect: location.pathname } });
+    return <LoadingScreen />;
+  }
+
+  if (!loading && user && !shopId && !isShopExemptRoute) {
+    void navigate({ to: "/boutiques/nouveau" });
+    return <LoadingScreen />;
+  }
+
+  if (loading) return <LoadingScreen />;
+
   const content = isExemptRoute ? <>{children}</> : (
     <ProtectedRoute>
       <SubscriptionGuard>{children}</SubscriptionGuard>
@@ -60,4 +81,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
     </div>
   );
+}
+
+function LoadingScreen() {
+  return <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">Chargement...</div>;
 }

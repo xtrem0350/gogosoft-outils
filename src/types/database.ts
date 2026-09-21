@@ -21,6 +21,29 @@ export type ToolUpdate = Database["public"]["Tables"]["tools"]["Update"];
 export type ToolLaunch = Database["public"]["Tables"]["tool_launches"]["Row"];
 export type ToolLog = Database["public"]["Tables"]["tool_logs"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type WorkshopStatus = "en_attente" | "en_cours" | "termine" | "livre";
+export type WorkshopTicket = {
+  id: string;
+  shop_id: string | null;
+  client_id: string | null;
+  client_name: string | null;
+  client_whatsapp: string | null;
+  device_model: string | null;
+  device_processor: string | null;
+  device_imei: string | null;
+  device_sn: string | null;
+  device_os_version: string | null;
+  issues: string[];
+  status: WorkshopStatus;
+  diagnosis: Record<string, unknown> | null;
+  notes: string | null;
+  price_estimate: number | null;
+  price_final: number | null;
+  notified_at: string | null;
+  created_by: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
 
 /** Liste ordonnée des catégories utilisées dans l'UI. */
 export const CATEGORIES: Categorie[] = ["MTK", "Unisoc", "Apple", "Drivers", "Autres"];

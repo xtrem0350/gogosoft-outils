@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { generateDiagnosis, ISSUES_DATABASE, createTicket, type IssueKey, type WorkshopDiagnosis } from "@/services/workshopService";
 
 export const Route = createFileRoute("/atelier/nouveau")({ component: NewWorkshopTicketPage });
@@ -29,6 +30,7 @@ type WorkshopFormValues = z.infer<typeof formSchema>;
 /** Formulaire de création d'une fiche de réparation. */
 function NewWorkshopTicketPage() {
   const navigate = useNavigate();
+  const { shopId, loading: shopLoading } = useCurrentShop();
   const [diagnosis, setDiagnosis] = useState<WorkshopDiagnosis | null>(null);
   const { register, control, handleSubmit, formState: { errors, isSubmitting } } = useForm<WorkshopFormValues>({
     resolver: zodResolver(formSchema),
@@ -40,9 +42,13 @@ function NewWorkshopTicketPage() {
   }
 
   async function submit(values: WorkshopFormValues) {
+    if (shopLoading || !shopId) {
+      toast.error("Sélectionnez une boutique avant de créer une fiche.");
+      return;
+    }
     try {
       const selectedIssues = values.issues as IssueKey[];
-      await createTicket({ ...values, issues: selectedIssues, diagnosis: diagnosis ?? generateDiagnosis(selectedIssues) });
+      await createTicket({ shop_id: shopId, ...values, issues: selectedIssues, diagnosis: diagnosis ?? generateDiagnosis(selectedIssues) });
       toast.success("Fiche d'atelier enregistrée.");
       await navigate({ to: "/atelier" });
     } catch (error) {
