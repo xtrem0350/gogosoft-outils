@@ -14,6 +14,130 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          shop_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          shop_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          shop_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          shop_id: string
+          total_repairs: number
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          shop_id: string
+          total_repairs?: number
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          shop_id?: string
+          total_repairs?: number
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          plan: string | null
+          reference: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method: string
+          plan?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          plan?: string | null
+          reference?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -21,7 +145,6 @@ export type Database = {
           favorite_categories: string[]
           full_name: string | null
           id: string
-          phone: string | null
           theme: string
           updated_at: string
         }
@@ -31,7 +154,6 @@ export type Database = {
           favorite_categories?: string[]
           full_name?: string | null
           id: string
-          phone?: string | null
           theme?: string
           updated_at?: string
         }
@@ -41,165 +163,103 @@ export type Database = {
           favorite_categories?: string[]
           full_name?: string | null
           id?: string
-          phone?: string | null
           theme?: string
           updated_at?: string
         }
         Relationships: []
       }
+      shop_members: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          shop_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          shop_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          shop_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_members_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           address: string | null
-          created_at: string | null
+          created_at: string
           id: string
           name: string
-          owner_id: string | null
+          owner_id: string
           phone: string | null
+          updated_at: string
         }
         Insert: {
           address?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name: string
-          owner_id?: string | null
+          owner_id: string
           phone?: string | null
+          updated_at?: string
         }
         Update: {
           address?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           name?: string
-          owner_id?: string | null
+          owner_id?: string
           phone?: string | null
-        }
-        Relationships: []
-      }
-      shop_members: {
-        Row: {
-          created_at: string | null
-          id: string
-          role: string | null
-          shop_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          role?: string | null
-          shop_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          role?: string | null
-          shop_id?: string | null
-          user_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
       subscriptions: {
         Row: {
-          created_at: string | null
-          expires_at: string | null
-          id: string
-          plan: string | null
-          started_at: string | null
-          status: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          plan?: string | null
-          started_at?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string
-          plan?: string | null
-          started_at?: string | null
-          status?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      payments: {
-        Row: {
-          amount: number
-          created_at: string | null
-          currency: string | null
+          created_at: string
+          expires_at: string
           id: string
           plan: string
-          provider: string | null
-          status: string | null
-          transaction_id: string | null
-          user_id: string | null
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          amount: number
-          created_at?: string | null
-          currency?: string | null
-          id?: string
-          plan: string
-          provider?: string | null
-          status?: string | null
-          transaction_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          currency?: string | null
+          created_at?: string
+          expires_at?: string
           id?: string
           plan?: string
-          provider?: string | null
-          status?: string | null
-          transaction_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      clients: {
-        Row: {
-          address: string | null
-          created_at: string | null
-          email: string | null
-          full_name: string
-          id: string
-          notes: string | null
-          shop_id: string | null
-          total_repairs: number | null
-          updated_at: string | null
-          whatsapp: string
-        }
-        Insert: {
-          address?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name: string
-          id?: string
-          notes?: string | null
-          shop_id?: string | null
-          total_repairs?: number | null
-          updated_at?: string | null
-          whatsapp: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          address?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string
+          created_at?: string
+          expires_at?: string
           id?: string
-          notes?: string | null
-          shop_id?: string | null
-          total_repairs?: number | null
-          updated_at?: string | null
-          whatsapp?: string
+          plan?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -284,6 +344,7 @@ export type Database = {
           last_used_at: string | null
           launch_count: number
           nom: string
+          shop_id: string | null
           sous_categorie: string | null
           tags: string[]
           type: string
@@ -303,6 +364,7 @@ export type Database = {
           last_used_at?: string | null
           launch_count?: number
           nom: string
+          shop_id?: string | null
           sous_categorie?: string | null
           tags?: string[]
           type: string
@@ -322,13 +384,22 @@ export type Database = {
           last_used_at?: string | null
           launch_count?: number
           nom?: string
+          shop_id?: string | null
           sous_categorie?: string | null
           tags?: string[]
           type?: string
           updated_at?: string
           version?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tools_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -351,8 +422,44 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_templates: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          name: string
+          shop_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          name: string
+          shop_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          name?: string
+          shop_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_templates_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workshop_tickets: {
         Row: {
+          client_id: string | null
           client_name: string
           client_whatsapp: string
           created_at: string
@@ -367,10 +474,14 @@ export type Database = {
           issues: string[]
           notes: string | null
           notified_at: string | null
+          price_estimate: number | null
+          price_final: number | null
+          shop_id: string | null
           status: string | null
           updated_at: string
         }
         Insert: {
+          client_id?: string | null
           client_name: string
           client_whatsapp: string
           created_at?: string
@@ -385,10 +496,14 @@ export type Database = {
           issues?: string[]
           notes?: string | null
           notified_at?: string | null
+          price_estimate?: number | null
+          price_final?: number | null
+          shop_id?: string | null
           status?: string | null
           updated_at?: string
         }
         Update: {
+          client_id?: string | null
           client_name?: string
           client_whatsapp?: string
           created_at?: string
@@ -403,10 +518,28 @@ export type Database = {
           issues?: string[]
           notes?: string | null
           notified_at?: string | null
+          price_estimate?: number | null
+          price_final?: number | null
+          shop_id?: string | null
           status?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "workshop_tickets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workshop_tickets_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -420,6 +553,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
+      is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
       register_launch: {
         Args: { _action: string; _tool_id: string }
         Returns: undefined
