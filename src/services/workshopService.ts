@@ -2,6 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { WorkshopTicket } from "@/types/database";
 
+export type { WorkshopTicket } from "@/types/database";
+
 /** Identifiants des pannes prises en charge par l'atelier. */
 export type IssueKey =
   | "ecran_casse"

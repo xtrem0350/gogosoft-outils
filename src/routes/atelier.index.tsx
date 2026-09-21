@@ -18,8 +18,8 @@ function WorkshopListPage() {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { void getTickets().then(setTickets).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Impossible de charger les fiches.")); }, []);
   const filtered = filter === "tous" ? tickets : tickets.filter((ticket) => ticket.status === filter);
-  const statusLabel: Record<WorkshopStatus, string> = { en_attente: "En attente", en_cours: "En cours", termine: "Terminé" };
-  const statusClass: Record<WorkshopStatus, string> = { en_attente: "bg-muted text-muted-foreground", en_cours: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200", termine: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200" };
+  const statusLabel: Record<WorkshopStatus, string> = { en_attente: "En attente", en_cours: "En cours", termine: "Terminé", livre: "Livré" };
+  const statusClass: Record<WorkshopStatus, string> = { en_attente: "bg-muted text-muted-foreground", en_cours: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200", termine: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200", livre: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200" };
 
   return <div className="mx-auto max-w-6xl space-y-6"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-medium text-primary">Suivi</p><h1 className="mt-2 text-3xl font-bold">Atelier</h1><p className="mt-2 text-muted-foreground">Les réparations en cours et leur diagnostic.</p></div><Button asChild><Link to="/atelier/nouveau"><Plus />Nouvelle fiche</Link></Button></div>
     <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}><TabsList><TabsTrigger value="tous">Tout</TabsTrigger><TabsTrigger value="en_attente">En attente</TabsTrigger><TabsTrigger value="en_cours">En cours</TabsTrigger><TabsTrigger value="termine">Terminé</TabsTrigger></TabsList></Tabs>

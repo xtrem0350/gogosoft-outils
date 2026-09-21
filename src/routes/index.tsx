@@ -9,6 +9,7 @@ import { getClientsByShop } from "@/services/clientService";
 import { getTickets } from "@/services/workshopService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useSubscription } from "@/hooks/useSubscription";
+import type { WorkshopTicket } from "@/types/database";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   const { shopId } = useCurrentShop();
   const { subscription } = useSubscription();
-  const [tickets, setTickets] = useState<Array<{ id: string; client_name: string; device_model: string; status: string; created_at: string }>>([]);
+  const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<Array<{ id: string; full_name: string; whatsapp: string; total_repairs?: number | null }>>([]);
 
   useEffect(() => {
@@ -92,9 +93,9 @@ function Index() {
               tickets.map((repair) => (
                 <div key={repair.id} className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50">
                   <div>
-                    <p className="text-sm font-semibold">{repair.client_name}</p>
+                    <p className="text-sm font-semibold">{repair.client_name ?? "Client non renseigné"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {repair.device_model} · {repair.id.slice(0, 8)}
+                      {repair.device_model ?? "Appareil non renseigné"} · {repair.id.slice(0, 8)}
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground">{repair.status}</span>
