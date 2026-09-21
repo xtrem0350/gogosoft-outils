@@ -20,7 +20,8 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
 
-  async function handleSignIn() {
+  async function handleSignIn(event?: React.FormEvent) {
+    event?.preventDefault();
     setBusy(true);
     try {
       const result = await signIn(email, password);
@@ -36,7 +37,8 @@ function AuthPage() {
     }
   }
 
-  async function handleSignUp() {
+  async function handleSignUp(event?: React.FormEvent) {
+    event?.preventDefault();
     setBusy(true);
     try {
       const result = await signUp(email, password, fullName, phone);
@@ -101,67 +103,75 @@ function AuthPage() {
                     <TabsTrigger value="signup" className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900">Inscription</TabsTrigger>
                   </TabsList>
 
-                  <TabsContent value="signin" className="space-y-4 pt-5">
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-email" className="text-slate-200">Adresse e-mail</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signin-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                  <form onSubmit={(event) => {
+                    if (activeTab === "signin") {
+                      void handleSignIn(event);
+                    } else {
+                      void handleSignUp(event);
+                    }
+                  }}>
+                    <TabsContent value="signin" className="space-y-4 pt-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-email" className="text-slate-200">Adresse e-mail</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signin-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signin-password" className="text-slate-200">Mot de passe</Label>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signin-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                      <div className="space-y-2">
+                        <Label htmlFor="signin-password" className="text-slate-200">Mot de passe</Label>
+                        <div className="relative">
+                          <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signin-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                        </div>
                       </div>
-                    </div>
 
-                    <Button className="w-full" disabled={busy} onClick={() => void handleSignIn()}>
-                      Se connecter
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </TabsContent>
+                      <Button className="w-full" disabled={busy} type="submit">
+                        Se connecter
+                        <ArrowRight className="size-4" />
+                      </Button>
+                    </TabsContent>
 
-                  <TabsContent value="signup" className="space-y-4 pt-5">
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-name" className="text-slate-200">Nom complet</Label>
-                      <div className="relative">
-                        <UserRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                    <TabsContent value="signup" className="space-y-4 pt-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-name" className="text-slate-200">Nom complet</Label>
+                        <div className="relative">
+                          <UserRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-email" className="text-slate-200">Adresse e-mail</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-email" className="text-slate-200">Adresse e-mail</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signup-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-phone" className="text-slate-200">Téléphone</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signup-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" placeholder="+225 01 02 03 04" />
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-phone" className="text-slate-200">Téléphone</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signup-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" placeholder="+225 01 02 03 04" />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="signup-password" className="text-slate-200">Mot de passe</Label>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                        <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                      <div className="space-y-2">
+                        <Label htmlFor="signup-password" className="text-slate-200">Mot de passe</Label>
+                        <div className="relative">
+                          <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                          <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                        </div>
                       </div>
-                    </div>
 
-                    <Button className="w-full" disabled={busy} onClick={() => void handleSignUp()}>
-                      Créer mon compte
-                      <ArrowRight className="size-4" />
-                    </Button>
-                  </TabsContent>
+                      <Button className="w-full" disabled={busy} type="submit">
+                        Créer mon compte
+                        <ArrowRight className="size-4" />
+                      </Button>
+                    </TabsContent>
+                  </form>
                 </Tabs>
               </div>
             </section>

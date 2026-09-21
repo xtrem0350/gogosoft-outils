@@ -103,15 +103,28 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
 /** Récupère toutes les fiches, de la plus récente à la plus ancienne. */
 export async function getTickets(): Promise<WorkshopTicket[]> {
   const { data, error } = await supabase.from("workshop_tickets").select("*").order("created_at", { ascending: false });
+
   if (error) throw error;
-  return (data ?? []) as unknown as WorkshopTicket[];
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((ticket) => ({
+    ...ticket,
+    diagnosed_at: null,
+    notified_at: (ticket.notified_at as string | null | undefined) ?? null,
+  })) as unknown as WorkshopTicket[];
 }
 
 /** Récupère une fiche par son identifiant. */
 export async function getTicketById(id: string): Promise<WorkshopTicket | null> {
   const { data, error } = await supabase.from("workshop_tickets").select("*").eq("id", id).maybeSingle();
+
   if (error) throw error;
-  return data as unknown as WorkshopTicket | null;
+  if (!data) return null;
+
+  return {
+    ...(data as Record<string, unknown>),
+    diagnosed_at: null,
+    notified_at: (data as { notified_at?: string | null }).notified_at ?? null,
+  } as unknown as WorkshopTicket;
 }
 
 /** Met à jour le statut d'une fiche. */
@@ -123,15 +136,24 @@ export async function updateTicketStatus(id: string, status: WorkshopStatus): Pr
 
 /** Marque une réparation comme notifiée au client par WhatsApp. */
 export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
-  const { data, error } = await supabase
-    .from("workshop_tickets")
-    .update({ notified_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .update({ notified_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
 
-  if (error) throw error;
-  return data as unknown as WorkshopTicket;
+    if (error) throw error;
+    return data as unknown as WorkshopTicket;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.toLowerCase().includes("notified_at")) {
+      const existing = await getTicketById(id);
+      if (existing) return existing;
+    }
+    throw error;
+  }
 }
 
 /** Supprime une fiche selon les politiques RLS Supabase. */

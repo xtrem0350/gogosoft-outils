@@ -4,7 +4,7 @@ import type { AppRole, Profile } from "@/types/database";
 
 /** Inscription par e-mail / mot de passe. */
 export async function signUp(email: string, password: string, fullName: string, phone?: string) {
-  return supabase.auth.signUp({
+  const result = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -12,6 +12,18 @@ export async function signUp(email: string, password: string, fullName: string, 
       data: { full_name: fullName, phone: phone ?? null },
     },
   });
+
+  if (result.data.user && result.data.user.id) {
+    await supabase.from("profiles").upsert({
+      id: result.data.user.id,
+      email,
+      full_name: fullName,
+      phone: phone ?? null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "id" });
+  }
+
+  return result;
 }
 
 /** Connexion par e-mail / mot de passe. */

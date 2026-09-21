@@ -11,10 +11,12 @@ CREATE TABLE public.workshop_tickets (
   status TEXT CHECK (status IN ('en_attente','en_cours','termine')) DEFAULT 'en_attente',
   diagnosis JSONB,
   notes TEXT,
+  notified_at TIMESTAMPTZ,
   created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+ALTER TABLE public.workshop_tickets ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.workshop_tickets TO authenticated;
 GRANT ALL ON public.workshop_tickets TO service_role;
 ALTER TABLE public.workshop_tickets ENABLE ROW LEVEL SECURITY;

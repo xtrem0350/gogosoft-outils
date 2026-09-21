@@ -8,6 +8,48 @@ CREATE TABLE IF NOT EXISTS shops (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE is_first BOOLEAN;
+BEGIN
+  INSERT INTO public.profiles (id, full_name, email, phone)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email,'@',1)),
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'phone', NULL)
+  )
+  ON CONFLICT (id) DO UPDATE
+    SET full_name = EXCLUDED.full_name,
+        email = EXCLUDED.email,
+        phone = COALESCE(EXCLUDED.phone, public.profiles.phone),
+        updated_at = now();
+
+  SELECT NOT EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = NEW.id) INTO is_first;
+  IF is_first THEN
+    INSERT INTO public.user_roles (user_id, role)
+    VALUES (NEW.id, 'technicien'::public.app_role)
+    ON CONFLICT (user_id, role) DO NOTHING;
+  END IF;
+
+  INSERT INTO public.subscriptions (user_id, plan, status, expires_at)
+  VALUES (NEW.id, 'trial', 'active', NOW() + INTERVAL '7 days')
+  ON CONFLICT (user_id) DO UPDATE
+    SET plan = 'trial',
+        status = 'active',
+        expires_at = NOW() + INTERVAL '7 days';
+
+  RETURN NEW;
+END; $$;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS on_auth_user_created_trial ON auth.users;
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
 -- Table shop_members (réparateurs ↔ boutiques)
 CREATE TABLE IF NOT EXISTS shop_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -109,7 +151,10 @@ RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO subscriptions (user_id, plan, status, expires_at)
   VALUES (NEW.id, 'trial', 'active', NOW() + INTERVAL '7 days')
-  ON CONFLICT (user_id) DO NOTHING;
+  ON CONFLICT (user_id) DO UPDATE
+    SET plan = 'trial',
+        status = 'active',
+        expires_at = NOW() + INTERVAL '7 days';
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

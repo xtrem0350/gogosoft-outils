@@ -21,6 +21,7 @@ export type Database = {
           favorite_categories: string[]
           full_name: string | null
           id: string
+          phone: string | null
           theme: string
           updated_at: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           favorite_categories?: string[]
           full_name?: string | null
           id: string
+          phone?: string | null
           theme?: string
           updated_at?: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           favorite_categories?: string[]
           full_name?: string | null
           id?: string
+          phone?: string | null
           theme?: string
           updated_at?: string
         }
@@ -363,6 +366,7 @@ export type Database = {
           id: string
           issues: string[]
           notes: string | null
+          notified_at: string | null
           status: string | null
           updated_at: string
         }
@@ -380,6 +384,7 @@ export type Database = {
           id?: string
           issues?: string[]
           notes?: string | null
+          notified_at?: string | null
           status?: string | null
           updated_at?: string
         }
@@ -397,6 +402,7 @@ export type Database = {
           id?: string
           issues?: string[]
           notes?: string | null
+          notified_at?: string | null
           status?: string | null
           updated_at?: string
         }

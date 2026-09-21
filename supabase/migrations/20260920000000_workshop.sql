@@ -11,10 +11,12 @@ CREATE TABLE IF NOT EXISTS workshop_tickets (
   status TEXT CHECK (status IN ('en_attente','en_cours','termine')) DEFAULT 'en_attente',
   diagnosis JSONB,
   notes TEXT,
+  notified_at TIMESTAMPTZ,
   created_by UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE workshop_tickets ADD COLUMN IF NOT EXISTS notified_at TIMESTAMPTZ;
 ALTER TABLE workshop_tickets ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Authenticated users can view workshop tickets"
   ON workshop_tickets FOR SELECT USING (auth.role() = 'authenticated');
