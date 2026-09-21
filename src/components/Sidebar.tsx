@@ -24,10 +24,10 @@ const navigation = [
   { label: "Atelier", to: "/atelier", icon: Wrench },
   { label: "Clients", to: "/clients", icon: Users },
   { label: "Boutiques", to: "/boutiques", icon: Store },
+  { label: "Équipe", to: "/equipe", icon: UserCog },
   { label: "Outils", to: "/outils", icon: Package },
   { label: "Historique", to: "/historique", icon: History },
   { label: "Statistiques", to: "/statistiques", icon: BarChart3 },
-  { label: "Équipe", to: "/equipe", icon: UserCog },
   { label: "Abonnement", to: "/abonnement", icon: CreditCard },
   { label: "Paramètres", to: "/parametres", icon: Settings },
 ] as const;

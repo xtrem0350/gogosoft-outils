@@ -36,6 +36,7 @@ export interface WorkshopTicket {
   status: WorkshopStatus;
   diagnosis: WorkshopDiagnosis | null;
   notes: string | null;
+  notified_at: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -116,6 +117,19 @@ export async function getTicketById(id: string): Promise<WorkshopTicket | null> 
 /** Met à jour le statut d'une fiche. */
 export async function updateTicketStatus(id: string, status: WorkshopStatus): Promise<WorkshopTicket> {
   const { data, error } = await supabase.from("workshop_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select().single();
+  if (error) throw error;
+  return data as unknown as WorkshopTicket;
+}
+
+/** Marque une réparation comme notifiée au client par WhatsApp. */
+export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .update({ notified_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+
   if (error) throw error;
   return data as unknown as WorkshopTicket;
 }

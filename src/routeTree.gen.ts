@@ -23,6 +23,7 @@ import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
 import { Route as AtelierNouveauRouteImport } from './routes/atelier.nouveau'
 import { Route as BoutiquesIndexRouteImport } from './routes/boutiques.index'
+import { Route as BoutiquesIdRouteImport } from './routes/boutiques.$id'
 import { Route as BoutiquesNouveauRouteImport } from './routes/boutiques.nouveau'
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
@@ -99,6 +100,11 @@ const BoutiquesIndexRoute = BoutiquesIndexRouteImport.update({
   path: '/boutiques/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BoutiquesIdRoute = BoutiquesIdRouteImport.update({
+  id: '/boutiques/$id',
+  path: '/boutiques/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BoutiquesNouveauRoute = BoutiquesNouveauRouteImport.update({
   id: '/boutiques/nouveau',
   path: '/boutiques/nouveau',
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
@@ -159,6 +166,7 @@ export interface FileRoutesByTo {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
@@ -204,6 +213,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
@@ -225,6 +235,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
@@ -246,6 +257,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
@@ -268,6 +280,7 @@ export interface RootRouteChildren {
   StatistiquesRoute: typeof StatistiquesRoute
   AtelierIdRoute: typeof AtelierIdRoute
   AtelierNouveauRoute: typeof AtelierNouveauRoute
+  BoutiquesIdRoute: typeof BoutiquesIdRoute
   BoutiquesNouveauRoute: typeof BoutiquesNouveauRoute
   ClientsIdRoute: typeof ClientsIdRoute
   ClientsNouveauRoute: typeof ClientsNouveauRoute
@@ -376,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoutiquesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/boutiques/$id': {
+      id: '/boutiques/$id'
+      path: '/boutiques/$id'
+      fullPath: '/boutiques/$id'
+      preLoaderRoute: typeof BoutiquesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/boutiques/nouveau': {
       id: '/boutiques/nouveau'
       path: '/boutiques/nouveau'
@@ -438,6 +458,7 @@ const rootRouteChildren: RootRouteChildren = {
   StatistiquesRoute: StatistiquesRoute,
   AtelierIdRoute: AtelierIdRoute,
   AtelierNouveauRoute: AtelierNouveauRoute,
+  BoutiquesIdRoute: BoutiquesIdRoute,
   BoutiquesNouveauRoute: BoutiquesNouveauRoute,
   ClientsIdRoute: ClientsIdRoute,
   ClientsNouveauRoute: ClientsNouveauRoute,

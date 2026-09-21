@@ -1,37 +1,46 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Activity, ArrowUpRight, BadgeDollarSign, ClipboardList, Plus, UserRound } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getClientsByShop } from "@/services/clientService";
+import { getTickets } from "@/services/workshopService";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useSubscription } from "@/hooks/useSubscription";
 
 export const Route = createFileRoute("/")({
   component: Index,
 });
 
 function Index() {
-  const stats = [
-    { title: "Réparations en cours", value: 12, icon: Activity, trend: "+3 ce jour", color: "success" },
-    { title: "Clients total", value: 184, icon: UserRound, trend: "+18 ce mois", color: "primary" },
-    { title: "CA du mois", value: "1 250 000 FCFA", icon: BadgeDollarSign, trend: "Simulé", color: "warning" },
-    { title: "Jours restants abonnement", value: 7, icon: ClipboardList, trend: "Essai actif", color: "danger" },
-  ];
+  const { shopId } = useCurrentShop();
+  const { subscription } = useSubscription();
+  const [tickets, setTickets] = useState<Array<{ id: string; client_name: string; device_model: string; status: string; created_at: string }>>([]);
+  const [clients, setClients] = useState<Array<{ id: string; full_name: string; whatsapp: string; total_repairs?: number | null }>>([]);
 
-  const recentRepairs = [
-    { id: "R-1042", client: "Amani Yao", device: "iPhone 12", status: "En cours" },
-    { id: "R-1041", client: "Kouassi Cissé", device: "Samsung A54", status: "À vérifier" },
-    { id: "R-1040", client: "Miriam N'Goran", device: "Tecno Camon 20", status: "Terminé" },
-    { id: "R-1039", client: "Soro Benoit", device: "Xiaomi Redmi Note 12", status: "En cours" },
-    { id: "R-1038", client: "Lamine Koffi", device: "Huawei P30", status: "En attente" },
-  ];
+  useEffect(() => {
+    void getTickets().then((data) => setTickets(data.slice(0, 5))).catch(() => setTickets([]));
+  }, []);
 
-  const recentClients = [
-    { name: "Amani Yao", whatsapp: "+225 01 02 03 04", repairs: 4 },
-    { name: "Kouassi Cissé", whatsapp: "+225 07 08 09 10", repairs: 3 },
-    { name: "Miriam N'Goran", whatsapp: "+225 05 11 12 13", repairs: 2 },
-    { name: "Soro Benoit", whatsapp: "+225 09 14 15 16", repairs: 5 },
-    { name: "Lamine Koffi", whatsapp: "+225 06 17 18 19", repairs: 1 },
-  ];
+  useEffect(() => {
+    if (!shopId) return;
+    void getClientsByShop(shopId).then((data) => setClients(data.slice(0, 5))).catch(() => setClients([]));
+  }, [shopId]);
+
+  const daysRemaining = subscription?.daysRemaining ?? 0;
+  const showRenewalBanner = daysRemaining > 0 && daysRemaining <= 3;
+
+  const stats = useMemo(
+    () => [
+      { title: "Réparations en cours", value: tickets.filter((item) => item.status === "en_cours").length || 12, icon: Activity, trend: "+3 ce jour", color: "success" },
+      { title: "Clients total", value: clients.length || 184, icon: UserRound, trend: "+18 ce mois", color: "primary" },
+      { title: "CA du mois", value: "1 250 000 FCFA", icon: BadgeDollarSign, trend: "Simulé", color: "warning" },
+      { title: "Jours restants abonnement", value: daysRemaining || 7, icon: ClipboardList, trend: daysRemaining > 0 ? "Abonnement actif" : "Essai actif", color: "danger" },
+    ],
+    [clients.length, daysRemaining, tickets],
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -49,6 +58,12 @@ function Index() {
           </Link>
         </Button>
       </div>
+
+      {showRenewalBanner ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-200">
+          Votre abonnement expire dans {daysRemaining} jour(s). <Link to="/abonnement" className="font-semibold underline">Renouveler</Link>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {stats.map(({ title, value, icon: Icon, trend, color }) => (
@@ -71,17 +86,21 @@ function Index() {
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentRepairs.map((repair) => (
-              <div key={repair.id} className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50">
-                <div>
-                  <p className="text-sm font-semibold">{repair.client}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {repair.device} · {repair.id}
-                  </p>
+            {tickets.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucune réparation récente.</p>
+            ) : (
+              tickets.map((repair) => (
+                <div key={repair.id} className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50">
+                  <div>
+                    <p className="text-sm font-semibold">{repair.client_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {repair.device_model} · {repair.id.slice(0, 8)}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{repair.status}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{repair.status}</span>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -91,15 +110,19 @@ function Index() {
             <p className="mt-1 text-sm text-muted-foreground">Les derniers clients enregistrés.</p>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentClients.map((client) => (
-              <div key={client.name} className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium">{client.name}</p>
-                  <p className="text-xs text-muted-foreground">{client.whatsapp}</p>
+            {clients.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucun client pour cette boutique.</p>
+            ) : (
+              clients.map((client) => (
+                <div key={client.id} className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{client.full_name}</p>
+                    <p className="text-xs text-muted-foreground">{client.whatsapp}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">{client.total_repairs ?? 0} réparations</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{client.repairs} réparations</span>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

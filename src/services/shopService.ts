@@ -16,7 +16,7 @@ export interface CreateShopData {
   phone?: string | null;
 }
 
-/** Récupère toutes les boutiques de l'utilisateur courant. */
+/** Récupère toutes les boutiques de l'utilisateur courant, propriétaire ou membre. */
 export async function getUserShops(): Promise<Shop[]> {
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -25,14 +25,36 @@ export async function getUserShops(): Promise<Shop[]> {
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data: memberships, error: membershipsError } = await supabase
+    .from("shop_members")
+    .select("shop_id, shops(*)")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (membershipsError) throw membershipsError;
+
+  const memberShops = ((memberships ?? []) as Array<{ shops?: Shop | Shop[] | null }>).flatMap((entry) => {
+    const candidate = entry.shops;
+    if (!candidate) return [];
+    const shops = Array.isArray(candidate) ? candidate : [candidate];
+    return shops.map((shop) => ({
+      ...shop,
+      owner_id: shop.owner_id ?? userId,
+    }));
+  });
+
+  const { data: ownedShops, error: ownerError } = await supabase
     .from("shops")
     .select("*")
     .eq("owner_id", userId)
     .order("created_at", { ascending: false });
 
-  if (error) throw error;
-  return (data ?? []) as unknown as Shop[];
+  if (ownerError) throw ownerError;
+
+  const merged = [...((ownedShops ?? []) as Shop[]), ...memberShops];
+  const unique = merged.filter((shop, index, array) => array.findIndex((entry) => entry.id === shop.id) === index);
+
+  return unique.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
 }
 
 /** Crée une boutique et lui associe le propriétaire. */
@@ -51,6 +73,11 @@ export async function createShop(data: CreateShopData): Promise<Shop> {
     .single();
 
   if (error) throw error;
+
+  await supabase
+    .from("shop_members")
+    .upsert({ shop_id: shop.id, user_id: userId, role: "owner" }, { onConflict: "shop_id,user_id" });
+
   return shop as unknown as Shop;
 }
 

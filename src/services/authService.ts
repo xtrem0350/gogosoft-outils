@@ -3,13 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, Profile } from "@/types/database";
 
 /** Inscription par e-mail / mot de passe. */
-export async function signUp(email: string, password: string, fullName: string) {
+export async function signUp(email: string, password: string, fullName: string, phone?: string) {
   return supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/`,
-      data: { full_name: fullName },
+      data: { full_name: fullName, phone: phone ?? null },
     },
   });
 }

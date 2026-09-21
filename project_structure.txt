@@ -3,6 +3,7 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20260921000000_saas_mvp.sql
 │   │   ├── 📄 20260920192317_859fb027-231f-479c-9c9f-57e04fa75ed1.sql
 │   │   ├── 📄 20260920000000_workshop.sql
 │   │   ├── 📄 20260918115927_f851f768-05d7-4c81-b27a-65464ac28174.sql
@@ -17,8 +18,12 @@ Structure du projet (avec glob)
 │   ├── 📁 services/
 │   │   ├── 📄 workshopService.ts
 │   │   ├── 📄 toolService.ts
+│   │   ├── 📄 subscriptionService.ts
+│   │   ├── 📄 shopService.ts
+│   │   ├── 📄 paymentService.ts
 │   │   ├── 📄 launchService.ts
 │   │   ├── 📄 historyService.ts
+│   │   ├── 📄 clientService.ts
 │   │   └── 📄 authService.ts
 │   ├── 📁 routes/
 │   │   ├── 📄 __root.tsx
@@ -31,11 +36,17 @@ Structure du projet (avec glob)
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
+│   │   ├── 📄 clients.nouveau.tsx
+│   │   ├── 📄 clients.index.tsx
+│   │   ├── 📄 clients.$id.tsx
 │   │   ├── 📄 categories.tsx
+│   │   ├── 📄 boutiques.nouveau.tsx
+│   │   ├── 📄 boutiques.index.tsx
 │   │   ├── 📄 auth.tsx
 │   │   ├── 📄 atelier.nouveau.tsx
 │   │   ├── 📄 atelier.index.tsx
-│   │   └── 📄 atelier.$id.tsx
+│   │   ├── 📄 atelier.$id.tsx
+│   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
 │   │   ├── 📄 utils.ts
 │   │   ├── 📄 lovable-error-reporting.ts
@@ -119,9 +130,13 @@ Structure du projet (avec glob)
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 SubscriptionCard.tsx
 │   │   ├── 📄 StatsCard.tsx
 │   │   ├── 📄 Sidebar.tsx
+│   │   ├── 📄 ShopSelector.tsx
+│   │   ├── 📄 ShopCard.tsx
 │   │   ├── 📄 RoutePage.tsx
+│   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   └── 📄 AnimatedLogo.tsx

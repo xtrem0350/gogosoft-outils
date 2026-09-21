@@ -9,6 +9,12 @@ interface ClientCardProps {
   client: ClientRecord;
 }
 
+function getWhatsAppLink(phone: string, name: string) {
+  const cleaned = phone.replace(/[\s+\-()]/g, "").replace(/\D/g, "");
+  const message = encodeURIComponent(`Bonjour ${name}, votre appareil est prêt.`);
+  return `https://wa.me/${cleaned}?text=${message}`;
+}
+
 /** Affiche les informations essentielles d'un client avec un CTA vers sa fiche. */
 export function ClientCard({ client }: ClientCardProps) {
   const initials = client.full_name
@@ -28,7 +34,7 @@ export function ClientCard({ client }: ClientCardProps) {
           <div className="min-w-0">
             <p className="truncate font-semibold text-foreground">{client.full_name}</p>
             <a
-              href={`https://wa.me/${client.whatsapp.replace(/\D/g, "")}`}
+              href={getWhatsAppLink(client.whatsapp, client.full_name)}
               target="_blank"
               rel="noreferrer"
               className="mt-1 flex items-center gap-1 text-xs text-primary hover:underline"
