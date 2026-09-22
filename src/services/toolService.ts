@@ -132,6 +132,7 @@ export async function hardDeleteTool(id: string): Promise<void> {
 /** Duplique un outil existant (suffixe « (copie) »). */
 export async function duplicateTool(tool: Tool): Promise<Tool> {
   return createTool({
+    shop_id: tool.shop_id,
     nom: `${tool.nom} (copie)`,
     version: tool.version,
     chemin: tool.chemin,
