@@ -4,6 +4,8 @@ import type { LogAction, Tool, ToolInsert, ToolUpdate } from "@/types/database";
 
 /** Filtres appliqués à la liste des outils. */
 export interface ToolFilters {
+  /** Boutique courante : obligatoire pour obtenir des résultats. */
+  shopId?: string | null;
   search?: string;
   categorie?: string;
   type?: string;
@@ -32,10 +34,8 @@ async function writeLog(toolId: string, action: LogAction, changes: unknown): Pr
  * Liste les outils correspondant aux filtres, triés par favoris puis par nom.
  */
 export async function listTools(filters: ToolFilters = {}): Promise<Tool[]> {
-  const hasSession = await hasActiveSession();
-  console.log("[toolService] called", { hasSession, shopId: null });
-  if (!hasSession) return [];
-  let query = supabase.from("tools").select("*");
+  if (!(await hasActiveSession()) || !filters.shopId) return [];
+  let query = supabase.from("tools").select("*").eq("shop_id", filters.shopId);
 
   query = filters.deleted ? query.not("deleted_at", "is", null) : query.is("deleted_at", null);
 
@@ -132,6 +132,7 @@ export async function hardDeleteTool(id: string): Promise<void> {
 /** Duplique un outil existant (suffixe « (copie) »). */
 export async function duplicateTool(tool: Tool): Promise<Tool> {
   return createTool({
+    shop_id: tool.shop_id,
     nom: `${tool.nom} (copie)`,
     version: tool.version,
     chemin: tool.chemin,

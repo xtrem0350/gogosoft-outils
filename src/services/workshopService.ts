@@ -99,19 +99,16 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
   }
 }
 
-/** Récupère toutes les fiches, de la plus récente à la plus ancienne. */
-export async function getTickets(): Promise<WorkshopTicket[]> {
-  const hasSession = await hasActiveSession();
-  console.log("[workshopService] called", { hasSession, shopId: null });
-  if (!hasSession) return [];
-  try {
-    const { data, error } = await supabase.from("workshop_tickets").select("*").order("created_at", { ascending: false });
-    if (error) throw error;
-    return ((data ?? []) as WorkshopTicket[]).map((ticket) => ({ ...ticket, notified_at: ticket["notified_at"] ?? null }));
-  } catch (error) {
-    console.error("[workshopService] Catch:", error);
-    return [];
-  }
+/** Récupère les fiches d'une boutique, de la plus récente à la plus ancienne. */
+export async function getTickets(shopId: string | null | undefined): Promise<WorkshopTicket[]> {
+  if (!(await hasActiveSession()) || !shopId) return [];
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .select("*")
+    .eq("shop_id", requireShopId(shopId))
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as WorkshopTicket[];
 }
 
 /** Récupère une fiche par son identifiant. */
