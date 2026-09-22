@@ -5,7 +5,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addShopMember, getShopMembers } from "@/services/shopService";
@@ -14,7 +20,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
 function EquipePage() {
-  const [members, setMembers] = useState<Array<{ id: string; user_id: string; role: string; created_at?: string | null }>>([]);
+  const [members, setMembers] = useState<
+    Array<{ id: string; user_id: string; role: string; created_at?: string | null }>
+  >([]);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -27,14 +35,22 @@ function EquipePage() {
     }
 
     void getShopMembers(shopId)
-      .then((data) => setMembers(data as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>))
+      .then((data) =>
+        setMembers(
+          data as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>,
+        ),
+      )
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, []);
 
   async function inviteMember() {
     try {
-      const { data: foundUser } = await supabase.from("profiles").select("id").eq("email", email.trim()).maybeSingle();
+      const { data: foundUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email.trim())
+        .maybeSingle();
       if (!foundUser?.id) {
         toast.error("Aucun utilisateur trouvé pour cet e-mail.");
         return;
@@ -51,7 +67,9 @@ function EquipePage() {
       setOpen(false);
       setEmail("");
       const next = await getShopMembers(shopId);
-      setMembers(next as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>);
+      setMembers(
+        next as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>,
+      );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invitation impossible.");
     }
@@ -73,11 +91,15 @@ function EquipePage() {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
           <Card className="md:col-span-2 xl:col-span-3">
-            <CardContent className="p-6 text-sm text-muted-foreground">Chargement des membres…</CardContent>
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              Chargement des membres…
+            </CardContent>
           </Card>
         ) : members.length === 0 ? (
           <Card className="md:col-span-2 xl:col-span-3">
-            <CardContent className="p-6 text-sm text-muted-foreground">Aucun membre dans cette boutique.</CardContent>
+            <CardContent className="p-6 text-sm text-muted-foreground">
+              Aucun membre dans cette boutique.
+            </CardContent>
           </Card>
         ) : (
           members.map((member) => (
@@ -110,11 +132,19 @@ function EquipePage() {
             <Label htmlFor="member-email">E-mail</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-              <Input id="member-email" value={email} onChange={(event) => setEmail(event.target.value)} className="pl-9" placeholder="prenom@exemple.com" />
+              <Input
+                id="member-email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="pl-9"
+                placeholder="prenom@exemple.com"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Annuler
+            </Button>
             <Button onClick={() => void inviteMember()}>Inviter</Button>
           </DialogFooter>
         </DialogContent>

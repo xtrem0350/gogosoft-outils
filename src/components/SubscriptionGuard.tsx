@@ -15,7 +15,11 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (loading) {
-    return <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">Vérification de l'abonnement…</div>;
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+        Vérification de l'abonnement…
+      </div>
+    );
   }
 
   if (!isActive) {
@@ -27,7 +31,9 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
               <AlertCircle className="size-7" />
             </div>
             <div>
-              <p className="text-sm font-medium uppercase tracking-[0.18em] text-destructive">Abonnement</p>
+              <p className="text-sm font-medium uppercase tracking-[0.18em] text-destructive">
+                Abonnement
+              </p>
               <h1 className="mt-3 text-3xl font-bold">Votre abonnement a expiré</h1>
               <p className="mt-3 text-sm text-muted-foreground">
                 Réactivez votre accès pour continuer à gérer votre atelier et vos clients.

@@ -6,5 +6,9 @@ import { useTheme } from "@/hooks/useTheme";
 /** Bouton de bascule du thème persistant. */
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
-  return <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Changer de thème">{theme === "dark" ? <Sun /> : <Moon />}</Button>;
+  return (
+    <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Changer de thème">
+      {theme === "dark" ? <Sun /> : <Moon />}
+    </Button>
+  );
 }

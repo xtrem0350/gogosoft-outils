@@ -1,5 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Activity, ArrowLeft, ArrowUpRight, ClipboardList, Plus, UserRound, Wrench } from "lucide-react";
+import {
+  Activity,
+  ArrowLeft,
+  ArrowUpRight,
+  ClipboardList,
+  Plus,
+  UserRound,
+  Wrench,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -17,9 +25,16 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Tableau de bord — GogoSoft Tools Manager" },
-      { name: "description", content: "Vue d'ensemble de votre atelier de réparation : réparations en cours, clients et abonnement." },
+      {
+        name: "description",
+        content:
+          "Vue d'ensemble de votre atelier de réparation : réparations en cours, clients et abonnement.",
+      },
       { property: "og:title", content: "Tableau de bord — GogoSoft Tools Manager" },
-      { property: "og:description", content: "Vue d'ensemble de votre atelier de réparation mobile." },
+      {
+        property: "og:description",
+        content: "Vue d'ensemble de votre atelier de réparation mobile.",
+      },
     ],
   }),
   component: Index,
@@ -53,11 +68,18 @@ function Index() {
     setLoading(true);
     setError(null);
     try {
-      const [ticketList, clientList] = await Promise.all([getTickets(shopId), getClientsByShop(shopId)]);
+      const [ticketList, clientList] = await Promise.all([
+        getTickets(shopId),
+        getClientsByShop(shopId),
+      ]);
       setTickets(ticketList);
       setClients(clientList);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Impossible de charger les données de la boutique.");
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Impossible de charger les données de la boutique.",
+      );
     } finally {
       setLoading(false);
     }
@@ -71,10 +93,11 @@ function Index() {
   const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
   const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
   const busy = shopLoading || loading;
-  const displayName = profile?.full_name?.trim() || "Utilisateur";
+  const displayName = profile?.nom?.trim() || "Utilisateur";
   const firstName = displayName.split(" ")[0] ?? displayName;
   const currentHour = new Date().getHours();
-  const greeting = currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
+  const greeting =
+    currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
   const roleLabel = profile?.role ?? "Réparateur";
   const whatsappValue = profile?.phone ?? shop?.phone ?? "+225 07 XX XX XX XX";
 
@@ -82,11 +105,18 @@ function Index() {
     <div className="mx-auto max-w-7xl space-y-8">
       <div
         className="relative overflow-hidden rounded-2xl bg-slate-900 bg-cover bg-center p-6 text-white sm:p-8"
-        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop)" }}
+        style={{
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop)",
+        }}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/30" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <Button variant="secondary" className="bg-white/10 text-white hover:bg-white/20" onClick={() => window.history.back()}>
+          <Button
+            variant="secondary"
+            className="bg-white/10 text-white hover:bg-white/20"
+            onClick={() => window.history.back()}
+          >
             <ArrowLeft className="size-4" />
             Retour
           </Button>
@@ -101,14 +131,19 @@ function Index() {
           <p className="mb-2 text-sm font-medium text-blue-300">Vue d'ensemble</p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{greeting}</h1>
           <p className="mt-3 text-sm text-slate-200">{`${roleLabel} • ${whatsappValue}`}</p>
-          <p className="mt-4 text-sm text-slate-200/80">{shop?.name ?? "Votre atelier"} · suivi des réparations, clients et activités de la boutique.</p>
+          <p className="mt-4 text-sm text-slate-200/80">
+            {shop?.name ?? "Votre atelier"} · suivi des réparations, clients et activités de la
+            boutique.
+          </p>
         </div>
       </div>
 
       {showRenewalBanner ? (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/20 dark:text-amber-200">
           Votre abonnement expire dans {daysRemaining} jour(s).{" "}
-          <Link to="/abonnement" className="font-semibold underline">Renouveler</Link>
+          <Link to="/abonnement" className="font-semibold underline">
+            Renouveler
+          </Link>
         </div>
       ) : null}
 
@@ -122,9 +157,31 @@ function Index() {
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Réparations en cours" value={busy ? "…" : enCours} icon={Activity} trend={`${tickets.length} fiche(s) au total`} color="success" />
-        <StatsCard title="Clients enregistrés" value={busy ? "…" : clients.length} icon={UserRound} trend="Base de la boutique" color="primary" />
-        <StatsCard title="Fiches terminées" value={busy ? "…" : tickets.filter((t) => t.status === "termine" || t.status === "livre").length} icon={Wrench} trend="Prêtes ou livrées" color="warning" />
+        <StatsCard
+          title="Réparations en cours"
+          value={busy ? "…" : enCours}
+          icon={Activity}
+          trend={`${tickets.length} fiche(s) au total`}
+          color="success"
+        />
+        <StatsCard
+          title="Clients enregistrés"
+          value={busy ? "…" : clients.length}
+          icon={UserRound}
+          trend="Base de la boutique"
+          color="primary"
+        />
+        <StatsCard
+          title="Fiches terminées"
+          value={
+            busy
+              ? "…"
+              : tickets.filter((t) => t.status === "termine" || t.status === "livre").length
+          }
+          icon={Wrench}
+          trend="Prêtes ou livrées"
+          color="warning"
+        />
         <StatsCard
           title="Jours restants abonnement"
           value={subLoading ? "…" : daysRemaining}
@@ -139,7 +196,9 @@ function Index() {
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>Réparations récentes</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">Les 5 dernières fiches de l'atelier.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les 5 dernières fiches de l'atelier.
+              </p>
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/atelier">
@@ -171,7 +230,9 @@ function Index() {
                     <p className="text-sm font-semibold">{repair.client_name}</p>
                     <p className="text-xs text-muted-foreground">{repair.device_model}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{STATUS_LABELS[repair.status] ?? repair.status}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {STATUS_LABELS[repair.status] ?? repair.status}
+                  </span>
                 </Link>
               ))
             )}
@@ -182,7 +243,9 @@ function Index() {
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>Clients récents</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">Les derniers clients enregistrés.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les derniers clients enregistrés.
+              </p>
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to="/clients">
@@ -214,7 +277,9 @@ function Index() {
                     <p className="text-sm font-medium">{client.full_name}</p>
                     <p className="text-xs text-muted-foreground">{client.whatsapp}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{client.total_repairs ?? 0} réparation(s)</span>
+                  <span className="text-xs text-muted-foreground">
+                    {client.total_repairs ?? 0} réparation(s)
+                  </span>
                 </Link>
               ))
             )}

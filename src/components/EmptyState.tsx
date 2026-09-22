@@ -11,7 +11,13 @@ export interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export function EmptyState({ icon: Icon, title, description, actionLabel, onAction }: EmptyStateProps) {
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  actionLabel,
+  onAction,
+}: EmptyStateProps) {
   return (
     <Card className="border-dashed border-border/80 bg-muted/20">
       <CardContent className="flex flex-col items-center justify-center px-6 py-12 text-center">

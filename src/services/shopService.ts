@@ -37,15 +37,17 @@ export async function getUserShops(): Promise<Shop[]> {
 
   if (membershipsError) throw membershipsError;
 
-  const memberShops = ((memberships ?? []) as Array<{ shops?: Shop | Shop[] | null }>).flatMap((entry) => {
-    const candidate = entry.shops;
-    if (!candidate) return [];
-    const shops = Array.isArray(candidate) ? candidate : [candidate];
-    return shops.map((shop) => ({
-      ...shop,
-      owner_id: shop.owner_id ?? userId,
-    }));
-  });
+  const memberShops = ((memberships ?? []) as Array<{ shops?: Shop | Shop[] | null }>).flatMap(
+    (entry) => {
+      const candidate = entry.shops;
+      if (!candidate) return [];
+      const shops = Array.isArray(candidate) ? candidate : [candidate];
+      return shops.map((shop) => ({
+        ...shop,
+        owner_id: shop.owner_id ?? userId,
+      }));
+    },
+  );
 
   const { data: ownedShops, error: ownerError } = await supabase
     .from("shops")
@@ -56,9 +58,13 @@ export async function getUserShops(): Promise<Shop[]> {
   if (ownerError) throw ownerError;
 
   const merged = [...((ownedShops ?? []) as Shop[]), ...memberShops];
-  const unique = merged.filter((shop, index, array) => array.findIndex((entry) => entry.id === shop.id) === index);
+  const unique = merged.filter(
+    (shop, index, array) => array.findIndex((entry) => entry.id === shop.id) === index,
+  );
 
-  return unique.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+  return unique.sort(
+    (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
+  );
 }
 
 /** Crée une boutique et lui associe le propriétaire. */
@@ -81,7 +87,10 @@ export async function createShop(data: CreateShopData): Promise<Shop> {
 
   await supabase
     .from("shop_members")
-    .upsert({ shop_id: shop.id, user_id: userId, role: "owner" }, { onConflict: "shop_id,user_id" });
+    .upsert(
+      { shop_id: shop.id, user_id: userId, role: "owner" },
+      { onConflict: "shop_id,user_id" },
+    );
 
   return shop as unknown as Shop;
 }
@@ -99,7 +108,12 @@ export async function getShopById(id: string): Promise<Shop | null> {
 export async function updateShop(id: string, data: Partial<CreateShopData>): Promise<Shop> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   requireShopId(id);
-  const { data: shop, error } = await supabase.from("shops").update(data).eq("id", id).select().single();
+  const { data: shop, error } = await supabase
+    .from("shops")
+    .update(data)
+    .eq("id", id)
+    .select()
+    .single();
   if (error) throw error;
   return shop as unknown as Shop;
 }
@@ -122,7 +136,11 @@ export async function getShopMembers(shopId: string) {
 }
 
 /** Ajoute un membre à une boutique. */
-export async function addShopMember(shopId: string, userId: string, role: "owner" | "technicien" = "owner") {
+export async function addShopMember(
+  shopId: string,
+  userId: string,
+  role: "owner" | "technicien" = "owner",
+) {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   requireShopId(shopId);
   const { data, error } = await supabase

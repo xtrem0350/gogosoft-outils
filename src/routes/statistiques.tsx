@@ -11,9 +11,15 @@ export const Route = createFileRoute("/statistiques")({
   head: () => ({
     meta: [
       { title: "Statistiques — GogoSoft Tools Manager" },
-      { name: "description", content: "Indicateurs d'utilisation du catalogue d'outils de votre atelier." },
+      {
+        name: "description",
+        content: "Indicateurs d'utilisation du catalogue d'outils de votre atelier.",
+      },
       { property: "og:title", content: "Statistiques — GogoSoft Tools Manager" },
-      { property: "og:description", content: "Outils les plus utilisés, répartition par catégorie et lancements récents." },
+      {
+        property: "og:description",
+        content: "Outils les plus utilisés, répartition par catégorie et lancements récents.",
+      },
     ],
   }),
   component: StatistiquesPage,
@@ -34,23 +40,51 @@ function StatistiquesPage() {
         <p className="mt-2 text-muted-foreground">L'utilisation réelle de vos outils.</p>
       </div>
 
-      {error ? <p className="text-sm text-destructive">Impossible de calculer les statistiques.</p> : null}
+      {error ? (
+        <p className="text-sm text-destructive">Impossible de calculer les statistiques.</p>
+      ) : null}
       {!shopLoading && !shopId ? (
-        <EmptyState icon={BarChart3} title="Aucune boutique sélectionnée" description="Sélectionnez une boutique pour consulter ses statistiques." />
+        <EmptyState
+          icon={BarChart3}
+          title="Aucune boutique sélectionnée"
+          description="Sélectionnez une boutique pour consulter ses statistiques."
+        />
       ) : null}
 
       {shopId ? (
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatsCard title="Outils actifs" value={busy ? "…" : (data?.total ?? 0)} icon={Wrench} color="primary" />
-            <StatsCard title="Favoris" value={busy ? "…" : (data?.favoris ?? 0)} icon={Star} color="warning" />
-            <StatsCard title="Lancements aujourd'hui" value={busy ? "…" : (data?.lancementsAujourdhui ?? 0)} icon={Rocket} color="success" />
-            <StatsCard title="Lancements 7 jours" value={busy ? "…" : (data?.lancements7j ?? 0)} icon={BarChart3} color="danger" />
+            <StatsCard
+              title="Outils actifs"
+              value={busy ? "…" : (data?.total ?? 0)}
+              icon={Wrench}
+              color="primary"
+            />
+            <StatsCard
+              title="Favoris"
+              value={busy ? "…" : (data?.favoris ?? 0)}
+              icon={Star}
+              color="warning"
+            />
+            <StatsCard
+              title="Lancements aujourd'hui"
+              value={busy ? "…" : (data?.lancementsAujourdhui ?? 0)}
+              icon={Rocket}
+              color="success"
+            />
+            <StatsCard
+              title="Lancements 7 jours"
+              value={busy ? "…" : (data?.lancements7j ?? 0)}
+              icon={BarChart3}
+              color="danger"
+            />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Card className="card-elevated border-0">
-              <CardHeader><CardTitle>Répartition par catégorie</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Répartition par catégorie</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-3">
                 {(data?.parCategorie ?? []).length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aucun outil enregistré.</p>
@@ -66,7 +100,9 @@ function StatistiquesPage() {
             </Card>
 
             <Card className="card-elevated border-0">
-              <CardHeader><CardTitle>Outils les plus utilisés</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle>Outils les plus utilisés</CardTitle>
+              </CardHeader>
               <CardContent className="space-y-3">
                 {(data?.top ?? []).length === 0 ? (
                   <p className="text-sm text-muted-foreground">Aucun lancement enregistré.</p>

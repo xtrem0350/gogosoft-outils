@@ -36,7 +36,9 @@ function ToolPlaceholder({ tool, imageUrl }: { tool: Tool; imageUrl?: string | n
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/20 via-accent/10 to-secondary text-primary">
       {imageUrl ? <ImageOff className="size-7 opacity-60" /> : <Icon className="size-10" />}
-      <span className="text-xs font-semibold uppercase tracking-wider opacity-70">{tool.categorie}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider opacity-70">
+        {tool.categorie}
+      </span>
     </div>
   );
 }
@@ -46,16 +48,17 @@ export function ToolImage({ tool, size = "md", onClick, className, imageUrl }: T
   const [imageFailed, setImageFailed] = useState(false);
   const interactive = onClick !== undefined;
   const imageProps = imageUrl === undefined ? {} : { imageUrl };
-  const content = imageUrl && !imageFailed ? (
-    <img
-      src={imageUrl}
-      alt={`Logo de ${tool.nom}`}
-      className="h-full w-full object-cover"
-      onError={() => setImageFailed(true)}
-    />
-  ) : (
-    <ToolPlaceholder {...imageProps} tool={tool} />
-  );
+  const content =
+    imageUrl && !imageFailed ? (
+      <img
+        src={imageUrl}
+        alt={`Logo de ${tool.nom}`}
+        className="h-full w-full object-cover"
+        onError={() => setImageFailed(true)}
+      />
+    ) : (
+      <ToolPlaceholder {...imageProps} tool={tool} />
+    );
 
   return (
     <motion.div
@@ -66,7 +69,8 @@ export function ToolImage({ tool, size = "md", onClick, className, imageUrl }: T
       className={cn(
         "relative shrink-0 overflow-hidden rounded-lg border border-border shadow-sm",
         sizeClasses[size],
-        interactive && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        interactive &&
+          "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         className,
       )}
       role={interactive ? "button" : undefined}

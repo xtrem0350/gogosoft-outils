@@ -15,20 +15,36 @@ export const Route = createFileRoute("/abonnement")({
 
 const plans = [
   { key: "trial", label: "Trial", price: "Gratuit", days: 7, description: "Essai de 7 jours" },
-  { key: "mensuel", label: "Mensuel", price: "5 000 FCFA", days: 30, description: "Abonnement mensuel" },
-  { key: "annuel", label: "Annuel", price: "50 000 FCFA", days: 365, description: "Abonnement annuel" },
+  {
+    key: "mensuel",
+    label: "Mensuel",
+    price: "5 000 FCFA",
+    days: 30,
+    description: "Abonnement mensuel",
+  },
+  {
+    key: "annuel",
+    label: "Annuel",
+    price: "50 000 FCFA",
+    days: 365,
+    description: "Abonnement annuel",
+  },
 ] as const;
 
 function AbonnementPage() {
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
 
   useEffect(() => {
-    void getMySubscription().then(setSubscription).catch(() => setSubscription(null));
+    void getMySubscription()
+      .then(setSubscription)
+      .catch(() => setSubscription(null));
   }, []);
 
   async function subscribe(plan: (typeof plans)[number]) {
     try {
-      const { data: userData } = await (await import("@/integrations/supabase/client")).supabase.auth.getUser();
+      const { data: userData } = await (
+        await import("@/integrations/supabase/client")
+      ).supabase.auth.getUser();
       const userId = userData.user?.id;
       if (!userId) {
         toast.error("Utilisateur non authentifié.");
@@ -89,7 +105,9 @@ function AbonnementPage() {
               className="w-full"
               onClick={async () => {
                 try {
-                  const { data: userData } = await (await import("@/integrations/supabase/client")).supabase.auth.getUser();
+                  const { data: userData } = await (
+                    await import("@/integrations/supabase/client")
+                  ).supabase.auth.getUser();
                   const userId = userData.user?.id;
                   if (!userId) {
                     toast.error("Utilisateur non authentifié.");

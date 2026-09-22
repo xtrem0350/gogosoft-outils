@@ -16,7 +16,11 @@ export interface PaymentRecord {
 }
 
 /** Crée un paiement simulé pour l'abonnement. */
-export async function createPayment(userId: string, plan: SubscriptionPlan, amount: number): Promise<PaymentRecord> {
+export async function createPayment(
+  userId: string,
+  plan: SubscriptionPlan,
+  amount: number,
+): Promise<PaymentRecord> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("payments")
@@ -65,7 +69,11 @@ export async function simulatePaymentSuccess(paymentId: string): Promise<Payment
     annuel: 365,
   };
 
-  await upgradePlan(payment.user_id as string, payment.plan as SubscriptionPlan, durationMap[payment.plan as string] ?? 30);
+  await upgradePlan(
+    payment.user_id as string,
+    payment.plan as SubscriptionPlan,
+    durationMap[payment.plan as string] ?? 30,
+  );
 
   return updated as PaymentRecord;
 }
@@ -82,7 +90,11 @@ export async function getMyPayments(): Promise<PaymentRecord[]> {
     return [];
   }
 
-  const { data, error } = await supabase.from("payments").select("*").eq("user_id", userId).order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as PaymentRecord[];
 }

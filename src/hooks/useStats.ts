@@ -84,7 +84,10 @@ export function useStats(shopId: string | null | undefined) {
       return {
         total: list.length,
         favoris: list.filter((tool) => tool.favori).length,
-        parCategorie: (Object.keys(byCat) as Categorie[]).map((c) => ({ categorie: c, count: byCat[c] ?? 0 })),
+        parCategorie: (Object.keys(byCat) as Categorie[]).map((c) => ({
+          categorie: c,
+          count: byCat[c] ?? 0,
+        })),
         parType: Object.keys(byType).map((t) => ({ type: t, count: byType[t] ?? 0 })),
         lancementsAujourdhui: todayCount,
         lancements7j: weekCount,

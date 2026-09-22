@@ -72,7 +72,12 @@ export function ToolCard({
           )}
         >
           <div className="flex min-w-0 flex-1 items-start gap-3">
-            <div className={cn("flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-black/5", categoryStyles[tool.categorie] ?? "bg-slate-100 text-slate-500")}>
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-xl ring-1 ring-black/5",
+                categoryStyles[tool.categorie] ?? "bg-slate-100 text-slate-500",
+              )}
+            >
               <Icon className="h-5 w-5" />
             </div>
 
@@ -92,9 +97,13 @@ export function ToolCard({
               </p>
               <ToolBadges tool={tool} className="mt-2" />
               {view === "grid" && tool.description ? (
-                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{tool.description}</p>
+                <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                  {tool.description}
+                </p>
               ) : null}
-              <p className="mt-2 truncate font-mono text-[11px] text-muted-foreground">{tool.chemin}</p>
+              <p className="mt-2 truncate font-mono text-[11px] text-muted-foreground">
+                {tool.chemin}
+              </p>
             </div>
           </div>
           <div className={cn(view === "grid" && "border-t border-border/60 pt-3")}>

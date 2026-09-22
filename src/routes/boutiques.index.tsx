@@ -40,21 +40,29 @@ function BoutiquesPage() {
 
       {loading ? (
         <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">Chargement des boutiques...</CardContent>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            Chargement des boutiques...
+          </CardContent>
         </Card>
       ) : shops.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             Aucune boutique pour le moment.
             <div className="mt-4">
-              <Button onClick={() => void navigate({ to: "/boutiques/nouveau" })}>Créer une boutique</Button>
+              <Button onClick={() => void navigate({ to: "/boutiques/nouveau" })}>
+                Créer une boutique
+              </Button>
             </div>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {shops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} isCurrent={shop.id === window.localStorage.getItem("gogosoft.currentShopId")} />
+            <ShopCard
+              key={shop.id}
+              shop={shop}
+              isCurrent={shop.id === window.localStorage.getItem("gogosoft.currentShopId")}
+            />
           ))}
         </div>
       )}

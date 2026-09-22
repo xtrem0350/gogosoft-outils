@@ -2,7 +2,12 @@
 import { ChevronDown, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 
 /** Sélecteur de boutique affiché dans le header. */
@@ -11,7 +16,11 @@ export function ShopSelector() {
 
   if (loading || shops.length === 0) {
     return (
-      <Button variant="outline" size="sm" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+      <Button
+        variant="outline"
+        size="sm"
+        className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+      >
         <Store className="size-4" />
         Boutique
       </Button>
@@ -21,7 +30,11 @@ export function ShopSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+        >
           <Store className="size-4" />
           {shop?.name ?? "Boutique"}
           <ChevronDown className="size-4" />

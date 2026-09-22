@@ -26,7 +26,8 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
     daysRemaining: 7,
   };
 
-  const planClass = planStyles[activeSubscription.plan as keyof typeof planStyles] ?? planStyles["trial"];
+  const planClass =
+    planStyles[activeSubscription.plan as keyof typeof planStyles] ?? planStyles["trial"];
 
   return (
     <Card className="border-0 shadow-sm">
@@ -45,7 +46,9 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
             <span>Expiration</span>
           </div>
           <p className="mt-2 font-medium text-foreground">
-            {activeSubscription.expires_at ? new Date(activeSubscription.expires_at).toLocaleDateString("fr-FR") : "7 jours"}
+            {activeSubscription.expires_at
+              ? new Date(activeSubscription.expires_at).toLocaleDateString("fr-FR")
+              : "7 jours"}
           </p>
           <p className="mt-1">{activeSubscription.daysRemaining} jours restants</p>
         </div>

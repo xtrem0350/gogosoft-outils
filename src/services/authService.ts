@@ -3,8 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, Profile } from "@/types/database";
 
 function getMissingSupabaseMigrationMessage(error: unknown): string | null {
-  const code = typeof error === "object" && error && "code" in error ? String((error as { code?: string }).code ?? "") : "";
-  const message = typeof error === "object" && error && "message" in error ? String((error as { message?: string }).message ?? "") : "";
+  const code =
+    typeof error === "object" && error && "code" in error
+      ? String((error as { code?: string }).code ?? "")
+      : "";
+  const message =
+    typeof error === "object" && error && "message" in error
+      ? String((error as { message?: string }).message ?? "")
+      : "";
   const text = `${code} ${message}`.toLowerCase();
 
   if (
@@ -23,6 +29,17 @@ function getMissingSupabaseMigrationMessage(error: unknown): string | null {
   }
 
   return null;
+}
+
+export async function checkPseudoExists(pseudo: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("check_pseudo_exists", {
+    pseudo_input: pseudo.trim(),
+  });
+  if (error) {
+    console.error("[authService] checkPseudoExists error:", error);
+    return false;
+  }
+  return data === true;
 }
 
 /** Résout un identifiant vers un email de compte. */
@@ -98,7 +115,7 @@ export async function signUp(
       {
         id: result.data.user.id,
         email,
-        full_name: fullName,
+        nom: fullName,
         phone: phone ?? null,
         pseudo: normalizedPseudo ?? null,
         avatar_url: avatarUrl,

@@ -51,18 +51,125 @@ interface IssueDefinition {
 export const ISSUES_DATABASE: Record<IssueKey, IssueDefinition> = {
   ecran_casse: {
     label: "Écran cassé",
-    tools: ["Ventouse", "Médiator plastique", "Tournevis Y000", "Station à air chaud", "Adhésif B-7000"],
-    process: ["Éteindre le téléphone", "Retirer la carte SIM", "Chauffer les bords de l'écran", "Insérer le médiator", "Décoller l'écran", "Débrancher la nappe", "Retirer l'écran", "Nettoyer les résidus d'adhésif", "Poser le nouvel écran", "Reconnecter la nappe", "Tester avant fermeture"],
+    tools: [
+      "Ventouse",
+      "Médiator plastique",
+      "Tournevis Y000",
+      "Station à air chaud",
+      "Adhésif B-7000",
+    ],
+    process: [
+      "Éteindre le téléphone",
+      "Retirer la carte SIM",
+      "Chauffer les bords de l'écran",
+      "Insérer le médiator",
+      "Décoller l'écran",
+      "Débrancher la nappe",
+      "Retirer l'écran",
+      "Nettoyer les résidus d'adhésif",
+      "Poser le nouvel écran",
+      "Reconnecter la nappe",
+      "Tester avant fermeture",
+    ],
   },
-  ne_sallume_pas: { label: "Ne s'allume pas", tools: ["Alimentation de laboratoire", "Multimètre", "Tournevis de précision"], process: ["Inspecter les dommages visibles", "Mesurer la tension de la batterie", "Contrôler le connecteur de batterie", "Tester la carte mère", "Effectuer un démarrage contrôlé"] },
-  batterie_hs: { label: "Batterie hors service", tools: ["Spatule plastique", "Tournevis de précision", "Batterie compatible"], process: ["Éteindre le téléphone", "Retirer la coque arrière", "Déconnecter la batterie", "Retirer l'ancienne batterie", "Installer la batterie neuve", "Tester la charge"] },
-  connecteur_charge: { label: "Connecteur de charge", tools: ["Loupe", "Brosse antistatique", "Station à air chaud", "Fer à souder"], process: ["Inspecter et nettoyer le connecteur", "Tester le câble et le chargeur", "Déposer le connecteur endommagé", "Poser le nouveau connecteur", "Tester la charge et la connexion USB"] },
-  camera: { label: "Caméra", tools: ["Tournevis de précision", "Pince antistatique", "Module caméra compatible"], process: ["Tester les caméras", "Débrancher le module", "Installer le module de remplacement", "Tester la mise au point et la vidéo"] },
-  haut_parleur: { label: "Haut-parleur", tools: ["Brosse antistatique", "Tournevis de précision", "Module haut-parleur"], process: ["Tester le son", "Nettoyer la grille", "Remplacer le module si nécessaire", "Valider le volume et les appels"] },
-  micro: { label: "Microphone", tools: ["Brosse antistatique", "Tournevis de précision", "Module microphone"], process: ["Tester l'enregistrement", "Nettoyer l'orifice du microphone", "Remplacer le module si nécessaire", "Valider les appels et les notes vocales"] },
-  reseau: { label: "Réseau", tools: ["Carte SIM de test", "Multimètre", "Tournevis de précision"], process: ["Tester la carte SIM", "Vérifier les antennes", "Contrôler les connecteurs", "Réinitialiser les paramètres réseau", "Valider les appels et les données"] },
-  logiciel: { label: "Logiciel", tools: ["Ordinateur", "Câble USB", "Outil de flash"], process: ["Sauvegarder les données", "Démarrer le diagnostic logiciel", "Réinstaller ou mettre à jour le système", "Restaurer les données", "Tester les fonctions principales"] },
-  oxydation: { label: "Oxydation", tools: ["Alcool isopropylique", "Brosse antistatique", "Station à air chaud", "Microscope"], process: ["Éteindre et déconnecter la batterie", "Documenter l'oxydation", "Nettoyer la carte mère", "Sécher les composants", "Tester les circuits", "Remplacer les pièces corrodées"] },
+  ne_sallume_pas: {
+    label: "Ne s'allume pas",
+    tools: ["Alimentation de laboratoire", "Multimètre", "Tournevis de précision"],
+    process: [
+      "Inspecter les dommages visibles",
+      "Mesurer la tension de la batterie",
+      "Contrôler le connecteur de batterie",
+      "Tester la carte mère",
+      "Effectuer un démarrage contrôlé",
+    ],
+  },
+  batterie_hs: {
+    label: "Batterie hors service",
+    tools: ["Spatule plastique", "Tournevis de précision", "Batterie compatible"],
+    process: [
+      "Éteindre le téléphone",
+      "Retirer la coque arrière",
+      "Déconnecter la batterie",
+      "Retirer l'ancienne batterie",
+      "Installer la batterie neuve",
+      "Tester la charge",
+    ],
+  },
+  connecteur_charge: {
+    label: "Connecteur de charge",
+    tools: ["Loupe", "Brosse antistatique", "Station à air chaud", "Fer à souder"],
+    process: [
+      "Inspecter et nettoyer le connecteur",
+      "Tester le câble et le chargeur",
+      "Déposer le connecteur endommagé",
+      "Poser le nouveau connecteur",
+      "Tester la charge et la connexion USB",
+    ],
+  },
+  camera: {
+    label: "Caméra",
+    tools: ["Tournevis de précision", "Pince antistatique", "Module caméra compatible"],
+    process: [
+      "Tester les caméras",
+      "Débrancher le module",
+      "Installer le module de remplacement",
+      "Tester la mise au point et la vidéo",
+    ],
+  },
+  haut_parleur: {
+    label: "Haut-parleur",
+    tools: ["Brosse antistatique", "Tournevis de précision", "Module haut-parleur"],
+    process: [
+      "Tester le son",
+      "Nettoyer la grille",
+      "Remplacer le module si nécessaire",
+      "Valider le volume et les appels",
+    ],
+  },
+  micro: {
+    label: "Microphone",
+    tools: ["Brosse antistatique", "Tournevis de précision", "Module microphone"],
+    process: [
+      "Tester l'enregistrement",
+      "Nettoyer l'orifice du microphone",
+      "Remplacer le module si nécessaire",
+      "Valider les appels et les notes vocales",
+    ],
+  },
+  reseau: {
+    label: "Réseau",
+    tools: ["Carte SIM de test", "Multimètre", "Tournevis de précision"],
+    process: [
+      "Tester la carte SIM",
+      "Vérifier les antennes",
+      "Contrôler les connecteurs",
+      "Réinitialiser les paramètres réseau",
+      "Valider les appels et les données",
+    ],
+  },
+  logiciel: {
+    label: "Logiciel",
+    tools: ["Ordinateur", "Câble USB", "Outil de flash"],
+    process: [
+      "Sauvegarder les données",
+      "Démarrer le diagnostic logiciel",
+      "Réinstaller ou mettre à jour le système",
+      "Restaurer les données",
+      "Tester les fonctions principales",
+    ],
+  },
+  oxydation: {
+    label: "Oxydation",
+    tools: ["Alcool isopropylique", "Brosse antistatique", "Station à air chaud", "Microscope"],
+    process: [
+      "Éteindre et déconnecter la batterie",
+      "Documenter l'oxydation",
+      "Nettoyer la carte mère",
+      "Sécher les composants",
+      "Tester les circuits",
+      "Remplacer les pièces corrodées",
+    ],
+  },
 };
 
 /** Fusionne les outils et les étapes sans doublons. */
@@ -86,10 +193,16 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const payload: Record<string, unknown> = {
       ...data,
       shop_id: shopId,
-      diagnosis: data.diagnosis ? { tools: data.diagnosis.tools, process: data.diagnosis.process } : null,
+      diagnosis: data.diagnosis
+        ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
+        : null,
       created_by: auth.user?.id ?? null,
     };
-    const { data: ticket, error } = await supabase.from("workshop_tickets").insert(payload).select().single();
+    const { data: ticket, error } = await supabase
+      .from("workshop_tickets")
+      .insert(payload)
+      .select()
+      .single();
     if (error) throw error;
     if (!ticket) throw new Error("Fiche atelier introuvable.");
     return ticket as WorkshopTicket;
@@ -115,7 +228,11 @@ export async function getTickets(shopId: string | null | undefined): Promise<Wor
 export async function getTicketById(id: string): Promise<WorkshopTicket | null> {
   if (!(await hasActiveSession())) return null;
   try {
-    const { data, error } = await supabase.from("workshop_tickets").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
     if (!data) return null;
     const ticket = data as WorkshopTicket;
@@ -127,10 +244,18 @@ export async function getTicketById(id: string): Promise<WorkshopTicket | null> 
 }
 
 /** Met à jour le statut d'une fiche. */
-export async function updateTicketStatus(id: string, status: WorkshopStatus): Promise<WorkshopTicket> {
+export async function updateTicketStatus(
+  id: string,
+  status: WorkshopStatus,
+): Promise<WorkshopTicket> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
-    const { data, error } = await supabase.from("workshop_tickets").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select().single();
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select()
+      .single();
     if (error) throw error;
     if (!data) throw new Error("Fiche atelier introuvable.");
     return data as WorkshopTicket;

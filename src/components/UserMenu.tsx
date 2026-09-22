@@ -1,4 +1,10 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut, Settings, User } from "lucide-react";
@@ -14,7 +20,7 @@ export function UserMenu() {
 
   if (loading || !user) return null;
 
-  const displayName = profile?.full_name?.trim() || user.email?.split("@")[0] || "Utilisateur";
+  const displayName = profile?.nom?.trim() || user.email?.split("@")[0] || "Utilisateur";
   const initials = displayName
     .split(" ")
     .map((part) => part[0])
@@ -34,9 +40,14 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="flex items-center gap-2 px-2 text-white hover:bg-white/10 hover:text-white">
+        <Button
+          variant="ghost"
+          className="flex items-center gap-2 px-2 text-white hover:bg-white/10 hover:text-white"
+        >
           <Avatar className="size-8 border border-white/20">
-            {profile?.avatar_url ? <AvatarImage src={profile.avatar_url} alt={displayName} /> : null}
+            {profile?.avatar_url ? (
+              <AvatarImage src={profile.avatar_url} alt={displayName} />
+            ) : null}
             <AvatarFallback className="bg-primary/20 text-xs text-white">{initials}</AvatarFallback>
           </Avatar>
           <div className="hidden min-w-0 text-left md:block">
@@ -55,7 +66,10 @@ export function UserMenu() {
           Paramètres
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => void handleSignOut()} className="text-red-600 focus:text-red-600">
+        <DropdownMenuItem
+          onClick={() => void handleSignOut()}
+          className="text-red-600 focus:text-red-600"
+        >
           <LogOut className="size-4" />
           Déconnexion
         </DropdownMenuItem>

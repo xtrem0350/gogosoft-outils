@@ -15,9 +15,15 @@ export const Route = createFileRoute("/atelier/")({
   head: () => ({
     meta: [
       { title: "Atelier — GogoSoft Tools Manager" },
-      { name: "description", content: "Suivez les fiches de réparation de votre atelier et leur diagnostic." },
+      {
+        name: "description",
+        content: "Suivez les fiches de réparation de votre atelier et leur diagnostic.",
+      },
       { property: "og:title", content: "Atelier — GogoSoft Tools Manager" },
-      { property: "og:description", content: "Suivi des réparations en cours, terminées et livrées." },
+      {
+        property: "og:description",
+        content: "Suivi des réparations en cours, terminées et livrées.",
+      },
     ],
   }),
   component: WorkshopListPage,
@@ -65,7 +71,8 @@ function WorkshopListPage() {
     void load();
   }, [load, shopLoading]);
 
-  const filtered = filter === "tous" ? tickets : tickets.filter((ticket) => ticket.status === filter);
+  const filtered =
+    filter === "tous" ? tickets : tickets.filter((ticket) => ticket.status === filter);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -96,7 +103,9 @@ function WorkshopListPage() {
       {error ? (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}{" "}
-          <button type="button" className="font-semibold underline" onClick={() => void load()}>Réessayer</button>
+          <button type="button" className="font-semibold underline" onClick={() => void load()}>
+            Réessayer
+          </button>
         </div>
       ) : null}
 
@@ -125,7 +134,9 @@ function WorkshopListPage() {
               <div className="flex items-center gap-3">
                 <Badge className={STATUS_CLASS[ticket.status]}>{STATUS_LABEL[ticket.status]}</Badge>
                 <Button asChild variant="outline" size="sm">
-                  <Link to="/atelier/$id" params={{ id: ticket.id }}>Voir le diagnostic</Link>
+                  <Link to="/atelier/$id" params={{ id: ticket.id }}>
+                    Voir le diagnostic
+                  </Link>
                 </Button>
               </div>
             </CardContent>

@@ -27,7 +27,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 function NewClientPage() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       full_name: "",
@@ -78,13 +82,17 @@ function NewClientPage() {
             <div className="space-y-2">
               <Label htmlFor="full_name">Nom complet *</Label>
               <Input id="full_name" {...register("full_name")} />
-              {errors.full_name ? <p className="text-sm text-destructive">{errors.full_name.message}</p> : null}
+              {errors.full_name ? (
+                <p className="text-sm text-destructive">{errors.full_name.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="whatsapp">WhatsApp *</Label>
               <Input id="whatsapp" {...register("whatsapp")} />
-              {errors.whatsapp ? <p className="text-sm text-destructive">{errors.whatsapp.message}</p> : null}
+              {errors.whatsapp ? (
+                <p className="text-sm text-destructive">{errors.whatsapp.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -103,7 +111,11 @@ function NewClientPage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => void navigate({ to: "/clients" })}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void navigate({ to: "/clients" })}
+              >
                 Annuler
               </Button>
               <Button type="submit" disabled={isSubmitting}>

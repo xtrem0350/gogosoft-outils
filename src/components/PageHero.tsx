@@ -19,7 +19,12 @@ export function PageHero({ title, subtitle, imageUrl, showBack = false }: PageHe
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/20" />
       {showBack ? (
         <div className="absolute left-4 top-4 z-10">
-          <Button variant="secondary" size="sm" onClick={() => window.history.back()} className="bg-white/10 text-white hover:bg-white/20">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => window.history.back()}
+            className="bg-white/10 text-white hover:bg-white/20"
+          >
             <ArrowLeft className="size-4" />
             Retour
           </Button>

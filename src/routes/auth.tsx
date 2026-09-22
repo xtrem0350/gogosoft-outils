@@ -12,8 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
-import { resolveEmailFromIdentifier, signInWithIdentifier, signUp } from "@/services/authService";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  checkPseudoExists,
+  signInWithIdentifier,
+  signUp,
+} from "@/services/authService";
 
 const pseudoSchema = z
   .string()
@@ -86,39 +89,8 @@ function AuthPage() {
 
     const normalizedPseudo = pseudoResult.data;
 
-    let existingPseudo: { id: string } | null = null;
-    let pseudoError: { message?: string; code?: string } | null = null;
-
-    try {
-      const response = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("pseudo", normalizedPseudo)
-        .maybeSingle();
-
-      existingPseudo = response.data as { id: string } | null;
-      pseudoError = response.error as { message?: string; code?: string } | null;
-    } catch (error) {
-      pseudoError = {
-        message: error instanceof Error ? error.message : "Erreur pseudo",
-        code: "UNKNOWN",
-      };
-    }
-
-    if (pseudoError) {
-      const message = String(pseudoError.message ?? "").toLowerCase();
-      if (pseudoError.code === "42703" || message.includes("pseudo") || message.includes("column")) {
-        toast.error(
-          "La migration Supabase du pseudo n'est pas encore appliquée. Exécute 20260923000000_pseudo.sql dans le SQL Editor.",
-        );
-        return;
-      }
-
-      toast.error("Impossible de vérifier le pseudo pour le moment.");
-      return;
-    }
-
-    if (existingPseudo) {
+    const pseudoAlreadyUsed = await checkPseudoExists(normalizedPseudo);
+    if (pseudoAlreadyUsed) {
       toast.error("Ce pseudo est déjà utilisé. Merci d'en choisir un autre.");
       return;
     }

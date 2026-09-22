@@ -30,7 +30,11 @@ export async function getClientsByShop(shopId: string): Promise<ClientRecord[]> 
   console.log("[clientService] called", { hasSession, shopId });
   if (!hasSession || !shopId) return [];
   try {
-    const { data, error } = await supabase.from("clients").select("*").eq("shop_id", requireShopId(shopId)).order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("shop_id", requireShopId(shopId))
+      .order("created_at", { ascending: false });
     if (error) throw error;
     return (data ?? []) as ClientRecord[];
   } catch (error) {
@@ -52,13 +56,20 @@ export async function createClient(data: CreateClientData): Promise<ClientRecord
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const shopId = requireShopId(data.shop_id);
   console.log("[clientService] called", { hasSession: true, shopId });
-  const { data: client, error } = await supabase.from("clients").insert({ ...data, shop_id: shopId }).select().single();
+  const { data: client, error } = await supabase
+    .from("clients")
+    .insert({ ...data, shop_id: shopId })
+    .select()
+    .single();
   if (error) throw error;
   return client as ClientRecord;
 }
 
 /** Met à jour un client. */
-export async function updateClient(id: string, data: Partial<CreateClientData>): Promise<ClientRecord> {
+export async function updateClient(
+  id: string,
+  data: Partial<CreateClientData>,
+): Promise<ClientRecord> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data: client, error } = await supabase
     .from("clients")

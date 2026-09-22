@@ -14,7 +14,9 @@ function ToolDetailsPage() {
   const [tool, setTool] = useState<Tool | null>(null);
 
   useEffect(() => {
-    void getTool(id).then(setTool).catch(() => setTool(null));
+    void getTool(id)
+      .then(setTool)
+      .catch(() => setTool(null));
   }, [id]);
 
   return (
@@ -27,7 +29,9 @@ function ToolDetailsPage() {
       <Card className="card-elevated border-0">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-3 text-primary"><Boxes className="size-5" /></div>
+            <div className="rounded-lg bg-primary/10 p-3 text-primary">
+              <Boxes className="size-5" />
+            </div>
             <div>
               <p className="text-sm text-muted-foreground">Détail de l&apos;outil</p>
               <CardTitle>{tool?.nom ?? "Outil introuvable"}</CardTitle>
@@ -37,13 +41,22 @@ function ToolDetailsPage() {
         <CardContent>
           {tool ? (
             <div className="grid gap-4 text-sm sm:grid-cols-2">
-              <p><span className="font-medium">Version :</span> {tool.version ?? "Non renseignée"}</p>
-              <p><span className="font-medium">Catégorie :</span> {tool.categorie}</p>
-              <p className="sm:col-span-2"><span className="font-medium">Chemin :</span> <code className="font-mono text-xs">{tool.chemin}</code></p>
+              <p>
+                <span className="font-medium">Version :</span> {tool.version ?? "Non renseignée"}
+              </p>
+              <p>
+                <span className="font-medium">Catégorie :</span> {tool.categorie}
+              </p>
+              <p className="sm:col-span-2">
+                <span className="font-medium">Chemin :</span>{" "}
+                <code className="font-mono text-xs">{tool.chemin}</code>
+              </p>
               <p className="text-muted-foreground sm:col-span-2">{tool.description}</p>
             </div>
           ) : (
-            <p className="text-muted-foreground">Cet outil est introuvable dans le catalogue Supabase.</p>
+            <p className="text-muted-foreground">
+              Cet outil est introuvable dans le catalogue Supabase.
+            </p>
           )}
         </CardContent>
       </Card>

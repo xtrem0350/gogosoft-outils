@@ -15,7 +15,9 @@ function ShopDetailsPage() {
   const navigate = useNavigate();
   const { id } = Route.useParams();
   const [shop, setShop] = useState<Shop | null>(null);
-  const [members, setMembers] = useState<Array<{ id: string; user_id: string; role: string; created_at?: string | null }>>([]);
+  const [members, setMembers] = useState<
+    Array<{ id: string; user_id: string; role: string; created_at?: string | null }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +25,14 @@ function ShopDetailsPage() {
       try {
         const [shopData, membersData] = await Promise.all([getShopById(id), getShopMembers(id)]);
         setShop(shopData);
-        setMembers(membersData as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>);
+        setMembers(
+          membersData as Array<{
+            id: string;
+            user_id: string;
+            role: string;
+            created_at?: string | null;
+          }>,
+        );
       } catch {
         setShop(null);
         setMembers([]);
@@ -63,7 +72,10 @@ function ShopDetailsPage() {
           <h1 className="mt-2 text-3xl font-bold">{shop.name}</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => toast.info("Fonctionnalité de modification à compléter.")}>
+          <Button
+            variant="outline"
+            onClick={() => toast.info("Fonctionnalité de modification à compléter.")}
+          >
             <Pencil className="size-4" />
             Modifier
           </Button>
@@ -80,17 +92,28 @@ function ShopDetailsPage() {
             <CardTitle>Informations</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <p><span className="font-semibold">Nom :</span> {shop.name}</p>
-            <p><span className="font-semibold">Adresse :</span> {shop.address || "—"}</p>
-            <p><span className="font-semibold">Téléphone :</span> {shop.phone || "—"}</p>
-            <p><span className="font-semibold">Nombre de membres :</span> {memberCount}</p>
+            <p>
+              <span className="font-semibold">Nom :</span> {shop.name}
+            </p>
+            <p>
+              <span className="font-semibold">Adresse :</span> {shop.address || "—"}
+            </p>
+            <p>
+              <span className="font-semibold">Téléphone :</span> {shop.phone || "—"}
+            </p>
+            <p>
+              <span className="font-semibold">Nombre de membres :</span> {memberCount}
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex items-center justify-between gap-3">
             <CardTitle>Membres</CardTitle>
-            <Button size="sm" onClick={() => toast.info("Invitation à ajouter un membre à compléter.")}>
+            <Button
+              size="sm"
+              onClick={() => toast.info("Invitation à ajouter un membre à compléter.")}
+            >
               <UserPlus className="size-4" />
               Ajouter un membre
             </Button>
@@ -100,13 +123,18 @@ function ShopDetailsPage() {
               <p className="text-sm text-muted-foreground">Aucun membre pour cette boutique.</p>
             ) : (
               members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between rounded-lg border p-3">
+                <div
+                  key={member.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
                   <div>
                     <p className="font-medium">{member.user_id.slice(0, 8)}…</p>
                     <p className="text-xs text-muted-foreground">{member.role}</p>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {member.created_at ? new Date(member.created_at).toLocaleDateString("fr-FR") : "—"}
+                    {member.created_at
+                      ? new Date(member.created_at).toLocaleDateString("fr-FR")
+                      : "—"}
                   </span>
                 </div>
               ))

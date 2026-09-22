@@ -21,6 +21,7 @@ export type ToolUpdate = Database["public"]["Tables"]["tools"]["Update"];
 export type ToolLaunch = Database["public"]["Tables"]["tool_launches"]["Row"];
 export type ToolLog = Database["public"]["Tables"]["tool_logs"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  nom: string | null;
   avatar_url?: string | null;
   phone_country_code?: string | null;
   phone?: string | null;

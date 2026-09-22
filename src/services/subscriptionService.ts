@@ -47,7 +47,9 @@ export async function getMySubscription(): Promise<SubscriptionSummary | null> {
 }
 
 /** Vérifie si l'abonnement est actif. */
-export function isSubscriptionActive(subscription: Partial<SubscriptionSummary> | null | undefined): boolean {
+export function isSubscriptionActive(
+  subscription: Partial<SubscriptionSummary> | null | undefined,
+): boolean {
   if (!subscription) return false;
   return subscription.isActive ?? subscription.status === "active";
 }
@@ -74,7 +76,11 @@ export async function startTrial(userId: string): Promise<SubscriptionSummary> {
 }
 
 /** Met à niveau le plan de l'utilisateur. */
-export async function upgradePlan(userId: string, plan: SubscriptionPlan, durationDays: number): Promise<SubscriptionSummary> {
+export async function upgradePlan(
+  userId: string,
+  plan: SubscriptionPlan,
+  durationDays: number,
+): Promise<SubscriptionSummary> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const expiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase

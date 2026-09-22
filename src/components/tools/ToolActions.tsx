@@ -121,7 +121,12 @@ export function ToolActions({
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-8" aria-label="Actions supplémentaires">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            aria-label="Actions supplémentaires"
+          >
             <MoreHorizontal />
           </Button>
         </DropdownMenuTrigger>
@@ -132,11 +137,16 @@ export function ToolActions({
           <DropdownMenuItem onClick={() => onDuplicate?.(tool)}>
             <Copy /> Dupliquer
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => toast.info(tool.favori ? "Outil favori" : "Outil standard")}>
+          <DropdownMenuItem
+            onClick={() => toast.info(tool.favori ? "Outil favori" : "Outil standard")}
+          >
             <Star /> {tool.favori ? "Favori" : "Ajouter aux favoris"}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => onDelete?.(tool)}>
+          <DropdownMenuItem
+            className="text-destructive focus:text-destructive"
+            onClick={() => onDelete?.(tool)}
+          >
             <Trash2 /> Supprimer
           </DropdownMenuItem>
         </DropdownMenuContent>

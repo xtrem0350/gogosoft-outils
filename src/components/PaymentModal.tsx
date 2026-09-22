@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { CheckCircle2, CreditCard, LoaderCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface PaymentModalProps {
   open: boolean;
@@ -50,7 +57,9 @@ export function PaymentModal({ open, onOpenChange, plan, amount, onSuccess }: Pa
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Paiement du plan {plan}</DialogTitle>
-          <DialogDescription>Confirmez le paiement pour activer votre abonnement.</DialogDescription>
+          <DialogDescription>
+            Confirmez le paiement pour activer votre abonnement.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 rounded-lg border bg-muted/30 p-4 text-sm">
@@ -65,10 +74,20 @@ export function PaymentModal({ open, onOpenChange, plan, amount, onSuccess }: Pa
         </div>
 
         <DialogFooter className="sm:justify-between">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isProcessing}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isProcessing}
+          >
             Annuler
           </Button>
-          <Button type="button" onClick={() => void handlePay()} disabled={isProcessing} className="min-w-[180px]">
+          <Button
+            type="button"
+            onClick={() => void handlePay()}
+            disabled={isProcessing}
+            className="min-w-[180px]"
+          >
             {isProcessing ? (
               <>
                 <LoaderCircle className="size-4 animate-spin" />

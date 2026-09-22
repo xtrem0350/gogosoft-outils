@@ -46,7 +46,12 @@ export function useCurrentShop() {
     void refresh();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") {
+      if (
+        event === "SIGNED_IN" ||
+        event === "SIGNED_OUT" ||
+        event === "TOKEN_REFRESHED" ||
+        event === "USER_UPDATED"
+      ) {
         void refresh();
       }
     });
@@ -56,15 +61,18 @@ export function useCurrentShop() {
     };
   }, [refresh]);
 
-  const switchShop = useCallback((shopId: string) => {
-    const nextShop = shops.find((entry) => entry.id === shopId) ?? null;
-    setShop(nextShop);
-    if (nextShop) {
-      window.localStorage.setItem(STORAGE_KEY, nextShop.id);
-    } else {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
-  }, [shops]);
+  const switchShop = useCallback(
+    (shopId: string) => {
+      const nextShop = shops.find((entry) => entry.id === shopId) ?? null;
+      setShop(nextShop);
+      if (nextShop) {
+        window.localStorage.setItem(STORAGE_KEY, nextShop.id);
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    },
+    [shops],
+  );
 
   return useMemo(
     () => ({

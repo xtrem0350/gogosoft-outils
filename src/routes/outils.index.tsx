@@ -16,7 +16,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useToolMutations, useTools } from "@/hooks/useTools";
@@ -26,9 +32,16 @@ export const Route = createFileRoute("/outils/")({
   head: () => ({
     meta: [
       { title: "Catalogue d'outils — GogoSoft Tools Manager" },
-      { name: "description", content: "Gérez les utilitaires de réparation de votre atelier : versions, emplacements et lancement." },
+      {
+        name: "description",
+        content:
+          "Gérez les utilitaires de réparation de votre atelier : versions, emplacements et lancement.",
+      },
       { property: "og:title", content: "Catalogue d'outils — GogoSoft Tools Manager" },
-      { property: "og:description", content: "Vos utilitaires MTK, Unisoc, Apple et pilotes, centralisés." },
+      {
+        property: "og:description",
+        content: "Vos utilitaires MTK, Unisoc, Apple et pilotes, centralisés.",
+      },
     ],
   }),
   component: OutilsPage,
@@ -67,7 +80,10 @@ function OutilsPage() {
   const [editing, setEditing] = useState<Tool | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
-  const filters = useMemo(() => ({ shopId, search, categorie, type }), [shopId, search, categorie, type]);
+  const filters = useMemo(
+    () => ({ shopId, search, categorie, type }),
+    [shopId, search, categorie, type],
+  );
   const { data: tools = [], isLoading, error } = useTools(filters);
   const { create, update, remove, duplicate, favorite } = useToolMutations();
 
@@ -111,7 +127,10 @@ function OutilsPage() {
       categorie: form.categorie,
       sous_categorie: form.sous_categorie.trim() || null,
       description: form.description.trim() || null,
-      tags: form.tags.split(",").map((tag) => tag.trim()).filter(Boolean),
+      tags: form.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
     };
 
     if (editing) {
@@ -132,10 +151,17 @@ function OutilsPage() {
         <div>
           <p className="text-sm font-medium text-primary">Catalogue</p>
           <h1 className="mt-2 text-3xl font-bold">Outils</h1>
-          <p className="mt-2 text-muted-foreground">Vos utilitaires, leurs versions et leurs emplacements.</p>
+          <p className="mt-2 text-muted-foreground">
+            Vos utilitaires, leurs versions et leurs emplacements.
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => setView(view === "grid" ? "list" : "grid")} aria-label="Changer de vue">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setView(view === "grid" ? "list" : "grid")}
+            aria-label="Changer de vue"
+          >
             {view === "grid" ? <List /> : <LayoutGrid />}
           </Button>
           <Button onClick={openCreate}>
@@ -146,19 +172,35 @@ function OutilsPage() {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-        <Input placeholder="Rechercher un outil…" value={search} onChange={(event) => setSearch(event.target.value)} />
+        <Input
+          placeholder="Rechercher un outil…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
         <Select value={categorie} onValueChange={setCategorie}>
-          <SelectTrigger className="sm:w-44"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+          <SelectTrigger className="sm:w-44">
+            <SelectValue placeholder="Catégorie" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Toutes catégories</SelectItem>
-            {CATEGORIES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+            {CATEGORIES.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={type} onValueChange={setType}>
-          <SelectTrigger className="sm:w-40"><SelectValue placeholder="Type" /></SelectTrigger>
+          <SelectTrigger className="sm:w-40">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les types</SelectItem>
-            {TOOL_TYPES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+            {TOOL_TYPES.map((item) => (
+              <SelectItem key={item} value={item}>
+                {item}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -169,10 +211,16 @@ function OutilsPage() {
         </div>
       ) : null}
 
-      {shopLoading || isLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : null}
+      {shopLoading || isLoading ? (
+        <p className="text-sm text-muted-foreground">Chargement…</p>
+      ) : null}
 
       {!shopLoading && !shopId ? (
-        <EmptyState icon={Wrench} title="Aucune boutique sélectionnée" description="Créez ou sélectionnez une boutique pour gérer son catalogue d'outils." />
+        <EmptyState
+          icon={Wrench}
+          title="Aucune boutique sélectionnée"
+          description="Créez ou sélectionnez une boutique pour gérer son catalogue d'outils."
+        />
       ) : null}
 
       {shopId && !isLoading && !error && tools.length === 0 ? (
@@ -185,7 +233,11 @@ function OutilsPage() {
         />
       ) : null}
 
-      <div className={view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-3"}>
+      <div
+        className={
+          view === "grid" ? "grid gap-4 sm:grid-cols-2 xl:grid-cols-3" : "flex flex-col gap-3"
+        }
+      >
         {tools.map((tool) => (
           <ToolCard
             key={tool.id}
@@ -203,57 +255,106 @@ function OutilsPage() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{editing ? "Modifier l'outil" : "Ajouter un outil"}</DialogTitle>
-            <DialogDescription>Renseignez l'emplacement exact de l'outil sur votre PC.</DialogDescription>
+            <DialogDescription>
+              Renseignez l'emplacement exact de l'outil sur votre PC.
+            </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <Label htmlFor="nom">Nom *</Label>
-              <Input id="nom" value={form.nom} onChange={(event) => setForm({ ...form, nom: event.target.value })} required />
+              <Input
+                id="nom"
+                value={form.nom}
+                onChange={(event) => setForm({ ...form, nom: event.target.value })}
+                required
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="version">Version</Label>
-                <Input id="version" value={form.version} onChange={(event) => setForm({ ...form, version: event.target.value })} />
+                <Input
+                  id="version"
+                  value={form.version}
+                  onChange={(event) => setForm({ ...form, version: event.target.value })}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="sous">Sous-catégorie</Label>
-                <Input id="sous" value={form.sous_categorie} onChange={(event) => setForm({ ...form, sous_categorie: event.target.value })} />
+                <Input
+                  id="sous"
+                  value={form.sous_categorie}
+                  onChange={(event) => setForm({ ...form, sous_categorie: event.target.value })}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="chemin">Chemin *</Label>
-              <Input id="chemin" placeholder="C:\\Program Files\\MonOutil" value={form.chemin} onChange={(event) => setForm({ ...form, chemin: event.target.value })} required />
+              <Input
+                id="chemin"
+                placeholder="C:\\Program Files\\MonOutil"
+                value={form.chemin}
+                onChange={(event) => setForm({ ...form, chemin: event.target.value })}
+                required
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={form.type} onValueChange={(value) => setForm({ ...form, type: value as ToolType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={form.type}
+                  onValueChange={(value) => setForm({ ...form, type: value as ToolType })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {TOOL_TYPES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                    {TOOL_TYPES.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Catégorie</Label>
-                <Select value={form.categorie} onValueChange={(value) => setForm({ ...form, categorie: value as Categorie })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <Select
+                  value={form.categorie}
+                  onValueChange={(value) => setForm({ ...form, categorie: value as Categorie })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+                    {CATEGORIES.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea id="description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
+              <Textarea
+                id="description"
+                value={form.description}
+                onChange={(event) => setForm({ ...form, description: event.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tags">Tags (séparés par des virgules)</Label>
-              <Input id="tags" value={form.tags} onChange={(event) => setForm({ ...form, tags: event.target.value })} />
+              <Input
+                id="tags"
+                value={form.tags}
+                onChange={(event) => setForm({ ...form, tags: event.target.value })}
+              />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Annuler
+              </Button>
               <Button type="submit" disabled={create.isPending || update.isPending}>
                 {editing ? "Enregistrer" : "Ajouter"}
               </Button>

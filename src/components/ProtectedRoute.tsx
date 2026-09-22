@@ -15,7 +15,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, [loading, location.pathname, navigate, user]);
 
   if (loading) {
-    return <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">Chargement…</div>;
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">
+        Chargement…
+      </div>
+    );
   }
 
   if (!user) {

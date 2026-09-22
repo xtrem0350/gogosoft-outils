@@ -17,12 +17,13 @@ function getWhatsAppLink(phone: string, name: string) {
 
 /** Affiche les informations essentielles d'un client avec un CTA vers sa fiche. */
 export function ClientCard({ client }: ClientCardProps) {
-  const initials = client.full_name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("") || "C";
+  const initials =
+    client.full_name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? "")
+      .join("") || "C";
 
   return (
     <Card className="border-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">

@@ -1,5 +1,11 @@
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface PhoneInputOption {
   code: string;
@@ -35,14 +41,16 @@ export function PhoneInput({
   placeholder = "0700000000",
   className,
 }: PhoneInputProps) {
-  const resolvedCountry: PhoneInputOption =
-    COUNTRY_OPTIONS.find((country) => country.code === defaultCountryCode) ??
-    COUNTRY_OPTIONS[0] ??
-    { code: "+225", label: "Côte d'Ivoire", flag: "🇨🇮" };
+  const resolvedCountry: PhoneInputOption = COUNTRY_OPTIONS.find(
+    (country) => country.code === defaultCountryCode,
+  ) ??
+    COUNTRY_OPTIONS[0] ?? { code: "+225", label: "Côte d'Ivoire", flag: "🇨🇮" };
   const currentCountry = resolvedCountry;
   const digits = value.replace(/\D/g, "");
   const normalizedCode = currentCountry.code.replace("+", "");
-  const localNumber = digits.startsWith(normalizedCode) ? digits.slice(normalizedCode.length) : digits;
+  const localNumber = digits.startsWith(normalizedCode)
+    ? digits.slice(normalizedCode.length)
+    : digits;
 
   const handleCountryChange = (nextCode: string) => {
     const nextLocale = localNumber.replace(/\D/g, "");

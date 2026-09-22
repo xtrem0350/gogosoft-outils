@@ -56,19 +56,28 @@ function ClientsPage() {
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
-        <Input value={query} onChange={(event) => void handleSearch(event.target.value)} className="pl-9" placeholder="Rechercher un client" />
+        <Input
+          value={query}
+          onChange={(event) => void handleSearch(event.target.value)}
+          className="pl-9"
+          placeholder="Rechercher un client"
+        />
       </div>
 
       {loading ? (
         <Card>
-          <CardContent className="p-6 text-sm text-muted-foreground">Chargement des clients...</CardContent>
+          <CardContent className="p-6 text-sm text-muted-foreground">
+            Chargement des clients...
+          </CardContent>
         </Card>
       ) : clients.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             Aucun client pour cette boutique.
             <div className="mt-4">
-              <Button onClick={() => void navigate({ to: "/clients/nouveau" })}>Créer un client</Button>
+              <Button onClick={() => void navigate({ to: "/clients/nouveau" })}>
+                Créer un client
+              </Button>
             </div>
           </CardContent>
         </Card>

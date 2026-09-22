@@ -21,10 +21,16 @@ export function ShopCard({ shop, isCurrent = false }: ShopCardProps) {
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold text-foreground">{shop.name}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{shop.address || "Adresse non renseignée"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {shop.address || "Adresse non renseignée"}
+            </p>
           </div>
         </div>
-        {isCurrent ? <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">Active</Badge> : null}
+        {isCurrent ? (
+          <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">
+            Active
+          </Badge>
+        ) : null}
       </CardContent>
     </Card>
   );

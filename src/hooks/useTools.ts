@@ -44,7 +44,11 @@ export function useToolMutations() {
   };
   const onError = (error: unknown) => {
     const message = error instanceof Error ? error.message : "Action impossible.";
-    toast.error(message.includes("row-level security") ? "Vos droits ne permettent pas cette action." : message);
+    toast.error(
+      message.includes("row-level security")
+        ? "Vos droits ne permettent pas cette action."
+        : message,
+    );
   };
 
   return {

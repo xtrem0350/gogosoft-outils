@@ -32,13 +32,17 @@ function ClientDetailsPage() {
     }
   }
 
-  const waLink = client ? `https://wa.me/${client.whatsapp.replace(/[\s+\-()]/g, "").replace(/\D/g, "")} ?text=${encodeURIComponent(`Bonjour ${client.full_name}, votre appareil est prêt.`)}` : "#";
+  const waLink = client
+    ? `https://wa.me/${client.whatsapp.replace(/[\s+\-()]/g, "").replace(/\D/g, "")} ?text=${encodeURIComponent(`Bonjour ${client.full_name}, votre appareil est prêt.`)}`
+    : "#";
 
   if (!client) {
     return (
       <div className="mx-auto max-w-3xl">
         <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">Chargement du client...</CardContent>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            Chargement du client...
+          </CardContent>
         </Card>
       </div>
     );
@@ -70,15 +74,28 @@ function ClientDetailsPage() {
         <CardContent className="space-y-3 text-sm">
           <p>
             <span className="font-semibold">WhatsApp :</span>{" "}
-            <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-primary hover:underline">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-primary hover:underline"
+            >
               <MessageCircle className="size-4" />
               {client.whatsapp}
             </a>
           </p>
-          <p><span className="font-semibold">Email :</span> {client.email || "—"}</p>
-          <p><span className="font-semibold">Adresse :</span> {client.address || "—"}</p>
-          <p><span className="font-semibold">Notes :</span> {client.notes || "—"}</p>
-          <p><span className="font-semibold">Total réparations :</span> {client.total_repairs ?? 0}</p>
+          <p>
+            <span className="font-semibold">Email :</span> {client.email || "—"}
+          </p>
+          <p>
+            <span className="font-semibold">Adresse :</span> {client.address || "—"}
+          </p>
+          <p>
+            <span className="font-semibold">Notes :</span> {client.notes || "—"}
+          </p>
+          <p>
+            <span className="font-semibold">Total réparations :</span> {client.total_repairs ?? 0}
+          </p>
         </CardContent>
       </Card>
 
@@ -87,7 +104,9 @@ function ClientDetailsPage() {
           <CardTitle>Réparations</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Aucune réparation enregistrée pour ce client pour le moment.</p>
+          <p className="text-muted-foreground">
+            Aucune réparation enregistrée pour ce client pour le moment.
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -24,7 +24,11 @@ type FormValues = z.infer<typeof formSchema>;
 
 function NewShopPage() {
   const navigate = useNavigate();
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", address: "", phone: "" },
   });
@@ -37,7 +41,9 @@ function NewShopPage() {
         phone: values.phone || null,
       });
 
-      const { data: userData } = await (await import("@/integrations/supabase/client")).supabase.auth.getUser();
+      const { data: userData } = await (
+        await import("@/integrations/supabase/client")
+      ).supabase.auth.getUser();
       if (userData.user?.id) {
         await addShopMember(shop.id, userData.user.id, "owner");
       }
@@ -65,7 +71,9 @@ function NewShopPage() {
             <div className="space-y-2">
               <Label htmlFor="name">Nom *</Label>
               <Input id="name" {...register("name")} />
-              {errors.name ? <p className="text-sm text-destructive">{errors.name.message}</p> : null}
+              {errors.name ? (
+                <p className="text-sm text-destructive">{errors.name.message}</p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -79,7 +87,11 @@ function NewShopPage() {
             </div>
 
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline" onClick={() => void navigate({ to: "/boutiques" })}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void navigate({ to: "/boutiques" })}
+              >
                 Annuler
               </Button>
               <Button type="submit" disabled={isSubmitting}>
