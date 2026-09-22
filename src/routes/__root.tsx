@@ -98,7 +98,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/logo.png", type: "image/png" },
+      { rel: "icon", href: "/profile.ico", type: "image/x-icon" },
     ],
   }),
   shellComponent: RootShell,
@@ -139,7 +139,13 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {isAuthPage ? <Outlet /> : <AppShell><Outlet /></AppShell>}
+        {isAuthPage ? (
+          <Outlet />
+        ) : (
+          <AppShell>
+            <Outlet />
+          </AppShell>
+        )}
         <Toaster position="bottom-right" />
       </AuthProvider>
     </QueryClientProvider>

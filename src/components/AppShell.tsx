@@ -11,7 +11,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import logo from "@/assets/images/logo.png";
+import logo from "@/assets/images/profile.png";
 
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -20,7 +20,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const isAuthRoute = location.pathname === "/auth";
-  const isShopExemptRoute = location.pathname.startsWith("/boutiques") || location.pathname === "/abonnement" || location.pathname === "/parametres";
+  const isShopExemptRoute =
+    location.pathname.startsWith("/boutiques") ||
+    location.pathname === "/abonnement" ||
+    location.pathname === "/parametres";
   const isExemptRoute = isAuthRoute || location.pathname === "/abonnement";
   const loading = authLoading || (!isAuthRoute && shopLoading);
 
@@ -36,7 +39,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (loading) return <LoadingScreen />;
 
-  const content = isExemptRoute ? <>{children}</> : (
+  const content = isExemptRoute ? (
+    <>{children}</>
+  ) : (
     <ProtectedRoute>
       <SubscriptionGuard>{children}</SubscriptionGuard>
     </ProtectedRoute>
@@ -86,5 +91,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function LoadingScreen() {
-  return <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">Chargement...</div>;
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+      Chargement...
+    </div>
+  );
 }

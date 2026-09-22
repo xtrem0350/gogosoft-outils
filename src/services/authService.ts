@@ -2,6 +2,58 @@ import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import type { AppRole, Profile } from "@/types/database";
 
+function getMissingSupabaseMigrationMessage(error: unknown): string | null {
+  const code = typeof error === "object" && error && "code" in error ? String((error as { code?: string }).code ?? "") : "";
+  const message = typeof error === "object" && error && "message" in error ? String((error as { message?: string }).message ?? "") : "";
+  const text = `${code} ${message}`.toLowerCase();
+
+  if (
+    code === "42703" ||
+    code === "PGRST204" ||
+    code === "PGRST301" ||
+    text.includes("column") ||
+    text.includes("fonction") ||
+    text.includes("function") ||
+    text.includes("does not exist") ||
+    text.includes("pseudo") ||
+    text.includes("avatar_url") ||
+    text.includes("phone_country_code")
+  ) {
+    return "La migration Supabase du pseudo n'est pas encore appliquée. Exécute 20260923000000_pseudo.sql dans le SQL Editor.";
+  }
+
+  return null;
+}
+
+/** Résout un identifiant vers un email de compte. */
+export async function resolveEmailFromIdentifier(identifier: string): Promise<string | null> {
+  const trimmed = identifier.trim();
+  if (!trimmed) return null;
+  if (trimmed.includes("@")) return trimmed.toLowerCase();
+
+  const { data, error } = await supabase.rpc("get_email_by_identifier", { identifier: trimmed });
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    if (getMissingSupabaseMigrationMessage(error)) return null;
+    throw error;
+  }
+
+  return typeof data === "string" && data.length > 0 ? data : null;
+}
+
+/** Connexion par identifiant (email, pseudo ou WhatsApp). */
+export async function signInWithIdentifier(identifier: string, password: string) {
+  const resolvedEmail = await resolveEmailFromIdentifier(identifier);
+  if (!resolvedEmail) {
+    return {
+      data: null,
+      error: { message: "Aucun compte trouvé avec cet identifiant", status: 400 },
+    };
+  }
+
+  return supabase.auth.signInWithPassword({ email: resolvedEmail, password });
+}
+
 /** Télécharge un avatar utilisateur dans le bucket public avatars. */
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   const bucket = "avatars";
@@ -27,30 +79,41 @@ export async function signUp(
   fullName: string,
   phone?: string,
   avatarFile?: File | null,
+  pseudo?: string,
 ) {
+  const normalizedPseudo = pseudo?.trim();
   const result = await supabase.auth.signUp({
     email,
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/`,
-      data: { full_name: fullName, phone: phone ?? null },
+      data: { full_name: fullName, phone: phone ?? null, pseudo: normalizedPseudo ?? null },
     },
   });
 
   if (result.data.user && result.data.user.id) {
     const avatarUrl = avatarFile ? await uploadAvatar(result.data.user.id, avatarFile) : null;
 
-    await supabase.from("profiles").upsert(
+    const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: result.data.user.id,
         email,
         full_name: fullName,
         phone: phone ?? null,
+        pseudo: normalizedPseudo ?? null,
         avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "id" },
     );
+
+    if (profileError) {
+      const migrationMessage = getMissingSupabaseMigrationMessage(profileError);
+      if (migrationMessage) {
+        throw new Error(migrationMessage);
+      }
+      throw new Error(profileError.message || "Impossible de sauvegarder le profil.");
+    }
   }
 
   return result;
@@ -83,7 +146,11 @@ export async function signOut() {
 
 /** Récupère le profil de l'utilisateur courant. */
 export async function getProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", userId)
+    .maybeSingle();
   if (error) throw error;
   if (!data) return null;
   const roles = await getRoles(userId);
@@ -92,7 +159,10 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 
 /** Met à jour le profil de l'utilisateur courant. */
 export async function updateProfile(userId: string, values: Partial<Profile>) {
-  const { error } = await supabase.from("profiles").update({ ...values, updated_at: new Date().toISOString() }).eq("id", userId);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ ...values, updated_at: new Date().toISOString() })
+    .eq("id", userId);
   if (error) throw error;
 }
 

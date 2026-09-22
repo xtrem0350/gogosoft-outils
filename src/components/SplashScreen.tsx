@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import profileLogo from "@/assets/images/logo.png";
+import profileLogo from "@/assets/images/profile.png";
 
 export function SplashScreen() {
   return (
