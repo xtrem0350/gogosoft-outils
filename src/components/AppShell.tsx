@@ -7,6 +7,7 @@ import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
@@ -70,6 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex items-center gap-2">
             <ShopSelector />
             <ThemeToggle />
+            <UserMenu />
           </div>
         </header>
 

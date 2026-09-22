@@ -44,7 +44,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const [p, r] = await Promise.all([getProfile(userId), getRoles(userId)]);
         if (!active) return;
-        setProfile(p);
+        const nextProfile = p ? { ...p, role: r[0] ?? null } : null;
+        setProfile(nextProfile);
         setRoles(r);
       } catch {
         /* profil indisponible : l'UI reste utilisable en lecture */
@@ -87,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userId = session?.user.id;
         if (!userId) return;
         const [p, r] = await Promise.all([getProfile(userId), getRoles(userId)]);
-        setProfile(p);
+        setProfile(p ? { ...p, role: r[0] ?? null } : null);
         setRoles(r);
       },
     };

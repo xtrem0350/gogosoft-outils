@@ -20,7 +20,12 @@ export type ToolInsert = Database["public"]["Tables"]["tools"]["Insert"];
 export type ToolUpdate = Database["public"]["Tables"]["tools"]["Update"];
 export type ToolLaunch = Database["public"]["Tables"]["tool_launches"]["Row"];
 export type ToolLog = Database["public"]["Tables"]["tool_logs"]["Row"];
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  avatar_url?: string | null;
+  phone_country_code?: string | null;
+  phone?: string | null;
+  role?: AppRole | null;
+};
 export type WorkshopStatus = "en_attente" | "en_cours" | "termine" | "livre";
 export type WorkshopTicket = {
   id: string;

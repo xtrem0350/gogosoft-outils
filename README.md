@@ -1,448 +1,106 @@
-# GogoSoft Tools Hub
+# GogoSoft Tools Manager
 
-# 🎯 PROMPT — Application Web « GogoSoft Tools Manager »
+GogoSoft Tools Manager est une application SaaS multi-tenant pour les réparateurs de téléphones. Elle centralise les outils de réparation, les boutiques, les membres d'équipe, les clients, les fiches d'atelier, l'historique et les abonnements.
 
-## 📌 Contexte
+## Stack technique
 
-Je suis **Thierry Gogo**, développeur FullStack, fondateur de **GogoSoft Technology Solutions**. Je gère quotidiennement une collection d'outils de réparation mobile (MTK, Unisoc/SPD, Apple, Drivers, etc.) stockés à divers emplacements sur mon PC Windows.
+- React 19, TypeScript strict et Vite
+- TanStack Router
+- Supabase Auth, PostgreSQL et Row Level Security
+- shadcn/ui, Radix UI, Tailwind CSS
+- React Hook Form, Zod et Sonner
+- Bun ou Node.js/npm
+- Déploiement Vercel
 
-J'ai déjà une page HTML statique (`organisation-outils.html`, ci-jointe) qui liste ces outils par catégories, avec pour chaque outil : nom, version, chemin, et un bouton « Ouvrir le dossier » qui appelle un serveur local (`POST /open`) pour lancer l'Explorateur Windows.
+## Prérequis
 
-**Je veux maintenant transformer cette page en une véritable application web full-stack**, moderne, multi-utilisateur, avec base de données, authentification, et gestion complète des outils.
+- Node.js 20+ ou Bun installé
+- Un projet Supabase configuré
+- Un compte Vercel pour le déploiement
+- Un compte Supabase avec accès au SQL Editor
 
-## 🛠️ Stack technique imposée
-
-Utilise **exactement** la même stack que mon application existante :
-
-| Couche | Technologie |
-
-|---|---|
-
-| **Frontend** | React + TypeScript + Vite |
-
-| **Routage** | TanStack Router (routes basées sur les fichiers) |
-
-| **UI** | shadcn/ui + Tailwind CSS + Radix UI |
-
-| **Icônes** | Lucide React + Font Awesome |
-
-| **Formulaires** | React Hook Form + Zod |
-
-| **Notifications** | Sonner |
-
-| **Backend / DB** | Supabase (PostgreSQL + Auth + Storage) |
-
-| **Runtime / PM** | Bun |
-
-| **Linting** | ESLint |
-
-## 🎯 Fonctionnalités exactes à implémenter
-
-### 1. Gestion des outils (CRUD complet)
-
-- **Lister** : afficher tous les outils, avec filtres par catégorie, type, favori, et recherche par nom/version/chemin.
-
-- **Ajouter** : formulaire pour créer un nouvel outil avec tous les champs ci-dessous.
-
-- **Modifier** : édition de n'importe quel champ d'un outil existant.
-
-- **Supprimer** : suppression avec confirmation (soft delete de préférence, avec possibilité de restaurer).
-
-- **Dupliquer** : cloner un outil existant pour créer une variante rapidement.
-
-### 2. Champs par outil
-
-| Champ | Type | Obligatoire | Description |
-
-|---|---|---|---|
-
-| `id` | UUID | Auto | Identifiant unique |
-
-| `nom` | string | Oui | Nom de l'outil (ex: « TSM PRO ») |
-
-| `version` | string | Non | Version (ex: « 2.4.1 ») |
-
-| `chemin` | string | Oui | Chemin complet sur le disque (ex: `C:\Program Files (x86)\TurboServiceMobile`) |
-
-| `type` | enum | Oui | `exe`, `archive`, `dossier` |
-
-| `categorie` | enum | Oui | `MTK`, `Unisoc`, `Apple`, `Drivers`, `Autres` |
-
-| `sous_categorie` | string | Non | Ex: « Noyau », « Pilotes », « Outils » |
-
-| `description` | text | Non | Description courte de l'outil |
-
-| `favori` | boolean | Non | Marqué comme favori (défaut: false) |
-
-| `icone` | string | Non | Nom d'icône Font Awesome ou Lucide |
-
-| `tags` | string[] | Non | Mots-clés pour la recherche |
-
-| `created_at` | timestamp | Auto | Date de création |
-
-| `updated_at` | timestamp | Auto | Date de dernière modification |
-
-| `created_by` | UUID | Auto | Utilisateur créateur |
-
-### 3. Suivi d'utilisation
-
-- **Compteur de lancements** : chaque fois qu'un outil est lancé, incrémenter un compteur.
-
-- **Dernière utilisation** : enregistrer la date/heure du dernier lancement.
-
-- **Statistiques** : afficher les outils les plus utilisés dans un dashboard.
-
-### 4. Historique
-
-- **Table `tool_launches`** : enregistrer chaque lancement avec `tool_id`, `user_id`, `timestamp`, `action` (`open_folder`, `launch_exe`, etc.).
-
-- **Page historique** : liste chronologique des lancements, filtrable par outil, utilisateur, date.
-
-- **Journal des modifications** : enregistrer les créations, modifications et suppressions d'outils.
-
-### 5. Lancement des outils
-
-- **Bouton « Ouvrir le dossier »** : lance l'Explorateur Windows sur le dossier contenant l'outil (comme dans la page actuelle).
-
-- **Bouton « Lancer l'outil »** : si le type est `exe`, lance directement l'exécutable.
-
-- **Bouton « Ouvrir l'archive »** : si le type est `archive`, ouvre l'archive avec WinRAR/7-Zip.
-
-- **Backend local** : un petit serveur Node.js/Bun qui expose `POST /open` et `POST /launch` pour interagir avec le système de fichiers Windows.
-
-### 6. Multi-utilisateur
-
-- **Authentification** : Supabase Auth (email/mot de passe + OTP téléphone si possible, comme dans mon app existante).
-
-- **Rôles** :
-
-  - `admin` : peut tout faire (CRUD, gérer les utilisateurs, voir l'historique global).
-
-  - `technicien` : peut ajouter/modifier des outils, lancer des outils, voir son propre historique.
-
-  - `lecteur` : peut seulement consulter et lancer les outils.
-
-- **Row Level Security (RLS)** : chaque utilisateur ne voit que ce qu'il a le droit de voir.
-
-- **Profil utilisateur** : nom, email, rôle, préférences (catégories favorites, thème sombre/clair).
-
-## 🎨 Interface & Design
-
-- **Reprendre le design de la page HTML actuelle** : header dégradé bleu nuit, logo `profile.jpeg`, badges, sections par catégorie, cartes d'outils.
-
-- **Ajouter** :
-
-  - Une **barre latérale** (sidebar) avec navigation : Dashboard, Outils, Catégories, Historique, Statistiques, Paramètres.
-
-  - Un **dashboard** avec cartes statistiques (nombre d'outils, lancements du jour, outils favoris, top 5 des outils les plus utilisés).
-
-  - Une **vue grille** et une **vue liste** pour les outils.
-
-  - Un **mode sombre** et un **mode clair**.
-
-  - Des **animations fluides** (transitions, hover, etc.).
-
-- **Responsive** : doit fonctionner sur desktop, tablette et mobile.
-
-## 🗄️ Schéma Supabase à créer
-
-```sql
-
--- Table des outils
-
-CREATE TABLE tools (
-
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  nom TEXT NOT NULL,
-
-  version TEXT,
-
-  chemin TEXT NOT NULL,
-
-  type TEXT CHECK (type IN ('exe', 'archive', 'dossier')) NOT NULL,
-
-  categorie TEXT CHECK (categorie IN ('MTK', 'Unisoc', 'Apple', 'Drivers', 'Autres')) NOT NULL,
-
-  sous_categorie TEXT,
-
-  description TEXT,
-
-  favori BOOLEAN DEFAULT FALSE,
-
-  icone TEXT,
-
-  tags TEXT[],
-
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  created_by UUID REFERENCES auth.users(id)
-
-);
-
--- Table des lancements
-
-CREATE TABLE tool_launches (
-
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  tool_id UUID REFERENCES tools(id) ON DELETE CASCADE,
-
-  user_id UUID REFERENCES auth.users(id),
-
-  action TEXT CHECK (action IN ('open_folder', 'launch_exe', 'open_archive')) NOT NULL,
-
-  launched_at TIMESTAMPTZ DEFAULT NOW()
-
-);
-
--- Table des logs de modifications
-
-CREATE TABLE tool_logs (
-
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-
-  tool_id UUID REFERENCES tools(id) ON DELETE CASCADE,
-
-  user_id UUID REFERENCES auth.users(id),
-
-  action TEXT CHECK (action IN ('create', 'update', 'delete', 'restore')) NOT NULL,
-
-  changes JSONB,
-
-  logged_at TIMESTAMPTZ DEFAULT NOW()
-
-);
-
--- RLS
-
-ALTER TABLE tools ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE tool_launches ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE tool_logs ENABLE ROW LEVEL SECURITY;
-
-```
-
-## 📁 Structure du projet à générer
-
-```
-
-gogosoft-tools-manager/
-
-├── src/
-
-│   ├── routes/
-
-│   │   ├── __root.tsx
-
-│   │   ├── index.tsx              (Dashboard)
-
-│   │   ├── outils.tsx             (Liste des outils)
-
-│   │   ├── outils.$id.tsx         (Détail d'un outil)
-
-│   │   ├── outils.ajouter.tsx     (Ajout)
-
-│   │   ├── outils.$id.modifier.tsx (Édition)
-
-│   │   ├── categories.tsx
-
-│   │   ├── historique.tsx
-
-│   │   ├── statistiques.tsx
-
-│   │   ├── parametres.tsx
-
-│   │   └── auth.tsx
-
-│   ├── components/
-
-│   │   ├── ui/                    (shadcn/ui)
-
-│   │   ├── AppShell.tsx
-
-│   │   ├── Sidebar.tsx
-
-│   │   ├── ToolCard.tsx
-
-│   │   ├── ToolForm.tsx
-
-│   │   ├── CategoryBadge.tsx
-
-│   │   ├── StatsCard.tsx
-
-│   │   └── ...
-
-│   ├── services/
-
-│   │   ├── toolService.ts
-
-│   │   ├── launchService.ts
-
-│   │   ├── historyService.ts
-
-│   │   └── authService.ts
-
-│   ├── hooks/
-
-│   │   ├── useAuth.tsx
-
-│   │   ├── useTools.ts
-
-│   │   └── useStats.ts
-
-│   ├── lib/
-
-│   │   ├── supabase.ts
-
-│   │   └── utils.ts
-
-│   ├── types/
-
-│   │   └── database.ts
-
-│   └── assets/
-
-│       └── images/
-
-│           ├── profile.jpeg
-
-│           └── logo.png
-
-├── supabase/
-
-│   ├── schema.sql
-
-│   └── migrations/
-
-├── server/
-
-│   └── server.ts                  (Serveur local Bun/Node pour /open et /launch)
-
-├── package.json
-
-├── vite.config.ts
-
-├── tsconfig.json
-
-└── README.md
-
-```
-
-## 🚀 Livrables attendus
-
-1. **Schéma Supabase complet** (SQL) avec RLS.
-
-2. **Structure du projet** complète avec tous les fichiers.
-
-3. **Composants React** principaux (AppShell, Sidebar, ToolCard, ToolForm, Dashboard).
-
-4. **Services TypeScript** pour interagir avec Supabase.
-
-5. **Serveur local** (Bun ou Node) qui expose `/open` et `/launch`.
-
-6. **Routes TanStack** pour toutes les pages.
-
-7. **Documentation** dans le README : installation, configuration Supabase, lancement du serveur local, déploiement.
-
-8. **Design** fidèle à la page HTML actuelle, avec les améliorations demandées.
-
-## ⚠️ Contraintes importantes
-
-- **Le code doit être complet et fonctionnel**, pas de pseudo-code.
-
-- **Utilise TypeScript strict** partout.
-
-- **Respecte les conventions shadcn/ui** pour les composants.
-
-- **Le serveur local** doit fonctionner sous Windows 10/11.
-
-- **Prévois un mode démo** avec des données fictives pour tester sans Supabase.
-
-- **Documente chaque fonction** avec des commentaires JSDoc.
-
-## 📎 Fichier joint
-
-`organisation-outils.html` — ma page actuelle, à transformer en application.
-
----
-
-**Merci de générer l'application complète, prête à être installée et lancée.**
-
----
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://gogosoft-outils.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/5ad9f6c3-e0d5-4855-adb7-5265bf9489b3).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
-
-## Deploiement sur Vercel
-
-### Prerequis
-
-- Un compte Vercel et un projet Supabase
-- Un depot Git distant (GitHub, GitLab ou Bitbucket)
-- Bun ou Node.js installe localement
-
-### Configuration locale
-
-Copiez `.env.example` vers `.env.local`, puis renseignez `VITE_SUPABASE_URL` et
-`VITE_SUPABASE_PUBLISHABLE_KEY`. Seule la cle publique Supabase doit etre utilisee dans
-le navigateur. Ne placez jamais de cle `service_role` dans une variable `VITE_*`.
-
-Les variables disponibles sont documentees dans `.env.example`. Le mode demo
-peut etre active avec `VITE_DEMO_MODE=true` lorsque Supabase n'est pas configure.
-
-### Deployer
-
-1. Poussez le projet sur votre depot Git.
-2. Dans Vercel, choisissez **Import Git Repository** et selectionnez le depot.
-3. Ajoutez `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` et `VITE_DEMO_MODE` dans
-  **Settings > Environment Variables** pour Production, Preview et Development.
-4. Ajoutez `VITE_LOCAL_AGENT_URL` uniquement en Development. Un navigateur Vercel
-  ne peut pas joindre l'agent Windows local d'un utilisateur distant.
-5. Lancez le deploiement. Vercel reutilise `vercel.json` pour les routes SPA.
-
-Le fichier `vercel.json` redirige les URLs sans extension vers l'application tout
-en laissant les fichiers statiques servis directement. Les routes `/`, `/outils`
-et `/outils/123` peuvent ainsi etre rechargees sans erreur 404.
-
-### Verification avant push
+## Installation
 
 ```bash
+git clone https://github.com/xtrem0350/gogosoft-outils.git
+cd gogosoft-outils
 bun install
+cp .env.example .env.local
+bun run dev
+```
+
+Sous Windows PowerShell, utilisez `Copy-Item .env.example .env.local` à la place de `cp`.
+
+## Configuration Supabase
+
+Le projet utilise le projet Supabase déjà configuré dans l'environnement. Renseignez les variables publiques dans `.env.local` sans les commiter :
+
+```env
+VITE_SUPABASE_URL=https://votre-projet.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxxxxxx
+VITE_DEMO_MODE=false
+VITE_LOCAL_AGENT_URL=http://localhost:4567
+```
+
+Dans le SQL Editor Supabase :
+
+1. Exécutez les migrations de `supabase/migrations/` dans l'ordre chronologique.
+2. Vérifiez les tables `shops`, `shop_members`, `clients`, `workshop_tickets`, `tools`, `subscriptions` et `payments`.
+3. Vérifiez que RLS est activé et que les policies limitent chaque utilisateur à ses boutiques.
+4. Activez la confirmation d'e-mail selon le parcours d'inscription souhaité.
+
+La clé service Supabase ne doit jamais être utilisée dans le navigateur.
+
+## Scripts disponibles
+
+```bash
+bun run dev
 bun run type-check
 bun run lint
 bun run build
 bun run preview
 ```
 
-Ouvrez ensuite `http://localhost:4173` et testez la navigation ainsi que le
-rechargement direct d'une route interne. Apres chaque modification de variable
-d'environnement dans Vercel, redeployez le projet pour reconstruire le bundle.
+Les scripts npm équivalents sont également disponibles : `npm run dev`, `npm run type-check`, `npm run lint`, `npm run build` et `npm run preview`.
 
-### Rollback
+## Déploiement Vercel
 
-Dans Vercel, ouvrez **Deployments**, choisissez le dernier deploiement stable,
-puis utilisez **... > Promote to Production**.
+1. Importez le dépôt GitHub dans Vercel.
+2. Ajoutez `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_DEMO_MODE` et `VITE_LOCAL_AGENT_URL` dans les variables d'environnement.
+3. Utilisez `bun run build` comme commande de build, ou `npm run build` si Vercel utilise npm.
+4. Le résultat est généré par Vite ; Vercel détecte automatiquement la sortie `dist`.
+5. Redéployez après chaque modification des variables d'environnement.
+
+## Parcours de test rapide
+
+1. Ouvrir l'application déconnecté et vérifier la redirection vers `/auth`.
+2. Créer un compte avec nom et téléphone.
+3. Créer une première boutique.
+4. Vérifier le dashboard vide et l'absence de données fictives.
+5. Créer un client puis une fiche d'atelier.
+6. Modifier le statut de la réparation et ouvrir le lien WhatsApp.
+7. Ajouter, modifier, dupliquer et supprimer un outil.
+8. Vérifier les catégories et les compteurs d'outils.
+9. Inviter un membre et contrôler l'isolation entre boutiques.
+10. Vérifier l'abonnement, l'historique et les statistiques.
+11. Se déconnecter et confirmer qu'aucune donnée privée n'est chargée.
+
+## Structure du projet
+
+```text
+src/
+  components/       UI métier et composants shadcn/ui
+  hooks/            Auth, boutique, outils et abonnement
+  integrations/     Client et types Supabase
+  lib/              Helpers et utilitaires
+  routes/           Pages TanStack Router
+  services/         Accès Supabase et logique métier
+  types/            Types TypeScript du domaine
+supabase/
+  migrations/       Schéma PostgreSQL, RLS et évolutions
+public/             Assets statiques dont le favicon
+```
+
+## Documentation produit
+
+La vision, la mission, la proposition de valeur, le modèle économique et la roadmap sont disponibles dans [docs/missions.md](docs/missions.md).

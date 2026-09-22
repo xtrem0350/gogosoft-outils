@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Activity, ArrowUpRight, ClipboardList, Plus, UserRound, Wrench } from "lucide-react";
+import { Activity, ArrowLeft, ArrowUpRight, ClipboardList, Plus, UserRound, Wrench } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
@@ -33,6 +34,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 function Index() {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const { shop, shopId, loading: shopLoading } = useCurrentShop();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
 
@@ -69,26 +71,37 @@ function Index() {
   const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
   const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
   const busy = shopLoading || loading;
+  const displayName = profile?.full_name?.trim() || "Utilisateur";
+  const firstName = displayName.split(" ")[0] ?? displayName;
+  const currentHour = new Date().getHours();
+  const greeting = currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
+  const roleLabel = profile?.role ?? "Réparateur";
+  const whatsappValue = profile?.phone ?? shop?.phone ?? "+225 07 XX XX XX XX";
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <div
         className="relative overflow-hidden rounded-2xl bg-slate-900 bg-cover bg-center p-6 text-white sm:p-8"
-        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1512054502232-10a0a035d672?w=1600&auto=format&fit=crop)" }}
+        style={{ backgroundImage: "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop)" }}
       >
-        <div className="absolute inset-0 bg-slate-950/70" />
-        <div className="relative flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="mb-2 text-sm font-medium text-blue-300">Vue d'ensemble</p>
-            <h1 className="text-3xl font-bold tracking-tight">{shop?.name ?? "Votre atelier"}</h1>
-            <p className="mt-2 text-sm text-slate-200">Votre atelier de réparation, résumé en un coup d'œil.</p>
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/30" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <Button variant="secondary" className="bg-white/10 text-white hover:bg-white/20" onClick={() => window.history.back()}>
+            <ArrowLeft className="size-4" />
+            Retour
+          </Button>
           <Button asChild className="accent-gradient text-accent-foreground">
             <Link to="/atelier/nouveau">
               <Plus />
               Nouvelle réparation
             </Link>
           </Button>
+        </div>
+        <div className="relative mt-10 max-w-xl">
+          <p className="mb-2 text-sm font-medium text-blue-300">Vue d'ensemble</p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{greeting}</h1>
+          <p className="mt-3 text-sm text-slate-200">{`${roleLabel} • ${whatsappValue}`}</p>
+          <p className="mt-4 text-sm text-slate-200/80">{shop?.name ?? "Votre atelier"} · suivi des réparations, clients et activités de la boutique.</p>
         </div>
       </div>
 

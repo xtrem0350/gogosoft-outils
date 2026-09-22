@@ -3,6 +3,8 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20260922000000_extras.sql
+│   │   ├── 📄 20260921235847_f024e900-7b07-4754-aeac-61418d89ac06.sql
 │   │   ├── 📄 20260921000000_saas_mvp.sql
 │   │   ├── 📄 20260920192317_859fb027-231f-479c-9c9f-57e04fa75ed1.sql
 │   │   ├── 📄 20260920000000_workshop.sql
@@ -31,7 +33,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 README.md
 │   │   ├── 📄 profil.tsx
 │   │   ├── 📄 parametres.tsx
-│   │   ├── 📄 outils.tsx
+│   │   ├── 📄 outils.index.tsx
 │   │   ├── 📄 outils.$id.tsx
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
@@ -42,18 +44,20 @@ Structure du projet (avec glob)
 │   │   ├── 📄 categories.tsx
 │   │   ├── 📄 boutiques.nouveau.tsx
 │   │   ├── 📄 boutiques.index.tsx
+│   │   ├── 📄 boutiques.$id.tsx
 │   │   ├── 📄 auth.tsx
 │   │   ├── 📄 atelier.nouveau.tsx
 │   │   ├── 📄 atelier.index.tsx
 │   │   ├── 📄 atelier.$id.tsx
 │   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
+│   │   ├── 📄 whatsapp.ts
 │   │   ├── 📄 utils.ts
+│   │   ├── 📄 supabaseGuard.ts
 │   │   ├── 📄 lovable-error-reporting.ts
 │   │   ├── 📄 localAgent.ts
 │   │   ├── 📄 error-page.ts
 │   │   ├── 📄 error-capture.ts
-│   │   ├── 📄 demoData.ts
 │   │   └── 📄 animations.ts
 │   ├── 📁 integrations/
 │   │   ├── 📁 supabase/
@@ -71,7 +75,9 @@ Structure du projet (avec glob)
 │   ├── 📁 hooks/
 │   │   ├── 📄 useTools.ts
 │   │   ├── 📄 useTheme.tsx
+│   │   ├── 📄 useSubscription.ts
 │   │   ├── 📄 useStats.ts
+│   │   ├── 📄 useCurrentShop.ts
 │   │   ├── 📄 useAuth.tsx
 │   │   └── 📄 use-mobile.tsx
 │   ├── 📁 components/
@@ -130,12 +136,17 @@ Structure du projet (avec glob)
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 SubscriptionGuard.tsx
 │   │   ├── 📄 SubscriptionCard.tsx
 │   │   ├── 📄 StatsCard.tsx
+│   │   ├── 📄 SplashScreen.tsx
 │   │   ├── 📄 Sidebar.tsx
 │   │   ├── 📄 ShopSelector.tsx
 │   │   ├── 📄 ShopCard.tsx
 │   │   ├── 📄 RoutePage.tsx
+│   │   ├── 📄 ProtectedRoute.tsx
+│   │   ├── 📄 PaymentModal.tsx
+│   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 AppShell.tsx
@@ -160,6 +171,9 @@ Structure du projet (avec glob)
 │   ├── 📄 hooks
 │   ├── 📄 components
 │   └── 📄 assets
+├── 📁 docs/
+│   ├── 📄 prompt.md
+│   └── 📄 missions.md
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json
 ├── 📄 tsconfig.json
@@ -170,6 +184,7 @@ Structure du projet (avec glob)
 ├── 📄 package-lock.json
 ├── 📄 liste.mjs
 ├── 📄 eslint.config.js
+├── 📄 docs
 ├── 📄 components.json
 ├── 📄 bunfig.toml
 ├── 📄 bun.lock

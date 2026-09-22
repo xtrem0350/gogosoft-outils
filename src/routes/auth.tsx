@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, KeyRound, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import { ArrowRight, KeyRound, Mail, Phone, ShieldCheck, Upload, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
+import { PhoneInput } from "@/components/PhoneInput";
+import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { signIn, signUp } from "@/services/authService";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
@@ -18,6 +21,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleSignIn(event?: React.FormEvent) {
@@ -39,9 +44,15 @@ function AuthPage() {
 
   async function handleSignUp(event?: React.FormEvent) {
     event?.preventDefault();
+    const strength = checkPasswordStrength(password);
+    if (strength.score < 3) {
+      toast.error("Le mot de passe doit être au moins de niveau Fort pour finaliser l'inscription.");
+      return;
+    }
+
     setBusy(true);
     try {
-      const result = await signUp(email, password, fullName, phone);
+      const result = await signUp(email, password, fullName, phone, avatarFile);
       if (result.error) {
         toast.error(result.error.message);
         return;
@@ -134,11 +145,42 @@ function AuthPage() {
                     </TabsContent>
 
                     <TabsContent value="signup" className="space-y-4 pt-5">
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-name" className="text-slate-200">Nom complet</Label>
-                        <div className="relative">
-                          <UserRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                          <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-name" className="text-slate-200">Nom complet</Label>
+                          <div className="relative">
+                            <UserRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
+                            <Input id="signup-name" value={fullName} onChange={(event) => setFullName(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="signup-avatar" className="text-slate-200">Photo de profil</Label>
+                          <div className="flex items-center gap-3 rounded-md border border-white/10 bg-white/5 p-2">
+                            <div className="flex size-16 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-slate-900/70">
+                              {avatarPreview ? (
+                                <img src={avatarPreview} alt="Aperçu avatar" className="size-full object-cover" />
+                              ) : (
+                                <Upload className="size-5 text-slate-300" />
+                              )}
+                            </div>
+                            <Input
+                              id="signup-avatar"
+                              type="file"
+                              accept="image/*"
+                              className="max-w-[160px] file:mr-2 file:rounded file:border-0 file:bg-blue-500 file:text-white"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0] ?? null;
+                                setAvatarFile(file);
+                                if (file) {
+                                  const nextPreview = URL.createObjectURL(file);
+                                  setAvatarPreview(nextPreview);
+                                } else {
+                                  setAvatarPreview(null);
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -151,19 +193,17 @@ function AuthPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="signup-phone" className="text-slate-200">Téléphone</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                          <Input id="signup-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" placeholder="+225 01 02 03 04" />
-                        </div>
+                        <Label className="text-slate-200">Téléphone</Label>
+                        <PhoneInput value={phone} onChange={setPhone} className="w-full" />
                       </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="signup-password" className="text-slate-200">Mot de passe</Label>
                         <div className="relative">
                           <KeyRound className="absolute left-3 top-2.5 size-4 text-slate-400" />
-                          <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" minLength={6} required />
+                          <Input id="signup-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400" required />
                         </div>
+                        <PasswordStrengthBar password={password} />
                       </div>
 
                       <Button className="w-full" disabled={busy} type="submit">

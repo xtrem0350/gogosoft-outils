@@ -1,4 +1,5 @@
 import {
+  ArrowLeft,
   BarChart3,
   CreditCard,
   History,
@@ -77,6 +78,17 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     </button>
   );
 
+  const backButton = (
+    <button
+      type="button"
+      onClick={() => window.history.back()}
+      className="mb-4 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+    >
+      <ArrowLeft className="size-4" />
+      Retour
+    </button>
+  );
+
   return (
     <>
       <aside className="hidden w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground lg:flex">
@@ -85,6 +97,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             Espace de travail
           </p>
         </div>
+        {backButton}
         {links}
         <div className="mt-auto border-t border-sidebar-border pt-4">{signOutButton}</div>
       </aside>
@@ -94,6 +107,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           <SheetTrigger asChild>{mobileTrigger}</SheetTrigger>
           <SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground">
             <SheetTitle className="mb-8">Espace de travail</SheetTitle>
+            {backButton}
             {links}
             <div className="mt-8 border-t border-sidebar-border pt-4">{signOutButton}</div>
           </SheetContent>
