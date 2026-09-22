@@ -15,7 +15,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
-import { Route as OutilsRouteImport } from './routes/outils'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
@@ -28,6 +27,7 @@ import { Route as BoutiquesNouveauRouteImport } from './routes/boutiques.nouveau
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as ClientsNouveauRouteImport } from './routes/clients.nouveau'
+import { Route as OutilsIndexRouteImport } from './routes/outils.index'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -58,11 +58,6 @@ const EquipeRoute = EquipeRouteImport.update({
 const HistoriqueRoute = HistoriqueRouteImport.update({
   id: '/historique',
   path: '/historique',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OutilsRoute = OutilsRouteImport.update({
-  id: '/outils',
-  path: '/outils',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParametresRoute = ParametresRouteImport.update({
@@ -125,10 +120,15 @@ const ClientsNouveauRoute = ClientsNouveauRouteImport.update({
   path: '/clients/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OutilsIndexRoute = OutilsIndexRouteImport.update({
+  id: '/outils/',
+  path: '/outils/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutilsIdRoute = OutilsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => OutilsRoute,
+  id: '/outils/$id',
+  path: '/outils/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -138,7 +138,6 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
-  '/outils': typeof OutilsRouteWithChildren
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
@@ -152,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/outils/': typeof OutilsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -160,7 +160,6 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
-  '/outils': typeof OutilsRouteWithChildren
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
@@ -174,6 +173,7 @@ export interface FileRoutesByTo {
   '/atelier': typeof AtelierIndexRoute
   '/boutiques': typeof BoutiquesIndexRoute
   '/clients': typeof ClientsIndexRoute
+  '/outils': typeof OutilsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -183,7 +183,6 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
-  '/outils': typeof OutilsRouteWithChildren
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/statistiques': typeof StatistiquesRoute
@@ -197,6 +196,7 @@ export interface FileRoutesById {
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
+  '/outils/': typeof OutilsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -207,7 +207,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
-    | '/outils'
     | '/parametres'
     | '/profil'
     | '/statistiques'
@@ -221,6 +220,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
+    | '/outils/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -229,7 +229,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
-    | '/outils'
     | '/parametres'
     | '/profil'
     | '/statistiques'
@@ -243,6 +242,7 @@ export interface FileRouteTypes {
     | '/atelier'
     | '/boutiques'
     | '/clients'
+    | '/outils'
   id:
     | '__root__'
     | '/'
@@ -251,7 +251,6 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
-    | '/outils'
     | '/parametres'
     | '/profil'
     | '/statistiques'
@@ -265,6 +264,7 @@ export interface FileRouteTypes {
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
+    | '/outils/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -274,7 +274,6 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
-  OutilsRoute: typeof OutilsRouteWithChildren
   ParametresRoute: typeof ParametresRoute
   ProfilRoute: typeof ProfilRoute
   StatistiquesRoute: typeof StatistiquesRoute
@@ -284,9 +283,11 @@ export interface RootRouteChildren {
   BoutiquesNouveauRoute: typeof BoutiquesNouveauRoute
   ClientsIdRoute: typeof ClientsIdRoute
   ClientsNouveauRoute: typeof ClientsNouveauRoute
+  OutilsIdRoute: typeof OutilsIdRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
   BoutiquesIndexRoute: typeof BoutiquesIndexRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
+  OutilsIndexRoute: typeof OutilsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -331,13 +332,6 @@ declare module '@tanstack/react-router' {
       path: '/historique'
       fullPath: '/historique'
       preLoaderRoute: typeof HistoriqueRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/outils': {
-      id: '/outils'
-      path: '/outils'
-      fullPath: '/outils'
-      preLoaderRoute: typeof OutilsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parametres': {
@@ -424,26 +418,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientsNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/outils/': {
+      id: '/outils/'
+      path: '/outils'
+      fullPath: '/outils/'
+      preLoaderRoute: typeof OutilsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outils/$id': {
       id: '/outils/$id'
-      path: '/$id'
+      path: '/outils/$id'
       fullPath: '/outils/$id'
       preLoaderRoute: typeof OutilsIdRouteImport
-      parentRoute: typeof OutilsRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface OutilsRouteChildren {
-  OutilsIdRoute: typeof OutilsIdRoute
-}
-
-const OutilsRouteChildren: OutilsRouteChildren = {
-  OutilsIdRoute: OutilsIdRoute,
-}
-
-const OutilsRouteWithChildren =
-  OutilsRoute._addFileChildren(OutilsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -452,7 +442,6 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
-  OutilsRoute: OutilsRouteWithChildren,
   ParametresRoute: ParametresRoute,
   ProfilRoute: ProfilRoute,
   StatistiquesRoute: StatistiquesRoute,
@@ -462,9 +451,11 @@ const rootRouteChildren: RootRouteChildren = {
   BoutiquesNouveauRoute: BoutiquesNouveauRoute,
   ClientsIdRoute: ClientsIdRoute,
   ClientsNouveauRoute: ClientsNouveauRoute,
+  OutilsIdRoute: OutilsIdRoute,
   AtelierIndexRoute: AtelierIndexRoute,
   BoutiquesIndexRoute: BoutiquesIndexRoute,
   ClientsIndexRoute: ClientsIndexRoute,
+  OutilsIndexRoute: OutilsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
