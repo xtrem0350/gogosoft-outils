@@ -11,7 +11,7 @@ import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import logo from "@/assets/images/profile.png";
+import logo from "@/assets/images/logo.png";
 
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {

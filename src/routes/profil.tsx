@@ -37,7 +37,10 @@ function ProfilPage() {
 
   useEffect(() => {
     if (!user) return;
-    form.reset({ full_name: profile?.full_name ?? user.user_metadata.full_name ?? "", phone: user.user_metadata.phone ?? "" });
+    form.reset({
+      full_name: profile?.full_name ?? (user.user_metadata["full_name"] as string | undefined) ?? "",
+      phone: (user.user_metadata["phone"] as string | undefined) ?? "",
+    });
   }, [form, profile, user]);
 
   useEffect(() => {
@@ -72,15 +75,15 @@ function ProfilPage() {
 
   if (authLoading) return <div className="mx-auto max-w-5xl p-6 text-sm text-muted-foreground">Chargement du profil...</div>;
   if (!user) return null;
-  const displayName = profile?.full_name ?? user.user_metadata.full_name ?? user.email ?? "Utilisateur";
-  const initials = displayName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  const displayName = profile?.full_name ?? (user.user_metadata["full_name"] as string | undefined) ?? user.email ?? "Utilisateur";
+  const initials = displayName.split(" ").map((part: string) => part[0]).join("").slice(0, 2).toUpperCase();
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div><p className="text-sm font-medium text-primary">Compte</p><h1 className="mt-2 text-3xl font-bold">Mon profil</h1><p className="mt-2 text-muted-foreground">Gérez vos informations et vos accès à GogoSoft Tools Manager.</p></div>
       <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-6">
-          <Card><CardContent className="flex items-center gap-4 p-6"><div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">{initials}</div><div><h2 className="text-xl font-semibold">{displayName}</h2><p className="text-sm text-muted-foreground">{user.email}</p><p className="text-sm text-muted-foreground">{user.user_metadata.phone ?? "Téléphone non renseigné"}</p></div></CardContent></Card>
+          <Card><CardContent className="flex items-center gap-4 p-6"><div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">{initials}</div><div><h2 className="text-xl font-semibold">{displayName}</h2><p className="text-sm text-muted-foreground">{user.email}</p><p className="text-sm text-muted-foreground">{(user.user_metadata["phone"] as string | undefined) ?? "Téléphone non renseigné"}</p></div></CardContent></Card>
           <Card><CardHeader><CardTitle>Modifier mes informations</CardTitle></CardHeader><CardContent><Form {...form}><form onSubmit={form.handleSubmit(save)} className="space-y-4"><FormField control={form.control} name="full_name" render={({ field }) => <FormItem><FormLabel>Nom complet</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>} /><FormField control={form.control} name="phone" render={({ field }) => <FormItem><FormLabel>Téléphone</FormLabel><FormControl><Input {...field} type="tel" /></FormControl><FormMessage /></FormItem>} /><Button type="submit" disabled={form.formState.isSubmitting}><User className="size-4" />Enregistrer</Button></form></Form></CardContent></Card>
           <Card><CardHeader><CardTitle>Mes boutiques</CardTitle></CardHeader><CardContent>{loadingShops ? <p className="text-sm text-muted-foreground">Chargement des boutiques...</p> : shops.length === 0 ? <p className="text-sm text-muted-foreground">Aucune boutique associée.</p> : <div className="grid gap-3 sm:grid-cols-2">{shops.map((shop) => <div key={shop.id} className="flex items-center gap-3 rounded-lg border p-3"><Store className="size-4 text-primary" /><div><p className="font-medium">{shop.name}</p><p className="text-xs text-muted-foreground">{shop.address ?? "Adresse non renseignée"}</p></div></div>)}</div>}</CardContent></Card>
         </div>

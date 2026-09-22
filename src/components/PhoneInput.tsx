@@ -35,9 +35,11 @@ export function PhoneInput({
   placeholder = "0700000000",
   className,
 }: PhoneInputProps) {
-  const currentCountry = COUNTRY_OPTIONS.find((country) => country.code === defaultCountryCode) ?? COUNTRY_OPTIONS[0];
+  const resolvedCountry = COUNTRY_OPTIONS.find((country) => country.code === defaultCountryCode) ?? COUNTRY_OPTIONS[0];
+  const currentCountry: PhoneInputOption = resolvedCountry;
   const digits = value.replace(/\D/g, "");
-  const localNumber = digits.startsWith(currentCountry.code.replace("+", "")) ? digits.slice(currentCountry.code.length - 1) : digits;
+  const normalizedCode = currentCountry.code.replace("+", "");
+  const localNumber = digits.startsWith(normalizedCode) ? digits.slice(normalizedCode.length) : digits;
 
   const handleCountryChange = (nextCode: string) => {
     const nextLocale = localNumber.replace(/\D/g, "");

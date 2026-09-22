@@ -48,7 +48,8 @@ export function checkPasswordStrength(password: string): PasswordStrengthResult 
     [4, "Très fort", "green"],
   ];
 
-  const [safeScore, label, color] = labelMap[Math.min(score, 4)];
+  const safeScore = Math.min(score, 4);
+  const [_, label, color] = labelMap[safeScore]!;
 
   return {
     score: safeScore,

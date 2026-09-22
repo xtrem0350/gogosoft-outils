@@ -1,4 +1,4 @@
-import logo from "@/assets/images/profile.png";
+import logo from "@/assets/images/logo.png";
 
 /** Logo de marque avec apparition douce et interaction au survol. */
 export function AnimatedLogo({ compact = false }: { compact?: boolean }) {
