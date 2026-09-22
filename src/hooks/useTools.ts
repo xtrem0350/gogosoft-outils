@@ -15,11 +15,12 @@ import {
 } from "@/services/toolService";
 import type { Tool, ToolInsert, ToolUpdate } from "@/types/database";
 
-/** Liste réactive des outils selon les filtres fournis. */
+/** Liste réactive des outils de la boutique courante. */
 export function useTools(filters: ToolFilters = {}) {
   return useQuery({
     queryKey: ["tools", filters],
     queryFn: () => listTools(filters),
+    enabled: Boolean(filters.shopId),
   });
 }
 
