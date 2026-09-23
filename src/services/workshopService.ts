@@ -239,7 +239,13 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       .single();
     if (error) throw error;
     if (!ticket) throw new Error("Fiche atelier introuvable.");
-    return ticket as WorkshopTicket;
+    const created = ticket as WorkshopTicket;
+    await addEvent(created.id, "received", "Appareil réceptionné à l'atelier.").catch(
+      (reason: unknown) => {
+        console.error("[workshopService] event received:", reason);
+      },
+    );
+    return created;
   } catch (error) {
     console.error("[workshopService] Catch:", error);
     throw error;
