@@ -16,14 +16,18 @@ export interface PhoneInputOption {
 const COUNTRY_OPTIONS: PhoneInputOption[] = [
   { code: "+225", label: "Côte d'Ivoire", flag: "🇨🇮" },
   { code: "+221", label: "Sénégal", flag: "🇸🇳" },
-  { code: "+226", label: "Burkina", flag: "🇧🇫" },
   { code: "+223", label: "Mali", flag: "🇲🇱" },
-  { code: "+233", label: "Ghana", flag: "🇬🇭" },
-  { code: "+228", label: "Togo", flag: "🇹🇬" },
+  { code: "+226", label: "Burkina Faso", flag: "🇧🇫" },
   { code: "+229", label: "Bénin", flag: "🇧🇯" },
+  { code: "+228", label: "Togo", flag: "🇹🇬" },
   { code: "+227", label: "Niger", flag: "🇳🇪" },
   { code: "+224", label: "Guinée", flag: "🇬🇳" },
+  { code: "+233", label: "Ghana", flag: "🇬🇭" },
+  { code: "+234", label: "Nigeria", flag: "🇳🇬" },
+  { code: "+237", label: "Cameroun", flag: "🇨🇲" },
   { code: "+33", label: "France", flag: "🇫🇷" },
+  { code: "+1", label: "USA/Canada", flag: "🇺🇸" },
+  { code: "+212", label: "Maroc", flag: "🇲🇦" },
 ];
 
 interface PhoneInputProps {
@@ -45,8 +49,10 @@ export function PhoneInput({
     (country) => country.code === defaultCountryCode,
   ) ??
     COUNTRY_OPTIONS[0] ?? { code: "+225", label: "Côte d'Ivoire", flag: "🇨🇮" };
-  const currentCountry = resolvedCountry;
   const digits = value.replace(/\D/g, "");
+  const currentCountry =
+    COUNTRY_OPTIONS.find((country) => digits.startsWith(country.code.replace("+", ""))) ??
+    resolvedCountry;
   const normalizedCode = currentCountry.code.replace("+", "");
   const localNumber = digits.startsWith(normalizedCode)
     ? digits.slice(normalizedCode.length)
@@ -63,15 +69,27 @@ export function PhoneInput({
   };
 
   return (
-    <div className={className ? `flex gap-2 ${className}` : "flex gap-2"}>
+    <div className={className ? `flex gap-2 md:flex-col ${className}` : "flex gap-2 md:flex-col"}>
       <Select value={currentCountry.code} onValueChange={handleCountryChange}>
-        <SelectTrigger className="w-[170px]">
-          <SelectValue placeholder="Indicatif" />
+        <SelectTrigger className="w-[110px] border-white/10 bg-white/5 text-white md:w-full">
+          <SelectValue placeholder="Indicatif">
+            <span className="md:hidden">
+              {currentCountry.flag} {currentCountry.code}
+            </span>
+            <span className="hidden md:inline">
+              {currentCountry.flag} {currentCountry.label} {currentCountry.code}
+            </span>
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {COUNTRY_OPTIONS.map((country) => (
             <SelectItem key={country.code} value={country.code}>
-              {country.flag} {country.code} ({country.label})
+              <span className="md:hidden">
+                {country.flag} {country.code}
+              </span>
+              <span className="hidden md:inline">
+                {country.flag} {country.label} {country.code}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -82,7 +100,7 @@ export function PhoneInput({
         value={localNumber}
         onChange={(event) => handleLocalChange(event.target.value)}
         placeholder={placeholder}
-        className="flex-1"
+        className="flex-1 border-white/10 bg-white/5 text-white placeholder:text-slate-400"
       />
     </div>
   );

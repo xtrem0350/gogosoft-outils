@@ -32,6 +32,7 @@ function getMissingSupabaseMigrationMessage(error: unknown): string | null {
 }
 
 export async function checkPseudoExists(pseudo: string): Promise<boolean> {
+  console.info("[authService] checkPseudoExists:start", { pseudo: pseudo.trim() });
   const { data, error } = await supabase.rpc("check_pseudo_exists", {
     pseudo_input: pseudo.trim(),
   });
@@ -39,6 +40,7 @@ export async function checkPseudoExists(pseudo: string): Promise<boolean> {
     console.error("[authService] checkPseudoExists error:", error);
     return false;
   }
+  console.info("[authService] checkPseudoExists:success", { exists: data === true });
   return data === true;
 }
 
@@ -74,16 +76,23 @@ export async function signInWithIdentifier(identifier: string, password: string)
 /** Télécharge un avatar utilisateur dans le bucket public avatars. */
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   const bucket = "avatars";
-  const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".png";
+  const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".jpg";
   const path = `${userId}/avatar${Date.now()}${extension}`;
 
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    cacheControl: "3600",
-    upsert: true,
-    contentType: file.type || "image/png",
-  });
-
-  if (error) throw error;
+  try {
+    const { error } = await supabase.storage.from(bucket).upload(path, file, {
+      cacheControl: "3600",
+      upsert: true,
+      contentType: file.type || "image/jpeg",
+    });
+    if (error) {
+      console.error("[authService] uploadAvatar error:", error);
+      throw error;
+    }
+  } catch (error) {
+    console.error("[authService] uploadAvatar exception:", error);
+    throw error;
+  }
 
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
@@ -99,18 +108,46 @@ export async function signUp(
   pseudo?: string,
 ) {
   const normalizedPseudo = pseudo?.trim();
-  const result = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${window.location.origin}/`,
-      data: { full_name: fullName, phone: phone ?? null, pseudo: normalizedPseudo ?? null },
-    },
+  console.info("[authService] signUp:auth-start", {
+    email: email.trim(),
+    pseudo: normalizedPseudo,
+    hasPhone: Boolean(phone?.trim()),
+    hasAvatar: Boolean(avatarFile),
+  });
+
+  let result;
+  try {
+    result = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName, phone: phone ?? null, pseudo: normalizedPseudo ?? null },
+      },
+    });
+  } catch (error) {
+    console.error("[authService] signUp:auth-exception", error);
+    throw error;
+  }
+
+  if (result.error) {
+    console.error("[authService] signUp:auth-error", result.error);
+    return result;
+  }
+
+  console.info("[authService] signUp:auth-success", {
+    userId: result.data.user?.id ?? null,
+    sessionCreated: Boolean(result.data.session),
   });
 
   if (result.data.user && result.data.user.id) {
-    const avatarUrl = avatarFile ? await uploadAvatar(result.data.user.id, avatarFile) : null;
+    let avatarUrl: string | null = null;
+    if (avatarFile) {
+      console.info("[authService] signUp:avatar-start", { userId: result.data.user.id });
+      avatarUrl = await uploadAvatar(result.data.user.id, avatarFile);
+      console.info("[authService] signUp:avatar-success", { userId: result.data.user.id });
+    }
 
+    console.info("[authService] signUp:profile-upsert-start", { userId: result.data.user.id });
     const { error: profileError } = await supabase.from("profiles").upsert(
       {
         id: result.data.user.id,
@@ -125,12 +162,17 @@ export async function signUp(
     );
 
     if (profileError) {
+      console.error("[authService] signUp:profile-upsert-error", {
+        userId: result.data.user.id,
+        error: profileError,
+      });
       const migrationMessage = getMissingSupabaseMigrationMessage(profileError);
       if (migrationMessage) {
         throw new Error(migrationMessage);
       }
       throw new Error(profileError.message || "Impossible de sauvegarder le profil.");
     }
+    console.info("[authService] signUp:profile-upsert-success", { userId: result.data.user.id });
   }
 
   return result;
@@ -163,14 +205,22 @@ export async function signOut() {
 
 /** Récupère le profil de l'utilisateur courant. */
 export async function getProfile(userId: string): Promise<Profile | null> {
+  console.info("[authService] getProfile:start", { userId });
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
+  if (error) {
+    console.error("[authService] getProfile:error", { userId, error });
+    throw error;
+  }
+  if (!data) {
+    console.warn("[authService] getProfile:not-found", { userId });
+    return null;
+  }
   const roles = await getRoles(userId);
+  console.info("[authService] getProfile:success", { userId, roleCount: roles.length });
   return { ...data, role: roles[0] ?? null } as Profile;
 }
 
@@ -185,7 +235,12 @@ export async function updateProfile(userId: string, values: Partial<Profile>) {
 
 /** Récupère les rôles de l'utilisateur courant. */
 export async function getRoles(userId: string): Promise<AppRole[]> {
+  console.info("[authService] getRoles:start", { userId });
   const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
-  if (error) throw error;
+  if (error) {
+    console.error("[authService] getRoles:error", { userId, error });
+    throw error;
+  }
+  console.info("[authService] getRoles:success", { userId, roleCount: data?.length ?? 0 });
   return (data ?? []).map((r) => r.role as AppRole);
 }

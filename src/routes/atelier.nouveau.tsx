@@ -9,10 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ClientSearchInput } from "@/components/ClientSearchInput";
+import { DeviceSearchInput } from "@/components/DeviceSearchInput";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import type { ClientRecord } from "@/services/clientService";
 import {
   generateDiagnosis,
   ISSUES_DATABASE,
@@ -27,12 +31,16 @@ const issueKeys = Object.keys(ISSUES_DATABASE) as IssueKey[];
 const formSchema = z.object({
   client_name: z.string().min(1, "Le nom est requis."),
   client_whatsapp: z.string().min(1, "Le WhatsApp est requis."),
+  client_id: z.string().nullable(),
   device_model: z.string().min(1, "Le modèle est requis."),
   device_processor: z.string(),
   device_imei: z.string(),
   device_sn: z.string(),
   device_os_version: z.string(),
   notes: z.string(),
+  entry_fee: z.number().min(0),
+  entry_fee_paid: z.boolean(),
+  diagnostic_notes: z.string(),
   issues: z.array(z.string()).min(1, "Sélectionnez au moins une panne."),
 });
 type WorkshopFormValues = z.infer<typeof formSchema>;
@@ -46,24 +54,35 @@ function NewWorkshopTicketPage() {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<WorkshopFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       client_name: "",
       client_whatsapp: "",
+      client_id: null,
       device_model: "",
       device_processor: "",
       device_imei: "",
       device_sn: "",
       device_os_version: "",
       notes: "",
+      entry_fee: 2000,
+      entry_fee_paid: false,
+      diagnostic_notes: "",
       issues: [],
     },
   });
 
   function showDiagnosis(values: WorkshopFormValues) {
     setDiagnosis(generateDiagnosis(values.issues as IssueKey[]));
+  }
+
+  function selectClient(client: ClientRecord) {
+    setValue("client_id", client.id, { shouldValidate: true });
+    setValue("client_name", client.full_name, { shouldValidate: true });
+    setValue("client_whatsapp", client.whatsapp, { shouldValidate: true });
   }
 
   async function submit(values: WorkshopFormValues) {
@@ -102,8 +121,13 @@ function NewWorkshopTicketPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="client_name">Nom *</Label>
-              <Input id="client_name" {...register("client_name")} />
+              <Label>Rechercher un client *</Label>
+              <ClientSearchInput
+                shopId={shopId}
+                onSelect={selectClient}
+                onCreateNew={() => toast.info("Créez d'abord ce client depuis la page Clients.")}
+              />
+              <Input type="hidden" {...register("client_name")} />
               {errors.client_name && (
                 <p className="text-sm text-destructive">{errors.client_name.message}</p>
               )}
@@ -122,6 +146,19 @@ function NewWorkshopTicketPage() {
             <CardTitle>Appareil</CardTitle>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Rechercher un appareil déjà connu</Label>
+              <DeviceSearchInput
+                shopId={shopId}
+                onSelect={(device) => {
+                  setValue("device_model", device.device_model, { shouldValidate: true });
+                  setValue("device_processor", device.device_processor ?? "");
+                  setValue("device_imei", device.device_imei ?? "");
+                  setValue("device_sn", device.device_sn ?? "");
+                  setValue("device_os_version", device.device_os_version ?? "");
+                }}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="device_model">Modèle *</Label>
               <Input id="device_model" {...register("device_model")} />
@@ -144,6 +181,36 @@ function NewWorkshopTicketPage() {
             <div className="space-y-2">
               <Label htmlFor="device_os_version">Version OS</Label>
               <Input id="device_os_version" {...register("device_os_version")} />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Frais de diagnostic</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="entry_fee">Frais de diagnostic (FCFA)</Label>
+                <Input id="entry_fee" type="number" min="0" {...register("entry_fee", { valueAsNumber: true })} />
+              </div>
+              <Controller
+                name="entry_fee_paid"
+                control={control}
+                render={({ field }) => (
+                  <div className="flex items-center gap-3 pt-7">
+                    <Switch id="entry_fee_paid" checked={field.value} onCheckedChange={field.onChange} />
+                    <Label htmlFor="entry_fee_paid">Frais payés</Label>
+                  </div>
+                )}
+              />
+            </div>
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+              Ces frais couvrent le diagnostic. Ils ne sont pas remboursables.
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="diagnostic_notes">Notes de diagnostic</Label>
+              <Textarea id="diagnostic_notes" {...register("diagnostic_notes")} />
             </div>
           </CardContent>
         </Card>

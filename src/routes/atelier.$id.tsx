@@ -3,12 +3,16 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { AddWorkshopEvent } from "@/components/AddWorkshopEvent";
+import { WorkshopTimeline } from "@/components/WorkshopTimeline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   deleteTicket,
+  getEvents,
   getTicketById,
+  markEntryFeePaid,
   updateTicketStatus,
   ISSUES_DATABASE,
   type WorkshopStatus,
@@ -22,12 +26,20 @@ function WorkshopDetailsPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const [ticket, setTicket] = useState<WorkshopTicket | null>(null);
+  const [events, setEvents] = useState<Awaited<ReturnType<typeof getEvents>>>([]);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     void getTicketById(id)
       .then(setTicket)
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason.message : "Impossible de charger la fiche."),
+      );
+  }, [id]);
+  useEffect(() => {
+    void getEvents(id)
+      .then(setEvents)
+      .catch((reason: unknown) =>
+        toast.error(reason instanceof Error ? reason.message : "Impossible de charger l'historique."),
       );
   }, [id]);
 
@@ -46,6 +58,15 @@ function WorkshopDetailsPage() {
       await navigate({ to: "/atelier" });
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Suppression impossible.");
+    }
+  }
+
+  async function markPaid() {
+    try {
+      setTicket(await markEntryFeePaid(id));
+      toast.success("Frais de diagnostic marqués comme payés.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de mettre à jour le paiement.");
     }
   }
 
@@ -73,6 +94,30 @@ function WorkshopDetailsPage() {
         </div>
         <Badge>{statusLabel[ticket.status]}</Badge>
       </div>
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-4 pt-6">
+          <div>
+            <p className="text-sm font-medium">Frais de diagnostic</p>
+            <p className="mt-1 text-2xl font-bold">{ticket.entry_fee ?? 0} FCFA</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Badge
+              className={
+                ticket.entry_fee_paid
+                  ? "bg-green-100 text-green-800 hover:bg-green-100"
+                  : "bg-orange-100 text-orange-800 hover:bg-orange-100"
+              }
+            >
+              {ticket.entry_fee_paid ? "Payé" : "Non payé"}
+            </Badge>
+            {!ticket.entry_fee_paid ? (
+              <Button type="button" onClick={() => void markPaid()}>
+                Marquer comme payé
+              </Button>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -155,6 +200,35 @@ function WorkshopDetailsPage() {
           <CardContent className="text-sm text-muted-foreground">{ticket.notes}</CardContent>
         </Card>
       )}
+      {ticket.diagnostic_notes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Notes de diagnostic</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">{ticket.diagnostic_notes}</CardContent>
+        </Card>
+      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Historique de l&apos;intervention</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <WorkshopTimeline events={events} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ajouter un événement</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AddWorkshopEvent
+            ticketId={id}
+            onAdded={() => {
+              void getEvents(id).then(setEvents);
+            }}
+          />
+        </CardContent>
+      </Card>
       <div className="flex flex-wrap gap-3">
         <Button
           onClick={() => void changeStatus("en_cours")}

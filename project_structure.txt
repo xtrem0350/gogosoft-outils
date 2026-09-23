@@ -3,6 +3,9 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20260923122630_5dcb2912-d6c6-4bc1-8d4a-5bf61650a054.sql
+│   │   ├── 📄 20260923000000_pseudo.sql
+│   │   ├── 📄 20260923000000_avatar.sql
 │   │   ├── 📄 20260922000000_extras.sql
 │   │   ├── 📄 20260921235847_f024e900-7b07-4754-aeac-61418d89ac06.sql
 │   │   ├── 📄 20260921000000_saas_mvp.sql
@@ -25,6 +28,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 paymentService.ts
 │   │   ├── 📄 launchService.ts
 │   │   ├── 📄 historyService.ts
+│   │   ├── 📄 guideService.ts
 │   │   ├── 📄 clientService.ts
 │   │   └── 📄 authService.ts
 │   ├── 📁 routes/
@@ -54,6 +58,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 whatsapp.ts
 │   │   ├── 📄 utils.ts
 │   │   ├── 📄 supabaseGuard.ts
+│   │   ├── 📄 passwordStrength.ts
 │   │   ├── 📄 lovable-error-reporting.ts
 │   │   ├── 📄 localAgent.ts
 │   │   ├── 📄 error-page.ts
@@ -132,6 +137,8 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 ToolImage.tsx
 │   │   │   ├── 📄 ToolBadges.tsx
 │   │   │   └── 📄 ToolActions.tsx
+│   │   ├── 📄 WorkshopTimeline.tsx
+│   │   ├── 📄 UserMenu.tsx
 │   │   ├── 📄 ui
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
@@ -145,16 +152,24 @@ Structure du projet (avec glob)
 │   │   ├── 📄 ShopCard.tsx
 │   │   ├── 📄 RoutePage.tsx
 │   │   ├── 📄 ProtectedRoute.tsx
+│   │   ├── 📄 PhoneInput.tsx
 │   │   ├── 📄 PaymentModal.tsx
+│   │   ├── 📄 PasswordStrengthBar.tsx
+│   │   ├── 📄 PasswordInput.tsx
+│   │   ├── 📄 PageHero.tsx
 │   │   ├── 📄 EmptyState.tsx
+│   │   ├── 📄 DeviceSearchInput.tsx
+│   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 AppShell.tsx
-│   │   └── 📄 AnimatedLogo.tsx
+│   │   ├── 📄 AnimatedLogo.tsx
+│   │   └── 📄 AddWorkshopEvent.tsx
 │   ├── 📁 assets/
 │   │   ├── 📁 images/
 │   │   │   ├── 📄 profile.png
-│   │   │   └── 📄 profile.ico
+│   │   │   ├── 📄 profile.ico
+│   │   │   └── 📄 logo.png
 │   │   └── 📄 images
 │   ├── 📄 vite-env.d.ts
 │   ├── 📄 types

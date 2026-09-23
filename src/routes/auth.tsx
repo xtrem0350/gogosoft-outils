@@ -11,6 +11,16 @@ import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import {
   checkPseudoExists,
@@ -37,6 +47,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -54,18 +65,53 @@ function AuthPage() {
   async function handleSignIn(event?: React.FormEvent) {
     event?.preventDefault();
     setBusy(true);
+    console.info("[auth] sign-in:start", {
+      identifier: identifier.trim(),
+      identifierType: identifier.includes("@") ? "email" : "pseudo-or-phone",
+    });
     try {
       const result = await signInWithIdentifier(identifier, password);
       if (result.error) {
+        console.error("[auth] sign-in:error", result.error);
         const message = result.error.message || "Aucun compte trouvé avec cet identifiant";
         toast.error(
           message === "invalid_credentials" ? "Aucun compte trouvé avec cet identifiant" : message,
         );
         return;
       }
+      console.info("[auth] sign-in:success");
       await navigate({ to: "/" });
     } catch (error) {
+      console.error("[auth] sign-in:exception", error);
       toast.error(error instanceof Error ? error.message : "Connexion impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitSignUp() {
+    const normalizedPseudo = pseudoSchema.parse(pseudo);
+    setBusy(true);
+    console.info("[auth] sign-up:start", {
+      email: email.trim(),
+      pseudo: normalizedPseudo,
+      fullName: fullName.trim(),
+      hasPhone: Boolean(phone.trim()),
+      hasAvatar: Boolean(avatarFile),
+    });
+    try {
+      const result = await signUp(email, password, fullName, phone, avatarFile, normalizedPseudo);
+      if (result.error) {
+        console.error("[auth] sign-up:supabase-error", result.error);
+        toast.error(result.error.message);
+        return;
+      }
+      console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
+      toast.success("Compte créé. Vous pouvez maintenant créer votre première boutique.");
+      await navigate({ to: "/boutiques/nouveau" });
+    } catch (error) {
+      console.error("[auth] sign-up:exception", error);
+      toast.error(error instanceof Error ? error.message : "Inscription impossible.");
     } finally {
       setBusy(false);
     }
@@ -73,6 +119,12 @@ function AuthPage() {
 
   async function handleSignUp(event?: React.FormEvent) {
     event?.preventDefault();
+    console.info("[auth] sign-up:submit", {
+      email: email.trim(),
+      pseudo: pseudo.trim(),
+      hasPhone: Boolean(phone.trim()),
+      hasAvatar: Boolean(avatarFile),
+    });
     const strength = checkPasswordStrength(password);
     if (strength.score < 3) {
       toast.error(
@@ -91,24 +143,18 @@ function AuthPage() {
 
     const pseudoAlreadyUsed = await checkPseudoExists(normalizedPseudo);
     if (pseudoAlreadyUsed) {
+      console.warn("[auth] sign-up:pseudo-already-used", { pseudo: normalizedPseudo });
       toast.error("Ce pseudo est déjà utilisé. Merci d'en choisir un autre.");
       return;
     }
 
-    setBusy(true);
-    try {
-      const result = await signUp(email, password, fullName, phone, avatarFile, normalizedPseudo);
-      if (result.error) {
-        toast.error(result.error.message);
-        return;
-      }
-      toast.success("Compte créé. Vous pouvez maintenant créer votre première boutique.");
-      await navigate({ to: "/boutiques/nouveau" });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Inscription impossible.");
-    } finally {
-      setBusy(false);
+    if (!avatarFile) {
+      console.info("[auth] sign-up:awaiting-avatar-confirmation");
+      setAvatarDialogOpen(true);
+      return;
     }
+
+    await submitSignUp();
   }
 
   return (
@@ -127,57 +173,53 @@ function AuthPage() {
           <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
             <section className="flex min-h-[280px] flex-col justify-center bg-slate-900/70 p-8 text-white lg:min-h-[640px] lg:p-10">
               <div className="flex flex-col items-center justify-center gap-5 text-center">
-                <button
-                  type="button"
-                  aria-label="Choisir une photo de profil"
-                  onClick={() => document.getElementById("avatar-upload")?.click()}
-                  className="group relative flex size-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-100 text-slate-400 transition-transform duration-200 hover:scale-105 hover:border-slate-400 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-500"
-                >
-                  {avatarPreview ? (
-                    <>
-                      <img
-                        src={avatarPreview}
-                        alt="Aperçu de la photo de profil"
-                        className="size-full object-cover"
-                      />
-                      <span className="absolute bottom-1.5 right-1.5 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
-                        <Camera className="size-4" />
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <img
-                        src={profileLogo}
-                        alt="GogoSoft logo"
-                        className="size-full object-cover"
-                      />
-                      <span className="absolute inset-0 bg-slate-900/0 transition-colors group-hover:bg-slate-900/5" />
-                    </>
-                  )}
-                </button>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(event) => {
-                    const file = event.target.files?.[0] ?? null;
-                    setAvatarFile(file);
-                  }}
-                />
-                {!avatarPreview ? (
-                  <p className="text-center text-xs text-slate-400">
-                    Cliquez pour ajouter une photo
-                  </p>
-                ) : null}
-
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
-                  <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
-                    Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos
-                    diagnostics et l’activité de votre équipe.
-                  </p>
-                </div>
+                {activeTab === "signup" ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Choisir une photo de profil"
+                      onClick={() => document.getElementById("avatar-upload")?.click()}
+                      className="group relative flex size-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-100 text-slate-400 transition-transform duration-200 hover:scale-105 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
+                    >
+                      {avatarPreview ? (
+                        <>
+                          <img src={avatarPreview} alt="Aperçu de la photo de profil" className="size-full object-cover" />
+                          <span className="absolute bottom-1.5 right-1.5 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
+                            <Camera className="size-4" />
+                          </span>
+                        </>
+                      ) : (
+                        <img src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                      )}
+                    </button>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      hidden
+                      onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+                    />
+                    {!avatarPreview ? <p className="text-center text-xs text-slate-400">Cliquez pour ajouter une photo</p> : null}
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
+                      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
+                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos diagnostics et l’activité de votre équipe.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="size-32 overflow-hidden rounded-full border-2 border-slate-300 dark:border-slate-600">
+                      <img src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
+                      <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
+                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos diagnostics et l’activité de votre équipe.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
 
@@ -323,6 +365,24 @@ function AuthPage() {
           </div>
         </div>
       </div>
+      <AlertDialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Aucune photo sélectionnée</AlertDialogTitle>
+            <AlertDialogDescription>
+              Voulez-vous utiliser l&apos;image par défaut ? Vous pourrez la modifier plus tard dans votre profil.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => document.getElementById("avatar-upload")?.click()}>
+              Choisir une photo
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => void submitSignUp()}>
+              Continuer avec l&apos;image par défaut
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
