@@ -46,6 +46,9 @@ export type WorkshopTicket = {
   price_estimate: number | null;
   price_final: number | null;
   notified_at: string | null;
+  entry_fee: number | null;
+  entry_fee_paid: boolean | null;
+  diagnostic_notes: string | null;
   created_by: string | null;
   created_at: string | null;
   updated_at: string | null;

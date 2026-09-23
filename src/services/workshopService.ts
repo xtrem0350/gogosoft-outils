@@ -39,6 +39,40 @@ export interface CreateTicketData {
   issues: IssueKey[];
   diagnosis?: WorkshopDiagnosis;
   notes?: string;
+  client_id?: string | null;
+  entry_fee?: number;
+  entry_fee_paid?: boolean;
+  diagnostic_notes?: string;
+}
+
+/** Type d'événement enregistré dans l'historique d'une intervention. */
+export type WorkshopEventType =
+  | "received"
+  | "diagnosed"
+  | "in_progress"
+  | "waiting_parts"
+  | "completed"
+  | "delivered"
+  | "cancelled"
+  | "note";
+
+/** Événement de l'historique d'une fiche d'atelier. */
+export interface WorkshopEvent {
+  id: string;
+  ticket_id: string | null;
+  event_type: WorkshopEventType;
+  description: string | null;
+  created_by: string | null;
+  created_at: string | null;
+}
+
+/** Appareil déjà connu de la boutique, dédupliqué par IMEI. */
+export interface KnownDevice {
+  device_model: string;
+  device_imei: string | null;
+  device_sn: string | null;
+  device_processor: string | null;
+  device_os_version: string | null;
 }
 
 interface IssueDefinition {
@@ -205,7 +239,13 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       .single();
     if (error) throw error;
     if (!ticket) throw new Error("Fiche atelier introuvable.");
-    return ticket as WorkshopTicket;
+    const created = ticket as WorkshopTicket;
+    await addEvent(created.id, "received", "Appareil réceptionné à l'atelier.").catch(
+      (reason: unknown) => {
+        console.error("[workshopService] event received:", reason);
+      },
+    );
+    return created;
   } catch (error) {
     console.error("[workshopService] Catch:", error);
     throw error;
@@ -299,4 +339,78 @@ export async function deleteTicket(id: string): Promise<void> {
     console.error("[workshopService] Catch:", error);
     throw error;
   }
+}
+
+/** Recherche les appareils déjà passés à l'atelier (dédupliqués par IMEI). */
+export async function searchDevices(
+  shopId: string | null | undefined,
+  query: string,
+): Promise<KnownDevice[]> {
+  if (!(await hasActiveSession()) || !shopId) return [];
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .select("device_model, device_imei, device_sn, device_processor, device_os_version")
+    .eq("shop_id", requireShopId(shopId))
+    .or(`device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`)
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  const seen = new Set<string>();
+  const devices: KnownDevice[] = [];
+  for (const row of (data ?? []) as KnownDevice[]) {
+    const key = row.device_imei ?? row.device_sn ?? row.device_model;
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    devices.push(row);
+  }
+  return devices;
+}
+
+/** Récupère l'historique chronologique d'une intervention. */
+export async function getEvents(ticketId: string): Promise<WorkshopEvent[]> {
+  if (!(await hasActiveSession())) return [];
+  const { data, error } = await supabase
+    .from("workshop_events")
+    .select("*")
+    .eq("ticket_id", ticketId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as WorkshopEvent[];
+}
+
+/** Ajoute un événement à l'historique d'une intervention. */
+export async function addEvent(
+  ticketId: string,
+  eventType: WorkshopEventType,
+  description?: string,
+): Promise<WorkshopEvent> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data: auth } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("workshop_events")
+    .insert({
+      ticket_id: ticketId,
+      event_type: eventType,
+      description: description ?? null,
+      created_by: auth.user?.id ?? null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as WorkshopEvent;
+}
+
+/** Marque les frais de diagnostic comme payés. */
+export async function markEntryFeePaid(id: string): Promise<WorkshopTicket> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .update({ entry_fee_paid: true, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as WorkshopTicket;
 }
