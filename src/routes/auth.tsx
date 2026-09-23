@@ -44,6 +44,7 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [pseudo, setPseudo] = useState("");
   const [phone, setPhone] = useState("");
+  const [phoneCountryCode, setPhoneCountryCode] = useState("+225");
   const [email, setEmail] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -100,15 +101,30 @@ function AuthPage() {
       hasAvatar: Boolean(avatarFile),
     });
     try {
-      const result = await signUp(email, password, fullName, phone, avatarFile, normalizedPseudo);
+      const result = await signUp(
+        email,
+        password,
+        fullName,
+        phone,
+        phoneCountryCode,
+        avatarFile,
+        normalizedPseudo,
+      );
       if (result.error) {
         console.error("[auth] sign-up:supabase-error", result.error);
         toast.error(result.error.message);
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
-      toast.success("Compte créé. Vous pouvez maintenant créer votre première boutique.");
-      await navigate({ to: "/boutiques/nouveau" });
+      toast.success("Compte créé ! Connectez-vous maintenant.");
+      setActiveTab("signin");
+      setPassword("");
+      setEmail("");
+      setFullName("");
+      setPseudo("");
+      setPhone("");
+      setPhoneCountryCode("+225");
+      setAvatarFile(null);
     } catch (error) {
       console.error("[auth] sign-up:exception", error);
       toast.error(error instanceof Error ? error.message : "Inscription impossible.");
@@ -324,7 +340,12 @@ function AuthPage() {
                           />
                         </div>
 
-                        <PhoneInput value={phone} onChange={setPhone} className="w-full" />
+                        <PhoneInput
+                          value={phone}
+                          onChange={setPhone}
+                          onCountryChange={setPhoneCountryCode}
+                          className="w-full"
+                        />
 
                         <div className="relative">
                           <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />

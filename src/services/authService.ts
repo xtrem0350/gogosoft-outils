@@ -104,14 +104,22 @@ export async function signUp(
   password: string,
   fullName: string,
   phone?: string,
+  phoneCountryCode = "+225",
   avatarFile?: File | null,
   pseudo?: string,
 ) {
   const normalizedPseudo = pseudo?.trim();
+  const countryCode = phoneCountryCode || "+225";
+  const cleanPhone = phone?.replace(/\s+/g, "").replace(/\D/g, "") ?? "";
+  const cleanCountryCode = countryCode.replace(/\D/g, "");
+  const localPhone = cleanPhone.startsWith(cleanCountryCode)
+    ? cleanPhone.slice(cleanCountryCode.length)
+    : cleanPhone;
+  const fullPhone = localPhone ? `${countryCode}${localPhone}` : null;
   console.info("[authService] signUp:auth-start", {
     email: email.trim(),
     pseudo: normalizedPseudo,
-    hasPhone: Boolean(phone?.trim()),
+    hasPhone: Boolean(localPhone),
     hasAvatar: Boolean(avatarFile),
   });
 
@@ -121,7 +129,12 @@ export async function signUp(
       email,
       password,
       options: {
-        data: { full_name: fullName, phone: phone ?? null, pseudo: normalizedPseudo ?? null },
+        data: {
+          full_name: fullName,
+          phone: fullPhone,
+          phone_country_code: countryCode,
+          pseudo: normalizedPseudo ?? null,
+        },
       },
     });
   } catch (error) {
@@ -139,41 +152,48 @@ export async function signUp(
     sessionCreated: Boolean(result.data.session),
   });
 
-  if (result.data.user && result.data.user.id) {
-    let avatarUrl: string | null = null;
-    if (avatarFile) {
-      console.info("[authService] signUp:avatar-start", { userId: result.data.user.id });
-      avatarUrl = await uploadAvatar(result.data.user.id, avatarFile);
-      console.info("[authService] signUp:avatar-success", { userId: result.data.user.id });
-    }
-
-    console.info("[authService] signUp:profile-upsert-start", { userId: result.data.user.id });
-    const { error: profileError } = await supabase.from("profiles").upsert(
-      {
-        id: result.data.user.id,
-        email,
-        nom: fullName,
-        phone: phone ?? null,
-        pseudo: normalizedPseudo ?? null,
-        avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" },
-    );
-
-    if (profileError) {
-      console.error("[authService] signUp:profile-upsert-error", {
-        userId: result.data.user.id,
-        error: profileError,
-      });
-      const migrationMessage = getMissingSupabaseMigrationMessage(profileError);
-      if (migrationMessage) {
-        throw new Error(migrationMessage);
-      }
-      throw new Error(profileError.message || "Impossible de sauvegarder le profil.");
-    }
-    console.info("[authService] signUp:profile-upsert-success", { userId: result.data.user.id });
+  if (!result.data.user?.id) {
+    console.error("[authService] signUp: no user returned");
+    throw new Error("Aucun utilisateur retourné par Supabase.");
   }
+
+  const userId = result.data.user.id;
+  let avatarUrl: string | null = null;
+  if (avatarFile) {
+    console.info("[authService] signUp:avatar-start", { userId });
+    try {
+      avatarUrl = await uploadAvatar(userId, avatarFile);
+      console.info("[authService] signUp:avatar-success", { userId });
+    } catch (error) {
+      console.warn("[authService] Upload avatar échoué, on continue:", error);
+    }
+  }
+
+  console.info("[authService] signUp:profile-upsert-start", { userId });
+  const { error: profileError } = await supabase.from("profiles").upsert(
+    {
+      id: userId,
+      email,
+      nom: fullName,
+      phone: fullPhone,
+      phone_country_code: countryCode,
+      pseudo: normalizedPseudo ?? null,
+      avatar_url: avatarUrl,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "id" },
+  );
+
+  if (profileError) {
+    console.error("[authService] Erreur insert profiles:", profileError);
+    const migrationMessage = getMissingSupabaseMigrationMessage(profileError);
+    if (migrationMessage) {
+      throw new Error(migrationMessage);
+    }
+    throw new Error(profileError.message || "Impossible de sauvegarder le profil.");
+  }
+
+  console.log("[authService] Profil créé avec succès pour", userId);
 
   return result;
 }

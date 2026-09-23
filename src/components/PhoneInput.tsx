@@ -33,6 +33,7 @@ const COUNTRY_OPTIONS: PhoneInputOption[] = [
 interface PhoneInputProps {
   value?: string;
   onChange?: (value: string) => void;
+  onCountryChange?: (code: string) => void;
   defaultCountryCode?: string;
   placeholder?: string;
   className?: string;
@@ -41,6 +42,7 @@ interface PhoneInputProps {
 export function PhoneInput({
   value = "",
   onChange,
+  onCountryChange,
   defaultCountryCode = "+225",
   placeholder = "0700000000",
   className,
@@ -60,6 +62,7 @@ export function PhoneInput({
 
   const handleCountryChange = (nextCode: string) => {
     const nextLocale = localNumber.replace(/\D/g, "");
+    onCountryChange?.(nextCode);
     onChange?.(`${nextCode}${nextLocale}`);
   };
 
