@@ -39,6 +39,40 @@ export interface CreateTicketData {
   issues: IssueKey[];
   diagnosis?: WorkshopDiagnosis;
   notes?: string;
+  client_id?: string | null;
+  entry_fee?: number;
+  entry_fee_paid?: boolean;
+  diagnostic_notes?: string;
+}
+
+/** Type d'événement enregistré dans l'historique d'une intervention. */
+export type WorkshopEventType =
+  | "received"
+  | "diagnosed"
+  | "in_progress"
+  | "waiting_parts"
+  | "completed"
+  | "delivered"
+  | "cancelled"
+  | "note";
+
+/** Événement de l'historique d'une fiche d'atelier. */
+export interface WorkshopEvent {
+  id: string;
+  ticket_id: string | null;
+  event_type: WorkshopEventType;
+  description: string | null;
+  created_by: string | null;
+  created_at: string | null;
+}
+
+/** Appareil déjà connu de la boutique, dédupliqué par IMEI. */
+export interface KnownDevice {
+  device_model: string;
+  device_imei: string | null;
+  device_sn: string | null;
+  device_processor: string | null;
+  device_os_version: string | null;
 }
 
 interface IssueDefinition {
