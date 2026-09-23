@@ -79,7 +79,7 @@ function ProfilPage() {
     try {
       await updateProfile(user.id, { nom: values.nom });
       const { error } = await supabase.auth.updateUser({
-        data: { full_name: values.full_name, phone: values.phone },
+        data: { full_name: values.nom, phone: values.phone },
       });
       if (error) throw error;
       await refresh();
