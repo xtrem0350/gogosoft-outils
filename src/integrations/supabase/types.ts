@@ -168,6 +168,74 @@ export type Database = {
         }
         Relationships: []
       }
+      repair_guides: {
+        Row: {
+          actual_time: number | null
+          author_id: string | null
+          brand: string
+          created_at: string
+          device_model: string
+          difficulty: string | null
+          estimated_time: number | null
+          external_links: Json | null
+          id: string
+          images: string[] | null
+          is_public: boolean
+          personal_notes: string | null
+          processor: string | null
+          shop_id: string | null
+          steps: Json | null
+          tools_needed: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          actual_time?: number | null
+          author_id?: string | null
+          brand: string
+          created_at?: string
+          device_model: string
+          difficulty?: string | null
+          estimated_time?: number | null
+          external_links?: Json | null
+          id?: string
+          images?: string[] | null
+          is_public?: boolean
+          personal_notes?: string | null
+          processor?: string | null
+          shop_id?: string | null
+          steps?: Json | null
+          tools_needed?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          actual_time?: number | null
+          author_id?: string | null
+          brand?: string
+          created_at?: string
+          device_model?: string
+          difficulty?: string | null
+          estimated_time?: number | null
+          external_links?: Json | null
+          id?: string
+          images?: string[] | null
+          is_public?: boolean
+          personal_notes?: string | null
+          processor?: string | null
+          shop_id?: string | null
+          steps?: Json | null
+          tools_needed?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "repair_guides_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_members: {
         Row: {
           created_at: string
@@ -457,6 +525,41 @@ export type Database = {
           },
         ]
       }
+      workshop_events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          event_type: string
+          id: string
+          ticket_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type: string
+          id?: string
+          ticket_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          event_type?: string
+          id?: string
+          ticket_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_events_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "workshop_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workshop_tickets: {
         Row: {
           client_id: string | null
@@ -470,6 +573,9 @@ export type Database = {
           device_processor: string | null
           device_sn: string | null
           diagnosis: Json | null
+          diagnostic_notes: string | null
+          entry_fee: number | null
+          entry_fee_paid: boolean | null
           id: string
           issues: string[]
           notes: string | null
@@ -492,6 +598,9 @@ export type Database = {
           device_processor?: string | null
           device_sn?: string | null
           diagnosis?: Json | null
+          diagnostic_notes?: string | null
+          entry_fee?: number | null
+          entry_fee_paid?: boolean | null
           id?: string
           issues?: string[]
           notes?: string | null
@@ -514,6 +623,9 @@ export type Database = {
           device_processor?: string | null
           device_sn?: string | null
           diagnosis?: Json | null
+          diagnostic_notes?: string | null
+          entry_fee?: number | null
+          entry_fee_paid?: boolean | null
           id?: string
           issues?: string[]
           notes?: string | null
