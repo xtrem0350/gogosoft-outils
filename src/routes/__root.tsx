@@ -128,7 +128,9 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const isAuthPage = location.pathname === "/auth";
+  const isAuthPage = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
+    location.pathname,
+  );
   const [isClient, setIsClient] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
 

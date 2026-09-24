@@ -46,6 +46,15 @@ function AuthPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [rememberIdentifier, setRememberIdentifier] = useState(false);
+
+  useEffect(() => {
+    const savedIdentifier = window.localStorage.getItem("gogosoft.rememberedIdentifier");
+    if (savedIdentifier) {
+      setIdentifier(savedIdentifier);
+      setRememberIdentifier(true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!avatarFile) {
@@ -75,6 +84,11 @@ function AuthPage() {
           message === "invalid_credentials" ? "Aucun compte trouvé avec cet identifiant" : message,
         );
         return;
+      }
+      if (rememberIdentifier) {
+        window.localStorage.setItem("gogosoft.rememberedIdentifier", identifier.trim());
+      } else {
+        window.localStorage.removeItem("gogosoft.rememberedIdentifier");
       }
       console.info("[auth] sign-in:success");
       await navigate({ to: "/" });
@@ -327,6 +341,24 @@ function AuthPage() {
                             className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                           />
                         </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <label className="flex items-center gap-2 text-slate-300">
+                          <input
+                            type="checkbox"
+                            checked={rememberIdentifier}
+                            onChange={(event) => setRememberIdentifier(event.target.checked)}
+                            className="size-4 rounded border-white/30 bg-white/10 accent-orange-500"
+                          />
+                          Se souvenir de moi
+                        </label>
+                        <a
+                          href="/mot-de-passe-oublie"
+                          className="font-medium text-orange-300 underline-offset-4 hover:text-orange-200 hover:underline"
+                        >
+                          Mot de passe oublié ?
+                        </a>
                       </div>
 
                       <Button className="mt-4 w-full" disabled={busy} type="submit">

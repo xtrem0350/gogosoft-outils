@@ -16,8 +16,10 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
@@ -66,6 +68,11 @@ const HistoriqueRoute = HistoriqueRouteImport.update({
   path: '/historique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ParametresRoute = ParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
@@ -74,6 +81,11 @@ const ParametresRoute = ParametresRouteImport.update({
 const ProfilRoute = ProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
+  id: '/reinitialiser-mot-de-passe',
+  path: '/reinitialiser-mot-de-passe',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatistiquesRoute = StatistiquesRouteImport.update({
@@ -145,8 +157,10 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
@@ -168,8 +182,10 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
@@ -192,8 +208,10 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
+  '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
@@ -217,8 +235,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
+    | '/mot-de-passe-oublie'
     | '/parametres'
     | '/profil'
+    | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
@@ -240,8 +260,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
+    | '/mot-de-passe-oublie'
     | '/parametres'
     | '/profil'
+    | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
@@ -263,8 +285,10 @@ export interface FileRouteTypes {
     | '/categories'
     | '/equipe'
     | '/historique'
+    | '/mot-de-passe-oublie'
     | '/parametres'
     | '/profil'
+    | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
@@ -287,8 +311,10 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   ParametresRoute: typeof ParametresRoute
   ProfilRoute: typeof ProfilRoute
+  ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   StatistiquesRoute: typeof StatistiquesRoute
   AtelierIdRoute: typeof AtelierIdRoute
   AtelierNouveauRoute: typeof AtelierNouveauRoute
@@ -354,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoriqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/parametres': {
       id: '/parametres'
       path: '/parametres'
@@ -366,6 +399,13 @@ declare module '@tanstack/react-router' {
       path: '/profil'
       fullPath: '/profil'
       preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reinitialiser-mot-de-passe': {
+      id: '/reinitialiser-mot-de-passe'
+      path: '/reinitialiser-mot-de-passe'
+      fullPath: '/reinitialiser-mot-de-passe'
+      preLoaderRoute: typeof ReinitialiserMotDePasseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/statistiques': {
@@ -463,8 +503,10 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
   ParametresRoute: ParametresRoute,
   ProfilRoute: ProfilRoute,
+  ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   StatistiquesRoute: StatistiquesRoute,
   AtelierIdRoute: AtelierIdRoute,
   AtelierNouveauRoute: AtelierNouveauRoute,

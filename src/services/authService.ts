@@ -203,6 +203,18 @@ export async function signIn(email: string, password: string) {
   return supabase.auth.signInWithPassword({ email, password });
 }
 
+/** Envoie le lien de récupération vers l'écran de nouveau mot de passe. */
+export async function sendPasswordResetEmail(email: string) {
+  return supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: `${window.location.origin}/reinitialiser-mot-de-passe`,
+  });
+}
+
+/** Définit le nouveau mot de passe après ouverture du lien de récupération. */
+export async function updatePassword(password: string) {
+  return supabase.auth.updateUser({ password });
+}
+
 /** Connexion via un compte Google. */
 export async function signInWithGoogle() {
   return lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });

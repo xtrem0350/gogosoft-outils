@@ -29,7 +29,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
-  const isAuthRoute = location.pathname === "/auth";
+  const isAuthRoute = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
+    location.pathname,
+  );
   const isShopExemptRoute =
     location.pathname.startsWith("/boutiques") ||
     location.pathname === "/abonnement" ||
