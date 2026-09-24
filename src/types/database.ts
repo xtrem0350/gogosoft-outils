@@ -26,6 +26,7 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   phone_country_code?: string | null;
   phone?: string | null;
   role?: AppRole | null;
+  is_super_admin?: boolean | null;
 };
 export type WorkshopStatus = "en_attente" | "en_cours" | "termine" | "livre";
 export type WorkshopTicket = {

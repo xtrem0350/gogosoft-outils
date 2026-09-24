@@ -137,6 +137,14 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 ToolImage.tsx
 │   │   │   ├── 📄 ToolBadges.tsx
 │   │   │   └── 📄 ToolActions.tsx
+│   │   ├── 📁 selects/
+│   │   │   ├── 📄 useAsyncOptions.ts
+│   │   │   ├── 📄 ShopSelect.tsx
+│   │   │   ├── 📄 ServiceSelect.tsx
+│   │   │   ├── 📄 PartSelect.tsx
+│   │   │   ├── 📄 MemberSelect.tsx
+│   │   │   ├── 📄 DeviceSelect.tsx
+│   │   │   └── 📄 ClientSelect.tsx
 │   │   ├── 📄 WorkshopTimeline.tsx
 │   │   ├── 📄 UserMenu.tsx
 │   │   ├── 📄 ui
@@ -150,6 +158,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 Sidebar.tsx
 │   │   ├── 📄 ShopSelector.tsx
 │   │   ├── 📄 ShopCard.tsx
+│   │   ├── 📄 selects
+│   │   ├── 📄 SearchableSelect.tsx
 │   │   ├── 📄 RoutePage.tsx
 │   │   ├── 📄 ProtectedRoute.tsx
 │   │   ├── 📄 PhoneInput.tsx

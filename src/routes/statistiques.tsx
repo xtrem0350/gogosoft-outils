@@ -36,7 +36,7 @@ function StatistiquesPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
         <p className="text-sm font-medium text-primary">Analyse</p>
-        <h1 className="mt-2 text-3xl font-bold">Statistiques</h1>
+        <h1 className="mt-2 text-3xl font-bold">Mes stats</h1>
         <p className="mt-2 text-muted-foreground">L'utilisation réelle de vos outils.</p>
       </div>
 

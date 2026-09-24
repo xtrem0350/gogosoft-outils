@@ -5,12 +5,12 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { hasActiveSession } from "@/lib/supabaseGuard";
 import { getUserShops, type Shop } from "@/services/shopService";
 
 const STORAGE_KEY = "gogosoft.currentShopId";
@@ -21,14 +21,20 @@ function useCurrentShopState() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
+  const loadingRef = useRef(false);
+  const loadedUserRef = useRef<string | null | undefined>(undefined);
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (sessionUserId?: string) => {
+    if (loadedUserRef.current === (sessionUserId ?? null) && !loadingRef.current) return;
+    if (loadingRef.current) return;
+    loadingRef.current = true;
     setLoading(true);
     try {
-      if (!(await hasActiveSession())) {
+      if (!sessionUserId) {
         setShops([]);
         setShop(null);
         window.localStorage.removeItem(STORAGE_KEY);
+        loadedUserRef.current = null;
         return;
       }
       const nextShops = await getUserShops();
@@ -44,22 +50,20 @@ function useCurrentShopState() {
       } else {
         window.localStorage.removeItem(STORAGE_KEY);
       }
+      loadedUserRef.current = sessionUserId;
     } catch {
       setShops([]);
       setShop(null);
       window.localStorage.removeItem(STORAGE_KEY);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    void refresh();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        void refresh();
-      }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
+      void refresh(session?.user.id);
     });
 
     return () => {

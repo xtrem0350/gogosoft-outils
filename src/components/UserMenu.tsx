@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Shield, Settings, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -16,12 +16,16 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function UserMenu() {
   const navigate = useNavigate();
-  const { profile, user, loading } = useAuth();
+  const { profile, user, loading, isSuperAdmin } = useAuth();
 
   if (loading || !user) return null;
 
   const displayName = profile?.nom?.trim() || user.email?.split("@")[0] || "Utilisateur";
-  const initials = displayName
+  const resolvedName =
+    displayName !== "Utilisateur"
+      ? displayName
+      : (user.user_metadata["full_name"] as string | undefined)?.trim() || displayName;
+  const initials = resolvedName
     .split(" ")
     .map((part) => part[0])
     .join("")
@@ -46,17 +50,23 @@ export function UserMenu() {
         >
           <Avatar className="size-8 border border-white/20">
             {profile?.avatar_url ? (
-              <AvatarImage src={profile.avatar_url} alt={displayName} />
+              <AvatarImage src={profile.avatar_url} alt={resolvedName} />
             ) : null}
             <AvatarFallback className="bg-primary/20 text-xs text-white">{initials}</AvatarFallback>
           </Avatar>
           <div className="hidden min-w-0 text-left md:block">
-            <p className="truncate text-sm font-medium leading-none">{displayName}</p>
-            <p className="text-[10px] text-slate-300">{profile?.role ?? "Membre"}</p>
+            <p className="truncate text-sm font-medium leading-none">{resolvedName}</p>
+            <p className="text-[10px] text-slate-300">{profile?.role ?? "Réparateur"}</p>
           </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        {isSuperAdmin ? (
+          <DropdownMenuItem onClick={() => void navigate({ to: "/admin" })}>
+            <Shield className="size-4" />
+            Espace Admin
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onClick={() => void navigate({ to: "/profil" })}>
           <User className="size-4" />
           Mon profil

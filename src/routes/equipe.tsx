@@ -80,11 +80,11 @@ function EquipePage() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">Collaboration</p>
-          <h1 className="mt-2 text-3xl font-bold">Équipe</h1>
+          <h1 className="mt-2 text-3xl font-bold">Mes techniciens</h1>
         </div>
         <Button onClick={() => setOpen(true)}>
           <UserPlus className="size-4" />
-          Inviter un membre
+          Inviter un technicien
         </Button>
       </div>
 

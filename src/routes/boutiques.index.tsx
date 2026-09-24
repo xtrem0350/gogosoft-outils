@@ -60,11 +60,7 @@ function BoutiquesPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {shops.map((shop) => (
-            <ShopCard
-              key={shop.id}
-              shop={shop}
-              isCurrent={shop.id === currentShopId}
-            />
+            <ShopCard key={shop.id} shop={shop} isCurrent={shop.id === currentShopId} />
           ))}
         </div>
       )}

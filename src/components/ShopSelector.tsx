@@ -22,7 +22,7 @@ export function ShopSelector() {
         className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
       >
         <Store className="size-4" />
-        Sélectionner un atelier
+        Sélectionner un atelier...
       </Button>
     );
   }
@@ -36,7 +36,7 @@ export function ShopSelector() {
           className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
         >
           <Store className="size-4" />
-          {shop?.name ?? "Sélectionner un atelier"}
+          {shop?.name ?? "Sélectionner un atelier..."}
           <ChevronDown className="size-4" />
         </Button>
       </DropdownMenuTrigger>

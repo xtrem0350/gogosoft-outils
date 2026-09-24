@@ -18,6 +18,7 @@ interface AuthContextValue {
   canEdit: boolean;
   /** Peut supprimer définitivement et administrer (admin). */
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   /** Recharge profil et rôles. */
   refresh: () => Promise<void>;
 }
@@ -49,22 +50,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles(r);
       } catch {
         /* profil indisponible : l'UI reste utilisable en lecture */
+        if (active) {
+          setProfile(null);
+          setRoles([]);
+        }
       }
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
-      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
-        if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-        void loadDetails(nextSession?.user.id);
-      }
-    });
-
-    void supabase.auth.getSession().then(async ({ data }) => {
-      if (!active) return;
-      setSession(data.session);
-      await loadDetails(data.session?.user.id);
-      if (active) setLoading(false);
+      if (event !== "INITIAL_SESSION") void queryClient.invalidateQueries();
+      void loadDetails(nextSession?.user.id).finally(() => {
+        if (active) setLoading(false);
+      });
     });
 
     return () => {
@@ -84,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       hasRole,
       canEdit: hasRole("admin") || hasRole("technicien"),
       isAdmin: hasRole("admin"),
+      isSuperAdmin: profile?.is_super_admin === true,
       refresh: async () => {
         const userId = session?.user.id;
         if (!userId) return;

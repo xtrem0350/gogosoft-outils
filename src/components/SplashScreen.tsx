@@ -3,8 +3,10 @@ import { motion } from "framer-motion";
 import profileLogo from "@/assets/images/profile.png";
 
 export function SplashScreen() {
+  if (typeof window === "undefined") return null;
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 px-6">
+    <div className="bg-hero-ivoirien flex min-h-screen items-center justify-center px-6">
       <div className="flex w-full max-w-md flex-col items-center text-center text-white">
         <motion.img
           src={profileLogo}

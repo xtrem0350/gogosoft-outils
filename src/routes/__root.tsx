@@ -42,39 +42,42 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+function ErrorComponent({ error, reset }: { error?: Error; reset?: () => void }) {
+  console.error("[ErrorBoundary]", error);
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 text-center">
+      <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-orange-100">
+        <span className="text-3xl" role="img" aria-label="Alerte">
+          ⚠️
+        </span>
+      </div>
+      <h1 className="mb-2 text-2xl font-bold">Une erreur est survenue</h1>
+      <p className="mb-6 max-w-md text-muted-foreground">
+        {error?.message ?? "Une erreur inattendue s'est produite."}
+      </p>
+      <div className="flex gap-3">
+        <button
+          onClick={() => {
+            router.invalidate();
+            reset?.();
+          }}
+          className="rounded-lg bg-orange-500 px-4 py-2 text-white hover:bg-orange-600"
+        >
+          Réessayer
+        </button>
+        <button
+          onClick={() => {
+            window.location.href = "/";
+          }}
+          className="rounded-lg border px-4 py-2 hover:bg-slate-50"
+        >
+          Retour à l'accueil
+        </button>
       </div>
     </div>
   );
@@ -126,22 +129,29 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
-  const [hasShownSplash, setHasShownSplash] = useState(
-    () =>
-      typeof window !== "undefined" && sessionStorage.getItem("gogosoft_splash_shown") === "true",
-  );
+  const [isClient, setIsClient] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   useEffect(() => {
-    if (hasShownSplash) return;
+    setIsClient(true);
+    const alreadyShown = sessionStorage.getItem("gogosoft_splash_shown") === "true";
+    if (alreadyShown) return;
+    setShowSplash(true);
     const timer = window.setTimeout(() => {
-      setHasShownSplash(true);
       sessionStorage.setItem("gogosoft_splash_shown", "true");
+      setShowSplash(false);
     }, 2000);
     return () => window.clearTimeout(timer);
-  }, [hasShownSplash]);
+  }, []);
 
-  if (!hasShownSplash) {
-    return <SplashScreen />;
+  if (!isClient || showSplash) {
+    return showSplash ? (
+      <SplashScreen />
+    ) : (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <span className="text-muted-foreground">Chargement...</span>
+      </div>
+    );
   }
 
   return (

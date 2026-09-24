@@ -225,23 +225,18 @@ export async function signOut() {
 
 /** Récupère le profil de l'utilisateur courant. */
 export async function getProfile(userId: string): Promise<Profile | null> {
-  console.info("[authService] getProfile:start", { userId });
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
     .eq("id", userId)
     .maybeSingle();
   if (error) {
-    console.error("[authService] getProfile:error", { userId, error });
     throw error;
   }
   if (!data) {
-    console.warn("[authService] getProfile:not-found", { userId });
     return null;
   }
-  const roles = await getRoles(userId);
-  console.info("[authService] getProfile:success", { userId, roleCount: roles.length });
-  return { ...data, role: roles[0] ?? null } as Profile;
+  return data as Profile;
 }
 
 /** Met à jour le profil de l'utilisateur courant. */

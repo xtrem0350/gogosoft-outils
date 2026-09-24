@@ -1,10 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
-  ArrowLeft,
   ArrowUpRight,
   ClipboardList,
-  Plus,
+  CreditCard,
+  UserPlus,
   UserRound,
   Wrench,
 } from "lucide-react";
@@ -18,7 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
-import { getTickets } from "@/services/workshopService";
+import { getEvents, getTickets, type WorkshopEvent } from "@/services/workshopService";
 import type { WorkshopTicket } from "@/types/database";
 
 export const Route = createFileRoute("/")({
@@ -49,12 +49,13 @@ const STATUS_LABELS: Record<string, string> = {
 
 function Index() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { shop, shopId, loading: shopLoading } = useCurrentShop();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
 
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [events, setEvents] = useState<WorkshopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,6 +63,7 @@ function Index() {
     if (!shopId) {
       setTickets([]);
       setClients([]);
+      setEvents([]);
       setLoading(false);
       return;
     }
@@ -72,8 +74,17 @@ function Index() {
         getTickets(shopId),
         getClientsByShop(shopId),
       ]);
+      const eventLists = await Promise.all(
+        ticketList.slice(0, 5).map((ticket) => getEvents(ticket.id)),
+      );
       setTickets(ticketList);
       setClients(clientList);
+      setEvents(
+        eventLists
+          .flat()
+          .sort((left, right) => (right.created_at ?? "").localeCompare(left.created_at ?? ""))
+          .slice(0, 5),
+      );
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -93,48 +104,47 @@ function Index() {
   const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
   const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
   const busy = shopLoading || loading;
-  const displayName = profile?.nom?.trim() || "Utilisateur";
+  const displayName =
+    profile?.nom?.trim() ||
+    (user?.user_metadata["full_name"] as string | undefined)?.trim() ||
+    user?.email?.split("@")[0] ||
+    "Réparateur";
   const firstName = displayName.split(" ")[0] ?? displayName;
   const currentHour = new Date().getHours();
   const greeting =
     currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
   const roleLabel = profile?.role ?? "Réparateur";
-  const whatsappValue = profile?.phone ?? shop?.phone ?? "+225 07 XX XX XX XX";
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthlyRevenue = tickets
+    .filter((ticket) => ticket.created_at?.startsWith(currentMonth))
+    .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0);
+  const formatAmount = new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "XOF",
+    maximumFractionDigits: 0,
+  });
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <div
-        className="relative overflow-hidden rounded-2xl bg-slate-900 bg-cover bg-center p-6 text-white sm:p-8"
+        className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8"
         style={{
           backgroundImage:
             "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop)",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-900/60 to-slate-900/30" />
+        <div className="absolute inset-0 bg-white/20" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <Button
-            variant="secondary"
-            className="bg-white/10 text-white hover:bg-white/20"
-            onClick={() => window.history.back()}
-          >
-            <ArrowLeft className="size-4" />
-            Retour
-          </Button>
-          <Button asChild className="accent-gradient text-accent-foreground">
-            <Link to="/atelier/nouveau">
-              <Plus />
-              Nouvelle réparation
-            </Link>
-          </Button>
-        </div>
-        <div className="relative mt-10 max-w-xl">
-          <p className="mb-2 text-sm font-medium text-blue-300">Vue d'ensemble</p>
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{greeting}</h1>
-          <p className="mt-3 text-sm text-slate-200">{`${roleLabel} • ${whatsappValue}`}</p>
-          <p className="mt-4 text-sm text-slate-200/80">
-            {shop?.name ?? "Votre atelier"} · suivi des réparations, clients et activités de la
-            boutique.
-          </p>
+          <div>
+            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{greeting} 👋</h1>
+            <p className="mt-3 text-sm text-slate-700">Que voulez-vous faire aujourd'hui ?</p>
+            <p className="mt-2 text-sm text-slate-700/80">
+              {roleLabel} · {shop?.name ?? "Votre atelier"}
+            </p>
+          </div>
+          <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold capitalize text-white">
+            {roleLabel}
+          </span>
         </div>
       </div>
 
@@ -156,6 +166,48 @@ function Index() {
         </div>
       ) : null}
 
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <Link to="/atelier/nouveau" className="group">
+          <Card className="card-3d h-full">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-xl bg-blue-100 p-3 text-blue-700 dark:bg-blue-950/40 dark:text-blue-200">
+                <Wrench />
+              </div>
+              <div>
+                <p className="font-semibold">Nouvelle réparation</p>
+                <p className="text-sm text-muted-foreground">Créer une fiche atelier</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/clients/nouveau" className="group">
+          <Card className="h-full transition-shadow hover:shadow-lg">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-xl bg-emerald-100 p-3 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <UserPlus />
+              </div>
+              <div>
+                <p className="font-semibold">Ajouter un client</p>
+                <p className="text-sm text-muted-foreground">Enregistrer un nouveau client</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link to="/statistiques" className="group">
+          <Card className="h-full transition-shadow hover:shadow-lg">
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-xl bg-amber-100 p-3 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                <Activity />
+              </div>
+              <div>
+                <p className="font-semibold">Voir mes statistiques</p>
+                <p className="text-sm text-muted-foreground">Analyser votre activité</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard
           title="Réparations en cours"
@@ -172,14 +224,10 @@ function Index() {
           color="primary"
         />
         <StatsCard
-          title="Fiches terminées"
-          value={
-            busy
-              ? "…"
-              : tickets.filter((t) => t.status === "termine" || t.status === "livre").length
-          }
-          icon={Wrench}
-          trend="Prêtes ou livrées"
+          title="CA du mois"
+          value={busy ? "…" : formatAmount.format(monthlyRevenue)}
+          icon={CreditCard}
+          trend="Selon les montants des fiches"
           color="warning"
         />
         <StatsCard
@@ -192,6 +240,37 @@ function Index() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <Card className="card-elevated border-0 transition-shadow hover:shadow-lg">
+          <CardHeader>
+            <CardTitle>Activité récente</CardTitle>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Les dernières actions sur vos fiches.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {busy ? (
+              <p className="text-sm text-muted-foreground">Chargement…</p>
+            ) : events.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucune activité récente.</p>
+            ) : (
+              events.map((event) => (
+                <div key={event.id} className="flex gap-3">
+                  <div className="mt-1 rounded-full bg-primary/10 p-2 text-primary">
+                    <Activity className="size-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{event.description ?? event.event_type}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {event.created_at
+                        ? new Date(event.created_at).toLocaleString("fr-FR")
+                        : "Date inconnue"}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
         <Card className="card-elevated border-0">
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>

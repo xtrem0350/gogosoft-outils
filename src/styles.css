@@ -1,9 +1,81 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 @import "./styles/design-system.css";
 
 @custom-variant dark (&:is(.dark *));
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.bg-ivoirien {
+  background: linear-gradient(135deg, #f77f00 0%, #e86a00 50%, #009e60 100%);
+  color: white;
+}
+
+.bg-ivoirien-hover:hover {
+  background: linear-gradient(135deg, #e86a00 0%, #d85a00 50%, #007a4a 100%);
+  box-shadow: 0 10px 25px -5px rgb(247 127 0 / 40%);
+}
+
+.shadow-3d {
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 5%),
+    0 4px 8px rgb(247 127 0 / 10%),
+    0 12px 24px rgb(0 158 96 / 8%);
+}
+
+.shadow-3d-hover {
+  transition: all 0.3s ease;
+}
+
+.shadow-3d-hover:hover {
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 8%),
+    0 8px 16px rgb(247 127 0 / 15%),
+    0 20px 40px rgb(0 158 96 / 12%);
+  transform: translateY(-2px);
+}
+
+.bg-hero-ivoirien {
+  background: linear-gradient(135deg, #f77f00 0%, #f99a2d 25%, #fff 50%, #4db88a 75%, #009e60 100%);
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+  color: #1f2937;
+}
+
+.glass {
+  background: rgb(255 255 255 / 70%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgb(255 255 255 / 30%);
+}
+
+.dark .glass {
+  background: rgb(31 41 55 / 70%);
+  border-color: rgb(255 255 255 / 10%);
+}
+
+@keyframes gradientShift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
 
 /*
  * GogoSoft Tools Manager — design system.
@@ -74,19 +146,19 @@
   --card-foreground: oklch(0.21 0.048 258);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.048 258);
-  --primary: oklch(0.34 0.108 261);
+  --primary: #f77f00;
   --primary-foreground: oklch(0.985 0.005 240);
   --secondary: oklch(0.94 0.014 248);
   --secondary-foreground: oklch(0.3 0.06 260);
   --muted: oklch(0.945 0.01 248);
   --muted-foreground: oklch(0.52 0.032 258);
-  --accent: oklch(0.72 0.14 205);
-  --accent-foreground: oklch(0.18 0.05 258);
+  --accent: #ffe5cc;
+  --accent-foreground: #9a4f00;
   --destructive: oklch(0.58 0.222 26);
   --destructive-foreground: oklch(0.985 0.005 240);
-  --success: oklch(0.62 0.15 155);
+  --success: #009e60;
   --success-foreground: oklch(0.985 0.005 240);
-  --warning: oklch(0.78 0.15 75);
+  --warning: #f77f00;
   --warning-foreground: oklch(0.22 0.05 258);
   --border: oklch(0.9 0.012 250);
   --input: oklch(0.9 0.012 250);
@@ -119,11 +191,7 @@
     oklch(0.32 0.09 255) 45%,
     oklch(0.42 0.1 225) 100%
   );
-  --gradient-accent: linear-gradient(
-    100deg,
-    oklch(0.72 0.14 205) 0%,
-    oklch(0.63 0.16 250) 100%
-  );
+  --gradient-accent: linear-gradient(100deg, oklch(0.72 0.14 205) 0%, oklch(0.63 0.16 250) 100%);
   --shadow-card: 0 1px 2px oklch(0.2 0.05 260 / 0.06), 0 10px 30px oklch(0.2 0.05 260 / 0.08);
   --shadow-glow: 0 0 0 1px oklch(0.72 0.14 205 / 0.35), 0 12px 40px oklch(0.55 0.13 235 / 0.28);
 }
@@ -135,13 +203,13 @@
   --card-foreground: oklch(0.95 0.01 245);
   --popover: oklch(0.225 0.045 262);
   --popover-foreground: oklch(0.95 0.01 245);
-  --primary: oklch(0.72 0.14 205);
+  --primary: #f99a2d;
   --primary-foreground: oklch(0.17 0.04 262);
   --secondary: oklch(0.29 0.05 262);
   --secondary-foreground: oklch(0.95 0.01 245);
   --muted: oklch(0.27 0.045 262);
   --muted-foreground: oklch(0.72 0.025 250);
-  --accent: oklch(0.72 0.14 205);
+  --accent: #6fc79f;
   --accent-foreground: oklch(0.17 0.04 262);
   --destructive: oklch(0.65 0.19 25);
   --destructive-foreground: oklch(0.98 0.005 240);
@@ -197,39 +265,55 @@
   }
 }
 
-@utility surface-gradient {
+.surface-gradient {
   background-image: var(--gradient-header);
 }
 
-@utility accent-gradient {
+.accent-gradient {
   background-image: var(--gradient-accent);
 }
 
-@utility card-elevated {
+.card-elevated {
   box-shadow: var(--shadow-card);
 }
 
-@utility hover-lift {
+.hover-lift {
   transition:
     transform 200ms ease,
     box-shadow 200ms ease,
     border-color 200ms ease;
+}
 
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-glow);
-  }
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-glow);
 }
 
 @keyframes logo-enter {
-  from { opacity: 0; transform: scale(0.8); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes logo-copy-enter {
-  from { opacity: 0; transform: translateX(-8px); }
-  to { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.logo-enter { animation: logo-enter 600ms ease-out both; }
-.logo-copy-enter { animation: logo-copy-enter 450ms 200ms ease-out both; }
+.logo-enter {
+  animation: logo-enter 600ms ease-out both;
+}
+.logo-copy-enter {
+  animation: logo-copy-enter 450ms 200ms ease-out both;
+}

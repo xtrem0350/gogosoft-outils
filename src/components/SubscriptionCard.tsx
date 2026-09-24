@@ -34,7 +34,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
       <CardContent className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-sm text-muted-foreground">Abonnement actuel</p>
+            <p className="text-sm text-muted-foreground">Forfait actuel</p>
             <h3 className="mt-2 text-2xl font-bold capitalize">{activeSubscription.plan}</h3>
           </div>
           <Badge className={planClass}>{activeSubscription.plan}</Badge>
@@ -55,7 +55,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
 
         <Button className="w-full" variant="secondary">
           <Sparkles className="size-4" />
-          Gérer l'abonnement
+          Gérer le forfait
         </Button>
       </CardContent>
     </Card>

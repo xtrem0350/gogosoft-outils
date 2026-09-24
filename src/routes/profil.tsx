@@ -20,17 +20,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getProfile, signOut, updateProfile, uploadAvatar } from "@/services/authService";
+import { signOut, updateProfile, uploadAvatar } from "@/services/authService";
 import { getUserShops, type Shop } from "@/services/shopService";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -162,7 +154,10 @@ function ProfilPage() {
                 <h2 className="text-xl font-semibold">{displayName}</h2>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 <p className="text-sm text-muted-foreground">
-                  {(user.user_metadata["phone"] as string | undefined) ?? "Téléphone non renseigné"}
+                  {profile?.phone ?? "Téléphone non renseigné"}
+                </p>
+                <p className="text-sm capitalize text-muted-foreground">
+                  Rôle : {profile?.role ?? "Réparateur"}
                 </p>
               </div>
               <div className="ml-auto">
@@ -190,40 +185,48 @@ function ProfilPage() {
               <CardTitle>Modifier mes informations</CardTitle>
             </CardHeader>
             <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(save)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="nom"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom complet</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+              <form onSubmit={form.handleSubmit(save)} className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="nom" className="text-sm font-medium text-foreground">
+                    Nom complet
+                  </label>
+                  <Input id="nom" {...form.register("nom")} placeholder="Votre nom" />
+                  {form.formState.errors.nom ? (
+                    <p className="text-sm text-destructive">{form.formState.errors.nom.message}</p>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-sm font-medium text-foreground">
+                    Email
+                  </label>
+                  <Input
+                    id="email"
+                    value={user.email ?? ""}
+                    readOnly
+                    disabled
+                    aria-describedby="email-help"
                   />
-                  <FormField
-                    control={form.control}
-                    name="phone"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Téléphone</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="tel" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={form.formState.isSubmitting}>
-                    <User className="size-4" />
-                    Enregistrer
-                  </Button>
-                </form>
-              </Form>
+                  <p id="email-help" className="text-xs text-muted-foreground">
+                    L’adresse email est gérée par le système d’authentification et ne peut pas être
+                    modifiée ici.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="phone" className="text-sm font-medium text-foreground">
+                    Téléphone
+                  </label>
+                  <Input id="phone" {...form.register("phone")} type="tel" />
+                  {form.formState.errors.phone ? (
+                    <p className="text-sm text-destructive">
+                      {form.formState.errors.phone.message}
+                    </p>
+                  ) : null}
+                </div>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  <User className="size-4" />
+                  Enregistrer
+                </Button>
+              </form>
             </CardContent>
           </Card>
           <Card>

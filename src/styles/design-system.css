@@ -1,16 +1,16 @@
 /* GogoSoft Tools Manager design tokens. */
 :root {
-  --primary-900: #0a1f44;
-  --primary-700: #15326b;
-  --primary-500: #2d5aa0;
-  --primary-300: #4da6ff;
-  --primary-100: #7fb8ff;
-  --primary-50: #e8f0fe;
+  --primary-900: #9a4f00;
+  --primary-700: #c65f00;
+  --primary-500: #f77f00;
+  --primary-300: #f99a2d;
+  --primary-100: #ffd2a3;
+  --primary-50: #ffe5cc;
 
-  --success: #16a34a;
-  --warning: #f59e0b;
+  --success: #009e60;
+  --warning: #f77f00;
   --danger: #dc2626;
-  --info: #0ea5e9;
+  --info: #009e60;
 
   --gray-900: #1a1a2e;
   --gray-700: #4a4a5e;
@@ -19,8 +19,8 @@
   --gray-100: #eef1f6;
   --gray-50: #f8fafd;
 
-  --cat-mtk: #2d5aa0;
-  --cat-unisoc: #0a1f44;
+  --cat-mtk: #f77f00;
+  --cat-unisoc: #009e60;
   --cat-apple: #555555;
   --cat-drivers: #f59e0b;
   --cat-autres: #10b981;
