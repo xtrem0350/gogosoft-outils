@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LogOut, ShieldAlert, Store, Trash2, User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { LogOut, ShieldAlert, Store, Trash2, Upload, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,7 +29,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getProfile, signOut, updateProfile } from "@/services/authService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getProfile, signOut, updateProfile, uploadAvatar } from "@/services/authService";
 import { getUserShops, type Shop } from "@/services/shopService";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -50,6 +51,9 @@ function ProfilPage() {
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const [shops, setShops] = useState<Shop[]>([]);
   const [loadingShops, setLoadingShops] = useState(true);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: { nom: "", phone: "" },
@@ -62,6 +66,16 @@ function ProfilPage() {
       phone: (user.user_metadata["phone"] as string | undefined) ?? "",
     });
   }, [form, profile, user]);
+
+  useEffect(() => {
+    if (!avatarFile) {
+      setAvatarPreview(profile?.avatar_url ?? null);
+      return;
+    }
+    const preview = URL.createObjectURL(avatarFile);
+    setAvatarPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [avatarFile, profile?.avatar_url]);
 
   useEffect(() => {
     if (!user) {
@@ -77,12 +91,18 @@ function ProfilPage() {
   async function save(values: ProfileFormValues) {
     if (!user) return;
     try {
-      await updateProfile(user.id, { nom: values.nom });
+      const avatarUrl = avatarFile ? await uploadAvatar(user.id, avatarFile) : profile?.avatar_url;
+      await updateProfile(user.id, {
+        nom: values.nom,
+        phone: values.phone,
+        avatar_url: avatarUrl ?? null,
+      });
       const { error } = await supabase.auth.updateUser({
         data: { full_name: values.nom, phone: values.phone },
       });
       if (error) throw error;
       await refresh();
+      setAvatarFile(null);
       toast.success("Informations mises à jour.");
     } catch (error) {
       toast.error(
@@ -132,15 +152,36 @@ function ProfilPage() {
         <div className="space-y-6">
           <Card>
             <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex size-16 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-                {initials}
-              </div>
+              <Avatar className="size-16">
+                {avatarPreview ? <AvatarImage src={avatarPreview} alt={displayName} /> : null}
+                <AvatarFallback className="bg-primary/10 text-xl font-bold text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <h2 className="text-xl font-semibold">{displayName}</h2>
                 <p className="text-sm text-muted-foreground">{user.email}</p>
                 <p className="text-sm text-muted-foreground">
                   {(user.user_metadata["phone"] as string | undefined) ?? "Téléphone non renseigné"}
                 </p>
+              </div>
+              <div className="ml-auto">
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => avatarInputRef.current?.click()}
+                >
+                  <Upload className="size-4" />
+                  Photo
+                </Button>
               </div>
             </CardContent>
           </Card>

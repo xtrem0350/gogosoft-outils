@@ -248,7 +248,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 export async function updateProfile(userId: string, values: Partial<Profile>) {
   const { error } = await supabase
     .from("profiles")
-    .update({ ...values, updated_at: new Date().toISOString() })
+    .update({ ...values, updated_at: new Date().toISOString() } as never)
     .eq("id", userId);
   if (error) throw error;
 }

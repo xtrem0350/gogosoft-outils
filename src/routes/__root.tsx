@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CurrentShopProvider } from "@/hooks/useCurrentShop";
 import { Toaster } from "@/components/ui/sonner";
 
 /** Ce fichier est le SEUL endroit où AppShell est monté. Ne jamais l'utiliser dans une route enfant. */
@@ -146,13 +147,15 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {isAuthPage ? (
-          <Outlet />
-        ) : (
-          <AppShell>
+        <CurrentShopProvider>
+          {isAuthPage ? (
             <Outlet />
-          </AppShell>
-        )}
+          ) : (
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          )}
+        </CurrentShopProvider>
         <Toaster position="bottom-right" />
       </AuthProvider>
     </QueryClientProvider>

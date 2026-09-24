@@ -1,12 +1,23 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createElement,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession } from "@/lib/supabaseGuard";
 import { getUserShops, type Shop } from "@/services/shopService";
 
 const STORAGE_KEY = "gogosoft.currentShopId";
+type CurrentShopValue = ReturnType<typeof useCurrentShopState>;
+const CurrentShopContext = createContext<CurrentShopValue | null>(null);
 
-export function useCurrentShop() {
+function useCurrentShopState() {
   const [shops, setShops] = useState<Shop[]>([]);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,4 +91,15 @@ export function useCurrentShop() {
     }),
     [shop, shops, switchShop, loading, refresh],
   );
+}
+
+export function CurrentShopProvider({ children }: { children: ReactNode }) {
+  const value = useCurrentShopState();
+  return createElement(CurrentShopContext.Provider, { value }, children);
+}
+
+export function useCurrentShop() {
+  const context = useContext(CurrentShopContext);
+  if (!context) throw new Error("useCurrentShop doit être utilisé dans <CurrentShopProvider>");
+  return context;
 }

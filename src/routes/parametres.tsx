@@ -8,13 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { getProfile, updateProfile } from "@/services/authService";
-import { getUserShops, updateShop } from "@/services/shopService";
+import { updateShop } from "@/services/shopService";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/parametres")({ component: ParametresPage });
 
 function ParametresPage() {
+  const { shop: currentShop, shopId } = useCurrentShop();
   const [tab, setTab] = useState("profil");
   const [profile, setProfile] = useState<{
     nom: string | null;
@@ -46,9 +48,6 @@ function ParametresPage() {
         });
       }
 
-      const shops = await getUserShops();
-      const currentShopId = window.localStorage.getItem("gogosoft.currentShopId") ?? shops[0]?.id;
-      const currentShop = shops.find((item) => item.id === currentShopId) ?? shops[0] ?? null;
       if (currentShop) {
         setShop({
           id: currentShop.id,
@@ -58,16 +57,16 @@ function ParametresPage() {
         });
       }
 
-      if (currentShopId) {
+      if (shopId) {
         const { data: rows } = await supabase
           .from("whatsapp_templates")
           .select("*")
-          .eq("shop_id", currentShopId)
+          .eq("shop_id", shopId)
           .order("created_at", { ascending: false });
         setTemplates((rows ?? []) as Array<{ id: string; name: string; message: string }>);
       }
     })().catch(() => undefined);
-  }, []);
+  }, [currentShop, shopId]);
 
   async function saveProfile() {
     const { data: userData } = await supabase.auth.getUser();

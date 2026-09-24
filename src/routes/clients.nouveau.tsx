@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createClient } from "@/services/clientService";
 
 export const Route = createFileRoute("/clients/nouveau")({
@@ -27,6 +28,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 function NewClientPage() {
   const navigate = useNavigate();
+  const { shopId } = useCurrentShop();
   const {
     register,
     handleSubmit,
@@ -44,7 +46,6 @@ function NewClientPage() {
 
   async function submit(values: FormValues) {
     try {
-      const shopId = window.localStorage.getItem("gogosoft.currentShopId");
       if (!shopId) {
         toast.error("Sélectionnez d'abord une boutique.");
         return;

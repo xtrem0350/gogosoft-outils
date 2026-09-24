@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 
 import { ShopCard } from "@/components/ShopCard";
 import { Button } from "@/components/ui/button";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { Card, CardContent } from "@/components/ui/card";
 import { getUserShops, type Shop } from "@/services/shopService";
 
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/boutiques/")({
 });
 
 function BoutiquesPage() {
+  const { shopId: currentShopId } = useCurrentShop();
   const navigate = useNavigate();
   const [shops, setShops] = useState<Shop[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +63,7 @@ function BoutiquesPage() {
             <ShopCard
               key={shop.id}
               shop={shop}
-              isCurrent={shop.id === window.localStorage.getItem("gogosoft.currentShopId")}
+              isCurrent={shop.id === currentShopId}
             />
           ))}
         </div>

@@ -6,6 +6,7 @@ import { ClientCard } from "@/components/ClientCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { getClientsByShop, searchClients, type ClientRecord } from "@/services/clientService";
 
 export const Route = createFileRoute("/clients/")({
@@ -17,9 +18,9 @@ function ClientsPage() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const { shopId, loading: shopLoading } = useCurrentShop();
 
   useEffect(() => {
-    const shopId = window.localStorage.getItem("gogosoft.currentShopId");
     if (!shopId) {
       setLoading(false);
       return;
@@ -29,11 +30,10 @@ function ClientsPage() {
       .then(setClients)
       .catch(() => setClients([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [shopId]);
 
   async function handleSearch(value: string) {
     setQuery(value);
-    const shopId = window.localStorage.getItem("gogosoft.currentShopId");
     if (!shopId) return;
     const next = value.trim() ? await searchClients(shopId, value) : await getClientsByShop(shopId);
     setClients(next);
@@ -64,7 +64,7 @@ function ClientsPage() {
         />
       </div>
 
-      {loading ? (
+      {shopLoading || loading ? (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
             Chargement des clients...

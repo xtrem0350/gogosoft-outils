@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { addShopMember, getShopMembers } from "@/services/shopService";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,9 +27,9 @@ function EquipePage() {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
+  const { shopId, loading: shopLoading } = useCurrentShop();
 
   useEffect(() => {
-    const shopId = window.localStorage.getItem("gogosoft.currentShopId");
     if (!shopId) {
       setLoading(false);
       return;
@@ -42,7 +43,7 @@ function EquipePage() {
       )
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
-  }, []);
+  }, [shopId]);
 
   async function inviteMember() {
     try {
@@ -56,7 +57,6 @@ function EquipePage() {
         return;
       }
 
-      const shopId = window.localStorage.getItem("gogosoft.currentShopId");
       if (!shopId) {
         toast.error("Aucun atelier actif.");
         return;
@@ -89,7 +89,7 @@ function EquipePage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {loading ? (
+        {shopLoading || loading ? (
           <Card className="md:col-span-2 xl:col-span-3">
             <CardContent className="p-6 text-sm text-muted-foreground">
               Chargement des membres…
