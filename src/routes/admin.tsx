@@ -3,6 +3,7 @@ import { AlertTriangle, CreditCard, Shield, Store, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { StatsCard } from "@/components/StatsCard";
+import { PageHero } from "@/components/PageHero";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -62,6 +63,11 @@ function AdminPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
+      <PageHero
+        title="Espace Admin"
+        subtitle="Supervision globale des ateliers et des forfaits"
+        imageUrl="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200"
+      />
       <div className="flex items-center gap-3">
         <Shield className="size-7 text-orange-500" />
         <div>

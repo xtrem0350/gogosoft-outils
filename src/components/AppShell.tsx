@@ -11,6 +11,14 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import logo from "@/assets/images/profile.png";
@@ -109,6 +117,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const heroRoute =
     heroRoutes[location.pathname] ??
     Object.entries(heroRoutes).find(([route]) => location.pathname.startsWith(`${route}/`))?.[1];
+  const breadcrumbLabels: Record<string, string> = {
+    "/": "Accueil",
+    "/atelier": "Atelier",
+    "/clients": "Clients",
+    "/boutiques": "Ateliers",
+    "/outils": "Outils",
+    "/categories": "Catégories",
+    "/historique": "Historique",
+    "/statistiques": "Stats",
+    "/equipe": "Techniciens",
+    "/abonnement": "Forfait",
+    "/profil": "Profil",
+    "/parametres": "Paramètres",
+    "/admin": "Espace Admin",
+  };
+  const breadcrumbLabel = breadcrumbLabels[location.pathname] ?? pageTitles[location.pathname];
 
   if (!loading && !user && !isAuthRoute) {
     void navigate({ to: "/auth", search: { redirect: location.pathname } });
@@ -172,7 +196,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Input
                 aria-label="Rechercher"
                 placeholder="Rechercher..."
-                className="h-9 border-white/20 bg-white/10 pl-9 text-white placeholder:text-slate-300"
+                className="h-9 border-orange-200 bg-white pl-9 text-slate-800 placeholder:text-slate-500 dark:bg-slate-800 dark:text-white"
               />
             </div>
             <Button
@@ -205,6 +229,23 @@ export function AppShell({ children }: { children: ReactNode }) {
               {...heroRoute}
               showBack={location.pathname !== "/atelier" && location.pathname !== "/clients"}
             />
+          ) : null}
+          {breadcrumbLabel ? (
+            <Breadcrumb className="mb-4">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Accueil</Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                {location.pathname !== "/" ? <BreadcrumbSeparator /> : null}
+                {location.pathname !== "/" ? (
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>{breadcrumbLabel}</BreadcrumbPage>
+                  </BreadcrumbItem>
+                ) : null}
+              </BreadcrumbList>
+            </Breadcrumb>
           ) : null}
           {content}
         </div>
