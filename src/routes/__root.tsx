@@ -125,14 +125,20 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasShownSplash, setHasShownSplash] = useState(
+    () => typeof window !== "undefined" && sessionStorage.getItem("gogosoft_splash_shown") === "true",
+  );
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 2000);
-    return () => window.clearTimeout(timeout);
-  }, []);
+    if (hasShownSplash) return;
+    const timer = window.setTimeout(() => {
+      setHasShownSplash(true);
+      sessionStorage.setItem("gogosoft_splash_shown", "true");
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [hasShownSplash]);
 
-  if (isLoading) {
+  if (!hasShownSplash) {
     return <SplashScreen />;
   }
 

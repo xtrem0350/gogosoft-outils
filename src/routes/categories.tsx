@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CircuitBoard, Cpu, HardDrive, Package, Smartphone, Wrench } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -31,6 +31,7 @@ const categoryPresentation: Record<Categorie, { icon: typeof Cpu; color: string 
 };
 
 function CategoriesPage() {
+  const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { data: tools = [], isLoading, error } = useTools({ shopId });
 
