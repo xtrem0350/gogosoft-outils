@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ClientSearchInput } from "@/components/ClientSearchInput";
-import { DeviceSearchInput } from "@/components/DeviceSearchInput";
+import { ClientSelect } from "@/components/selects/ClientSelect";
+import { DeviceSelect } from "@/components/selects/DeviceSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -55,6 +55,7 @@ function NewWorkshopTicketPage() {
     control,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<WorkshopFormValues>({
     resolver: zodResolver(formSchema),
@@ -119,26 +120,20 @@ function NewWorkshopTicketPage() {
           <CardHeader>
             <CardTitle>Client</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Rechercher un client *</Label>
-              <ClientSearchInput
-                shopId={shopId}
-                onSelect={selectClient}
-                onCreateNew={() => toast.info("Créez d'abord ce client depuis la page Clients.")}
-              />
-              <Input type="hidden" {...register("client_name")} />
-              {errors.client_name && (
-                <p className="text-sm text-destructive">{errors.client_name.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="client_whatsapp">WhatsApp *</Label>
-              <Input id="client_whatsapp" {...register("client_whatsapp")} />
-              {errors.client_whatsapp && (
-                <p className="text-sm text-destructive">{errors.client_whatsapp.message}</p>
-              )}
-            </div>
+          <CardContent className="space-y-2">
+            <Label>Client *</Label>
+            <ClientSelect
+              shopId={shopId}
+              value={clientId ?? undefined}
+              onSelect={selectClient}
+              onCreateNew={() => void navigate({ to: "/clients/nouveau" })}
+            />
+            {clientWhatsapp ? (
+              <p className="text-sm text-muted-foreground">WhatsApp : {clientWhatsapp}</p>
+            ) : null}
+            {errors.client_name && (
+              <p className="text-sm text-destructive">{errors.client_name.message}</p>
+            )}
           </CardContent>
         </Card>
         <Card>
@@ -147,8 +142,8 @@ function NewWorkshopTicketPage() {
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2 sm:col-span-2">
-              <Label>Rechercher un appareil déjà connu</Label>
-              <DeviceSearchInput
+              <Label>Appareil déjà connu</Label>
+              <DeviceSelect
                 shopId={shopId}
                 onSelect={(device) => {
                   setValue("device_model", device.device_model, { shouldValidate: true });
