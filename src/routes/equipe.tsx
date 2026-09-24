@@ -58,12 +58,12 @@ function EquipePage() {
 
       const shopId = window.localStorage.getItem("gogosoft.currentShopId");
       if (!shopId) {
-        toast.error("Aucune boutique active.");
+        toast.error("Aucun atelier actif.");
         return;
       }
 
       await addShopMember(shopId, foundUser.id, "technicien");
-      toast.success("Membre ajouté à la boutique.");
+      toast.success("Membre ajouté à l'atelier.");
       setOpen(false);
       setEmail("");
       const next = await getShopMembers(shopId);
@@ -98,7 +98,7 @@ function EquipePage() {
         ) : members.length === 0 ? (
           <Card className="md:col-span-2 xl:col-span-3">
             <CardContent className="p-6 text-sm text-muted-foreground">
-              Aucun membre dans cette boutique.
+              Aucun membre dans cet atelier.
             </CardContent>
           </Card>
         ) : (

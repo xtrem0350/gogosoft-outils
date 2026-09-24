@@ -48,23 +48,23 @@ function NewShopPage() {
         await addShopMember(shop.id, userData.user.id, "owner");
       }
 
-      toast.success("Boutique créée.");
+      toast.success("Atelier créé.");
       await navigate({ to: "/boutiques" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de créer la boutique.");
+      toast.error(error instanceof Error ? error.message : "Impossible de créer l'atelier.");
     }
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <p className="text-sm font-medium text-primary">Boutiques</p>
-        <h1 className="mt-2 text-3xl font-bold">Nouvelle boutique</h1>
+        <p className="text-sm font-medium text-primary">Ateliers</p>
+        <h1 className="mt-2 text-3xl font-bold">Créer un nouvel atelier</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Informations boutique</CardTitle>
+          <CardTitle>Informations atelier</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={(event) => void handleSubmit(submit)(event)} className="space-y-4">

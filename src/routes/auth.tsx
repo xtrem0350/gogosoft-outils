@@ -199,13 +199,13 @@ function AuthPage() {
                     >
                       {avatarPreview ? (
                         <>
-                          <img src={avatarPreview} alt="Aperçu de la photo de profil" className="size-full object-cover" />
+                          <img loading="lazy" decoding="async" src={avatarPreview} alt="Aperçu de la photo de profil" className="size-full object-cover" />
                           <span className="absolute bottom-1.5 right-1.5 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
                             <Camera className="size-4" />
                           </span>
                         </>
                       ) : (
-                        <img src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                        <img loading="lazy" decoding="async" src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
                       )}
                     </button>
                     <input
@@ -226,7 +226,7 @@ function AuthPage() {
                 ) : (
                   <>
                     <div className="size-32 overflow-hidden rounded-full border-2 border-slate-300 dark:border-slate-600">
-                      <img src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                      <img loading="lazy" decoding="async" src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>

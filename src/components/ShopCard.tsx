@@ -1,4 +1,4 @@
-/** Carte d'une boutique du réparateur. */
+/** Carte d'un atelier du réparateur. */
 import { Store } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ interface ShopCardProps {
   isCurrent?: boolean;
 }
 
-/** Affiche une boutique avec son adresse et son statut. */
+/** Affiche un atelier avec son adresse et son statut. */
 export function ShopCard({ shop, isCurrent = false }: ShopCardProps) {
   return (
     <Card className="border-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">

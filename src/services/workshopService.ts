@@ -347,15 +347,18 @@ export async function searchDevices(
   query: string,
 ): Promise<KnownDevice[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
-  const q = query.trim();
-  if (q.length < 2) return [];
-  const { data, error } = await supabase
+  const q = query.trim().replace(/[,()%]/g, "");
+  if (q.length === 1) return [];
+  let request = supabase
     .from("workshop_tickets")
     .select("device_model, device_imei, device_sn, device_processor, device_os_version")
-    .eq("shop_id", requireShopId(shopId))
-    .or(`device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`)
-    .order("created_at", { ascending: false })
-    .limit(30);
+    .eq("shop_id", requireShopId(shopId));
+  if (q.length >= 2) {
+    request = request.or(
+      `device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`,
+    );
+  }
+  const { data, error } = await request.order("created_at", { ascending: false }).limit(q ? 30 : 200);
   if (error) throw error;
   const seen = new Set<string>();
   const devices: KnownDevice[] = [];

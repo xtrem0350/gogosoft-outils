@@ -27,13 +27,13 @@ function BoutiquesPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">Boutiques</p>
-          <h1 className="mt-2 text-3xl font-bold">Mes boutiques</h1>
+          <p className="text-sm font-medium text-primary">Ateliers</p>
+          <h1 className="mt-2 text-3xl font-bold">Mes ateliers</h1>
         </div>
         <Button asChild>
           <Link to="/boutiques/nouveau">
             <Plus />
-            Nouvelle boutique
+            Nouvel atelier
           </Link>
         </Button>
       </div>
@@ -41,16 +41,16 @@ function BoutiquesPage() {
       {loading ? (
         <Card>
           <CardContent className="p-6 text-sm text-muted-foreground">
-            Chargement des boutiques...
+            Chargement des ateliers...
           </CardContent>
         </Card>
       ) : shops.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
-            Aucune boutique pour le moment.
+            Aucun atelier pour le moment.
             <div className="mt-4">
               <Button onClick={() => void navigate({ to: "/boutiques/nouveau" })}>
-                Créer une boutique
+                Créer un atelier
               </Button>
             </div>
           </CardContent>

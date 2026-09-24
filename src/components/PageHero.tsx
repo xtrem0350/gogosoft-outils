@@ -15,7 +15,7 @@ export function PageHero({ title, subtitle, imageUrl, showBack = false }: PageHe
 
   return (
     <div className="relative mb-6 h-48 overflow-hidden rounded-2xl bg-slate-900">
-      <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
+      <img loading="lazy" decoding="async" src={imageUrl} alt={title} className="h-full w-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 to-slate-900/20" />
       {showBack ? (
         <div className="absolute left-4 top-4 z-10">

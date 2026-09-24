@@ -49,7 +49,6 @@ export function useCurrentShop() {
       if (
         event === "SIGNED_IN" ||
         event === "SIGNED_OUT" ||
-        event === "TOKEN_REFRESHED" ||
         event === "USER_UPDATED"
       ) {
         void refresh();

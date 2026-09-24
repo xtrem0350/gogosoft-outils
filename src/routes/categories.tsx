@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CircuitBoard, Cpu, HardDrive, Package, Smartphone, Wrench } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -31,6 +31,7 @@ const categoryPresentation: Record<Categorie, { icon: typeof Cpu; color: string 
 };
 
 function CategoriesPage() {
+  const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { data: tools = [], isLoading, error } = useTools({ shopId });
 
@@ -79,7 +80,7 @@ function CategoriesPage() {
           title="Aucun outil à classer"
           description="Ajoutez un outil pour commencer à organiser votre catalogue."
           actionLabel="Voir les outils"
-          onAction={() => window.location.assign("/outils")}
+          onAction={() => void navigate({ to: "/outils" })}
         />
       ) : null}
 
@@ -103,7 +104,7 @@ function CategoriesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    window.location.assign(`/outils?categorie=${encodeURIComponent(category)}`)
+                    void navigate({ href: `/outils?categorie=${encodeURIComponent(category)}` })
                   }
                 >
                   Voir les outils
