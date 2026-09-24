@@ -5,7 +5,7 @@ export function AnimatedLogo({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-3">
       <div className="logo-enter size-11 shrink-0 overflow-hidden rounded-xl border border-white/20 bg-white/10 p-1 shadow-lg transition-transform hover:rotate-1 hover:scale-105">
-        <img
+        <img loading="lazy" decoding="async"
           src={logo}
           alt="GogoSoft Technology & Solutions"
           className="size-full rounded-lg object-cover"

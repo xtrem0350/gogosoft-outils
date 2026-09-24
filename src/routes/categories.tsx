@@ -79,7 +79,7 @@ function CategoriesPage() {
           title="Aucun outil à classer"
           description="Ajoutez un outil pour commencer à organiser votre catalogue."
           actionLabel="Voir les outils"
-          onAction={() => window.location.assign("/outils")}
+          onAction={() => void navigate({ to: "/outils" })}
         />
       ) : null}
 
@@ -103,7 +103,7 @@ function CategoriesPage() {
                   variant="outline"
                   size="sm"
                   onClick={() =>
-                    window.location.assign(`/outils?categorie=${encodeURIComponent(category)}`)
+                    void navigate({ href: `/outils?categorie=${encodeURIComponent(category)}` })
                   }
                 >
                   Voir les outils

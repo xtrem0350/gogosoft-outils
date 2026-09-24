@@ -50,7 +50,7 @@ export function ToolImage({ tool, size = "md", onClick, className, imageUrl }: T
   const imageProps = imageUrl === undefined ? {} : { imageUrl };
   const content =
     imageUrl && !imageFailed ? (
-      <img
+      <img loading="lazy" decoding="async"
         src={imageUrl}
         alt={`Logo de ${tool.nom}`}
         className="h-full w-full object-cover"

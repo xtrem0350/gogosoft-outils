@@ -76,6 +76,9 @@ function NewWorkshopTicketPage() {
     },
   });
 
+  const clientId = watch("client_id");
+  const clientWhatsapp = watch("client_whatsapp");
+
   function showDiagnosis(values: WorkshopFormValues) {
     setDiagnosis(generateDiagnosis(values.issues as IssueKey[]));
   }
@@ -88,7 +91,7 @@ function NewWorkshopTicketPage() {
 
   async function submit(values: WorkshopFormValues) {
     if (shopLoading || !shopId) {
-      toast.error("Sélectionnez une boutique avant de créer une fiche.");
+      toast.error("Sélectionnez un atelier avant de créer une fiche.");
       return;
     }
     try {
