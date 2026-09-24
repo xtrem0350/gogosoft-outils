@@ -210,7 +210,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Button
               asChild
               size="sm"
-              className="bg-ivoirien bg-ivoirien-hover shadow-3d hidden sm:inline-flex"
+              className="hidden bg-[#5b2c06] font-bold text-white shadow-3d transition-colors hover:bg-[#713807] sm:inline-flex"
             >
               <Link to="/atelier/nouveau">
                 <Plus />

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Wrench } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
@@ -51,6 +51,8 @@ function WorkshopListPage() {
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [filter, setFilter] = useState<Filter>("tous");
+  const [startDate, setStartDate] = useState("2026-01-01");
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,8 +73,26 @@ function WorkshopListPage() {
     void load();
   }, [load, shopLoading]);
 
-  const filtered =
-    filter === "tous" ? tickets : tickets.filter((ticket) => ticket.status === filter);
+  const periodTickets = useMemo(() => {
+    const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+    const end = endDate ? new Date(`${endDate}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
+    return tickets.filter((ticket) => {
+      if (!ticket.created_at) return false;
+      const createdAt = new Date(ticket.created_at).getTime();
+      return createdAt >= start && createdAt <= end;
+    });
+  }, [endDate, startDate, tickets]);
+
+  const statusCounts = useMemo(
+    () =>
+      periodTickets.reduce<Record<WorkshopStatus, number>>(
+        (counts, ticket) => ({ ...counts, [ticket.status]: counts[ticket.status] + 1 }),
+        { en_attente: 0, en_cours: 0, termine: 0, livre: 0 },
+      ),
+    [periodTickets],
+  );
+
+  const filtered = filter === "tous" ? periodTickets : periodTickets.filter((ticket) => ticket.status === filter);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -90,13 +110,47 @@ function WorkshopListPage() {
         </Button>
       </div>
 
+      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="space-y-1.5">
+            <label htmlFor="workshop-start-date" className="text-sm font-semibold text-foreground">
+              Période du
+            </label>
+            <input
+              id="workshop-start-date"
+              type="date"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label htmlFor="workshop-end-date" className="text-sm font-semibold text-foreground">
+              au
+            </label>
+            <input
+              id="workshop-end-date"
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
+            />
+          </div>
+          <p className="pb-2 text-sm text-muted-foreground">
+            {periodTickets.length} fiche(s) sur la période sélectionnée
+          </p>
+        </div>
+      </div>
+
       <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
         <TabsList>
-          <TabsTrigger value="tous">Tout</TabsTrigger>
-          <TabsTrigger value="en_attente">En attente</TabsTrigger>
-          <TabsTrigger value="en_cours">En cours</TabsTrigger>
-          <TabsTrigger value="termine">Terminé</TabsTrigger>
-          <TabsTrigger value="livre">Livré</TabsTrigger>
+          <TabsTrigger value="tous">Tout ({periodTickets.length})</TabsTrigger>
+          <TabsTrigger value="en_attente">En attente ({statusCounts.en_attente})</TabsTrigger>
+          <TabsTrigger value="en_cours">En cours ({statusCounts.en_cours})</TabsTrigger>
+          <TabsTrigger value="termine">Terminé ({statusCounts.termine})</TabsTrigger>
+          <TabsTrigger value="livre">Livré ({statusCounts.livre})</TabsTrigger>
         </TabsList>
       </Tabs>
 
