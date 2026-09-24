@@ -112,15 +112,15 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!loading && !user && !isAuthRoute) {
     void navigate({ to: "/auth", search: { redirect: location.pathname } });
-    return null;
+    return <LoadingShell />;
   }
 
   if (!loading && user && !shopId && !isShopExemptRoute) {
     void navigate({ to: "/boutiques/nouveau" });
-    return null;
+    return <LoadingShell />;
   }
 
-  if (loading) return null;
+  if (loading) return <LoadingShell />;
 
   const content = isExemptRoute ? (
     <>{children}</>
@@ -213,6 +213,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           Développé par Thierry Gogo &amp; Co
         </footer>
       </main>
+    </div>
+  );
+}
+
+function LoadingShell() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+      Chargement...
     </div>
   );
 }

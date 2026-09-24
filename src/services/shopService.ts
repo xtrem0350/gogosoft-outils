@@ -20,7 +20,6 @@ export interface CreateShopData {
 /** Récupère toutes les boutiques de l'utilisateur courant, propriétaire ou membre. */
 export async function getUserShops(): Promise<Shop[]> {
   const hasSession = await hasActiveSession();
-  console.log("[shopService] called", { hasSession, shopId: null });
   if (!hasSession) return [];
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;

@@ -62,11 +62,22 @@ function useCurrentShopState() {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+    const syncSession = (userId: string | undefined) => {
+      if (!mounted) return;
+      void refresh(userId);
+    };
+
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
-      void refresh(session?.user.id);
+      syncSession(session?.user.id);
+    });
+
+    void supabase.auth.getSession().then(({ data }) => {
+      syncSession(data.session?.user.id);
     });
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, [refresh]);
