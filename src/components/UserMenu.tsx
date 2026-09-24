@@ -46,17 +46,21 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 px-2 text-slate-800 hover:bg-orange-50 hover:text-orange-700 dark:text-white dark:hover:bg-slate-800"
+          className="flex items-center gap-2 px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <Avatar className="size-8 border border-orange-200">
+          <Avatar className="size-8 border border-sidebar-border">
             {profile?.avatar_url ? (
               <AvatarImage src={profile.avatar_url} alt={resolvedName} />
             ) : null}
-            <AvatarFallback className="bg-primary/20 text-xs text-white">{initials}</AvatarFallback>
+            <AvatarFallback className="bg-sidebar-primary/20 text-xs text-sidebar-foreground">
+              {initials}
+            </AvatarFallback>
           </Avatar>
           <div className="hidden min-w-0 text-left md:block">
             <p className="truncate text-sm font-medium leading-none">{resolvedName}</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-300">{profile?.role ?? "Réparateur"}</p>
+            <p className="text-[10px] text-sidebar-foreground/65">
+              {profile?.role ?? "Réparateur"}
+            </p>
           </div>
         </Button>
       </DropdownMenuTrigger>

@@ -3,6 +3,8 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20260926000000_fix_user_roles_rls.sql
+│   │   ├── 📄 20260925000000_super_admin.sql
 │   │   ├── 📄 20260923122630_5dcb2912-d6c6-4bc1-8d4a-5bf61650a054.sql
 │   │   ├── 📄 20260923000000_pseudo.sql
 │   │   ├── 📄 20260923000000_avatar.sql
@@ -30,7 +32,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 historyService.ts
 │   │   ├── 📄 guideService.ts
 │   │   ├── 📄 clientService.ts
-│   │   └── 📄 authService.ts
+│   │   ├── 📄 authService.ts
+│   │   └── 📄 adminService.ts
 │   ├── 📁 routes/
 │   │   ├── 📄 __root.tsx
 │   │   ├── 📄 statistiques.tsx
@@ -53,6 +56,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 atelier.nouveau.tsx
 │   │   ├── 📄 atelier.index.tsx
 │   │   ├── 📄 atelier.$id.tsx
+│   │   ├── 📄 admin.tsx
 │   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
 │   │   ├── 📄 whatsapp.ts

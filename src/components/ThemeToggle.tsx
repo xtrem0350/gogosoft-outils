@@ -7,7 +7,13 @@ import { useTheme } from "@/hooks/useTheme";
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
   return (
-    <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Changer de thème">
+    <Button
+      variant="ghost"
+      size="icon"
+      className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      onClick={toggleTheme}
+      aria-label="Changer de thème"
+    >
       {theme === "dark" ? <Sun /> : <Moon />}
     </Button>
   );

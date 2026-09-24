@@ -158,7 +158,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex min-h-20 items-center justify-between gap-3 border-b bg-white/80 px-4 shadow-3d backdrop-blur-md sm:px-5 lg:px-8 dark:bg-slate-900/80">
+        <header className="flex min-h-20 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <div className="lg:hidden">
               <Sidebar
@@ -166,7 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-slate-700 hover:bg-orange-50 hover:text-orange-700 dark:text-white"
+                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     aria-label="Ouvrir le menu"
                   >
                     <Menu />
@@ -181,12 +181,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               alt="GogoSoft"
               className="size-10 rounded-xl object-cover"
             />
-            <h1 className="truncate font-display text-base font-semibold text-slate-800 sm:text-lg dark:text-white">
+            <h1 className="truncate font-display text-base font-semibold text-sidebar-foreground sm:text-lg">
               GogoSoft Tools Manager
             </h1>
           </div>
 
-          <h2 className="hidden min-w-0 flex-1 truncate px-4 text-lg font-semibold text-slate-800 xl:block dark:text-white">
+          <h2 className="hidden min-w-0 flex-1 truncate px-4 text-lg font-semibold text-sidebar-foreground xl:block">
             {pageTitles[location.pathname] ?? "GogoSoft Tools Manager"}
           </h2>
 
@@ -196,14 +196,14 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Input
                 aria-label="Rechercher"
                 placeholder="Rechercher..."
-                className="h-9 border-orange-200 bg-white pl-9 text-slate-800 placeholder:text-slate-500 dark:bg-slate-800 dark:text-white"
+                className="h-9 border-sidebar-border bg-sidebar-accent pl-9 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
               />
             </div>
             <Button
               variant="ghost"
               size="icon"
               aria-label="Notifications"
-              className="relative text-slate-700 hover:bg-orange-50 hover:text-orange-700 dark:text-white"
+              className="relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
             >
               <Bell />
             </Button>

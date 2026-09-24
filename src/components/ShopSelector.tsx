@@ -19,7 +19,7 @@ export function ShopSelector() {
       <Button
         variant="outline"
         size="sm"
-        className="border-orange-200 bg-white text-slate-800 hover:bg-orange-50 hover:text-orange-700 dark:bg-slate-800 dark:text-white"
+        className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
       >
         <Store className="size-4" />
         Sélectionner un atelier...
@@ -33,7 +33,7 @@ export function ShopSelector() {
         <Button
           variant="outline"
           size="sm"
-          className="border-orange-200 bg-white text-slate-800 hover:bg-orange-50 hover:text-orange-700 dark:bg-slate-800 dark:text-white"
+          className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
         >
           <Store className="size-4" />
           {shop?.name ?? "Sélectionner un atelier..."}
