@@ -17,13 +17,13 @@ import { cn } from "@/lib/utils";
 export interface SearchableOption {
   value: string;
   label: string;
-  description?: string;
-  icon?: ReactNode;
+  description?: string | undefined;
+  icon?: ReactNode | undefined;
 }
 
 interface SearchableSelectProps {
   options: SearchableOption[];
-  value?: string;
+  value?: string | undefined;
   onSelect: (option: SearchableOption) => void;
   placeholder?: string;
   searchPlaceholder?: string;
@@ -48,7 +48,7 @@ export function SearchableSelect({
   className,
 }: SearchableSelectProps) {
   const [open, setOpen] = useState(false);
-  const selected = options.find((option) => option.value === value);
+  const selected = value ? options.find((option) => option.value === value) : undefined;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -118,10 +118,7 @@ export function SearchableSelect({
                     ) : null}
                   </div>
                   <Check
-                    className={cn(
-                      "size-4",
-                      option.value === value ? "opacity-100" : "opacity-0",
-                    )}
+                    className={cn("size-4", option.value === value ? "opacity-100" : "opacity-0")}
                   />
                 </CommandItem>
               ))}

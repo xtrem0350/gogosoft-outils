@@ -47,7 +47,7 @@ function ShopDetailsPage() {
   async function handleDelete() {
     try {
       await deleteShop(id);
-      toast.success("Boutique supprimée.");
+      toast.success("Atelier supprimé.");
       await navigate({ to: "/boutiques" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Suppression impossible.");
@@ -57,18 +57,18 @@ function ShopDetailsPage() {
   const memberCount = useMemo(() => members.length, [members.length]);
 
   if (loading) {
-    return <div className="p-6 text-sm text-muted-foreground">Chargement de la boutique…</div>;
+    return <div className="p-6 text-sm text-muted-foreground">Chargement de l'atelier…</div>;
   }
 
   if (!shop) {
-    return <div className="p-6 text-sm text-muted-foreground">Boutique introuvable.</div>;
+    return <div className="p-6 text-sm text-muted-foreground">Atelier introuvable.</div>;
   }
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-primary">Boutique</p>
+          <p className="text-sm font-medium text-primary">Atelier</p>
           <h1 className="mt-2 text-3xl font-bold">{shop.name}</h1>
         </div>
         <div className="flex gap-2">
@@ -120,7 +120,7 @@ function ShopDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             {members.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucun membre pour cette boutique.</p>
+              <p className="text-sm text-muted-foreground">Aucun membre pour cet atelier.</p>
             ) : (
               members.map((member) => (
                 <div

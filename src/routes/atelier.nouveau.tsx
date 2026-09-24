@@ -190,14 +190,23 @@ function NewWorkshopTicketPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="entry_fee">Frais de diagnostic (FCFA)</Label>
-                <Input id="entry_fee" type="number" min="0" {...register("entry_fee", { valueAsNumber: true })} />
+                <Input
+                  id="entry_fee"
+                  type="number"
+                  min="0"
+                  {...register("entry_fee", { valueAsNumber: true })}
+                />
               </div>
               <Controller
                 name="entry_fee_paid"
                 control={control}
                 render={({ field }) => (
                   <div className="flex items-center gap-3 pt-7">
-                    <Switch id="entry_fee_paid" checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      id="entry_fee_paid"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                     <Label htmlFor="entry_fee_paid">Frais payés</Label>
                   </div>
                 )}

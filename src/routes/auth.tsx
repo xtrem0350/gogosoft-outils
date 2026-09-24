@@ -22,11 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
-import {
-  checkPseudoExists,
-  signInWithIdentifier,
-  signUp,
-} from "@/services/authService";
+import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
 
 const pseudoSchema = z
   .string()
@@ -199,13 +195,25 @@ function AuthPage() {
                     >
                       {avatarPreview ? (
                         <>
-                          <img loading="lazy" decoding="async" src={avatarPreview} alt="Aperçu de la photo de profil" className="size-full object-cover" />
+                          <img
+                            loading="lazy"
+                            decoding="async"
+                            src={avatarPreview}
+                            alt="Aperçu de la photo de profil"
+                            className="size-full object-cover"
+                          />
                           <span className="absolute bottom-1.5 right-1.5 flex size-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm">
                             <Camera className="size-4" />
                           </span>
                         </>
                       ) : (
-                        <img loading="lazy" decoding="async" src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                        <img
+                          loading="lazy"
+                          decoding="async"
+                          src={profileLogo}
+                          alt="GogoSoft logo"
+                          className="size-full object-cover"
+                        />
                       )}
                     </button>
                     <input
@@ -215,23 +223,35 @@ function AuthPage() {
                       hidden
                       onChange={(event) => setAvatarFile(event.target.files?.[0] ?? null)}
                     />
-                    {!avatarPreview ? <p className="text-center text-xs text-slate-400">Cliquez pour ajouter une photo</p> : null}
+                    {!avatarPreview ? (
+                      <p className="text-center text-xs text-slate-400">
+                        Cliquez pour ajouter une photo
+                      </p>
+                    ) : null}
                     <div>
                       <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
                       <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
-                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos diagnostics et l’activité de votre équipe.
+                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients,
+                        vos diagnostics et l’activité de votre équipe.
                       </p>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="size-32 overflow-hidden rounded-full border-2 border-slate-300 dark:border-slate-600">
-                      <img loading="lazy" decoding="async" src={profileLogo} alt="GogoSoft logo" className="size-full object-cover" />
+                      <img
+                        loading="lazy"
+                        decoding="async"
+                        src={profileLogo}
+                        alt="GogoSoft logo"
+                        className="size-full object-cover"
+                      />
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
                       <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
-                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos diagnostics et l’activité de votre équipe.
+                        Tous vos outils, au même endroit. Centralisez vos réparations, vos clients,
+                        vos diagnostics et l’activité de votre équipe.
                       </p>
                     </div>
                   </>
@@ -391,7 +411,8 @@ function AuthPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Aucune photo sélectionnée</AlertDialogTitle>
             <AlertDialogDescription>
-              Voulez-vous utiliser l&apos;image par défaut ? Vous pourrez la modifier plus tard dans votre profil.
+              Voulez-vous utiliser l&apos;image par défaut ? Vous pourrez la modifier plus tard dans
+              votre profil.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

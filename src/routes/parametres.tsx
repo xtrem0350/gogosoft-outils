@@ -59,7 +59,8 @@ function ParametresPage() {
       }
 
       if (currentShopId) {
-        const { data: rows } = await (supabase.from("whatsapp_templates" as never) as any)
+        const { data: rows } = await supabase
+          .from("whatsapp_templates")
           .select("*")
           .eq("shop_id", currentShopId)
           .order("created_at", { ascending: false });
@@ -122,9 +123,7 @@ function ParametresPage() {
                   <Input
                     id="full-name"
                     value={profile.nom ?? ""}
-                    onChange={(e) =>
-                      setProfile((current) => ({ ...current, nom: e.target.value }))
-                    }
+                    onChange={(e) => setProfile((current) => ({ ...current, nom: e.target.value }))}
                     className="pl-9"
                   />
                 </div>

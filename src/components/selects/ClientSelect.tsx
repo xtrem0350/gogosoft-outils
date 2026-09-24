@@ -6,7 +6,7 @@ import { useAsyncList } from "./useAsyncOptions";
 
 interface Props {
   shopId: string | null;
-  value?: string;
+  value?: string | undefined;
   onSelect: (client: ClientRecord) => void;
   onCreateNew?: () => void;
 }

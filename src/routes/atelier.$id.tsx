@@ -39,7 +39,9 @@ function WorkshopDetailsPage() {
     void getEvents(id)
       .then(setEvents)
       .catch((reason: unknown) =>
-        toast.error(reason instanceof Error ? reason.message : "Impossible de charger l'historique."),
+        toast.error(
+          reason instanceof Error ? reason.message : "Impossible de charger l'historique.",
+        ),
       );
   }, [id]);
 
@@ -66,7 +68,9 @@ function WorkshopDetailsPage() {
       setTicket(await markEntryFeePaid(id));
       toast.success("Frais de diagnostic marqués comme payés.");
     } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Impossible de mettre à jour le paiement.");
+      toast.error(
+        reason instanceof Error ? reason.message : "Impossible de mettre à jour le paiement.",
+      );
     }
   }
 
@@ -205,7 +209,9 @@ function WorkshopDetailsPage() {
           <CardHeader>
             <CardTitle>Notes de diagnostic</CardTitle>
           </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{ticket.diagnostic_notes}</CardContent>
+          <CardContent className="text-sm text-muted-foreground">
+            {ticket.diagnostic_notes}
+          </CardContent>
         </Card>
       )}
       <Card>

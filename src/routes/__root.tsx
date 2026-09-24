@@ -126,7 +126,8 @@ function RootComponent() {
   const location = useLocation();
   const isAuthPage = location.pathname === "/auth";
   const [hasShownSplash, setHasShownSplash] = useState(
-    () => typeof window !== "undefined" && sessionStorage.getItem("gogosoft_splash_shown") === "true",
+    () =>
+      typeof window !== "undefined" && sessionStorage.getItem("gogosoft_splash_shown") === "true",
   );
 
   useEffect(() => {

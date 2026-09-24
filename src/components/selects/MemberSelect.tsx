@@ -25,7 +25,11 @@ async function loadMembers(shopId: string): Promise<MemberOption[]> {
     : { data: [] };
   return members.map((m) => {
     const p = (data ?? []).find((x) => x.id === m.user_id);
-    return { user_id: m.user_id, role: m.role, name: p?.full_name || p?.email || m.user_id.slice(0, 8) };
+    return {
+      user_id: m.user_id,
+      role: m.role,
+      name: p?.full_name || p?.email || m.user_id.slice(0, 8),
+    };
   });
 }
 

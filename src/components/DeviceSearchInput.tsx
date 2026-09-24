@@ -65,7 +65,9 @@ export function DeviceSearchInput({
           ) : results.length > 0 ? (
             <ul className="max-h-60 overflow-auto">
               {results.map((device, index) => (
-                <li key={`${device.device_imei ?? device.device_sn ?? device.device_model}-${index}`}>
+                <li
+                  key={`${device.device_imei ?? device.device_sn ?? device.device_model}-${index}`}
+                >
                   <button
                     type="button"
                     className="w-full px-3 py-2 text-left text-sm hover:bg-accent"

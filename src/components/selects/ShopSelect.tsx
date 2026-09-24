@@ -3,7 +3,7 @@ import { getUserShops, type Shop } from "@/services/shopService";
 import { useAsyncList } from "./useAsyncOptions";
 
 interface Props {
-  value?: string;
+  value?: string | undefined;
   onSelect: (shop: Shop) => void;
 }
 
@@ -12,7 +12,11 @@ export function ShopSelect({ value, onSelect }: Props) {
   const { items, loading } = useAsyncList("shops", getUserShops);
   return (
     <SearchableSelect
-      options={items.map((s) => ({ value: s.id, label: s.name, description: s.address ?? undefined }))}
+      options={items.map((s) => ({
+        value: s.id,
+        label: s.name,
+        description: s.address ?? undefined,
+      }))}
       value={value}
       loading={loading}
       placeholder="Sélectionner un atelier"

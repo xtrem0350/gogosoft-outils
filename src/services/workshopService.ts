@@ -358,7 +358,9 @@ export async function searchDevices(
       `device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`,
     );
   }
-  const { data, error } = await request.order("created_at", { ascending: false }).limit(q ? 30 : 200);
+  const { data, error } = await request
+    .order("created_at", { ascending: false })
+    .limit(q ? 30 : 200);
   if (error) throw error;
   const seen = new Set<string>();
   const devices: KnownDevice[] = [];

@@ -59,6 +59,8 @@ function createSupabaseClient() {
     );
   }
 
+  // The generated schema does not yet cover every legacy RPC/table used by the app.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return createClient<any>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     global: {
       fetch: createSupabaseFetch(SUPABASE_PUBLISHABLE_KEY),

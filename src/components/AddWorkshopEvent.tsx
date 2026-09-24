@@ -45,7 +45,10 @@ export function AddWorkshopEvent({ ticketId, onAdded }: AddWorkshopEventProps) {
     <div className="space-y-3">
       <div className="space-y-2">
         <Label>Type d'événement</Label>
-        <Select value={eventType} onValueChange={(value) => setEventType(value as WorkshopEventType)}>
+        <Select
+          value={eventType}
+          onValueChange={(value) => setEventType(value as WorkshopEventType)}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

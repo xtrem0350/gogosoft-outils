@@ -29,12 +29,22 @@ async function loadParts(shopId: string): Promise<Part[]> {
 }
 
 /** Sélection d'une pièce en stock. */
-export function PartSelect({ shopId, onSelect }: { shopId: string | null; onSelect: (p: Part) => void }) {
+export function PartSelect({
+  shopId,
+  onSelect,
+}: {
+  shopId: string | null;
+  onSelect: (p: Part) => void;
+}) {
   const [value, setValue] = useState<string>();
   const { items, loading } = useAsyncList(shopId, () => loadParts(shopId ?? ""));
   return (
     <SearchableSelect
-      options={items.map((p) => ({ value: p.id, label: p.name, description: `Stock: ${p.quantity}` }))}
+      options={items.map((p) => ({
+        value: p.id,
+        label: p.name,
+        description: `Stock: ${p.quantity}`,
+      }))}
       value={value}
       loading={loading}
       placeholder="Sélectionner une pièce"

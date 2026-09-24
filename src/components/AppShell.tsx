@@ -67,7 +67,13 @@ export function AppShell({ children }: { children: ReactNode }) {
                 }
               />
             </div>
-            <img loading="lazy" decoding="async" src={logo} alt="GogoSoft" className="size-10 rounded-xl object-cover" />
+            <img
+              loading="lazy"
+              decoding="async"
+              src={logo}
+              alt="GogoSoft"
+              className="size-10 rounded-xl object-cover"
+            />
             <h1 className="truncate font-display text-base font-semibold text-white sm:text-lg">
               GogoSoft Tools Manager
             </h1>

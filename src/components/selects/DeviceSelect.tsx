@@ -13,7 +13,8 @@ interface Props {
 export function DeviceSelect({ shopId, onSelect }: Props) {
   const [value, setValue] = useState<string>();
   const { items, loading } = useAsyncList(shopId, () => searchDevices(shopId, ""));
-  const keyOf = (d: KnownDevice, i: number) => d.device_imei || d.device_sn || `${d.device_model}-${i}`;
+  const keyOf = (d: KnownDevice, i: number) =>
+    d.device_imei || d.device_sn || `${d.device_model}-${i}`;
   return (
     <SearchableSelect
       options={items.map((d, i) => ({

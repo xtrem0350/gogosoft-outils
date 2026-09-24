@@ -29,12 +29,22 @@ async function loadServices(shopId: string): Promise<ServicePrice[]> {
 }
 
 /** Sélection d'un service tarifé. */
-export function ServiceSelect({ shopId, onSelect }: { shopId: string | null; onSelect: (s: ServicePrice) => void }) {
+export function ServiceSelect({
+  shopId,
+  onSelect,
+}: {
+  shopId: string | null;
+  onSelect: (s: ServicePrice) => void;
+}) {
   const [value, setValue] = useState<string>();
   const { items, loading } = useAsyncList(shopId, () => loadServices(shopId ?? ""));
   return (
     <SearchableSelect
-      options={items.map((s) => ({ value: s.id, label: s.service_name, description: `${s.price} FCFA` }))}
+      options={items.map((s) => ({
+        value: s.id,
+        label: s.service_name,
+        description: `${s.price} FCFA`,
+      }))}
       value={value}
       loading={loading}
       placeholder="Sélectionner un service"

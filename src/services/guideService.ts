@@ -84,9 +84,7 @@ export async function getPublicGuides(filters: PublicGuideFilters = {}): Promise
   if (filters.device_model) request = request.ilike("device_model", `%${filters.device_model}%`);
   if (filters.difficulty) request = request.eq("difficulty", filters.difficulty);
   if (filters.search) {
-    request = request.or(
-      `brand.ilike.%${filters.search}%,device_model.ilike.%${filters.search}%`,
-    );
+    request = request.or(`brand.ilike.%${filters.search}%,device_model.ilike.%${filters.search}%`);
   }
   const { data, error } = await request.order("created_at", { ascending: false });
   if (error) throw error;
