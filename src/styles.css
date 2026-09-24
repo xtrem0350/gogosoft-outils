@@ -1,110 +1,13 @@
 @import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
-@import "./styles/design-system.css";
 
 @custom-variant dark (&:is(.dark *));
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.bg-ivoirien {
-  background: linear-gradient(135deg, #f77f00 0%, #e86a00 50%, #009e60 100%);
-  color: white;
-}
-
-.bg-ivoirien-hover:hover {
-  background: linear-gradient(135deg, #e86a00 0%, #d85a00 50%, #007a4a 100%);
-  box-shadow: 0 10px 25px -5px rgb(247 127 0 / 40%);
-}
-
-.card-3d {
-  background: linear-gradient(135deg, #f77f00 0%, #e86a00 50%, #009e60 100%);
-  color: #ffffff;
-  border-color: rgb(255 255 255 / 24%);
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 8%),
-    0 8px 18px rgb(247 127 0 / 18%),
-    0 16px 30px rgb(0 158 96 / 12%);
-  transition: box-shadow 200ms ease, transform 200ms ease;
-}
-
-.card-3d:hover {
-  box-shadow:
-    0 3px 6px rgb(0 0 0 / 12%),
-    0 12px 26px rgb(247 127 0 / 24%),
-    0 20px 38px rgb(0 158 96 / 16%);
-  transform: translateY(-2px);
-}
-
-.card-3d .text-muted-foreground {
-  color: rgb(255 255 255 / 78%);
-}
-
-.shadow-3d {
-  box-shadow:
-    0 1px 2px rgb(0 0 0 / 5%),
-    0 4px 8px rgb(247 127 0 / 10%),
-    0 12px 24px rgb(0 158 96 / 8%);
-}
-
-.shadow-3d-hover {
-  transition: all 0.3s ease;
-}
-
-.shadow-3d-hover:hover {
-  box-shadow:
-    0 2px 4px rgb(0 0 0 / 8%),
-    0 8px 16px rgb(247 127 0 / 15%),
-    0 20px 40px rgb(0 158 96 / 12%);
-  transform: translateY(-2px);
-}
-
-.bg-hero-ivoirien {
-  background: linear-gradient(135deg, #f77f00 0%, #f99a2d 25%, #fff 50%, #4db88a 75%, #009e60 100%);
-  background-size: 200% 200%;
-  animation: gradientShift 8s ease infinite;
-  color: #1f2937;
-}
-
-.glass {
-  background: rgb(255 255 255 / 70%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgb(255 255 255 / 30%);
-}
-
-.dark .glass {
-  background: rgb(31 41 55 / 70%);
-  border-color: rgb(255 255 255 / 10%);
-}
-
-@keyframes gradientShift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/*
- * GogoSoft Tools Manager — design system.
- * Deep navy "atelier" palette with electric cyan + amber accents.
- * All colors are oklch tokens. Never hardcode colors in components.
- */
+/* ============================================
+   GOGOSOFT TOOLS MANAGER — THÈME OFFICIEL
+   Orange · Blanc · Vert (Côte d'Ivoire)
+   ============================================ */
 
 @theme inline {
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
@@ -140,17 +43,19 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
+
   --color-cat-mtk: var(--cat-mtk);
   --color-cat-unisoc: var(--cat-unisoc);
   --color-cat-apple: var(--cat-apple);
   --color-cat-drivers: var(--cat-drivers);
   --color-cat-autres: var(--cat-autres);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -161,112 +66,138 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ============================================
+   MODE CLAIR — Thème Orange-Blanc-Vert
+   ============================================ */
+
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.975 0.006 240);
-  --foreground: oklch(0.21 0.048 258);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.048 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.048 258);
-  --primary: #f77f00;
-  --primary-foreground: oklch(0.985 0.005 240);
-  --secondary: oklch(0.94 0.014 248);
-  --secondary-foreground: oklch(0.3 0.06 260);
-  --muted: oklch(0.945 0.01 248);
-  --muted-foreground: oklch(0.52 0.032 258);
-  --accent: #ffe5cc;
-  --accent-foreground: #9a4f00;
-  --destructive: oklch(0.58 0.222 26);
-  --destructive-foreground: oklch(0.985 0.005 240);
-  --success: #009e60;
-  --success-foreground: oklch(0.985 0.005 240);
-  --warning: #f77f00;
-  --warning-foreground: oklch(0.22 0.05 258);
-  --border: oklch(0.9 0.012 250);
-  --input: oklch(0.9 0.012 250);
-  --ring: oklch(0.6 0.12 235);
 
-  --cat-mtk: oklch(0.62 0.17 255);
-  --cat-unisoc: oklch(0.68 0.15 155);
-  --cat-apple: oklch(0.55 0.02 260);
-  --cat-drivers: oklch(0.72 0.16 60);
-  --cat-autres: oklch(0.62 0.14 320);
+  /* Fonds */
+  --background: #FAFAF7;        /* blanc crème */
+  --foreground: #1F2937;        /* gris charbon */
 
-  --chart-1: oklch(0.62 0.17 255);
-  --chart-2: oklch(0.68 0.15 155);
-  --chart-3: oklch(0.72 0.16 60);
-  --chart-4: oklch(0.62 0.14 320);
-  --chart-5: oklch(0.7 0.13 205);
+  /* Cartes */
+  --card: #FFFFFF;
+  --card-foreground: #1F2937;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2937;
 
-  --sidebar: oklch(0.26 0.06 260);
-  --sidebar-foreground: oklch(0.93 0.012 245);
-  --sidebar-primary: oklch(0.72 0.14 205);
-  --sidebar-primary-foreground: oklch(0.18 0.05 258);
-  --sidebar-accent: oklch(0.32 0.065 260);
-  --sidebar-accent-foreground: oklch(0.97 0.008 245);
-  --sidebar-border: oklch(0.36 0.06 260);
-  --sidebar-ring: oklch(0.72 0.14 205);
+  /* Primaire (Orange ivoirien) */
+  --primary: #F77F00;
+  --primary-foreground: #FFFFFF;
 
-  --gradient-header: linear-gradient(
-    120deg,
-    oklch(0.26 0.075 265) 0%,
-    oklch(0.32 0.09 255) 45%,
-    oklch(0.42 0.1 225) 100%
-  );
-  --gradient-accent: linear-gradient(100deg, oklch(0.72 0.14 205) 0%, oklch(0.63 0.16 250) 100%);
-  --shadow-card: 0 1px 2px oklch(0.2 0.05 260 / 0.06), 0 10px 30px oklch(0.2 0.05 260 / 0.08);
-  --shadow-glow: 0 0 0 1px oklch(0.72 0.14 205 / 0.35), 0 12px 40px oklch(0.55 0.13 235 / 0.28);
+  /* Secondaire (vert ivoirien) */
+  --secondary: #009E60;
+  --secondary-foreground: #FFFFFF;
+
+  /* Neutres */
+  --muted: #F3F1EB;
+  --muted-foreground: #6B7280;
+
+  /* Accent (orange très clair) */
+  --accent: #FFE5CC;
+  --accent-foreground: #9A4F00;
+
+  /* Sémantiques */
+  --destructive: #DC2626;
+  --destructive-foreground: #FFFFFF;
+  --success: #009E60;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+
+  /* Bordures et focus */
+  --border: #E5E0D5;
+  --input: #E5E0D5;
+  --ring: #F77F00;
+
+  /* Catégories d'outils */
+  --cat-mtk: #F77F00;
+  --cat-unisoc: #009E60;
+  --cat-apple: #6B7280;
+  --cat-drivers: #F59E0B;
+  --cat-autres: #8B5CF6;
+
+  /* Graphiques */
+  --chart-1: #F77F00;
+  --chart-2: #009E60;
+  --chart-3: #F59E0B;
+  --chart-4: #8B5CF6;
+  --chart-5: #0EA5E9;
+
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #F77F00;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #FFF4E6;
+  --sidebar-accent-foreground: #9A4F00;
+  --sidebar-border: #E5E0D5;
+  --sidebar-ring: #F77F00;
 }
+
+/* ============================================
+   MODE SOMBRE — Orange-Blanc-Vert assombri
+   ============================================ */
 
 .dark {
-  --background: oklch(0.175 0.038 262);
-  --foreground: oklch(0.95 0.01 245);
-  --card: oklch(0.225 0.045 262);
-  --card-foreground: oklch(0.95 0.01 245);
-  --popover: oklch(0.225 0.045 262);
-  --popover-foreground: oklch(0.95 0.01 245);
-  --primary: #f99a2d;
-  --primary-foreground: oklch(0.17 0.04 262);
-  --secondary: oklch(0.29 0.05 262);
-  --secondary-foreground: oklch(0.95 0.01 245);
-  --muted: oklch(0.27 0.045 262);
-  --muted-foreground: oklch(0.72 0.025 250);
-  --accent: #6fc79f;
-  --accent-foreground: oklch(0.17 0.04 262);
-  --destructive: oklch(0.65 0.19 25);
-  --destructive-foreground: oklch(0.98 0.005 240);
-  --success: oklch(0.7 0.15 158);
-  --success-foreground: oklch(0.17 0.04 262);
-  --warning: oklch(0.8 0.15 78);
-  --warning-foreground: oklch(0.17 0.04 262);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.14 205);
+  --background: #0F172A;
+  --foreground: #F1F5F9;
 
-  --cat-mtk: oklch(0.7 0.16 255);
-  --cat-unisoc: oklch(0.74 0.15 158);
-  --cat-apple: oklch(0.78 0.015 250);
-  --cat-drivers: oklch(0.8 0.15 65);
-  --cat-autres: oklch(0.72 0.14 320);
+  --card: #1E293B;
+  --card-foreground: #F1F5F9;
+  --popover: #1E293B;
+  --popover-foreground: #F1F5F9;
 
-  --chart-1: oklch(0.7 0.16 255);
-  --chart-2: oklch(0.74 0.15 158);
-  --chart-3: oklch(0.8 0.15 65);
-  --chart-4: oklch(0.72 0.14 320);
-  --chart-5: oklch(0.75 0.13 205);
+  --primary: #F99A2D;
+  --primary-foreground: #1F2937;
 
-  --sidebar: oklch(0.205 0.045 263);
-  --sidebar-foreground: oklch(0.93 0.012 245);
-  --sidebar-primary: oklch(0.72 0.14 205);
-  --sidebar-primary-foreground: oklch(0.17 0.04 262);
-  --sidebar-accent: oklch(0.28 0.05 262);
-  --sidebar-accent-foreground: oklch(0.97 0.008 245);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.72 0.14 205);
+  --secondary: #10B981;
+  --secondary-foreground: #1F2937;
 
-  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 12px 32px oklch(0 0 0 / 0.35);
+  --muted: #334155;
+  --muted-foreground: #94A3B8;
+
+  --accent: #3D2A1A;
+  --accent-foreground: #FBCFA0;
+
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  --warning: #FBBF24;
+  --warning-foreground: #1F2937;
+
+  --border: #334155;
+  --input: #334155;
+  --ring: #F99A2D;
+
+  --cat-mtk: #F99A2D;
+  --cat-unisoc: #10B981;
+  --cat-apple: #94A3B8;
+  --cat-drivers: #FBBF24;
+  --cat-autres: #A78BFA;
+
+  --chart-1: #F99A2D;
+  --chart-2: #10B981;
+  --chart-3: #FBBF24;
+  --chart-4: #A78BFA;
+  --chart-5: #38BDF8;
+
+  --sidebar: #1E293B;
+  --sidebar-foreground: #F1F5F9;
+  --sidebar-primary: #F99A2D;
+  --sidebar-primary-foreground: #1F2937;
+  --sidebar-accent: #3D2A1A;
+  --sidebar-accent-foreground: #FBCFA0;
+  --sidebar-border: #334155;
+  --sidebar-ring: #F99A2D;
 }
+
+/* ============================================
+   BASE
+   ============================================ */
 
 @layer base {
   * {
@@ -277,66 +208,146 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.015em;
   }
 }
 
-.surface-gradient {
-  background-image: var(--gradient-header);
+/* ============================================
+   CLASSES UTILITAIRES — Thème ivoirien
+   ============================================ */
+
+/* Dégradé Orange → Vert (boutons, badges, CTA) */
+.bg-ivoirien {
+  background: linear-gradient(135deg, #F77F00 0%, #E86A00 50%, #009E60 100%);
+  color: #FFFFFF;
 }
 
-.accent-gradient {
-  background-image: var(--gradient-accent);
+.bg-ivoirien-hover:hover {
+  background: linear-gradient(135deg, #E86A00 0%, #D85A00 50%, #007A4A 100%);
+  box-shadow: 0 10px 25px -5px rgba(247, 127, 0, 0.4);
 }
 
-.card-elevated {
-  box-shadow: var(--shadow-card);
+/* Dégradé Hero animé (bandeau dashboard) */
+.bg-hero-ivoirien {
+  background: linear-gradient(
+    135deg,
+    #F77F00 0%,
+    #F99A2D 25%,
+    #FFFFFF 50%,
+    #4DB88A 75%,
+    #009E60 100%
+  );
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+  color: #1F2937;
 }
 
-.hover-lift {
-  transition:
-    transform 200ms ease,
-    box-shadow 200ms ease,
-    border-color 200ms ease;
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-.hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-glow);
+/* Ombres 3D */
+.shadow-3d {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 4px 8px rgba(247, 127, 0, 0.1),
+    0 12px 24px rgba(0, 158, 96, 0.08);
+}
+
+.shadow-3d-hover {
+  transition: all 0.3s ease;
+}
+
+.shadow-3d-hover:hover {
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    0 8px 16px rgba(247, 127, 0, 0.15),
+    0 20px 40px rgba(0, 158, 96, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Cartes 3D (fond blanc, pas de dégradé orange) */
+.card-3d {
+  background: #FFFFFF;
+  border: 1px solid #F0EDE5;
+  border-radius: 12px;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 10px 15px -3px rgba(247, 127, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.dark .card-3d {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+.card-3d:hover {
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.05),
+    0 20px 25px -5px rgba(247, 127, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glass {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes logo-enter {
-  from {
-    opacity: 0;
-    transform: scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes logo-copy-enter {
-  from {
-    opacity: 0;
-    transform: translateX(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .logo-enter {
   animation: logo-enter 600ms ease-out both;
 }
-.logo-copy-enter {
-  animation: logo-copy-enter 450ms 200ms ease-out both;
+
+/* Anciens gradients (au cas où ils sont référencés ailleurs) — remappés sur l'orange/vert */
+.surface-gradient {
+  background-image: linear-gradient(135deg, #FFF8EE 0%, #FFFFFF 72%, #E8F7F0 100%);
+}
+
+.accent-gradient {
+  background-image: linear-gradient(100deg, #F77F00 0%, #009E60 100%);
+}
+
+.card-elevated {
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 10px 30px rgba(247, 127, 0, 0.08);
+}
+
+.hover-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgba(247, 127, 0, 0.35),
+    0 12px 40px rgba(0, 158, 96, 0.28);
 }
