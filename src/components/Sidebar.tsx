@@ -169,7 +169,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   to={to}
                   onClick={() => setOpen(false)}
                   className={cn(
-                      "flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 pl-7 text-sm text-sidebar-foreground/65 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
+                    "flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 pl-7 text-sm text-sidebar-foreground/65 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
                     pathname === to &&
                       "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
                   )}

@@ -348,7 +348,10 @@ export async function markTicketNotified(
 }
 
 /** Supprime une fiche selon les politiques RLS Supabase. */
-export async function deleteTicket(id: string, activityType: ActivityType = "phone"): Promise<void> {
+export async function deleteTicket(
+  id: string,
+  activityType: ActivityType = "phone",
+): Promise<void> {
   if (!(await hasActiveSession())) return;
   try {
     const { error } = await supabase

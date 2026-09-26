@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ActivityListPage } from "@/components/ActivityWorkshopPages";
 
-export const Route = createFileRoute("/phone/atelier/")({ component: () => <ActivityListPage activityType="phone" /> });
+export const Route = createFileRoute("/phone/atelier/")({
+  component: () => <ActivityListPage activityType="phone" />,
+});

@@ -77,7 +77,9 @@ function WorkshopListPage() {
   }, [load, shopLoading]);
 
   const periodTickets = useMemo(() => {
-    const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+    const start = startDate
+      ? new Date(`${startDate}T00:00:00`).getTime()
+      : Number.NEGATIVE_INFINITY;
     const end = endDate ? new Date(`${endDate}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
     return tickets.filter((ticket) => {
       if (!ticket.created_at) return false;
@@ -95,7 +97,8 @@ function WorkshopListPage() {
     [periodTickets],
   );
 
-  const filtered = filter === "tous" ? periodTickets : periodTickets.filter((ticket) => ticket.status === filter);
+  const filtered =
+    filter === "tous" ? periodTickets : periodTickets.filter((ticket) => ticket.status === filter);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

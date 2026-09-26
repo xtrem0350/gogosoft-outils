@@ -264,7 +264,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <PageHero
               {...heroRoute}
               showBack={
-                !["/atelier", "/phone/atelier", "/computer/atelier", "/consumable/stock", "/sales", "/clients"].includes(location.pathname)
+                ![
+                  "/atelier",
+                  "/phone/atelier",
+                  "/computer/atelier",
+                  "/consumable/stock",
+                  "/sales",
+                  "/clients",
+                ].includes(location.pathname)
               }
             />
           ) : null}

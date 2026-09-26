@@ -21,7 +21,11 @@ import {
 const activityLabels: Record<ActivityType, { noun: string; title: string; create: string }> = {
   phone: { noun: "téléphone", title: "Fiches téléphone", create: "Nouvelle réparation téléphone" },
   computer: { noun: "ordinateur", title: "Fiches ordinateur", create: "Nouvelle réparation PC" },
-  consumable: { noun: "consommable", title: "Stock consommables", create: "Ajouter un consommable" },
+  consumable: {
+    noun: "consommable",
+    title: "Stock consommables",
+    create: "Ajouter un consommable",
+  },
 };
 
 const statusLabels: Record<WorkshopTicket["status"], string> = {
@@ -51,7 +55,9 @@ export function ActivityListPage({
     if (statusFilter !== "tous" && ticket.status !== statusFilter) return false;
     if (!ticket.created_at) return !startDate && !endDate;
     const created = new Date(ticket.created_at).getTime();
-    const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+    const start = startDate
+      ? new Date(`${startDate}T00:00:00`).getTime()
+      : Number.NEGATIVE_INFINITY;
     const end = endDate ? new Date(`${endDate}T23:59:59.999`).getTime() : Number.POSITIVE_INFINITY;
     return created >= start && created <= end;
   });
@@ -61,7 +67,9 @@ export function ActivityListPage({
     setLoading(true);
     void getTickets(shopId, activityType)
       .then(setTickets)
-      .catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "Chargement impossible."))
+      .catch((reason: unknown) =>
+        setError(reason instanceof Error ? reason.message : "Chargement impossible."),
+      )
       .finally(() => setLoading(false));
   }, [activityType, shopId, shopLoading]);
 
@@ -70,29 +78,60 @@ export function ActivityListPage({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-primary">Suivi</p>
-          <h1 className="mt-2 text-3xl font-bold">{history ? `Historique ${labels.noun}` : labels.title}</h1>
+          <h1 className="mt-2 text-3xl font-bold">
+            {history ? `Historique ${labels.noun}` : labels.title}
+          </h1>
           <p className="mt-2 text-muted-foreground">Fiches enregistrées pour votre atelier.</p>
         </div>
-        {!history ? <Button asChild><a href={`${basePath}/nouveau`}>{labels.create}</a></Button> : null}
+        {!history ? (
+          <Button asChild>
+            <a href={`${basePath}/nouveau`}>{labels.create}</a>
+          </Button>
+        ) : null}
       </div>
       <div className="flex flex-wrap items-end gap-4 rounded-lg border bg-card p-4">
-        <label className="grid gap-1.5 text-sm font-semibold">Statut
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-md border bg-background px-3 font-normal">
-            <option value="tous">Tous</option><option value="en_attente">En attente</option><option value="en_cours">En cours</option><option value="termine">Terminé</option><option value="livre">Livré</option>
+        <label className="grid gap-1.5 text-sm font-semibold">
+          Statut
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="h-10 rounded-md border bg-background px-3 font-normal"
+          >
+            <option value="tous">Tous</option>
+            <option value="en_attente">En attente</option>
+            <option value="en_cours">En cours</option>
+            <option value="termine">Terminé</option>
+            <option value="livre">Livré</option>
           </select>
         </label>
-        <label className="grid gap-1.5 text-sm font-semibold">Du
-          <input type="date" value={startDate} max={endDate || undefined} onChange={(event) => setStartDate(event.target.value)} className="h-10 rounded-md border bg-background px-3 font-normal" />
+        <label className="grid gap-1.5 text-sm font-semibold">
+          Du
+          <input
+            type="date"
+            value={startDate}
+            max={endDate || undefined}
+            onChange={(event) => setStartDate(event.target.value)}
+            className="h-10 rounded-md border bg-background px-3 font-normal"
+          />
         </label>
-        <label className="grid gap-1.5 text-sm font-semibold">Au
-          <input type="date" value={endDate} min={startDate || undefined} onChange={(event) => setEndDate(event.target.value)} className="h-10 rounded-md border bg-background px-3 font-normal" />
+        <label className="grid gap-1.5 text-sm font-semibold">
+          Au
+          <input
+            type="date"
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(event) => setEndDate(event.target.value)}
+            className="h-10 rounded-md border bg-background px-3 font-normal"
+          />
         </label>
         <p className="pb-2 text-sm text-muted-foreground">{filteredTickets.length} fiche(s)</p>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {loading || shopLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : null}
       {!loading && !shopLoading && filteredTickets.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">Aucune fiche enregistrée.</p>
+        <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+          Aucune fiche enregistrée.
+        </p>
       ) : null}
       <div className="grid gap-3">
         {filteredTickets.map((ticket) => (
@@ -100,7 +139,9 @@ export function ActivityListPage({
             <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
               <div>
                 <h2 className="font-semibold">{ticket.device_model}</h2>
-                <p className="text-sm text-muted-foreground">{ticket.client_name} · {ticket.client_whatsapp}</p>
+                <p className="text-sm text-muted-foreground">
+                  {ticket.client_name} · {ticket.client_whatsapp}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <Badge>{statusLabels[ticket.status]}</Badge>
@@ -159,21 +200,43 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         <p className="text-sm font-medium text-primary">{labels.title}</p>
         <h1 className="mt-2 text-3xl font-bold">{labels.create}</h1>
       </div>
-      <form onSubmit={(event) => void submit(event)} className="grid gap-4 rounded-lg border bg-card p-6">
+      <form
+        onSubmit={(event) => void submit(event)}
+        className="grid gap-4 rounded-lg border bg-card p-6"
+      >
         {isConsumable ? <Input name="category" placeholder="Catégorie" required /> : null}
-        <Input name="client_name" placeholder={isConsumable ? "Fournisseur ou client" : "Nom du client"} required />
+        <Input
+          name="client_name"
+          placeholder={isConsumable ? "Fournisseur ou client" : "Nom du client"}
+          required
+        />
         <Input name="client_whatsapp" placeholder="WhatsApp" required />
-        <Input name="device_model" placeholder={isConsumable ? "Nom du consommable" : "Modèle"} required />
-        {!isConsumable ? <>
-          <Input name="device_processor" placeholder="Processeur" />
-          <Input name="device_imei" placeholder="IMEI" />
-          <Input name="device_sn" placeholder="Numéro de série" />
-          <label className="grid gap-2 text-sm font-medium">Problème constaté
-            <select value={issue} onChange={(event) => setIssue(event.target.value as IssueKey)} className="h-10 rounded-md border bg-background px-3">
-              {Object.entries(ISSUES_DATABASE).map(([key, definition]) => <option key={key} value={key}>{definition.label}</option>)}
-            </select>
-          </label>
-        </> : null}
+        <Input
+          name="device_model"
+          placeholder={isConsumable ? "Nom du consommable" : "Modèle"}
+          required
+        />
+        {!isConsumable ? (
+          <>
+            <Input name="device_processor" placeholder="Processeur" />
+            <Input name="device_imei" placeholder="IMEI" />
+            <Input name="device_sn" placeholder="Numéro de série" />
+            <label className="grid gap-2 text-sm font-medium">
+              Problème constaté
+              <select
+                value={issue}
+                onChange={(event) => setIssue(event.target.value as IssueKey)}
+                className="h-10 rounded-md border bg-background px-3"
+              >
+                {Object.entries(ISSUES_DATABASE).map(([key, definition]) => (
+                  <option key={key} value={key}>
+                    {definition.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </>
+        ) : null}
         <Input name="notes" placeholder="Notes" />
         <Button type="submit">Enregistrer</Button>
       </form>
@@ -181,7 +244,13 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
   );
 }
 
-export function ActivityDetailsPage({ activityType, id }: { activityType: ActivityType; id: string }) {
+export function ActivityDetailsPage({
+  activityType,
+  id,
+}: {
+  activityType: ActivityType;
+  id: string;
+}) {
   const [ticket, setTicket] = useState<WorkshopTicket | null>(null);
   useEffect(() => {
     void getTicketById(id, activityType).then(setTicket);
@@ -190,7 +259,14 @@ export function ActivityDetailsPage({ activityType, id }: { activityType: Activi
   return (
     <section className="mx-auto max-w-4xl space-y-4">
       <h1 className="text-3xl font-bold">{ticket.device_model}</h1>
-      <Card><CardContent className="space-y-2 p-5"><p>{ticket.client_name}</p><p>{ticket.client_whatsapp}</p><p>{ticket.notes}</p><Badge>{statusLabels[ticket.status]}</Badge></CardContent></Card>
+      <Card>
+        <CardContent className="space-y-2 p-5">
+          <p>{ticket.client_name}</p>
+          <p>{ticket.client_whatsapp}</p>
+          <p>{ticket.notes}</p>
+          <Badge>{statusLabels[ticket.status]}</Badge>
+        </CardContent>
+      </Card>
     </section>
   );
 }
@@ -199,6 +275,17 @@ export function ActivityHistoryPage({ activityType }: { activityType: ActivityTy
   return <ActivityListPage activityType={activityType} history />;
 }
 
-export function ExperienceBookPage({ activityType }: { activityType: Exclude<ActivityType, "consumable"> }) {
-  return <section className="space-y-3"><h1 className="text-3xl font-bold">Carnet d'expérience {activityLabels[activityType].noun}</h1><p className="text-muted-foreground">Module en construction.</p></section>;
+export function ExperienceBookPage({
+  activityType,
+}: {
+  activityType: Exclude<ActivityType, "consumable">;
+}) {
+  return (
+    <section className="space-y-3">
+      <h1 className="text-3xl font-bold">
+        Carnet d'expérience {activityLabels[activityType].noun}
+      </h1>
+      <p className="text-muted-foreground">Module en construction.</p>
+    </section>
+  );
 }
