@@ -278,7 +278,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <div className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
-          <PageHero {...pageHero} showBack />
+          {location.pathname !== "/" ? <PageHero {...pageHero} showBack /> : null}
           {breadcrumbLabel ? (
             <Breadcrumb className="mb-4">
               <BreadcrumbList>

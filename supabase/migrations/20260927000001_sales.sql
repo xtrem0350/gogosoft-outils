@@ -23,9 +23,11 @@ CREATE TABLE IF NOT EXISTS public.sales (
 
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Members view shop sales" ON public.sales;
 CREATE POLICY "Members view shop sales" ON public.sales FOR SELECT
   USING (EXISTS (SELECT 1 FROM public.shop_members WHERE shop_id = sales.shop_id AND user_id = auth.uid()));
 
+DROP POLICY IF EXISTS "Members manage shop sales" ON public.sales;
 CREATE POLICY "Members manage shop sales" ON public.sales FOR ALL
   USING (EXISTS (SELECT 1 FROM public.shop_members WHERE shop_id = sales.shop_id AND user_id = auth.uid()));
 
@@ -35,6 +37,8 @@ CREATE INDEX IF NOT EXISTS idx_sales_activity ON public.sales(shop_id, activity_
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('sales-product-photos', 'sales-product-photos', true)
 ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Shop members upload sale photos" ON storage.objects;
 
 CREATE POLICY "Shop members upload sale photos" ON storage.objects
   FOR INSERT TO authenticated
