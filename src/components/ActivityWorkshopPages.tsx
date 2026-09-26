@@ -29,10 +29,10 @@ const activityLabels: Record<ActivityType, { noun: string; title: string; create
 };
 
 const statusLabels: Record<WorkshopTicket["status"], string> = {
-  en_attente: "En attente",
-  en_cours: "En cours",
-  termine: "Terminé",
-  livre: "Livré",
+  en_attente: "⏳ En attente",
+  en_cours: "⚙️ En cours",
+  termine: "✅ Terminé",
+  livre: "📦 Livré",
 };
 
 export function ActivityListPage({
@@ -85,7 +85,7 @@ export function ActivityListPage({
         </div>
         {!history ? (
           <Button asChild>
-            <a href={`${basePath}/nouveau`}>{labels.create}</a>
+            <a href={`${basePath}/nouveau`}>➕ {labels.create}</a>
           </Button>
         ) : null}
       </div>
@@ -168,7 +168,7 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!shopId) {
-      toast.error("Sélectionnez un atelier.");
+      toast.error("⚠️ Sélectionnez un atelier.");
       return;
     }
     const values = new FormData(event.currentTarget);
@@ -187,10 +187,10 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         diagnosis: generateDiagnosis([issue]),
         notes: String(values.get("notes") ?? ""),
       });
-      toast.success("Enregistrement effectué.");
+      toast.success("✅ Enregistrement effectué.");
       await navigate({ to: listPath });
     } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Enregistrement impossible.");
+      toast.error(`❌ ${reason instanceof Error ? reason.message : "Enregistrement impossible."}`);
     }
   }
 
@@ -238,7 +238,7 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
           </>
         ) : null}
         <Input name="notes" placeholder="Notes" />
-        <Button type="submit">Enregistrer</Button>
+        <Button type="submit">💾 Enregistrer</Button>
       </form>
     </section>
   );

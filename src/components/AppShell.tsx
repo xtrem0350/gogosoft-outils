@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Bell, Menu, Plus, Search } from "lucide-react";
-import type { ReactNode } from "react";
+import { Bell, Menu, Plus, Search, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHero } from "@/components/PageHero";
@@ -9,6 +9,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
+import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,17 +22,27 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { hasNewVersion } from "@/lib/changelog";
 import logo from "@/assets/images/profile.png";
 
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const pageScrollRef = useRef<HTMLDivElement>(null);
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const [showNewBadge, setShowNewBadge] = useState(false);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  useEffect(() => {
+    pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [location.pathname]);
   const isAuthRoute = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
     location.pathname,
   );
+  useEffect(() => {
+    setShowNewBadge(Boolean(user && !isAuthRoute && hasNewVersion()));
+  }, [isAuthRoute, user?.id]);
   const isShopExemptRoute =
     location.pathname.startsWith("/boutiques") ||
     location.pathname === "/abonnement" ||
@@ -39,35 +50,36 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isExemptRoute = isAuthRoute || location.pathname === "/abonnement";
   const loading = authLoading || (!isAuthRoute && shopLoading);
   const pageTitles: Record<string, string> = {
-    "/": "Tableau de bord",
-    "/atelier": "Fiches d'atelier",
-    "/atelier/nouveau": "Nouvelle fiche",
-    "/phone/atelier": "Fiches téléphone",
-    "/phone/atelier/nouveau": "Nouvelle réparation téléphone",
-    "/phone/carnet": "Carnet d'expérience téléphone",
-    "/phone/historique": "Historique téléphone",
-    "/computer/atelier": "Fiches ordinateur",
-    "/computer/atelier/nouveau": "Nouvelle réparation PC",
-    "/computer/carnet": "Carnet d'expérience ordinateur",
-    "/computer/historique": "Historique ordinateur",
-    "/consumable/stock": "Stock consommables",
-    "/consumable/stock/nouveau": "Ajouter un consommable",
-    "/consumable/historique": "Historique consommables",
-    "/sales": "Ventes",
-    "/sales/nouveau": "Nouvelle vente",
-    "/sales/commandes": "Commandes",
-    "/sales/livraisons": "Livraisons",
-    "/clients": "Clients",
-    "/clients/nouveau": "Nouveau client",
-    "/outils": "Outils",
+    "/": "🏠 Tableau de bord",
+    "/atelier": "📋 Fiches d'atelier",
+    "/atelier/nouveau": "➕ Nouvelle fiche",
+    "/phone/atelier": "📋 Fiches téléphone",
+    "/phone/atelier/nouveau": "➕ Nouvelle réparation téléphone",
+    "/phone/carnet": "📖 Carnet d'expérience téléphone",
+    "/phone/historique": "🕘 Historique téléphone",
+    "/computer/atelier": "💻 Fiches ordinateur",
+    "/computer/atelier/nouveau": "➕ Nouvelle réparation PC",
+    "/computer/carnet": "📖 Carnet d'expérience ordinateur",
+    "/computer/historique": "🕘 Historique ordinateur",
+    "/consumable/stock": "📦 Stock consommables",
+    "/consumable/stock/nouveau": "➕ Ajouter un consommable",
+    "/consumable/historique": "🕘 Historique consommables",
+    "/sales": "🛒 Ventes",
+    "/sales/nouveau": "➕ Nouvelle vente",
+    "/sales/commandes": "📦 Commandes",
+    "/sales/livraisons": "🚚 Livraisons",
+    "/clients": "👥 Mes clients",
+    "/clients/nouveau": "➕ Nouveau client",
+    "/outils": "🛠️ Mes outils",
     "/categories": "Catégories",
-    "/historique": "Historique",
-    "/statistiques": "Statistiques",
-    "/equipe": "Équipe",
-    "/boutiques": "Mes ateliers",
-    "/profil": "Mon profil",
-    "/abonnement": "Mon abonnement",
-    "/parametres": "Paramètres",
+    "/historique": "🕘 Historique",
+    "/statistiques": "📊 Statistiques",
+    "/equipe": "👥 Équipe",
+    "/boutiques": "🏪 Mes ateliers",
+    "/profil": "👤 Mon profil",
+    "/abonnement": "💳 Mon abonnement",
+    "/parametres": "⚙️ Paramètres",
+    "/nouveautes": "✨ Nouveautés",
   };
   const heroRoutes: Record<string, { title: string; subtitle?: string; imageUrl: string }> = {
     "/atelier": {
@@ -185,6 +197,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/profil": "Profil",
     "/parametres": "Paramètres",
     "/admin": "Espace Admin",
+    "/nouveautes": "Nouveautés",
   };
   const breadcrumbLabel = breadcrumbLabels[location.pathname] ?? pageTitles[location.pathname];
 
@@ -220,7 +233,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                    className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
                     aria-label="Ouvrir le menu"
                   >
                     <Menu />
@@ -238,6 +251,17 @@ export function AppShell({ children }: { children: ReactNode }) {
             <h1 className="truncate font-display text-base font-semibold text-sidebar-foreground sm:text-lg">
               GogoSoft Tools Manager
             </h1>
+            {showNewBadge ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => setWhatsNewOpen(true)}
+                className="shrink-0 gap-1 rounded-full bg-orange-100 px-3 text-xs font-semibold text-orange-800 hover:bg-orange-200"
+              >
+                <Sparkles className="size-3.5" /> Nouveau
+              </Button>
+            ) : null}
           </div>
 
           <h2 className="hidden min-w-0 flex-1 truncate px-4 text-lg font-semibold text-sidebar-foreground xl:block">
@@ -257,7 +281,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon"
               aria-label="Notifications"
-              className="relative text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              className="relative flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
             >
               <Bell />
             </Button>
@@ -268,7 +292,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Link to="/phone/atelier/nouveau">
                 <Plus />
-                Nouvelle fiche
+                ➕ Nouvelle fiche
               </Link>
             </Button>
             <ShopSelector />
@@ -277,10 +301,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
+        <div
+          ref={pageScrollRef}
+          className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8"
+        >
           {location.pathname !== "/" ? <PageHero {...pageHero} showBack /> : null}
           {breadcrumbLabel ? (
-            <Breadcrumb className="mb-4">
+            <Breadcrumb className="mb-4 animate-in slide-in-from-left-4 fade-in duration-300">
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
@@ -302,6 +329,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </footer>
         </div>
       </main>
+      <WhatsNewModal
+        open={whatsNewOpen}
+        enabled={Boolean(user && !isAuthRoute)}
+        onOpenChange={setWhatsNewOpen}
+        onRead={() => setShowNewBadge(false)}
+      />
     </div>
   );
 }

@@ -10,7 +10,7 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
       onClick={toggleTheme}
       aria-label="Changer de thème"
     >

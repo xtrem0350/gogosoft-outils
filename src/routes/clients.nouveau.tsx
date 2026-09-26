@@ -47,7 +47,7 @@ function NewClientPage() {
   async function submit(values: FormValues) {
     try {
       if (!shopId) {
-        toast.error("Sélectionnez d'abord une boutique.");
+        toast.error("⚠️ Sélectionnez d'abord une boutique.");
         return;
       }
 
@@ -60,10 +60,10 @@ function NewClientPage() {
         notes: values.notes || null,
       });
 
-      toast.success("Client ajouté.");
+      toast.success("✅ Client ajouté.");
       await navigate({ to: "/clients" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de créer le client.");
+      toast.error(`❌ ${error instanceof Error ? error.message : "Impossible de créer le client."}`);
     }
   }
 
@@ -71,7 +71,7 @@ function NewClientPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
         <p className="text-sm font-medium text-primary">Clients</p>
-        <h1 className="mt-2 text-3xl font-bold">Nouveau client</h1>
+        <h1 className="mt-2 text-3xl font-bold">👥 Nouveau client</h1>
       </div>
 
       <Card>
@@ -120,7 +120,7 @@ function NewClientPage() {
                 Annuler
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                Enregistrer
+                💾 Enregistrer
               </Button>
             </div>
           </form>

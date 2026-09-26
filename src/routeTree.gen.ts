@@ -17,6 +17,7 @@ import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
+import { Route as NouveautesRouteImport } from './routes/nouveautes'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
@@ -89,6 +90,11 @@ const HistoriqueRoute = HistoriqueRouteImport.update({
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NouveautesRoute = NouveautesRouteImport.update({
+  id: '/nouveautes',
+  path: '/nouveautes',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParametresRoute = ParametresRouteImport.update({
@@ -266,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
@@ -309,6 +316,7 @@ export interface FileRoutesByTo {
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
@@ -353,6 +361,7 @@ export interface FileRoutesById {
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
+  '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/parametres'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
@@ -441,6 +451,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/parametres'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
@@ -484,6 +495,7 @@ export interface FileRouteTypes {
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
+    | '/nouveautes'
     | '/parametres'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
@@ -528,6 +540,7 @@ export interface RootRouteChildren {
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
+  NouveautesRoute: typeof NouveautesRoute
   ParametresRoute: typeof ParametresRoute
   ProfilRoute: typeof ProfilRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
@@ -619,6 +632,13 @@ declare module '@tanstack/react-router' {
       path: '/mot-de-passe-oublie'
       fullPath: '/mot-de-passe-oublie'
       preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nouveautes': {
+      id: '/nouveautes'
+      path: '/nouveautes'
+      fullPath: '/nouveautes'
+      preLoaderRoute: typeof NouveautesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/parametres': {
@@ -864,6 +884,7 @@ const rootRouteChildren: RootRouteChildren = {
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
+  NouveautesRoute: NouveautesRoute,
   ParametresRoute: ParametresRoute,
   ProfilRoute: ProfilRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,

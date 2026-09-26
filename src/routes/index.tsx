@@ -41,10 +41,10 @@ export const Route = createFileRoute("/")({
 });
 
 const STATUS_LABELS: Record<string, string> = {
-  en_attente: "En attente",
-  en_cours: "En cours",
-  termine: "Terminé",
-  livre: "Livré",
+  en_attente: "⏳ En attente",
+  en_cours: "⚙️ En cours",
+  termine: "✅ Terminé",
+  livre: "📦 Livré",
 };
 
 function Index() {
@@ -174,7 +174,7 @@ function Index() {
                 <Wrench />
               </div>
               <div>
-                <p className="font-semibold">Nouvelle réparation</p>
+                <p className="font-semibold">➕ Nouvelle réparation</p>
                 <p className="text-sm text-muted-foreground">Créer une fiche atelier</p>
               </div>
             </CardContent>
@@ -187,7 +187,7 @@ function Index() {
                 <UserPlus />
               </div>
               <div>
-                <p className="font-semibold">Ajouter un client</p>
+                <p className="font-semibold">👥 Ajouter un client</p>
                 <p className="text-sm text-muted-foreground">Enregistrer un nouveau client</p>
               </div>
             </CardContent>

@@ -131,6 +131,11 @@ function RootComponent() {
   const isAuthPage = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
     location.pathname,
   );
+  const routeOutlet = (
+    <div key={location.pathname} className="animate-fadeIn">
+      <Outlet />
+    </div>
+  );
   const [isClient, setIsClient] = useState(false);
   const [showSplash, setShowSplash] = useState(false);
 
@@ -161,10 +166,10 @@ function RootComponent() {
       <AuthProvider>
         <CurrentShopProvider>
           {isAuthPage ? (
-            <Outlet />
+            routeOutlet
           ) : (
             <AppShell>
-              <Outlet />
+              {routeOutlet}
             </AppShell>
           )}
         </CurrentShopProvider>

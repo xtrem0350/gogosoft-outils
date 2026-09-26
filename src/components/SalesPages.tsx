@@ -34,7 +34,8 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
         ? sale.delivery_status === "delivered"
         : true,
   );
-  const title = view === "orders" ? "Commandes" : view === "deliveries" ? "Livraisons" : "Ventes";
+  const title =
+    view === "orders" ? "📦 Commandes" : view === "deliveries" ? "🚚 Livraisons" : "🛒 Ventes";
   return (
     <section className="mx-auto max-w-6xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -44,7 +45,7 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
         </div>
         {view === "all" ? (
           <Button asChild>
-            <Link to="/sales/nouveau">Nouvelle vente</Link>
+            <Link to="/sales/nouveau">➕ Nouvelle vente</Link>
           </Button>
         ) : null}
       </div>
@@ -90,7 +91,7 @@ export function NewSalePage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!shopId) {
-      toast.error("Sélectionnez un atelier.");
+      toast.error("⚠️ Sélectionnez un atelier.");
       return;
     }
     const form = new FormData(event.currentTarget);
@@ -117,17 +118,17 @@ export function NewSalePage() {
         client_whatsapp: String(form.get("client_whatsapp") ?? "") || null,
         notes: null,
       });
-      toast.success("Vente enregistrée.");
+      toast.success("✅ Vente enregistrée.");
       await navigate({ to: "/sales" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Création impossible.");
+      toast.error(`❌ ${error instanceof Error ? error.message : "Création impossible."}`);
     }
   }
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <div>
         <p className="text-sm font-medium text-primary">Ventes</p>
-        <h1 className="mt-2 text-3xl font-bold">Nouvelle vente</h1>
+        <h1 className="mt-2 text-3xl font-bold">➕ Nouvelle vente</h1>
       </div>
       <form
         onSubmit={(event) => void submit(event)}
@@ -191,7 +192,7 @@ export function NewSalePage() {
         </label>
         <Input name="client_name" placeholder="Nom du client" />
         <Input name="client_whatsapp" placeholder="WhatsApp du client" />
-        <Button type="submit">Enregistrer la vente</Button>
+        <Button type="submit">💾 Enregistrer la vente</Button>
       </form>
     </section>
   );
