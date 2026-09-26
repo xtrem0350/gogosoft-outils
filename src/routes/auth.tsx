@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
+import { supabase } from "@/integrations/supabase/client";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
 
 const pseudoSchema = z
@@ -46,13 +47,13 @@ function AuthPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [rememberIdentifier, setRememberIdentifier] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
     const savedIdentifier = window.localStorage.getItem("gogosoft.rememberedIdentifier");
     if (savedIdentifier) {
       setIdentifier(savedIdentifier);
-      setRememberIdentifier(true);
+      setRememberMe(true);
     }
   }, []);
 
@@ -85,7 +86,27 @@ function AuthPage() {
         );
         return;
       }
-      if (rememberIdentifier) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: sessionData.session.access_token,
+          refresh_token: sessionData.session.refresh_token,
+        });
+        if (sessionError) throw sessionError;
+      }
+      const authStorageKeys = Object.keys(window.localStorage).filter(
+        (key) => key.startsWith("sb-") && key.endsWith("-auth-token"),
+      );
+      for (const key of authStorageKeys) {
+        const storedSession = window.localStorage.getItem(key);
+        if (rememberMe) {
+          window.sessionStorage.removeItem(key);
+        } else if (storedSession) {
+          window.sessionStorage.setItem(key, storedSession);
+          window.localStorage.removeItem(key);
+        }
+      }
+      if (rememberMe) {
         window.localStorage.setItem("gogosoft.rememberedIdentifier", identifier.trim());
       } else {
         window.localStorage.removeItem("gogosoft.rememberedIdentifier");
@@ -347,8 +368,8 @@ function AuthPage() {
                         <label className="flex items-center gap-2 text-slate-300">
                           <input
                             type="checkbox"
-                            checked={rememberIdentifier}
-                            onChange={(event) => setRememberIdentifier(event.target.checked)}
+                            checked={rememberMe}
+                            onChange={(event) => setRememberMe(event.target.checked)}
                             className="size-4 rounded border-white/30 bg-white/10 accent-orange-500"
                           />
                           Se souvenir de moi

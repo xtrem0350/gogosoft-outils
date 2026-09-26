@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Plus, Wrench } from "lucide-react";
 
@@ -12,6 +12,9 @@ import { getTickets } from "@/services/workshopService";
 import type { WorkshopStatus, WorkshopTicket } from "@/types/database";
 
 export const Route = createFileRoute("/atelier/")({
+  beforeLoad: () => {
+    throw redirect({ href: "/phone/atelier", statusCode: 301 });
+  },
   head: () => ({
     meta: [
       { title: "Atelier — GogoSoft Tools Manager" },

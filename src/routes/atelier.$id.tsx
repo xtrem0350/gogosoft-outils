@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +19,12 @@ import {
   type WorkshopTicket,
 } from "@/services/workshopService";
 
-export const Route = createFileRoute("/atelier/$id")({ component: WorkshopDetailsPage });
+export const Route = createFileRoute("/atelier/$id")({
+  beforeLoad: ({ params }) => {
+    throw redirect({ href: `/phone/atelier/${params.id}`, statusCode: 301 });
+  },
+  component: WorkshopDetailsPage,
+});
 
 /** Détail et suivi d'une fiche d'atelier. */
 function WorkshopDetailsPage() {

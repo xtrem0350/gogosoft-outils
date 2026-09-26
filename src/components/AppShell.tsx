@@ -42,6 +42,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/": "Tableau de bord",
     "/atelier": "Fiches d'atelier",
     "/atelier/nouveau": "Nouvelle fiche",
+    "/phone/atelier": "Fiches téléphone",
+    "/phone/atelier/nouveau": "Nouvelle réparation téléphone",
+    "/computer/atelier": "Fiches ordinateur",
+    "/computer/atelier/nouveau": "Nouvelle réparation PC",
+    "/consumable/stock": "Stock consommables",
+    "/consumable/stock/nouveau": "Ajouter un consommable",
+    "/sales": "Ventes",
+    "/sales/nouveau": "Nouvelle vente",
+    "/sales/commandes": "Commandes",
+    "/sales/livraisons": "Livraisons",
     "/clients": "Clients",
     "/clients/nouveau": "Nouveau client",
     "/outils": "Outils",
@@ -63,6 +73,26 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/atelier/nouveau": {
       title: "Nouvelle fiche",
       imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
+    },
+    "/phone/atelier": {
+      title: "Fiches téléphone",
+      subtitle: "Suivez les réparations de téléphones",
+      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
+    },
+    "/computer/atelier": {
+      title: "Fiches ordinateur",
+      subtitle: "Suivez les réparations informatiques",
+      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
+    },
+    "/consumable/stock": {
+      title: "Stock consommables",
+      subtitle: "Gérez les consommables de votre atelier",
+      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200",
+    },
+    "/sales": {
+      title: "Ventes",
+      subtitle: "Suivez les ventes de votre boutique",
+      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
     },
     "/clients": {
       title: "Mes clients",
@@ -122,6 +152,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const breadcrumbLabels: Record<string, string> = {
     "/": "Accueil",
     "/atelier": "Atelier",
+    "/phone/atelier": "Téléphone",
+    "/computer/atelier": "Ordinateur",
+    "/consumable/stock": "Consommables",
+    "/sales": "Ventes",
     "/clients": "Clients",
     "/boutiques": "Ateliers",
     "/outils": "Outils",
@@ -157,10 +191,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex min-h-20 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
+      <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <div className="lg:hidden">
               <Sidebar
@@ -214,7 +248,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               size="sm"
               className="hidden bg-[#5b2c06] font-bold text-white shadow-3d transition-colors hover:bg-[#713807] sm:inline-flex"
             >
-              <Link to="/atelier/nouveau">
+              <Link to="/phone/atelier/nouveau">
                 <Plus />
                 Nouvelle fiche
               </Link>
@@ -225,11 +259,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <div className="animate-fadeIn flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
+        <div className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
           {heroRoute && location.pathname !== "/admin" ? (
             <PageHero
               {...heroRoute}
-              showBack={location.pathname !== "/atelier" && location.pathname !== "/clients"}
+              showBack={
+                !["/atelier", "/phone/atelier", "/computer/atelier", "/consumable/stock", "/sales", "/clients"].includes(location.pathname)
+              }
             />
           ) : null}
           {breadcrumbLabel ? (
@@ -250,11 +286,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Breadcrumb>
           ) : null}
           {content}
+          <footer className="mt-8 hidden border-t border-border px-5 py-4 text-xs text-muted-foreground lg:block lg:px-8">
+            Développé par Thierry Gogo &amp; Co
+          </footer>
         </div>
-
-        <footer className="hidden border-t border-border px-5 py-4 text-xs text-muted-foreground lg:block lg:px-8">
-          Développé par Thierry Gogo &amp; Co
-        </footer>
       </main>
     </div>
   );

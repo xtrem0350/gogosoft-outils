@@ -3,6 +3,7 @@ import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { WorkshopTicket } from "@/types/database";
 
 export type { WorkshopTicket } from "@/types/database";
+export type ActivityType = "phone" | "computer" | "consumable";
 
 /** Identifiants des pannes prises en charge par l'atelier. */
 export type IssueKey =
@@ -29,6 +30,8 @@ export interface WorkshopDiagnosis {
 /** Données nécessaires à la création d'une fiche. */
 export interface CreateTicketData {
   shop_id: string;
+  activity_type?: ActivityType;
+  category?: string;
   client_name: string;
   client_whatsapp: string;
   device_model: string;
@@ -227,6 +230,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const payload: Record<string, unknown> = {
       ...data,
       shop_id: shopId,
+      activity_type: data.activity_type ?? "phone",
       diagnosis: data.diagnosis
         ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
         : null,
@@ -253,25 +257,33 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
 }
 
 /** Récupère les fiches d'une boutique, de la plus récente à la plus ancienne. */
-export async function getTickets(shopId: string | null | undefined): Promise<WorkshopTicket[]> {
+export async function getTickets(
+  shopId: string | null | undefined,
+  activityType: ActivityType = "phone",
+): Promise<WorkshopTicket[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const { data, error } = await supabase
     .from("workshop_tickets")
     .select("*")
     .eq("shop_id", requireShopId(shopId))
+    .eq("activity_type", activityType)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as WorkshopTicket[];
 }
 
 /** Récupère une fiche par son identifiant. */
-export async function getTicketById(id: string): Promise<WorkshopTicket | null> {
+export async function getTicketById(
+  id: string,
+  activityType: ActivityType = "phone",
+): Promise<WorkshopTicket | null> {
   if (!(await hasActiveSession())) return null;
   try {
     const { data, error } = await supabase
       .from("workshop_tickets")
       .select("*")
       .eq("id", id)
+      .eq("activity_type", activityType)
       .maybeSingle();
     if (error) throw error;
     if (!data) return null;
@@ -287,6 +299,7 @@ export async function getTicketById(id: string): Promise<WorkshopTicket | null> 
 export async function updateTicketStatus(
   id: string,
   status: WorkshopStatus,
+  activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
@@ -294,6 +307,7 @@ export async function updateTicketStatus(
       .from("workshop_tickets")
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id)
+      .eq("activity_type", activityType)
       .select()
       .single();
     if (error) throw error;
@@ -306,13 +320,17 @@ export async function updateTicketStatus(
 }
 
 /** Marque une réparation comme notifiée au client par WhatsApp. */
-export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
+export async function markTicketNotified(
+  id: string,
+  activityType: ActivityType = "phone",
+): Promise<WorkshopTicket> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
     const { data, error } = await supabase
       .from("workshop_tickets")
       .update({ notified_at: new Date().toISOString(), updated_at: new Date().toISOString() })
       .eq("id", id)
+      .eq("activity_type", activityType)
       .select()
       .single();
 
@@ -322,7 +340,7 @@ export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message.toLowerCase().includes("notified_at")) {
-      const existing = await getTicketById(id);
+      const existing = await getTicketById(id, activityType);
       if (existing) return existing;
     }
     throw error;
@@ -330,10 +348,14 @@ export async function markTicketNotified(id: string): Promise<WorkshopTicket> {
 }
 
 /** Supprime une fiche selon les politiques RLS Supabase. */
-export async function deleteTicket(id: string): Promise<void> {
+export async function deleteTicket(id: string, activityType: ActivityType = "phone"): Promise<void> {
   if (!(await hasActiveSession())) return;
   try {
-    const { error } = await supabase.from("workshop_tickets").delete().eq("id", id);
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .delete()
+      .eq("id", id)
+      .eq("activity_type", activityType);
     if (error) throw error;
   } catch (error) {
     console.error("[workshopService] Catch:", error);
@@ -345,6 +367,7 @@ export async function deleteTicket(id: string): Promise<void> {
 export async function searchDevices(
   shopId: string | null | undefined,
   query: string,
+  activityType: ActivityType = "phone",
 ): Promise<KnownDevice[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const q = query.trim().replace(/[,()%]/g, "");
@@ -352,7 +375,8 @@ export async function searchDevices(
   let request = supabase
     .from("workshop_tickets")
     .select("device_model, device_imei, device_sn, device_processor, device_os_version")
-    .eq("shop_id", requireShopId(shopId));
+    .eq("shop_id", requireShopId(shopId))
+    .eq("activity_type", activityType);
   if (q.length >= 2) {
     request = request.or(
       `device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`,
@@ -408,12 +432,16 @@ export async function addEvent(
 }
 
 /** Marque les frais de diagnostic comme payés. */
-export async function markEntryFeePaid(id: string): Promise<WorkshopTicket> {
+export async function markEntryFeePaid(
+  id: string,
+  activityType: ActivityType = "phone",
+): Promise<WorkshopTicket> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("workshop_tickets")
     .update({ entry_fee_paid: true, updated_at: new Date().toISOString() })
     .eq("id", id)
+    .eq("activity_type", activityType)
     .select()
     .single();
   if (error) throw error;

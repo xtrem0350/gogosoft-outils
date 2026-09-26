@@ -1,15 +1,16 @@
 import {
   ArrowLeft,
   ChevronDown,
-  ChevronLeft,
-  ClipboardList,
-  CreditCard,
   FolderTree,
   History,
+  Home,
+  Laptop,
   LayoutDashboard,
   LogOut,
   Package,
   PlusCircle,
+  Smartphone,
+  ShoppingCart,
   Settings,
   Store,
   User,
@@ -39,43 +40,73 @@ type NavigationGroup = {
 
 const navigationGroups: NavigationGroup[] = [
   {
-    label: "Accueil",
-    icon: LayoutDashboard,
+    label: "ACCUEIL",
+    icon: Home,
     items: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
   },
   {
-    label: "Mon atelier",
-    icon: Wrench,
+    label: "TÉLÉPHONE",
+    icon: Smartphone,
     items: [
-      { label: "Fiches en cours", to: "/atelier", icon: ClipboardList },
-      { label: "Nouvelle fiche", to: "/atelier/nouveau", icon: PlusCircle },
-      { label: "Historique", to: "/historique", icon: History },
+      { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
+      { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
+      { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
+      { label: "Historique", to: "/phone/historique", icon: History },
     ],
   },
   {
-    label: "Mes clients",
+    label: "ORDINATEUR",
+    icon: Laptop,
+    items: [
+      { label: "Fiches", to: "/computer/atelier", icon: Laptop },
+      { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+      { label: "Carnet d'expérience", to: "/computer/carnet", icon: History },
+      { label: "Historique", to: "/computer/historique", icon: History },
+    ],
+  },
+  {
+    label: "CONSOMMABLES",
+    icon: Package,
+    items: [
+      { label: "Stock", to: "/consumable/stock", icon: Package },
+      { label: "Nouveau produit", to: "/consumable/stock/nouveau", icon: PlusCircle },
+      { label: "Historique", to: "/consumable/historique", icon: History },
+    ],
+  },
+  {
+    label: "VENTES",
+    icon: ShoppingCart,
+    items: [
+      { label: "Toutes les ventes", to: "/sales", icon: ShoppingCart },
+      { label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle },
+      { label: "Commandes", to: "/sales/commandes", icon: Package },
+      { label: "Livraisons", to: "/sales/livraisons", icon: History },
+    ],
+  },
+  {
+    label: "CLIENTS",
     icon: Users,
     items: [
-      { label: "Liste des clients", to: "/clients", icon: UserRound },
-      { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
+      { label: "Liste", to: "/clients", icon: UserRound },
+      { label: "Nouveau", to: "/clients/nouveau", icon: UserPlus },
     ],
   },
   {
-    label: "Mes ressources",
-    icon: Package,
+    label: "MES RESSOURCES",
+    icon: Wrench,
     items: [
       { label: "Outils", to: "/outils", icon: Wrench },
       { label: "Catégories", to: "/categories", icon: FolderTree },
-      { label: "Équipe", to: "/equipe", icon: UserCog },
-      { label: "Ateliers", to: "/boutiques", icon: Store },
+      { label: "Techniciens", to: "/equipe", icon: UserCog },
+      { label: "Mes ateliers", to: "/boutiques", icon: Store },
     ],
   },
   {
-    label: "Mon compte",
+    label: "MON COMPTE",
     icon: Settings,
     items: [
       { label: "Profil", to: "/profil", icon: User },
-      { label: "Abonnement", to: "/abonnement", icon: CreditCard },
+      { label: "Forfait", to: "/abonnement", icon: Settings },
       { label: "Paramètres", to: "/parametres", icon: Settings },
     ],
   },
@@ -91,11 +122,10 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   );
   const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({ [activeGroup]: true });
   const [search, setSearch] = useState("");
-  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     if (activeGroup < 0) return;
-    setOpenGroups((current) => ({ ...current, [activeGroup]: true }));
+    setOpenGroups({ [activeGroup]: true });
   }, [activeGroup]);
 
   async function handleSignOut() {
@@ -103,6 +133,11 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     if (error) {
       toast.error(error.message);
       return;
+    }
+    for (const key of Object.keys(window.sessionStorage)) {
+      if (key.startsWith("sb-") && key.endsWith("-auth-token")) {
+        window.sessionStorage.removeItem(key);
+      }
     }
     await navigate({ to: "/auth" });
   }
@@ -124,10 +159,8 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           >
             <CollapsibleTrigger className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <GroupIcon className="size-4" />
-              {!collapsed ? <span className="flex-1">{label}</span> : null}
-              {!collapsed ? (
-                <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
-              ) : null}
+              <span className="flex-1">{label}</span>
+              <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1">
               {filteredItems.map(({ label: itemLabel, to, icon: Icon }) => (
@@ -136,13 +169,13 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   to={to}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 pl-7 text-sm text-sidebar-foreground/65 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
+                      "flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 pl-7 text-sm text-sidebar-foreground/65 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
                     pathname === to &&
-                      "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950/30 dark:text-blue-200",
+                      "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
                   )}
                 >
                   <Icon className="size-4" />
-                  {!collapsed ? itemLabel : null}
+                  {itemLabel}
                 </Link>
               ))}
             </CollapsibleContent>
@@ -159,7 +192,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
       className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     >
       <LogOut className="size-4" />
-      {!collapsed ? "Déconnexion" : null}
+      Déconnexion
     </button>
   );
 
@@ -170,7 +203,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
       className="mb-4 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     >
       <ArrowLeft className="size-4" />
-      {!collapsed ? "Retour" : null}
+      Retour
     </button>
   );
 
@@ -178,37 +211,23 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <>
       <aside
         className={cn(
-          "hidden shrink-0 flex-col border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-[width] lg:flex",
-          collapsed ? "w-20" : "w-64",
+          "hidden h-screen w-[260px] shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex",
         )}
       >
         <div className="mb-5 flex items-center justify-between gap-2 px-2">
-          {!collapsed ? (
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
-              Espace de travail
-            </p>
-          ) : null}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-sidebar-foreground hover:bg-sidebar-accent"
-            onClick={() => setCollapsed((value) => !value)}
-            aria-label={collapsed ? "Afficher la sidebar" : "Masquer la sidebar"}
-          >
-            <ChevronLeft className={cn("size-4 transition-transform", collapsed && "rotate-180")} />
-          </Button>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
+            Espace de travail
+          </p>
         </div>
-        {!collapsed ? (
-          <div className="relative mb-4">
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher..."
-              aria-label="Rechercher dans le menu"
-              className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
-            />
-          </div>
-        ) : null}
+        <div className="relative mb-4">
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Rechercher..."
+            aria-label="Rechercher dans le menu"
+            className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
+          />
+        </div>
         {backButton}
         {links}
         <div className="mt-auto border-t border-sidebar-border pt-4">{signOutButton}</div>

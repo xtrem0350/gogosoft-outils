@@ -30,8 +30,26 @@ import { Route as BoutiquesNouveauRouteImport } from './routes/boutiques.nouveau
 import { Route as ClientsIndexRouteImport } from './routes/clients.index'
 import { Route as ClientsIdRouteImport } from './routes/clients.$id'
 import { Route as ClientsNouveauRouteImport } from './routes/clients.nouveau'
+import { Route as ComputerCarnetRouteImport } from './routes/computer/carnet'
+import { Route as ComputerHistoriqueRouteImport } from './routes/computer/historique'
+import { Route as ConsumableHistoriqueRouteImport } from './routes/consumable/historique'
 import { Route as OutilsIndexRouteImport } from './routes/outils.index'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
+import { Route as PhoneCarnetRouteImport } from './routes/phone/carnet'
+import { Route as PhoneHistoriqueRouteImport } from './routes/phone/historique'
+import { Route as SalesIndexRouteImport } from './routes/sales/index'
+import { Route as SalesCommandesRouteImport } from './routes/sales/commandes'
+import { Route as SalesLivraisonsRouteImport } from './routes/sales/livraisons'
+import { Route as SalesNouveauRouteImport } from './routes/sales/nouveau'
+import { Route as ComputerAtelierIndexRouteImport } from './routes/computer/atelier/index'
+import { Route as ComputerAtelierIdRouteImport } from './routes/computer/atelier/$id'
+import { Route as ComputerAtelierNouveauRouteImport } from './routes/computer/atelier/nouveau'
+import { Route as ConsumableStockIndexRouteImport } from './routes/consumable/stock/index'
+import { Route as ConsumableStockIdRouteImport } from './routes/consumable/stock/$id'
+import { Route as ConsumableStockNouveauRouteImport } from './routes/consumable/stock/nouveau'
+import { Route as PhoneAtelierIndexRouteImport } from './routes/phone/atelier/index'
+import { Route as PhoneAtelierIdRouteImport } from './routes/phone/atelier/$id'
+import { Route as PhoneAtelierNouveauRouteImport } from './routes/phone/atelier/nouveau'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -138,6 +156,21 @@ const ClientsNouveauRoute = ClientsNouveauRouteImport.update({
   path: '/clients/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComputerCarnetRoute = ComputerCarnetRouteImport.update({
+  id: '/computer/carnet',
+  path: '/computer/carnet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComputerHistoriqueRoute = ComputerHistoriqueRouteImport.update({
+  id: '/computer/historique',
+  path: '/computer/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumableHistoriqueRoute = ConsumableHistoriqueRouteImport.update({
+  id: '/consumable/historique',
+  path: '/consumable/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OutilsIndexRoute = OutilsIndexRouteImport.update({
   id: '/outils/',
   path: '/outils/',
@@ -146,6 +179,81 @@ const OutilsIndexRoute = OutilsIndexRouteImport.update({
 const OutilsIdRoute = OutilsIdRouteImport.update({
   id: '/outils/$id',
   path: '/outils/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhoneCarnetRoute = PhoneCarnetRouteImport.update({
+  id: '/phone/carnet',
+  path: '/phone/carnet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhoneHistoriqueRoute = PhoneHistoriqueRouteImport.update({
+  id: '/phone/historique',
+  path: '/phone/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesIndexRoute = SalesIndexRouteImport.update({
+  id: '/sales/',
+  path: '/sales/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesCommandesRoute = SalesCommandesRouteImport.update({
+  id: '/sales/commandes',
+  path: '/sales/commandes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesLivraisonsRoute = SalesLivraisonsRouteImport.update({
+  id: '/sales/livraisons',
+  path: '/sales/livraisons',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SalesNouveauRoute = SalesNouveauRouteImport.update({
+  id: '/sales/nouveau',
+  path: '/sales/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComputerAtelierIndexRoute = ComputerAtelierIndexRouteImport.update({
+  id: '/computer/atelier/',
+  path: '/computer/atelier/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComputerAtelierIdRoute = ComputerAtelierIdRouteImport.update({
+  id: '/computer/atelier/$id',
+  path: '/computer/atelier/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComputerAtelierNouveauRoute = ComputerAtelierNouveauRouteImport.update({
+  id: '/computer/atelier/nouveau',
+  path: '/computer/atelier/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumableStockIndexRoute = ConsumableStockIndexRouteImport.update({
+  id: '/consumable/stock/',
+  path: '/consumable/stock/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumableStockIdRoute = ConsumableStockIdRouteImport.update({
+  id: '/consumable/stock/$id',
+  path: '/consumable/stock/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConsumableStockNouveauRoute = ConsumableStockNouveauRouteImport.update({
+  id: '/consumable/stock/nouveau',
+  path: '/consumable/stock/nouveau',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhoneAtelierIndexRoute = PhoneAtelierIndexRouteImport.update({
+  id: '/phone/atelier/',
+  path: '/phone/atelier/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhoneAtelierIdRoute = PhoneAtelierIdRouteImport.update({
+  id: '/phone/atelier/$id',
+  path: '/phone/atelier/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PhoneAtelierNouveauRoute = PhoneAtelierNouveauRouteImport.update({
+  id: '/phone/atelier/nouveau',
+  path: '/phone/atelier/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -168,11 +276,29 @@ export interface FileRoutesByFullPath {
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
+  '/computer/carnet': typeof ComputerCarnetRoute
+  '/computer/historique': typeof ComputerHistoriqueRoute
+  '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/phone/carnet': typeof PhoneCarnetRoute
+  '/phone/historique': typeof PhoneHistoriqueRoute
+  '/sales/commandes': typeof SalesCommandesRoute
+  '/sales/livraisons': typeof SalesLivraisonsRoute
+  '/sales/nouveau': typeof SalesNouveauRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
+  '/sales/': typeof SalesIndexRoute
+  '/computer/atelier/$id': typeof ComputerAtelierIdRoute
+  '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
+  '/consumable/stock/$id': typeof ConsumableStockIdRoute
+  '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
+  '/phone/atelier/$id': typeof PhoneAtelierIdRoute
+  '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/computer/atelier/': typeof ComputerAtelierIndexRoute
+  '/consumable/stock/': typeof ConsumableStockIndexRoute
+  '/phone/atelier/': typeof PhoneAtelierIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -193,11 +319,29 @@ export interface FileRoutesByTo {
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
+  '/computer/carnet': typeof ComputerCarnetRoute
+  '/computer/historique': typeof ComputerHistoriqueRoute
+  '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/phone/carnet': typeof PhoneCarnetRoute
+  '/phone/historique': typeof PhoneHistoriqueRoute
+  '/sales/commandes': typeof SalesCommandesRoute
+  '/sales/livraisons': typeof SalesLivraisonsRoute
+  '/sales/nouveau': typeof SalesNouveauRoute
   '/atelier': typeof AtelierIndexRoute
   '/boutiques': typeof BoutiquesIndexRoute
   '/clients': typeof ClientsIndexRoute
   '/outils': typeof OutilsIndexRoute
+  '/sales': typeof SalesIndexRoute
+  '/computer/atelier/$id': typeof ComputerAtelierIdRoute
+  '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
+  '/consumable/stock/$id': typeof ConsumableStockIdRoute
+  '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
+  '/phone/atelier/$id': typeof PhoneAtelierIdRoute
+  '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/computer/atelier': typeof ComputerAtelierIndexRoute
+  '/consumable/stock': typeof ConsumableStockIndexRoute
+  '/phone/atelier': typeof PhoneAtelierIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -219,11 +363,29 @@ export interface FileRoutesById {
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
   '/clients/nouveau': typeof ClientsNouveauRoute
+  '/computer/carnet': typeof ComputerCarnetRoute
+  '/computer/historique': typeof ComputerHistoriqueRoute
+  '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/phone/carnet': typeof PhoneCarnetRoute
+  '/phone/historique': typeof PhoneHistoriqueRoute
+  '/sales/commandes': typeof SalesCommandesRoute
+  '/sales/livraisons': typeof SalesLivraisonsRoute
+  '/sales/nouveau': typeof SalesNouveauRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
+  '/sales/': typeof SalesIndexRoute
+  '/computer/atelier/$id': typeof ComputerAtelierIdRoute
+  '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
+  '/consumable/stock/$id': typeof ConsumableStockIdRoute
+  '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
+  '/phone/atelier/$id': typeof PhoneAtelierIdRoute
+  '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/computer/atelier/': typeof ComputerAtelierIndexRoute
+  '/consumable/stock/': typeof ConsumableStockIndexRoute
+  '/phone/atelier/': typeof PhoneAtelierIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -246,11 +408,29 @@ export interface FileRouteTypes {
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
+    | '/computer/carnet'
+    | '/computer/historique'
+    | '/consumable/historique'
     | '/outils/$id'
+    | '/phone/carnet'
+    | '/phone/historique'
+    | '/sales/commandes'
+    | '/sales/livraisons'
+    | '/sales/nouveau'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
+    | '/sales/'
+    | '/computer/atelier/$id'
+    | '/computer/atelier/nouveau'
+    | '/consumable/stock/$id'
+    | '/consumable/stock/nouveau'
+    | '/phone/atelier/$id'
+    | '/phone/atelier/nouveau'
+    | '/computer/atelier/'
+    | '/consumable/stock/'
+    | '/phone/atelier/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -271,11 +451,29 @@ export interface FileRouteTypes {
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
+    | '/computer/carnet'
+    | '/computer/historique'
+    | '/consumable/historique'
     | '/outils/$id'
+    | '/phone/carnet'
+    | '/phone/historique'
+    | '/sales/commandes'
+    | '/sales/livraisons'
+    | '/sales/nouveau'
     | '/atelier'
     | '/boutiques'
     | '/clients'
     | '/outils'
+    | '/sales'
+    | '/computer/atelier/$id'
+    | '/computer/atelier/nouveau'
+    | '/consumable/stock/$id'
+    | '/consumable/stock/nouveau'
+    | '/phone/atelier/$id'
+    | '/phone/atelier/nouveau'
+    | '/computer/atelier'
+    | '/consumable/stock'
+    | '/phone/atelier'
   id:
     | '__root__'
     | '/'
@@ -296,11 +494,29 @@ export interface FileRouteTypes {
     | '/boutiques/nouveau'
     | '/clients/$id'
     | '/clients/nouveau'
+    | '/computer/carnet'
+    | '/computer/historique'
+    | '/consumable/historique'
     | '/outils/$id'
+    | '/phone/carnet'
+    | '/phone/historique'
+    | '/sales/commandes'
+    | '/sales/livraisons'
+    | '/sales/nouveau'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
+    | '/sales/'
+    | '/computer/atelier/$id'
+    | '/computer/atelier/nouveau'
+    | '/consumable/stock/$id'
+    | '/consumable/stock/nouveau'
+    | '/phone/atelier/$id'
+    | '/phone/atelier/nouveau'
+    | '/computer/atelier/'
+    | '/consumable/stock/'
+    | '/phone/atelier/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -322,11 +538,29 @@ export interface RootRouteChildren {
   BoutiquesNouveauRoute: typeof BoutiquesNouveauRoute
   ClientsIdRoute: typeof ClientsIdRoute
   ClientsNouveauRoute: typeof ClientsNouveauRoute
+  ComputerCarnetRoute: typeof ComputerCarnetRoute
+  ComputerHistoriqueRoute: typeof ComputerHistoriqueRoute
+  ConsumableHistoriqueRoute: typeof ConsumableHistoriqueRoute
   OutilsIdRoute: typeof OutilsIdRoute
+  PhoneCarnetRoute: typeof PhoneCarnetRoute
+  PhoneHistoriqueRoute: typeof PhoneHistoriqueRoute
+  SalesCommandesRoute: typeof SalesCommandesRoute
+  SalesLivraisonsRoute: typeof SalesLivraisonsRoute
+  SalesNouveauRoute: typeof SalesNouveauRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
   BoutiquesIndexRoute: typeof BoutiquesIndexRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
   OutilsIndexRoute: typeof OutilsIndexRoute
+  SalesIndexRoute: typeof SalesIndexRoute
+  ComputerAtelierIdRoute: typeof ComputerAtelierIdRoute
+  ComputerAtelierNouveauRoute: typeof ComputerAtelierNouveauRoute
+  ConsumableStockIdRoute: typeof ConsumableStockIdRoute
+  ConsumableStockNouveauRoute: typeof ConsumableStockNouveauRoute
+  PhoneAtelierIdRoute: typeof PhoneAtelierIdRoute
+  PhoneAtelierNouveauRoute: typeof PhoneAtelierNouveauRoute
+  ComputerAtelierIndexRoute: typeof ComputerAtelierIndexRoute
+  ConsumableStockIndexRoute: typeof ConsumableStockIndexRoute
+  PhoneAtelierIndexRoute: typeof PhoneAtelierIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -478,6 +712,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientsNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/computer/carnet': {
+      id: '/computer/carnet'
+      path: '/computer/carnet'
+      fullPath: '/computer/carnet'
+      preLoaderRoute: typeof ComputerCarnetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/computer/historique': {
+      id: '/computer/historique'
+      path: '/computer/historique'
+      fullPath: '/computer/historique'
+      preLoaderRoute: typeof ComputerHistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumable/historique': {
+      id: '/consumable/historique'
+      path: '/consumable/historique'
+      fullPath: '/consumable/historique'
+      preLoaderRoute: typeof ConsumableHistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outils/': {
       id: '/outils/'
       path: '/outils'
@@ -490,6 +745,111 @@ declare module '@tanstack/react-router' {
       path: '/outils/$id'
       fullPath: '/outils/$id'
       preLoaderRoute: typeof OutilsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phone/carnet': {
+      id: '/phone/carnet'
+      path: '/phone/carnet'
+      fullPath: '/phone/carnet'
+      preLoaderRoute: typeof PhoneCarnetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phone/historique': {
+      id: '/phone/historique'
+      path: '/phone/historique'
+      fullPath: '/phone/historique'
+      preLoaderRoute: typeof PhoneHistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales/': {
+      id: '/sales/'
+      path: '/sales'
+      fullPath: '/sales/'
+      preLoaderRoute: typeof SalesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales/commandes': {
+      id: '/sales/commandes'
+      path: '/sales/commandes'
+      fullPath: '/sales/commandes'
+      preLoaderRoute: typeof SalesCommandesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales/livraisons': {
+      id: '/sales/livraisons'
+      path: '/sales/livraisons'
+      fullPath: '/sales/livraisons'
+      preLoaderRoute: typeof SalesLivraisonsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sales/nouveau': {
+      id: '/sales/nouveau'
+      path: '/sales/nouveau'
+      fullPath: '/sales/nouveau'
+      preLoaderRoute: typeof SalesNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/computer/atelier/': {
+      id: '/computer/atelier/'
+      path: '/computer/atelier'
+      fullPath: '/computer/atelier/'
+      preLoaderRoute: typeof ComputerAtelierIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/computer/atelier/$id': {
+      id: '/computer/atelier/$id'
+      path: '/computer/atelier/$id'
+      fullPath: '/computer/atelier/$id'
+      preLoaderRoute: typeof ComputerAtelierIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/computer/atelier/nouveau': {
+      id: '/computer/atelier/nouveau'
+      path: '/computer/atelier/nouveau'
+      fullPath: '/computer/atelier/nouveau'
+      preLoaderRoute: typeof ComputerAtelierNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumable/stock/': {
+      id: '/consumable/stock/'
+      path: '/consumable/stock'
+      fullPath: '/consumable/stock/'
+      preLoaderRoute: typeof ConsumableStockIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumable/stock/$id': {
+      id: '/consumable/stock/$id'
+      path: '/consumable/stock/$id'
+      fullPath: '/consumable/stock/$id'
+      preLoaderRoute: typeof ConsumableStockIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/consumable/stock/nouveau': {
+      id: '/consumable/stock/nouveau'
+      path: '/consumable/stock/nouveau'
+      fullPath: '/consumable/stock/nouveau'
+      preLoaderRoute: typeof ConsumableStockNouveauRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phone/atelier/': {
+      id: '/phone/atelier/'
+      path: '/phone/atelier'
+      fullPath: '/phone/atelier/'
+      preLoaderRoute: typeof PhoneAtelierIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phone/atelier/$id': {
+      id: '/phone/atelier/$id'
+      path: '/phone/atelier/$id'
+      fullPath: '/phone/atelier/$id'
+      preLoaderRoute: typeof PhoneAtelierIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/phone/atelier/nouveau': {
+      id: '/phone/atelier/nouveau'
+      path: '/phone/atelier/nouveau'
+      fullPath: '/phone/atelier/nouveau'
+      preLoaderRoute: typeof PhoneAtelierNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -514,11 +874,29 @@ const rootRouteChildren: RootRouteChildren = {
   BoutiquesNouveauRoute: BoutiquesNouveauRoute,
   ClientsIdRoute: ClientsIdRoute,
   ClientsNouveauRoute: ClientsNouveauRoute,
+  ComputerCarnetRoute: ComputerCarnetRoute,
+  ComputerHistoriqueRoute: ComputerHistoriqueRoute,
+  ConsumableHistoriqueRoute: ConsumableHistoriqueRoute,
   OutilsIdRoute: OutilsIdRoute,
+  PhoneCarnetRoute: PhoneCarnetRoute,
+  PhoneHistoriqueRoute: PhoneHistoriqueRoute,
+  SalesCommandesRoute: SalesCommandesRoute,
+  SalesLivraisonsRoute: SalesLivraisonsRoute,
+  SalesNouveauRoute: SalesNouveauRoute,
   AtelierIndexRoute: AtelierIndexRoute,
   BoutiquesIndexRoute: BoutiquesIndexRoute,
   ClientsIndexRoute: ClientsIndexRoute,
   OutilsIndexRoute: OutilsIndexRoute,
+  SalesIndexRoute: SalesIndexRoute,
+  ComputerAtelierIdRoute: ComputerAtelierIdRoute,
+  ComputerAtelierNouveauRoute: ComputerAtelierNouveauRoute,
+  ConsumableStockIdRoute: ConsumableStockIdRoute,
+  ConsumableStockNouveauRoute: ConsumableStockNouveauRoute,
+  PhoneAtelierIdRoute: PhoneAtelierIdRoute,
+  PhoneAtelierNouveauRoute: PhoneAtelierNouveauRoute,
+  ComputerAtelierIndexRoute: ComputerAtelierIndexRoute,
+  ConsumableStockIndexRoute: ConsumableStockIndexRoute,
+  PhoneAtelierIndexRoute: PhoneAtelierIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

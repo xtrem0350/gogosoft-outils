@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -25,7 +25,12 @@ import {
   type WorkshopDiagnosis,
 } from "@/services/workshopService";
 
-export const Route = createFileRoute("/atelier/nouveau")({ component: NewWorkshopTicketPage });
+export const Route = createFileRoute("/atelier/nouveau")({
+  beforeLoad: () => {
+    throw redirect({ href: "/phone/atelier/nouveau", statusCode: 301 });
+  },
+  component: NewWorkshopTicketPage,
+});
 
 const issueKeys = Object.keys(ISSUES_DATABASE) as IssueKey[];
 const formSchema = z.object({
