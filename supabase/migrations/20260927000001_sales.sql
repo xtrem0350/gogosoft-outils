@@ -36,23 +36,13 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('sales-product-photos', 'sales-product-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'storage'
-      AND tablename = 'objects'
-      AND policyname = 'Shop members upload sale photos'
-  ) THEN
-    CREATE POLICY "Shop members upload sale photos" ON storage.objects
-      FOR INSERT TO authenticated
-      WITH CHECK (
-        bucket_id = 'sales-product-photos'
-        AND EXISTS (
-          SELECT 1 FROM public.shop_members
-          WHERE shop_id::text = split_part(name, '/', 1)
-            AND user_id = auth.uid()
-        )
-      );
-  END IF;
-END $$;
+CREATE POLICY "Shop members upload sale photos" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    bucket_id = 'sales-product-photos'
+    AND EXISTS (
+      SELECT 1 FROM public.shop_members
+      WHERE shop_members.shop_id::text = split_part(storage.objects.name, '/', 1)
+        AND shop_members.user_id = auth.uid()
+    )
+  );

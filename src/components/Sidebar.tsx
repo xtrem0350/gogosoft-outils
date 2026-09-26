@@ -200,7 +200,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <button
       type="button"
       onClick={() => window.history.back()}
-      className="mb-4 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      className="mb-4 flex w-full shrink-0 items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     >
       <ArrowLeft className="size-4" />
       Retour
@@ -240,7 +240,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           <SheetTrigger asChild>{mobileTrigger}</SheetTrigger>
           <SheetContent
             side="left"
-            className="flex h-full w-72 flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
+            className="flex h-dvh max-h-dvh w-72 flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
           >
             <SheetTitle className="mb-8 shrink-0">Espace de travail</SheetTitle>
             <div className="relative mb-4 shrink-0">
@@ -253,7 +253,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               />
             </div>
             {backButton}
-            <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
               {links}
             </div>
             <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
