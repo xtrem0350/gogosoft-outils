@@ -211,15 +211,15 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <>
       <aside
         className={cn(
-          "hidden h-screen w-[260px] shrink-0 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex",
+          "hidden h-screen w-[260px] shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground lg:flex",
         )}
       >
-        <div className="mb-5 flex items-center justify-between gap-2 px-2">
+        <div className="mb-5 flex shrink-0 items-center justify-between gap-2 px-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
             Espace de travail
           </p>
         </div>
-        <div className="relative mb-4">
+        <div className="relative mb-4 shrink-0">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -229,16 +229,21 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           />
         </div>
         {backButton}
-        {links}
-        <div className="mt-auto border-t border-sidebar-border pt-4">{signOutButton}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {links}
+        </div>
+        <div className="mt-4 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
       </aside>
 
       {mobileTrigger ? (
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>{mobileTrigger}</SheetTrigger>
-          <SheetContent side="left" className="w-72 bg-sidebar text-sidebar-foreground">
-            <SheetTitle className="mb-8">Espace de travail</SheetTitle>
-            <div className="relative mb-4">
+          <SheetContent
+            side="left"
+            className="flex h-full w-72 flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
+          >
+            <SheetTitle className="mb-8 shrink-0">Espace de travail</SheetTitle>
+            <div className="relative mb-4 shrink-0">
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -248,8 +253,10 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               />
             </div>
             {backButton}
-            {links}
-            <div className="mt-8 border-t border-sidebar-border pt-4">{signOutButton}</div>
+            <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {links}
+            </div>
+            <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
           </SheetContent>
         </Sheet>
       ) : null}

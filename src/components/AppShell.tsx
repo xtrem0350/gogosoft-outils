@@ -44,10 +44,15 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/atelier/nouveau": "Nouvelle fiche",
     "/phone/atelier": "Fiches téléphone",
     "/phone/atelier/nouveau": "Nouvelle réparation téléphone",
+    "/phone/carnet": "Carnet d'expérience téléphone",
+    "/phone/historique": "Historique téléphone",
     "/computer/atelier": "Fiches ordinateur",
     "/computer/atelier/nouveau": "Nouvelle réparation PC",
+    "/computer/carnet": "Carnet d'expérience ordinateur",
+    "/computer/historique": "Historique ordinateur",
     "/consumable/stock": "Stock consommables",
     "/consumable/stock/nouveau": "Ajouter un consommable",
+    "/consumable/historique": "Historique consommables",
     "/sales": "Ventes",
     "/sales/nouveau": "Nouvelle vente",
     "/sales/commandes": "Commandes",
@@ -149,6 +154,19 @@ export function AppShell({ children }: { children: ReactNode }) {
   const heroRoute =
     heroRoutes[location.pathname] ??
     Object.entries(heroRoutes).find(([route]) => location.pathname.startsWith(`${route}/`))?.[1];
+  const routeTitle =
+    pageTitles[location.pathname] ??
+    Object.entries(pageTitles)
+      .filter(([route]) => route !== "/" && location.pathname.startsWith(`${route}/`))
+      .sort(([first], [second]) => second.length - first.length)[0]?.[1] ??
+    "GogoSoft Tools Manager";
+  const pageHero = {
+    ...(heroRoute ?? {
+      imageUrl:
+        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop",
+    }),
+    title: routeTitle,
+  };
   const breadcrumbLabels: Record<string, string> = {
     "/": "Accueil",
     "/atelier": "Atelier",
@@ -223,7 +241,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
 
           <h2 className="hidden min-w-0 flex-1 truncate px-4 text-lg font-semibold text-sidebar-foreground xl:block">
-            {pageTitles[location.pathname] ?? "GogoSoft Tools Manager"}
+            {routeTitle}
           </h2>
 
           <div className="flex items-center gap-2">
@@ -260,21 +278,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </header>
 
         <div className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8">
-          {heroRoute && location.pathname !== "/admin" ? (
-            <PageHero
-              {...heroRoute}
-              showBack={
-                ![
-                  "/atelier",
-                  "/phone/atelier",
-                  "/computer/atelier",
-                  "/consumable/stock",
-                  "/sales",
-                  "/clients",
-                ].includes(location.pathname)
-              }
-            />
-          ) : null}
+          <PageHero {...pageHero} showBack />
           {breadcrumbLabel ? (
             <Breadcrumb className="mb-4">
               <BreadcrumbList>
