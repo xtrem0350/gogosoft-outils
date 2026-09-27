@@ -1,18 +1,27 @@
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { ArrowLeft, Wrench } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageIdentity } from "@/components/PageIdentity";
 import type { ReactNode } from "react";
 
 interface PageHeroProps {
   title: string;
   subtitle?: string;
   imageUrl?: string;
+  icon?: LucideIcon;
   showBack?: boolean;
   action?: ReactNode;
 }
 
-export function PageHero({ title, subtitle, imageUrl, showBack = false, action }: PageHeroProps) {
+export function PageHero({
+  title,
+  subtitle,
+  imageUrl,
+  icon,
+  showBack = false,
+  action,
+}: PageHeroProps) {
   const defaultImage =
     "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop";
 
@@ -41,8 +50,13 @@ export function PageHero({ title, subtitle, imageUrl, showBack = false, action }
       ) : null}
       {action ? <div className="absolute right-4 top-4 z-10">{action}</div> : null}
       <div className="absolute inset-x-0 bottom-0 z-10 p-6">
-        <h1 className="text-3xl font-bold text-white">{title}</h1>
-        {subtitle ? <p className="mt-1 text-sm text-slate-200">{subtitle}</p> : null}
+        <PageIdentity
+          title={title}
+          subtitle={subtitle}
+          icon={icon ?? Wrench}
+          titleClassName="text-white"
+          subtitleClassName="text-slate-100"
+        />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { getPageIcon, PageIdentity } from "@/components/PageIdentity";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,8 +137,13 @@ function Index() {
         <div className="absolute inset-0 bg-white/20" />
         <div className="relative flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{greeting} 👋</h1>
-            <p className="mt-3 text-sm text-slate-700">Que voulez-vous faire aujourd'hui ?</p>
+            <PageIdentity
+              icon={getPageIcon("/")}
+              title={`${greeting} 👋`}
+              subtitle="Que voulez-vous faire aujourd'hui ?"
+              titleClassName="mt-2 text-white text-3xl tracking-tight sm:text-4xl"
+              subtitleClassName="mt-2 text-slate-700"
+            />
             <p className="mt-2 text-sm text-slate-700/80">
               {roleLabel} · {shop?.name ?? "Votre atelier"}
             </p>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHero } from "@/components/PageHero";
+import { getPageIcon } from "@/components/PageIdentity";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
@@ -67,6 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/sales": "🛒 Ventes",
     "/sales/nouveau": "➕ Nouvelle vente",
     "/sales/commandes": "📦 Commandes",
+    "/salles/commandes": "📦 Commandes",
     "/sales/livraisons": "🚚 Livraisons",
     "/clients": "👥 Mes clients",
     "/clients/nouveau": "➕ Nouveau client",
@@ -109,6 +111,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/sales": {
       title: "Ventes",
       subtitle: "Suivez les ventes de votre boutique",
+      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
+    },
+    "/salles/commandes": {
+      title: "Commandes",
+      subtitle: "Préparez les commandes en attente de remise",
       imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
     },
     "/clients": {
@@ -178,7 +185,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop",
     }),
     title: routeTitle,
+    icon: getPageIcon(location.pathname),
+    subtitle: heroRoute?.subtitle ?? "Suivez et gérez les éléments de cette rubrique.",
   };
+  const CurrentPageIcon = getPageIcon(location.pathname);
   const breadcrumbLabels: Record<string, string> = {
     "/": "Accueil",
     "/atelier": "Atelier",
@@ -248,6 +258,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               alt="GogoSoft"
               className="size-10 rounded-xl object-cover"
             />
+            <CurrentPageIcon
+              aria-hidden="true"
+              className="size-5 shrink-0 text-orange-500 xl:hidden"
+            />
             <h1 className="truncate font-display text-base font-semibold text-sidebar-foreground sm:text-lg">
               GogoSoft Tools Manager
             </h1>
@@ -264,8 +278,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             ) : null}
           </div>
 
-          <h2 className="hidden min-w-0 flex-1 truncate px-4 text-lg font-semibold text-sidebar-foreground xl:block">
-            {routeTitle}
+          <h2 className="hidden min-w-0 flex-1 items-center gap-2 truncate px-4 text-lg font-semibold text-sidebar-foreground xl:flex">
+            <CurrentPageIcon aria-hidden="true" className="size-5 shrink-0 text-orange-500" />
+            <span className="truncate">{routeTitle}</span>
           </h2>
 
           <div className="flex items-center gap-2">

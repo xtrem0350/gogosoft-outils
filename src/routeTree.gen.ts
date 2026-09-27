@@ -42,6 +42,7 @@ import { Route as SalesIndexRouteImport } from './routes/sales/index'
 import { Route as SalesCommandesRouteImport } from './routes/sales/commandes'
 import { Route as SalesLivraisonsRouteImport } from './routes/sales/livraisons'
 import { Route as SalesNouveauRouteImport } from './routes/sales/nouveau'
+import { Route as SallesCommandesRouteImport } from './routes/salles/commandes'
 import { Route as ComputerAtelierIndexRouteImport } from './routes/computer/atelier/index'
 import { Route as ComputerAtelierIdRouteImport } from './routes/computer/atelier/$id'
 import { Route as ComputerAtelierNouveauRouteImport } from './routes/computer/atelier/nouveau'
@@ -217,6 +218,11 @@ const SalesNouveauRoute = SalesNouveauRouteImport.update({
   path: '/sales/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SallesCommandesRoute = SallesCommandesRouteImport.update({
+  id: '/salles/commandes',
+  path: '/salles/commandes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComputerAtelierIndexRoute = ComputerAtelierIndexRouteImport.update({
   id: '/computer/atelier/',
   path: '/computer/atelier/',
@@ -292,6 +298,7 @@ export interface FileRoutesByFullPath {
   '/sales/commandes': typeof SalesCommandesRoute
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
+  '/salles/commandes': typeof SallesCommandesRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
@@ -336,6 +343,7 @@ export interface FileRoutesByTo {
   '/sales/commandes': typeof SalesCommandesRoute
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
+  '/salles/commandes': typeof SallesCommandesRoute
   '/atelier': typeof AtelierIndexRoute
   '/boutiques': typeof BoutiquesIndexRoute
   '/clients': typeof ClientsIndexRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/sales/commandes': typeof SalesCommandesRoute
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
+  '/salles/commandes': typeof SallesCommandesRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
@@ -427,6 +436,7 @@ export interface FileRouteTypes {
     | '/sales/commandes'
     | '/sales/livraisons'
     | '/sales/nouveau'
+    | '/salles/commandes'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/sales/commandes'
     | '/sales/livraisons'
     | '/sales/nouveau'
+    | '/salles/commandes'
     | '/atelier'
     | '/boutiques'
     | '/clients'
@@ -515,6 +526,7 @@ export interface FileRouteTypes {
     | '/sales/commandes'
     | '/sales/livraisons'
     | '/sales/nouveau'
+    | '/salles/commandes'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
@@ -560,6 +572,7 @@ export interface RootRouteChildren {
   SalesCommandesRoute: typeof SalesCommandesRoute
   SalesLivraisonsRoute: typeof SalesLivraisonsRoute
   SalesNouveauRoute: typeof SalesNouveauRoute
+  SallesCommandesRoute: typeof SallesCommandesRoute
   AtelierIndexRoute: typeof AtelierIndexRoute
   BoutiquesIndexRoute: typeof BoutiquesIndexRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
@@ -809,6 +822,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SalesNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/salles/commandes': {
+      id: '/salles/commandes'
+      path: '/salles/commandes'
+      fullPath: '/salles/commandes'
+      preLoaderRoute: typeof SallesCommandesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/computer/atelier/': {
       id: '/computer/atelier/'
       path: '/computer/atelier'
@@ -904,6 +924,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesCommandesRoute: SalesCommandesRoute,
   SalesLivraisonsRoute: SalesLivraisonsRoute,
   SalesNouveauRoute: SalesNouveauRoute,
+  SallesCommandesRoute: SallesCommandesRoute,
   AtelierIndexRoute: AtelierIndexRoute,
   BoutiquesIndexRoute: BoutiquesIndexRoute,
   ClientsIndexRoute: ClientsIndexRoute,
