@@ -9,6 +9,9 @@ interface PageHeroProps {
   title: string;
   subtitle?: string | undefined;
   icon?: LucideIcon | undefined;
+  imageUrl?: string | undefined;
+  showBack?: boolean | undefined;
+  action?: React.ReactNode | undefined;
   className?: string | undefined;
   titleClassName?: string | undefined;
   subtitleClassName?: string | undefined;
@@ -18,10 +21,14 @@ interface PageHeroProps {
 export function PageHero({
   title,
   subtitle,
+  icon: Icon,
   imageUrl,
-  icon,
-  showBack = false,
+  showBack,
   action,
+  className,
+  titleClassName,
+  subtitleClassName,
+  iconClassName,
 }: PageHeroProps) {
   const defaultImage =
     "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop";
