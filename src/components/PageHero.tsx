@@ -7,11 +7,12 @@ import type { ReactNode } from "react";
 
 interface PageHeroProps {
   title: string;
-  subtitle?: string;
-  imageUrl?: string;
-  icon?: LucideIcon;
-  showBack?: boolean;
-  action?: ReactNode;
+  subtitle?: string | undefined;
+  icon?: LucideIcon | undefined;
+  className?: string | undefined;
+  titleClassName?: string | undefined;
+  subtitleClassName?: string | undefined;
+  iconClassName?: string | undefined;
 }
 
 export function PageHero({
