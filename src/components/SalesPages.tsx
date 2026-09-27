@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, CircleDollarSign, ClipboardList, Clock3, Package, Truck } from "lucide-react";
+import { ShoppingCart, Plus, Search, Filter, Eye, Edit, Trash2, CheckCircle, Clock, Truck } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageIdentity } from "@/components/PageIdentity";
