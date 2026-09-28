@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHero } from "@/components/PageHero";
 import { getPageIcon } from "@/components/PageIdentity";
+import { PricingModal } from "@/components/PricingModal";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
@@ -32,6 +33,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pageScrollRef = useRef<HTMLDivElement>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [showNewBadge, setShowNewBadge] = useState(false);
+  const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
@@ -41,6 +43,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isAuthRoute = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
     location.pathname,
   );
+  useEffect(() => {
+    if (authLoading || user || location.pathname !== "/") return;
+    if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
+
+    const timeout = window.setTimeout(() => {
+      setPricingPromptOpen(true);
+      window.localStorage.setItem("gogosoft_pricing_shown", "true");
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [authLoading, location.pathname, user]);
   useEffect(() => {
     setShowNewBadge(Boolean(user && !isAuthRoute && hasNewVersion()));
   }, [isAuthRoute, user?.id]);
@@ -212,6 +225,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const breadcrumbLabel = breadcrumbLabels[location.pathname] ?? pageTitles[location.pathname];
 
   if (!loading && !user && !isAuthRoute) {
+    if (location.pathname === "/") {
+      return (
+        <>
+          <LoadingShell />
+          <PricingModal
+            open={pricingPromptOpen}
+            onOpenChange={(open) => {
+              setPricingPromptOpen(open);
+              if (!open) void navigate({ to: "/auth" });
+            }}
+            onCreateAccount={() => void navigate({ to: "/auth" })}
+          />
+        </>
+      );
+    }
     void navigate({ to: "/auth", search: { redirect: location.pathname } });
     return <LoadingShell />;
   }

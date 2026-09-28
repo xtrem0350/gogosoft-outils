@@ -1,5 +1,6 @@
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
+import { getDeviceInfo, hasDeviceUsedTrial, markTrialAsUsed } from "@/services/deviceService";
 import type { AppRole, Profile } from "@/types/database";
 
 function getMissingSupabaseMigrationMessage(error: unknown): string | null {
@@ -158,6 +159,8 @@ export async function signUp(
   }
 
   const userId = result.data.user.id;
+  const deviceInfo = getDeviceInfo();
+  const devicePreviouslyUsedTrial = await hasDeviceUsedTrial(deviceInfo.imei);
   let avatarUrl: string | null = null;
   if (avatarFile) {
     console.info("[authService] signUp:avatar-start", { userId });
@@ -179,8 +182,12 @@ export async function signUp(
       phone_country_code: countryCode,
       pseudo: normalizedPseudo ?? null,
       avatar_url: avatarUrl,
+      device_imei: deviceInfo.imei,
+      device_os: deviceInfo.os,
+      device_build: deviceInfo.build,
+      first_trial_used_at: null,
       updated_at: new Date().toISOString(),
-    },
+    } as never,
     { onConflict: "id" },
   );
 
@@ -192,6 +199,8 @@ export async function signUp(
     }
     throw new Error(profileError.message || "Impossible de sauvegarder le profil.");
   }
+
+  if (devicePreviouslyUsedTrial) await markTrialAsUsed(userId, deviceInfo);
 
   console.log("[authService] Profil créé avec succès pour", userId);
 

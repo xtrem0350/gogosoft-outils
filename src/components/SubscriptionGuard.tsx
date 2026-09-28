@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, ArrowRight } from "lucide-react";
 
+import { PricingModal } from "@/components/PricingModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -25,6 +26,12 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   if (!isActive) {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center p-6">
+        <PricingModal
+          open
+          isBlocking
+          onOpenChange={() => undefined}
+          onCreateAccount={() => void navigate({ to: "/abonnement" })}
+        />
         <Card className="w-full border-destructive/30 bg-destructive/5">
           <CardContent className="space-y-5 p-8 text-center">
             <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">

@@ -12,7 +12,9 @@ import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { getPageIcon, PageIdentity } from "@/components/PageIdentity";
+import { PricingModal } from "@/components/PricingModal";
 import { StatsCard } from "@/components/StatsCard";
+import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -50,9 +52,10 @@ const STATUS_LABELS: Record<string, string> = {
 
 function Index() {
   const navigate = useNavigate();
-  const { profile, user } = useAuth();
+  const { profile, user, loading: authLoading } = useAuth();
   const { shop, shopId, loading: shopLoading } = useCurrentShop();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
+  const [pricingOpen, setPricingOpen] = useState(false);
 
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -102,6 +105,29 @@ function Index() {
     void load();
   }, [load, shopLoading]);
 
+  const subscriptionExpired = Boolean(
+    subscription &&
+      (subscription.status === "expired" ||
+        (subscription.expires_at && new Date(subscription.expires_at).getTime() <= Date.now())),
+  );
+
+  useEffect(() => {
+    if (subLoading || !subscriptionExpired) return;
+    setPricingOpen(true);
+  }, [subLoading, subscriptionExpired]);
+
+  useEffect(() => {
+    if (authLoading || user || typeof window === "undefined") return;
+    if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
+
+    const timeout = window.setTimeout(() => {
+      setPricingOpen(true);
+      window.localStorage.setItem("gogosoft_pricing_shown", "true");
+    }, 2000);
+
+    return () => window.clearTimeout(timeout);
+  }, [authLoading, user]);
+
   const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
   const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
   const busy = shopLoading || loading;
@@ -127,6 +153,14 @@ function Index() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
+      <PricingModal
+        open={pricingOpen}
+        onOpenChange={setPricingOpen}
+        isBlocking={subscriptionExpired}
+        onCreateAccount={() =>
+          void navigate({ to: user ? "/abonnement" : "/auth" })
+        }
+      />
       <div
         className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8"
         style={{
@@ -144,6 +178,7 @@ function Index() {
               titleClassName="mt-2 text-white text-3xl tracking-tight sm:text-4xl"
               subtitleClassName="mt-2 text-slate-700"
             />
+            {subscription ? <SubscriptionBadge subscription={subscription} /> : null}
             <p className="mt-2 text-sm text-slate-700/80">
               {roleLabel} · {shop?.name ?? "Votre atelier"}
             </p>
