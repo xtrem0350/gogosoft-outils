@@ -49,6 +49,7 @@ const navigationGroups: NavigationGroup[] = [
     items: [
       { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
       { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
+      { label: "🗄️ Plan de l'atelier", to: "/atelier/plan", icon: Package },
       { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
       { label: "Historique", to: "/phone/historique", icon: History },
     ],

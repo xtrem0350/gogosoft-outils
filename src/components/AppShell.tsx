@@ -66,6 +66,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
+    "/atelier/plan": "🗄️ Plan de mon atelier",
     "/atelier/nouveau": "➕ Nouvelle fiche",
     "/phone/atelier": "📋 Fiches téléphone",
     "/phone/atelier/nouveau": "➕ Nouvelle réparation téléphone",
@@ -94,6 +95,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/profil": "👤 Mon profil",
     "/abonnement": "💳 Mon abonnement",
     "/parametres": "⚙️ Paramètres",
+    "/parametres/emplacements": "📦 Mes emplacements",
     "/nouveautes": "✨ Nouveautés",
   };
   const heroRoutes: Record<string, { title: string; subtitle?: string; imageUrl: string }> = {
@@ -348,7 +350,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           ref={pageScrollRef}
           className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8"
         >
-          {location.pathname !== "/" ? <PageHero {...pageHero} showBack /> : null}
+          {location.pathname !== "/" &&
+          !["/atelier/plan", "/parametres/emplacements"].includes(location.pathname) ? (
+            <PageHero {...pageHero} showBack />
+          ) : null}
           {breadcrumbLabel ? (
             <Breadcrumb className="mb-4 animate-in slide-in-from-left-4 fade-in duration-300">
               <BreadcrumbList>
