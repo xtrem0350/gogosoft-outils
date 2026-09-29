@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { ShopCard } from "@/components/ShopCard";
 import { Button } from "@/components/ui/button";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
@@ -27,18 +29,21 @@ function BoutiquesPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Ateliers</p>
-          <h1 className="mt-2 text-3xl font-bold">Mes ateliers</h1>
-        </div>
-        <Button asChild>
-          <Link to="/boutiques/nouveau">
-            <Plus />
-            Nouvel atelier
-          </Link>
-        </Button>
-      </div>
+      <PageHero
+        title="Mes ateliers"
+        subtitle="Gérez vos points de vente et votre organisation."
+        icon={Store}
+        iconColor="orange"
+        action={
+          <Button onClick={() => void navigate({ to: "/boutiques/nouveau" })}>+ Nouvel atelier</Button>
+        }
+      />
+      <PageSectionTitle
+        icon={Store}
+        color="orange"
+        title="Liste des ateliers"
+        subtitle="Chaque atelier possède son propre flux et ses données."
+      />
 
       {loading ? (
         <Card>

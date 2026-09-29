@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Mail, UserMinus, UserPlus } from "lucide-react";
+import { Mail, UserCog, UserMinus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -77,16 +79,24 @@ function EquipePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Collaboration</p>
-          <h1 className="mt-2 text-3xl font-bold">Mes techniciens</h1>
-        </div>
-        <Button onClick={() => setOpen(true)}>
-          <UserPlus className="size-4" />
-          Inviter un technicien
-        </Button>
-      </div>
+      <PageHero
+        title="Mes techniciens"
+        subtitle="Collaborez avec votre équipe et gérez les accès."
+        icon={UserCog}
+        iconColor="green"
+        action={
+          <Button onClick={() => setOpen(true)}>
+            <UserPlus className="size-4" />
+            Inviter un technicien
+          </Button>
+        }
+      />
+      <PageSectionTitle
+        icon={UserCog}
+        color="green"
+        title="Équipe"
+        subtitle="Restez aligned sur la gestion des interventions et des compétences."
+      />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {shopLoading || loading ? (

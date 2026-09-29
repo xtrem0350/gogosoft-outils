@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Camera, KeyRound, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -374,12 +374,12 @@ function AuthPage() {
                           />
                           Se souvenir de moi
                         </label>
-                        <a
-                          href="/mot-de-passe-oublie"
+                        <Link
+                          to="/mot-de-passe-oublie"
                           className="font-medium text-orange-300 underline-offset-4 hover:text-orange-200 hover:underline"
                         >
                           Mot de passe oublié ?
-                        </a>
+                        </Link>
                       </div>
 
                       <Button className="mt-4 w-full" disabled={busy} type="submit">

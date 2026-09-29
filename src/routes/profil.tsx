@@ -2,6 +2,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogOut, ShieldAlert, Store, Trash2, Upload, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -133,13 +136,18 @@ function ProfilPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">Compte</p>
-        <h1 className="mt-2 text-3xl font-bold">Mon profil</h1>
-        <p className="mt-2 text-muted-foreground">
-          Gérez vos informations et vos accès à GogoSoft Tools Manager.
-        </p>
-      </div>
+      <PageHero
+        title="Mon profil"
+        subtitle="Gérez vos informations et vos accès à GogoSoft Tools Manager."
+        icon={User}
+        iconColor="orange"
+      />
+      <PageSectionTitle
+        icon={User}
+        color="orange"
+        title="Compte"
+        subtitle="Mettez à jour vos informations personnelles et votre organisation."
+      />
       <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-6">
           <Card>

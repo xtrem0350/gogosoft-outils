@@ -72,7 +72,7 @@ function ErrorComponent({ error, reset }: { error?: Error; reset?: () => void })
         </button>
         <button
           onClick={() => {
-            window.location.href = "/";
+            void router.navigate({ to: "/" });
           }}
           className="rounded-lg border px-4 py-2 hover:bg-slate-50"
         >
@@ -132,7 +132,7 @@ function RootComponent() {
     location.pathname,
   );
   const routeOutlet = (
-    <div key={location.pathname} className="animate-fadeIn">
+    <div key={location.pathname} className="page-transition">
       <Outlet />
     </div>
   );

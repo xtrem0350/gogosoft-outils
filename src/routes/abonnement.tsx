@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Check, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -64,10 +66,18 @@ function AbonnementPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-8">
-      <div>
-        <p className="text-sm font-medium text-primary">Abonnement</p>
-        <h1 className="mt-2 text-3xl font-bold">Gestion de l'abonnement</h1>
-      </div>
+      <PageHero
+        title="Gestion de l'abonnement"
+        subtitle="Suivez votre accès, vos avantages et vos options."
+        icon={CreditCard}
+        iconColor="green"
+      />
+      <PageSectionTitle
+        icon={CreditCard}
+        color="green"
+        title="Abonnement"
+        subtitle="Choisissez le plan adapté à votre activité."
+      />
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <SubscriptionCard subscription={subscription} />

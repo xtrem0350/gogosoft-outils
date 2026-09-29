@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { History, ScrollText } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listLaunches, listLogs } from "@/services/historyService";
@@ -43,13 +45,18 @@ function HistoriquePage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">Traçabilité</p>
-        <h1 className="mt-2 text-3xl font-bold">Historique</h1>
-        <p className="mt-2 text-muted-foreground">
-          Qui a lancé quoi, et quand le catalogue a changé.
-        </p>
-      </div>
+      <PageHero
+        title="Historique"
+        subtitle="Qui a lancé quoi, et quand le catalogue a changé."
+        icon={History}
+        iconColor="orange"
+      />
+      <PageSectionTitle
+        icon={History}
+        color="orange"
+        title="Traçabilité"
+        subtitle="Suivez les actions et modifications importantes pour votre atelier."
+      />
 
       <Tabs defaultValue="launches">
         <TabsList>

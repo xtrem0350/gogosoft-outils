@@ -25,6 +25,7 @@ import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
 import { Route as AtelierNouveauRouteImport } from './routes/atelier.nouveau'
+import { Route as AtelierPlanRouteImport } from './routes/atelier.plan'
 import { Route as BoutiquesIndexRouteImport } from './routes/boutiques.index'
 import { Route as BoutiquesIdRouteImport } from './routes/boutiques.$id'
 import { Route as BoutiquesNouveauRouteImport } from './routes/boutiques.nouveau'
@@ -36,6 +37,7 @@ import { Route as ComputerHistoriqueRouteImport } from './routes/computer/histor
 import { Route as ConsumableHistoriqueRouteImport } from './routes/consumable/historique'
 import { Route as OutilsIndexRouteImport } from './routes/outils.index'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
+import { Route as ParametresEmplacementsRouteImport } from './routes/parametres.emplacements'
 import { Route as PhoneCarnetRouteImport } from './routes/phone/carnet'
 import { Route as PhoneHistoriqueRouteImport } from './routes/phone/historique'
 import { Route as SalesIndexRouteImport } from './routes/sales/index'
@@ -133,6 +135,11 @@ const AtelierNouveauRoute = AtelierNouveauRouteImport.update({
   path: '/atelier/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AtelierPlanRoute = AtelierPlanRouteImport.update({
+  id: '/atelier/plan',
+  path: '/atelier/plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BoutiquesIndexRoute = BoutiquesIndexRouteImport.update({
   id: '/boutiques/',
   path: '/boutiques/',
@@ -187,6 +194,11 @@ const OutilsIdRoute = OutilsIdRouteImport.update({
   id: '/outils/$id',
   path: '/outils/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ParametresEmplacementsRoute = ParametresEmplacementsRouteImport.update({
+  id: '/emplacements',
+  path: '/emplacements',
+  getParentRoute: () => ParametresRoute,
 } as any)
 const PhoneCarnetRoute = PhoneCarnetRouteImport.update({
   id: '/phone/carnet',
@@ -279,12 +291,13 @@ export interface FileRoutesByFullPath {
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/parametres': typeof ParametresRoute
+  '/parametres': typeof ParametresRouteWithChildren
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/atelier/plan': typeof AtelierPlanRoute
   '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
@@ -293,6 +306,7 @@ export interface FileRoutesByFullPath {
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
   '/phone/historique': typeof PhoneHistoriqueRoute
   '/sales/commandes': typeof SalesCommandesRoute
@@ -324,12 +338,13 @@ export interface FileRoutesByTo {
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/parametres': typeof ParametresRoute
+  '/parametres': typeof ParametresRouteWithChildren
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/atelier/plan': typeof AtelierPlanRoute
   '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
@@ -338,6 +353,7 @@ export interface FileRoutesByTo {
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
   '/phone/historique': typeof PhoneHistoriqueRoute
   '/sales/commandes': typeof SalesCommandesRoute
@@ -370,12 +386,13 @@ export interface FileRoutesById {
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/parametres': typeof ParametresRoute
+  '/parametres': typeof ParametresRouteWithChildren
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
+  '/atelier/plan': typeof AtelierPlanRoute
   '/boutiques/$id': typeof BoutiquesIdRoute
   '/boutiques/nouveau': typeof BoutiquesNouveauRoute
   '/clients/$id': typeof ClientsIdRoute
@@ -384,6 +401,7 @@ export interface FileRoutesById {
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
   '/outils/$id': typeof OutilsIdRoute
+  '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
   '/phone/historique': typeof PhoneHistoriqueRoute
   '/sales/commandes': typeof SalesCommandesRoute
@@ -423,6 +441,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/atelier/plan'
     | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
@@ -431,6 +450,7 @@ export interface FileRouteTypes {
     | '/computer/historique'
     | '/consumable/historique'
     | '/outils/$id'
+    | '/parametres/emplacements'
     | '/phone/carnet'
     | '/phone/historique'
     | '/sales/commandes'
@@ -468,6 +488,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/atelier/plan'
     | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
@@ -476,6 +497,7 @@ export interface FileRouteTypes {
     | '/computer/historique'
     | '/consumable/historique'
     | '/outils/$id'
+    | '/parametres/emplacements'
     | '/phone/carnet'
     | '/phone/historique'
     | '/sales/commandes'
@@ -513,6 +535,7 @@ export interface FileRouteTypes {
     | '/statistiques'
     | '/atelier/$id'
     | '/atelier/nouveau'
+    | '/atelier/plan'
     | '/boutiques/$id'
     | '/boutiques/nouveau'
     | '/clients/$id'
@@ -521,6 +544,7 @@ export interface FileRouteTypes {
     | '/computer/historique'
     | '/consumable/historique'
     | '/outils/$id'
+    | '/parametres/emplacements'
     | '/phone/carnet'
     | '/phone/historique'
     | '/sales/commandes'
@@ -553,12 +577,13 @@ export interface RootRouteChildren {
   HistoriqueRoute: typeof HistoriqueRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   NouveautesRoute: typeof NouveautesRoute
-  ParametresRoute: typeof ParametresRoute
+  ParametresRoute: typeof ParametresRouteWithChildren
   ProfilRoute: typeof ProfilRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   StatistiquesRoute: typeof StatistiquesRoute
   AtelierIdRoute: typeof AtelierIdRoute
   AtelierNouveauRoute: typeof AtelierNouveauRoute
+  AtelierPlanRoute: typeof AtelierPlanRoute
   BoutiquesIdRoute: typeof BoutiquesIdRoute
   BoutiquesNouveauRoute: typeof BoutiquesNouveauRoute
   ClientsIdRoute: typeof ClientsIdRoute
@@ -703,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtelierNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/atelier/plan': {
+      id: '/atelier/plan'
+      path: '/atelier/plan'
+      fullPath: '/atelier/plan'
+      preLoaderRoute: typeof AtelierPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/boutiques/': {
       id: '/boutiques/'
       path: '/boutiques'
@@ -779,6 +811,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/outils/$id'
       preLoaderRoute: typeof OutilsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/parametres/emplacements': {
+      id: '/parametres/emplacements'
+      path: '/emplacements'
+      fullPath: '/parametres/emplacements'
+      preLoaderRoute: typeof ParametresEmplacementsRouteImport
+      parentRoute: typeof ParametresRoute
     }
     '/phone/carnet': {
       id: '/phone/carnet'
@@ -895,6 +934,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ParametresRouteChildren {
+  ParametresEmplacementsRoute: typeof ParametresEmplacementsRoute
+}
+
+const ParametresRouteChildren: ParametresRouteChildren = {
+  ParametresEmplacementsRoute: ParametresEmplacementsRoute,
+}
+
+const ParametresRouteWithChildren = ParametresRoute._addFileChildren(
+  ParametresRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AbonnementRoute: AbonnementRoute,
@@ -905,12 +956,13 @@ const rootRouteChildren: RootRouteChildren = {
   HistoriqueRoute: HistoriqueRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,
-  ParametresRoute: ParametresRoute,
+  ParametresRoute: ParametresRouteWithChildren,
   ProfilRoute: ProfilRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   StatistiquesRoute: StatistiquesRoute,
   AtelierIdRoute: AtelierIdRoute,
   AtelierNouveauRoute: AtelierNouveauRoute,
+  AtelierPlanRoute: AtelierPlanRoute,
   BoutiquesIdRoute: BoutiquesIdRoute,
   BoutiquesNouveauRoute: BoutiquesNouveauRoute,
   ClientsIdRoute: ClientsIdRoute,

@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Laptop, Package, Smartphone, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +54,8 @@ export function ActivityListPage({
   const [endDate, setEndDate] = useState("");
   const labels = activityLabels[activityType];
   const basePath = activityType === "consumable" ? "/consumable/stock" : `/${activityType}/atelier`;
+  const heroIcon = activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package;
+  const heroColor = activityType === "consumable" ? "green" : "orange";
   const filteredTickets = tickets.filter((ticket) => {
     if (statusFilter !== "tous" && ticket.status !== statusFilter) return false;
     if (!ticket.created_at) return !startDate && !endDate;
@@ -75,20 +80,30 @@ export function ActivityListPage({
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Suivi</p>
-          <h1 className="mt-2 text-3xl font-bold">
-            {history ? `Historique ${labels.noun}` : labels.title}
-          </h1>
-          <p className="mt-2 text-muted-foreground">Fiches enregistrées pour votre atelier.</p>
-        </div>
-        {!history ? (
-          <Button asChild>
-            <a href={`${basePath}/nouveau`}>➕ {labels.create}</a>
-          </Button>
-        ) : null}
-      </div>
+      {!history ? (
+        <PageHero
+          title={labels.title}
+          subtitle="Fiches enregistrées pour votre atelier."
+          icon={heroIcon}
+          iconColor={heroColor}
+          action={
+            <Button onClick={() => void navigate({ to: `${basePath}/nouveau` })}>+ {labels.create}</Button>
+          }
+        />
+      ) : (
+        <PageHero
+          title={`Historique ${labels.noun}`}
+          subtitle="Retrouvez les fiches clôturées et leurs diagnostics."
+          icon={heroIcon}
+          iconColor={heroColor}
+        />
+      )}
+      <PageSectionTitle
+        icon={Wrench}
+        color={heroColor}
+        title={history ? `Historique ${labels.noun}` : "Liste des fiches"}
+        subtitle={history ? "Suivez les fiches clôturées et les interventions passées." : "Cliquez sur une fiche pour la voir."}
+      />
       <div className="flex flex-wrap items-end gap-4 rounded-lg border bg-card p-4">
         <label className="grid gap-1.5 text-sm font-semibold">
           Statut
@@ -146,7 +161,9 @@ export function ActivityListPage({
               <div className="flex items-center gap-3">
                 <Badge>{statusLabels[ticket.status]}</Badge>
                 <Button asChild variant="outline" size="sm">
-                  <a href={`${basePath}/${ticket.id}`}>Détails</a>
+                  <Link to={`${basePath}/$id`} params={{ id: ticket.id }}>
+                    Détails
+                  </Link>
                 </Button>
               </div>
             </CardContent>

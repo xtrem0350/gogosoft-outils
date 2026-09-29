@@ -1,8 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Users } from "lucide-react";
 
 import { ClientCard } from "@/components/ClientCard";
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -41,18 +43,21 @@ function ClientsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Clients</p>
-          <h1 className="mt-2 text-3xl font-bold">Liste des clients</h1>
-        </div>
-        <Button asChild>
-          <Link to="/clients/nouveau">
-            <Plus />
-            Nouveau client
-          </Link>
-        </Button>
-      </div>
+      <PageHero
+        title="Mes clients"
+        subtitle="Tous vos clients enregistrés et leurs historiques."
+        icon={Users}
+        iconColor="green"
+        action={
+          <Button onClick={() => void navigate({ to: "/clients/nouveau" })}>+ Nouveau client</Button>
+        }
+      />
+      <PageSectionTitle
+        icon={Users}
+        color="green"
+        title="Liste des clients"
+        subtitle="Cliquez sur un client pour ouvrir sa fiche."
+      />
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />

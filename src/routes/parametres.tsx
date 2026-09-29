@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Building2, Mail, Phone, Save, ShieldAlert, User } from "lucide-react";
+import { AlertTriangle, Building2, Mail, Phone, Save, Settings, ShieldAlert, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -96,10 +98,18 @@ function ParametresPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">Configuration</p>
-        <h1 className="mt-2 text-3xl font-bold">Paramètres</h1>
-      </div>
+      <PageHero
+        title="Paramètres"
+        subtitle="Configurez votre profil, votre boutique et les options de communication."
+        icon={Settings}
+        iconColor="orange"
+      />
+      <PageSectionTitle
+        icon={Settings}
+        color="orange"
+        title="Configuration"
+        subtitle="Réglages globaux de la plateforme et de vos outils."
+      />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
         <TabsList className="grid w-full md:grid-cols-4">

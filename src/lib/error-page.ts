@@ -25,7 +25,7 @@ export function renderErrorPage(message?: string): string {
       ${detail}
       <div class="actions">
         <button class="primary" onclick="location.reload()">Try again</button>
-        <a class="secondary" href="/">Go home</a>
+        <button class="secondary" type="button" onclick="history.back()">Go home</button>
       </div>
     </div>
   </body>

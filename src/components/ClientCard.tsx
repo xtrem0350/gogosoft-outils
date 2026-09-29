@@ -1,5 +1,6 @@
 /** Carte récapitulative d'un client. */
 import { ArrowUpRight, MessageCircle, User } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,10 +51,10 @@ export function ClientCard({ client }: ClientCardProps) {
         </div>
 
         <Button variant="outline" size="sm" asChild>
-          <a href={`/clients/${client.id}`}>
+          <Link to="/clients/$id" params={{ id: client.id }}>
             Voir la fiche
             <ArrowUpRight className="size-3.5" />
-          </a>
+          </Link>
         </Button>
       </CardContent>
     </Card>

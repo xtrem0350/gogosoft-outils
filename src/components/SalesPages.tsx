@@ -3,7 +3,8 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Check, CircleDollarSign, ClipboardList, Clock3, Package, Truck } from "lucide-react";
 import { toast } from "sonner";
 
-import { PageIdentity } from "@/components/PageIdentity";
+import { PageHero } from "@/components/PageHero";
+import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,28 +80,29 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
-      <div
-        className={`flex flex-wrap items-end justify-between gap-4 rounded-xl border p-5 sm:p-6 ${theme.band}`}
-      >
-        <div className="max-w-2xl">
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {isOrders ? "Suivi de préparation" : isDeliveries ? "Suivi client" : "Point de vente"}
-          </p>
-          <PageIdentity
-            title={title}
-            subtitle={subtitle}
-            icon={HeadingIcon}
-            iconClassName={theme.icon}
-            titleClassName="text-2xl sm:text-3xl"
-            subtitleClassName="mt-1 text-muted-foreground"
-          />
-        </div>
-        {view === "all" ? (
-          <Button asChild>
-            <Link to="/sales/nouveau">➕ Nouvelle vente</Link>
-          </Button>
-        ) : null}
-      </div>
+      <PageHero
+        title={title}
+        subtitle={subtitle}
+        icon={HeadingIcon}
+        iconColor={isOrders ? "green" : isDeliveries ? "blue" : "orange"}
+        action={
+          view === "all" ? (
+            <Button onClick={() => void navigate({ to: "/sales/nouveau" })}>+ Nouvelle vente</Button>
+          ) : undefined
+        }
+      />
+      <PageSectionTitle
+        icon={HeadingIcon}
+        color={isOrders ? "green" : isDeliveries ? "blue" : "orange"}
+        title={isOrders ? "Commandes en préparation" : isDeliveries ? "Livraisons en cours" : "Ventes enregistrées"}
+        subtitle={
+          isOrders
+            ? "Suivez les commandes à préparer et à remettre aux clients."
+            : isDeliveries
+              ? "Retrouvez les ventes déjà remises aux clients."
+              : "Consultez les ventes de votre boutique et leur état de livraison."
+        }
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <SalesMetric icon={Clock3} label="À préparer" value={pendingCount} className={theme.metric} />
