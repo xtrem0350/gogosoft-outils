@@ -65,6 +65,26 @@ export async function createClient(data: CreateClientData): Promise<ClientRecord
   return client as ClientRecord;
 }
 
+/** Stocke une photo client sous un chemin déterministe pour la retrouver sans colonne dédiée. */
+export async function uploadClientPhoto(client: ClientRecord, file: File): Promise<void> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const path = `${requireShopId(client.shop_id)}/${client.id}/photo`;
+  const { error } = await supabase.storage.from("clients").upload(path, file, {
+    contentType: file.type || "image/jpeg",
+    upsert: true,
+  });
+  if (error) throw error;
+}
+
+/** Génère une URL signée pour la photo client si elle existe. */
+export async function getClientPhotoUrl(client: ClientRecord): Promise<string | null> {
+  if (!(await hasActiveSession())) return null;
+  const path = `${client.shop_id}/${client.id}/photo`;
+  const { data, error } = await supabase.storage.from("clients").createSignedUrl(path, 3600);
+  if (error) return null;
+  return data.signedUrl;
+}
+
 /** Met à jour un client. */
 export async function updateClient(
   id: string,

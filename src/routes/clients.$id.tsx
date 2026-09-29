@@ -5,7 +5,13 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { deleteClient, getClientById, type ClientRecord } from "@/services/clientService";
+import { deleteClient, getClientById, getClientPhotoUrl, type ClientRecord } from "@/services/clientService";
+import { getTickets, type WorkshopTicket } from "@/services/workshopService";
+
+interface ClientRepair {
+  ticket: WorkshopTicket;
+  activityType: "phone" | "computer";
+}
 
 export const Route = createFileRoute("/clients/$id")({
   component: ClientDetailsPage,
@@ -15,10 +21,31 @@ function ClientDetailsPage() {
   const navigate = useNavigate();
   const { id } = Route.useParams();
   const [client, setClient] = useState<ClientRecord | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [repairs, setRepairs] = useState<ClientRepair[]>([]);
 
   useEffect(() => {
     void getClientById(id)
-      .then(setClient)
+      .then(async (record) => {
+        setClient(record);
+        if (!record) return;
+        const [photo, phoneTickets, computerTickets] = await Promise.all([
+          getClientPhotoUrl(record),
+          getTickets(record.shop_id, "phone"),
+          getTickets(record.shop_id, "computer"),
+        ]);
+        setPhotoUrl(photo);
+        setRepairs([
+          ...phoneTickets
+            .filter((ticket) => ticket.client_id === record.id)
+            .map((ticket) => ({ ticket, activityType: "phone" as const })),
+          ...computerTickets
+            .filter((ticket) => ticket.client_id === record.id)
+            .map((ticket) => ({ ticket, activityType: "computer" as const })),
+        ].sort((left, right) =>
+          (right.ticket.created_at ?? "").localeCompare(left.ticket.created_at ?? ""),
+        ));
+      })
       .catch(() => setClient(null));
   }, [id]);
 
@@ -33,7 +60,7 @@ function ClientDetailsPage() {
   }
 
   const waLink = client
-    ? `https://wa.me/${client.whatsapp.replace(/[\s+\-()]/g, "").replace(/\D/g, "")} ?text=${encodeURIComponent(`Bonjour ${client.full_name}, votre appareil est prêt.`)}`
+    ? `https://wa.me/${client.whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(`Bonjour ${client.full_name}, votre appareil est prêt.`)}`
     : "#";
 
   if (!client) {
@@ -51,11 +78,37 @@ function ClientDetailsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-primary">Client</p>
-          <h1 className="mt-2 text-3xl font-bold">{client.full_name}</h1>
+        <div className="flex min-w-0 items-center gap-4">
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={client.full_name}
+              className="size-24 shrink-0 rounded-full border object-cover"
+            />
+          ) : (
+            <div className="flex size-24 shrink-0 items-center justify-center rounded-full bg-muted text-3xl font-semibold text-muted-foreground">
+              {client.full_name.slice(0, 1).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-primary">Client</p>
+            <h1 className="mt-2 truncate text-3xl font-bold">{client.full_name}</h1>
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-flex items-center gap-2 text-sm text-primary hover:underline"
+            >
+              <MessageCircle className="size-4" /> {client.whatsapp}
+            </a>
+          </div>
         </div>
         <div className="flex gap-2">
+          <Button asChild>
+            <a href={`/phone/atelier/nouveau?clientId=${encodeURIComponent(client.id)}`}>
+              + Nouvelle fiche pour ce client
+            </a>
+          </Button>
           <Button variant="outline" onClick={() => void navigate({ to: "/clients" })}>
             <Pencil className="size-4" />
             Modifier
@@ -101,12 +154,31 @@ function ClientDetailsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Réparations</CardTitle>
+          <CardTitle>Historique des réparations</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Aucune réparation enregistrée pour ce client pour le moment.
-          </p>
+        <CardContent className="space-y-3">
+          {repairs.length ? (
+            repairs.map(({ ticket, activityType }) => (
+              <a
+                key={ticket.id}
+                href={`/${activityType}/atelier/${ticket.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 transition-colors hover:bg-muted/50"
+              >
+                <span>
+                  <span className="block font-medium">{ticket.device_model || "Appareil"}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {activityType === "phone" ? "Téléphone" : "Ordinateur"}
+                    {ticket.created_at
+                      ? ` · ${new Date(ticket.created_at).toLocaleDateString("fr-FR")}`
+                      : ""}
+                  </span>
+                </span>
+                <span className="text-sm font-medium">{ticket.status.replaceAll("_", " ")}</span>
+              </a>
+            ))
+          ) : (
+            <p className="text-muted-foreground">Aucune réparation enregistrée pour ce client.</p>
+          )}
         </CardContent>
       </Card>
     </div>

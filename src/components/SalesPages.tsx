@@ -1,14 +1,35 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Check, CircleDollarSign, ClipboardList, Clock3, Package, Truck } from "lucide-react";
+import {
+  ShoppingCart,
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Trash2,
+  CheckCircle,
+  Clock,
+  Clock3,
+  Truck,
+  ClipboardList,
+  CircleDollarSign,
+  Package,
+  Check,
+} from "lucide-react";
+
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
+import { PageIdentity } from "@/components/PageIdentity";
 import { PageSectionTitle } from "@/components/PageSectionTitle";
+import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
+import { ClientSelect } from "@/components/selects/ClientSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import type { ClientRecord } from "@/services/clientService";
 import {
   createSale,
   listSales,
@@ -20,6 +41,7 @@ import {
 import type { ActivityType } from "@/services/workshopService";
 
 export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "deliveries" }) {
+  const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [sales, setSales] = useState<Sale[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,10 +235,16 @@ export function NewSalePage() {
   const { shopId } = useCurrentShop();
   const [activityType, setActivityType] = useState<ActivityType>("phone");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+  const [createClientOpen, setCreateClientOpen] = useState(false);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!shopId) {
       toast.error("⚠️ Sélectionnez un atelier.");
+      return;
+    }
+    if (!selectedClient) {
+      toast.error("Sélectionnez un client avant d'enregistrer la vente.");
       return;
     }
     const form = new FormData(event.currentTarget);
@@ -238,9 +266,9 @@ export function NewSalePage() {
         payment_status: "pending",
         payment_method: paymentMethod || null,
         delivery_status: "pending",
-        client_id: null,
-        client_name: String(form.get("client_name") ?? "") || null,
-        client_whatsapp: String(form.get("client_whatsapp") ?? "") || null,
+        client_id: selectedClient.id,
+        client_name: selectedClient.full_name,
+        client_whatsapp: selectedClient.whatsapp,
         notes: null,
       });
       toast.success("✅ Vente enregistrée.");
@@ -317,10 +345,27 @@ export function NewSalePage() {
             <option value="moov">Moov</option>
           </select>
         </label>
-        <Input name="client_name" placeholder="Nom du client" />
-        <Input name="client_whatsapp" placeholder="WhatsApp du client" />
+        <div className="grid gap-2">
+          <label className="text-sm font-medium">Client *</label>
+          <ClientSelect
+            shopId={shopId}
+            value={selectedClient?.id}
+            selectedClient={selectedClient ?? undefined}
+            onSelect={setSelectedClient}
+            onCreateNew={() => setCreateClientOpen(true)}
+          />
+          {selectedClient ? (
+            <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
+          ) : null}
+        </div>
         <Button type="submit">💾 Enregistrer la vente</Button>
       </form>
+      <QuickCreateClientDialog
+        open={createClientOpen}
+        onOpenChange={setCreateClientOpen}
+        shopId={shopId ?? ""}
+        onCreated={setSelectedClient}
+      />
     </section>
   );
 }

@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Bell, Menu, Plus, Search, Sparkles } from "lucide-react";
+import { Bell, ChevronDown, Laptop, Menu, Plus, Search, ShoppingCart, Smartphone, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageHero } from "@/components/PageHero";
 import { getPageIcon } from "@/components/PageIdentity";
 import { PricingModal } from "@/components/PricingModal";
+import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
@@ -13,6 +14,12 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
   Breadcrumb,
@@ -34,6 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [showNewBadge, setShowNewBadge] = useState(false);
   const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
+  const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
@@ -330,16 +338,42 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            <Button
-              asChild
-              size="sm"
-              className="hidden bg-[#5b2c06] font-bold text-white shadow-3d transition-colors hover:bg-[#713807] sm:inline-flex"
-            >
-              <Link to="/phone/atelier/nouveau">
+            <div className="hidden items-center gap-1 sm:flex">
+              <Button
+                type="button"
+                size="sm"
+                disabled={!shopId}
+                onClick={() => setQuickCreateClientOpen(true)}
+                className="bg-[#5b2c06] font-bold text-white shadow-3d transition-colors hover:bg-[#713807]"
+              >
                 <Plus />
-                ➕ Nouvelle fiche
-              </Link>
-            </Button>
+                Nouveau client
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    aria-label="Autres créations"
+                    title="Autres créations"
+                  >
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}>
+                    <Smartphone /> Nouvelle fiche téléphone
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}>
+                    <Laptop /> Nouvelle fiche ordinateur
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void navigate({ to: "/sales/nouveau" })}>
+                    <ShoppingCart /> Nouvelle vente
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <ShopSelector />
             <ThemeToggle />
             <UserMenu />
@@ -382,6 +416,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         enabled={Boolean(user && !isAuthRoute)}
         onOpenChange={setWhatsNewOpen}
         onRead={() => setShowNewBadge(false)}
+      />
+      <QuickCreateClientDialog
+        open={quickCreateClientOpen}
+        onOpenChange={setQuickCreateClientOpen}
+        shopId={shopId ?? ""}
+        onCreated={(client) => {
+          void navigate({ to: "/clients/$id", params: { id: client.id } });
+        }}
       />
     </div>
   );

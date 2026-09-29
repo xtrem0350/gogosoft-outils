@@ -27,7 +27,7 @@ export function PageHero({
   imageUrl,
   showBack = false,
   action,
-  className = "",
+  className,
   titleClassName = "text-white",
   subtitleClassName = "text-slate-100",
 }: PageHeroProps) {

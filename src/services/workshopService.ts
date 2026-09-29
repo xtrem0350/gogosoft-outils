@@ -371,6 +371,7 @@ export async function searchDevices(
   shopId: string | null | undefined,
   query: string,
   activityType: ActivityType = "phone",
+  clientId?: string,
 ): Promise<KnownDevice[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const q = query.trim().replace(/[,()%]/g, "");
@@ -380,6 +381,7 @@ export async function searchDevices(
     .select("device_model, device_imei, device_sn, device_processor, device_os_version")
     .eq("shop_id", requireShopId(shopId))
     .eq("activity_type", activityType);
+  if (clientId) request = request.eq("client_id", clientId);
   if (q.length >= 2) {
     request = request.or(
       `device_imei.ilike.%${q}%,device_sn.ilike.%${q}%,device_model.ilike.%${q}%`,

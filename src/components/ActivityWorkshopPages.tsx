@@ -1,8 +1,13 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { Laptop, Package, Smartphone, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
+import { DeviceCatalogPicker, type CatalogDevice } from "@/components/DeviceCatalogPicker";
+import { ClientSelect } from "@/components/selects/ClientSelect";
+import { DeviceSelect } from "@/components/selects/DeviceSelect";
+import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
+import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { PageHero } from "@/components/PageHero";
 import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { assignTicketToLocation, type StorageLocation } from "@/services/storageService";
+import { searchDevices, type KnownDevice } from "@/services/workshopService";
+import { getClientById, type ClientRecord } from "@/services/clientService";
 import {
   createTicket,
   generateDiagnosis,
@@ -45,6 +53,7 @@ export function ActivityListPage({
   activityType: ActivityType;
   history?: boolean;
 }) {
+  const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,9 +170,7 @@ export function ActivityListPage({
               <div className="flex items-center gap-3">
                 <Badge>{statusLabels[ticket.status]}</Badge>
                 <Button asChild variant="outline" size="sm">
-                  <Link to={`${basePath}/$id`} params={{ id: ticket.id }}>
-                    Détails
-                  </Link>
+                  <a href={`${basePath}/${ticket.id}`}>Détails</a>
                 </Button>
               </div>
             </CardContent>
@@ -177,10 +184,84 @@ export function ActivityListPage({
 export function NewActivityPage({ activityType }: { activityType: ActivityType }) {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
+  const [initialClientId] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : new URLSearchParams(window.location.search).get("clientId"),
+  );
   const labels = activityLabels[activityType];
   const listPath = activityType === "consumable" ? "/consumable/stock" : `/${activityType}/atelier`;
   const isConsumable = activityType === "consumable";
   const [issue, setIssue] = useState<IssueKey>("ecran_casse");
+  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+  const [createClientOpen, setCreateClientOpen] = useState(false);
+  const [deviceMode, setDeviceMode] = useState<"catalog" | "known" | "free">("catalog");
+  const [knownDevicesExist, setKnownDevicesExist] = useState(false);
+  const [deviceModel, setDeviceModel] = useState("");
+  const [deviceProcessor, setDeviceProcessor] = useState("");
+  const [deviceImei, setDeviceImei] = useState("");
+  const [deviceSerial, setDeviceSerial] = useState("");
+  const [deviceOs, setDeviceOs] = useState("");
+  const [devicePhoto, setDevicePhoto] = useState<string | null>(null);
+  const [location, setLocation] = useState<StorageLocation | null>(null);
+
+  useEffect(() => {
+    if (!shopId || !initialClientId) return;
+    let active = true;
+    void getClientById(initialClientId)
+      .then((client) => {
+        if (!active || !client || client.shop_id !== shopId) return;
+        setSelectedClient(client);
+        if (!isConsumable) {
+          void searchDevices(shopId, "", activityType, client.id)
+            .then((devices) => {
+              if (active) setKnownDevicesExist(devices.length > 0);
+            })
+            .catch(() => {
+              if (active) setKnownDevicesExist(false);
+            });
+        }
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [activityType, initialClientId, isConsumable, shopId]);
+
+  function selectClient(client: ClientRecord) {
+    setSelectedClient(client);
+    setKnownDevicesExist(false);
+    setDeviceMode("catalog");
+    setDeviceModel("");
+    setDeviceProcessor("");
+    setDeviceImei("");
+    setDeviceSerial("");
+    setDeviceOs("");
+    setDevicePhoto(null);
+    if (!isConsumable && shopId) {
+      void searchDevices(shopId, "", activityType, client.id)
+        .then((devices) => setKnownDevicesExist(devices.length > 0))
+        .catch(() => setKnownDevicesExist(false));
+    }
+  }
+
+  function setCatalogDevice(device: CatalogDevice) {
+    setDeviceModel(device.model);
+    setDeviceProcessor(device.processor ?? "");
+    setDeviceImei("");
+    setDeviceSerial("");
+    setDeviceOs("");
+    setDevicePhoto(device.imageUrl);
+  }
+
+  function setKnownDevice(device: KnownDevice) {
+    setDeviceModel(device.device_model);
+    setDeviceProcessor(device.device_processor ?? "");
+    setDeviceImei(device.device_imei ?? "");
+    setDeviceSerial(device.device_sn ?? "");
+    setDeviceOs(device.device_os_version ?? "");
+    setDevicePhoto(null);
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -188,22 +269,38 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
       toast.error("⚠️ Sélectionnez un atelier.");
       return;
     }
+    if (!selectedClient) {
+      toast.error("Sélectionnez un client avant de continuer.");
+      return;
+    }
     const values = new FormData(event.currentTarget);
+    const productName = String(values.get("consumable_name") ?? "").trim();
+    const model = isConsumable ? productName : deviceModel.trim();
+    if (!model) {
+      toast.error(isConsumable ? "Saisissez le nom du consommable." : "Sélectionnez ou saisissez un modèle.");
+      return;
+    }
     try {
-      await createTicket({
+      const ticket = await createTicket({
         shop_id: shopId,
         activity_type: activityType,
         ...(isConsumable ? { category: String(values.get("category") ?? "") } : {}),
-        client_name: String(values.get("client_name") ?? ""),
-        client_whatsapp: String(values.get("client_whatsapp") ?? ""),
-        device_model: String(values.get("device_model") ?? ""),
-        device_processor: String(values.get("device_processor") ?? ""),
-        device_imei: String(values.get("device_imei") ?? ""),
-        device_sn: String(values.get("device_sn") ?? ""),
-        issues: [issue],
-        diagnosis: generateDiagnosis([issue]),
+        client_id: selectedClient.id,
+        client_name: selectedClient.full_name,
+        client_whatsapp: selectedClient.whatsapp,
+        device_model: model,
+        device_processor: isConsumable ? "" : deviceProcessor,
+        device_imei: isConsumable ? "" : deviceImei,
+        device_sn: isConsumable ? "" : deviceSerial,
+        device_os_version: isConsumable ? "" : deviceOs,
+        issues: isConsumable ? [] : [issue],
+        ...(!isConsumable ? { diagnosis: generateDiagnosis([issue]) } : {}),
         notes: String(values.get("notes") ?? ""),
       });
+      if (location) {
+        const assigned = await assignTicketToLocation(ticket.id, location.id);
+        if (!assigned) toast.error("Fiche créée, mais l'emplacement n'a pas pu être attribué.");
+      }
       toast.success("✅ Enregistrement effectué.");
       await navigate({ to: listPath });
     } catch (reason) {
@@ -222,17 +319,107 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         className="grid gap-4 rounded-lg border bg-card p-6"
       >
         {isConsumable ? <Input name="category" placeholder="Catégorie" required /> : null}
-        <Input
-          name="client_name"
-          placeholder={isConsumable ? "Fournisseur ou client" : "Nom du client"}
-          required
-        />
-        <Input name="client_whatsapp" placeholder="WhatsApp" required />
-        <Input
-          name="device_model"
-          placeholder={isConsumable ? "Nom du consommable" : "Modèle"}
-          required
-        />
+        <div className="grid gap-2">
+          <label className="text-sm font-medium">Client *</label>
+          <ClientSelect
+            shopId={shopId}
+            value={selectedClient?.id}
+            selectedClient={selectedClient ?? undefined}
+            onSelect={selectClient}
+            onCreateNew={() => setCreateClientOpen(true)}
+          />
+          {selectedClient ? (
+            <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
+          ) : null}
+        </div>
+        {isConsumable ? (
+          <Input name="consumable_name" placeholder="Nom du consommable" required />
+        ) : (
+          <div className="grid gap-3">
+            <label className="text-sm font-medium">Appareil *</label>
+            {knownDevicesExist ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={deviceMode === "known" ? "default" : "outline"}
+                  onClick={() => setDeviceMode("known")}
+                >
+                  Réutiliser un appareil existant
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={deviceMode === "catalog" ? "default" : "outline"}
+                  onClick={() => setDeviceMode("catalog")}
+                >
+                  Catalogue
+                </Button>
+              </div>
+            ) : null}
+            {deviceMode === "known" && selectedClient ? (
+              <DeviceSelect
+                shopId={shopId}
+                clientId={selectedClient.id}
+                activityType={activityType}
+                onSelect={setKnownDevice}
+              />
+            ) : deviceMode === "free" ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input
+                  value={deviceModel}
+                  onChange={(event) => setDeviceModel(event.target.value)}
+                  placeholder="Marque et modèle"
+                  required
+                />
+                <Input
+                  value={deviceProcessor}
+                  onChange={(event) => setDeviceProcessor(event.target.value)}
+                  placeholder="Processeur"
+                />
+                <Input
+                  value={deviceImei}
+                  onChange={(event) => setDeviceImei(event.target.value)}
+                  placeholder="IMEI"
+                />
+                <Input
+                  value={deviceSerial}
+                  onChange={(event) => setDeviceSerial(event.target.value)}
+                  placeholder="Numéro de série"
+                />
+                <Input
+                  value={deviceOs}
+                  onChange={(event) => setDeviceOs(event.target.value)}
+                  placeholder="Version OS"
+                />
+              </div>
+            ) : (
+              <DeviceCatalogPicker
+                shopId={shopId}
+                category={activityType === "computer" ? "laptop" : "smartphone"}
+                onSelect={setCatalogDevice}
+                onFreeEntry={() => setDeviceMode("free")}
+              />
+            )}
+            {devicePhoto ? (
+              <img
+                src={devicePhoto}
+                alt={deviceModel}
+                className="size-24 rounded-md border object-cover"
+              />
+            ) : null}
+          </div>
+        )}
+        {!isConsumable ? (
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Emplacement physique</label>
+            <StorageLocationSelect
+              shopId={shopId}
+              value={location?.id}
+              onSelect={setLocation}
+            />
+          </div>
+        ) : null}
         {!isConsumable ? (
           <>
             <Input name="device_processor" placeholder="Processeur" />
@@ -257,6 +444,12 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         <Input name="notes" placeholder="Notes" />
         <Button type="submit">💾 Enregistrer</Button>
       </form>
+      <QuickCreateClientDialog
+        open={createClientOpen}
+        onOpenChange={setCreateClientOpen}
+        shopId={shopId ?? ""}
+        onCreated={selectClient}
+      />
     </section>
   );
 }

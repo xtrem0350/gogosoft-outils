@@ -191,6 +191,7 @@ Structure du projet (avec glob)
 │   │   │   └── 📄 ToolActions.tsx
 │   │   ├── 📁 selects/
 │   │   │   ├── 📄 useAsyncOptions.ts
+│   │   │   ├── 📄 StorageLocationSelect.tsx
 │   │   │   ├── 📄 ShopSelect.tsx
 │   │   │   ├── 📄 ServiceSelect.tsx
 │   │   │   ├── 📄 PartSelect.tsx
@@ -218,16 +219,20 @@ Structure du projet (avec glob)
 │   │   ├── 📄 SearchableSelect.tsx
 │   │   ├── 📄 SalesPages.tsx
 │   │   ├── 📄 RoutePage.tsx
+│   │   ├── 📄 QuickCreateClientDialog.tsx
 │   │   ├── 📄 ProtectedRoute.tsx
 │   │   ├── 📄 PricingModal.tsx
 │   │   ├── 📄 PhoneInput.tsx
 │   │   ├── 📄 PaymentModal.tsx
 │   │   ├── 📄 PasswordStrengthBar.tsx
 │   │   ├── 📄 PasswordInput.tsx
+│   │   ├── 📄 PageSectionTitle.tsx
 │   │   ├── 📄 PageIdentity.tsx
 │   │   ├── 📄 PageHero.tsx
+│   │   ├── 📄 IconBadge3D.tsx
 │   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx
+│   │   ├── 📄 DeviceCatalogPicker.tsx
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
