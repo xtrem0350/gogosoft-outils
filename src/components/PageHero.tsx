@@ -49,7 +49,7 @@ export function PageHero({
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-orange-900/70 via-orange-800/50 to-green-900/60" />
-      <div className="relative z-10 flex flex-col items-center justify-center gap-4 px-6 py-10 text-center">
+      <div className="relative z-10 flex min-h-40 flex-col items-start justify-center gap-3 px-6 py-6 text-left sm:min-h-44 sm:px-8 sm:py-7">
         {showBack ? (
           <div className="absolute left-4 top-4">
             <Button
@@ -63,15 +63,15 @@ export function PageHero({
             </Button>
           </div>
         ) : null}
-        {action ? <div className="absolute right-4 top-4">{action}</div> : null}
+        {action ? <div className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2">{action}</div> : null}
 
-        {icon ? <IconBadge3D icon={icon} size="xl" color={iconColor} /> : null}
+        {icon ? <IconBadge3D icon={icon} size="md" color={iconColor} className="size-14 rounded-xl [&_svg]:size-7" /> : null}
 
-        <h1 className={cn("text-3xl font-bold drop-shadow-lg md:text-4xl", titleClassName)}>
+        <h1 className={cn("max-w-[calc(100%-3rem)] text-2xl font-bold drop-shadow-lg sm:max-w-[calc(100%-12rem)] sm:text-3xl", titleClassName)}>
           {title}
         </h1>
         {subtitle ? (
-          <p className={cn("max-w-2xl text-sm text-white/90 drop-shadow md:text-base", subtitleClassName)}>
+          <p className={cn("max-w-2xl text-sm text-white/90 drop-shadow sm:text-base", subtitleClassName)}>
             {subtitle}
           </p>
         ) : null}

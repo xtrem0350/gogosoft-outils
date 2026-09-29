@@ -44,67 +44,37 @@ const navigationGroups: NavigationGroup[] = [
     items: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
   },
   {
-    label: "TÉLÉPHONE",
-    icon: Smartphone,
+    label: "MON ACTIVITÉ",
+    icon: Wrench,
     items: [
       { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
-      { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
-      { label: "🗄️ Plan de l'atelier", to: "/atelier/plan", icon: Package },
+      { label: "Nouvelle fiche téléphone", to: "/phone/atelier/nouveau", icon: PlusCircle },
       { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
       { label: "Historique", to: "/phone/historique", icon: History },
-    ],
-  },
-  {
-    label: "ORDINATEUR",
-    icon: Laptop,
-    items: [
-      { label: "Fiches", to: "/computer/atelier", icon: Laptop },
-      { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+      { label: "Fiches ordinateur", to: "/computer/atelier", icon: Laptop },
+      { label: "Nouvelle fiche ordinateur", to: "/computer/atelier/nouveau", icon: PlusCircle },
       { label: "Carnet d'expérience", to: "/computer/carnet", icon: History },
       { label: "Historique", to: "/computer/historique", icon: History },
-    ],
-  },
-  {
-    label: "CONSOMMABLES",
-    icon: Package,
-    items: [
       { label: "Stock", to: "/consumable/stock", icon: Package },
       { label: "Nouveau produit", to: "/consumable/stock/nouveau", icon: PlusCircle },
       { label: "Historique", to: "/consumable/historique", icon: History },
-    ],
-  },
-  {
-    label: "VENTES",
-    icon: ShoppingCart,
-    items: [
       { label: "Toutes les ventes", to: "/sales", icon: ShoppingCart },
       { label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle },
       { label: "Commandes", to: "/sales/commandes", icon: Package },
       { label: "Livraisons", to: "/sales/livraisons", icon: History },
-    ],
-  },
-  {
-    label: "CLIENTS",
-    icon: Users,
-    items: [
-      { label: "Liste", to: "/clients", icon: UserRound },
-      { label: "Nouveau", to: "/clients/nouveau", icon: UserPlus },
-    ],
-  },
-  {
-    label: "MES RESSOURCES",
-    icon: Wrench,
-    items: [
-      { label: "Outils", to: "/outils", icon: Wrench },
-      { label: "Catégories", to: "/categories", icon: FolderTree },
-      { label: "Techniciens", to: "/equipe", icon: UserCog },
-      { label: "Mes ateliers", to: "/boutiques", icon: Store },
+      { label: "🗄️ Plan de l'atelier", to: "/atelier/plan", icon: Package },
     ],
   },
   {
     label: "MON COMPTE",
     icon: Settings,
     items: [
+      { label: "Clients", to: "/clients", icon: Users },
+      { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
+      { label: "Outils", to: "/outils", icon: Wrench },
+      { label: "Catégories", to: "/categories", icon: FolderTree },
+      { label: "Mes ateliers", to: "/boutiques", icon: Store },
+      { label: "Équipe", to: "/equipe", icon: UserCog },
       { label: "Profil", to: "/profil", icon: User },
       { label: "Forfait", to: "/abonnement", icon: Settings },
       { label: "Paramètres", to: "/parametres", icon: Settings },
@@ -157,8 +127,8 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               setOpenGroups((current) => ({ ...current, [groupIndex]: isOpen }))
             }
           >
-            <CollapsibleTrigger className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-bold uppercase tracking-wide text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-              <GroupIcon className="size-4" />
+            <CollapsibleTrigger className="group flex h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+              <GroupIcon className={cn("size-4", activeGroup === groupIndex ? "text-orange-600" : "text-slate-500")} />
               <span className="flex-1">{label}</span>
               <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
             </CollapsibleTrigger>
@@ -169,13 +139,14 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   to={to}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 border-l-4 border-transparent px-3 py-2.5 pl-7 text-sm text-sidebar-foreground/65 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
+                    "flex h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 pl-7 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-sidebar-foreground/65 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
                     pathname === to &&
                       "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
                   )}
                 >
-                  <Icon className="size-4" />
-                  {itemLabel}
+                  <Icon className={cn("size-4 shrink-0", pathname === to ? "text-orange-600" : "text-slate-500")} />
+                  <span className="min-w-0 flex-1 truncate">{itemLabel}</span>
+                  {pathname === to ? <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" /> : null}
                 </Link>
               ))}
             </CollapsibleContent>

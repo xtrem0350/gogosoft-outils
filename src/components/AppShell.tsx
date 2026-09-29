@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronDown, Laptop, Menu, Plus, Search, ShoppingCart, Smartphone, Sparkles } from "lucide-react";
+import { Bell, ChevronDown, Laptop, Menu, Plus, Search, ShoppingCart, Smartphone, Sparkles, Users } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -338,30 +338,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            <div className="hidden items-center gap-1 sm:flex">
-              <Button
-                type="button"
-                size="sm"
-                disabled={!shopId}
-                onClick={() => setQuickCreateClientOpen(true)}
-                className="bg-[#5b2c06] font-bold text-white shadow-3d transition-colors hover:bg-[#713807]"
-              >
-                <Plus />
-                Nouveau client
-              </Button>
+            <div className="hidden sm:block">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     type="button"
-                    size="icon"
-                    variant="outline"
-                    aria-label="Autres créations"
-                    title="Autres créations"
+                    disabled={!shopId}
+                    className="h-10 rounded-full bg-ivoirien px-4 font-semibold text-white shadow-3d transition-transform hover:bg-ivoirien-hover active:scale-95"
                   >
-                    <ChevronDown />
+                    <Plus />
+                    Nouveau
+                    <ChevronDown className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
+                    <Users /> Nouveau client
+                  </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}>
                     <Smartphone /> Nouvelle fiche téléphone
                   </DropdownMenuItem>

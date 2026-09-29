@@ -27,10 +27,10 @@ export function ClientCard({ client }: ClientCardProps) {
       .join("") || "C";
 
   return (
-    <Card className="border-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <CardContent className="flex items-center justify-between gap-4 p-4">
+    <Card className="card-3d min-h-20 rounded-xl border-0 transition-all duration-300 hover:shadow-3d-hover">
+      <CardContent className="flex items-center justify-between gap-4 p-6">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-800">
             {initials}
           </div>
           <div className="min-w-0">

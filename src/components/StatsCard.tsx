@@ -29,22 +29,23 @@ export function StatsCard({
   const detail = trend ?? note;
 
   return (
-    <Card className={cn("card-elevated border-0", className)}>
-      <CardContent className="flex items-start justify-between p-5">
-        <div className="min-w-0">
-          <p className="text-sm text-muted-foreground">{cardLabel}</p>
-          <p className="mt-3 font-display text-3xl font-bold">{value}</p>
-          {detail ? <p className="mt-2 truncate text-xs text-muted-foreground">{detail}</p> : null}
-        </div>
+    <Card className={cn("card-3d rounded-2xl border-0", className)}>
+      <CardContent className="flex min-w-0 items-center gap-4 p-6">
         <div
           className={cn(
-            "rounded-lg bg-primary/10 p-2.5 text-primary",
+            "flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700",
             color === "success" && "bg-emerald-100 text-emerald-700",
             color === "warning" && "bg-amber-100 text-amber-700",
-            color === "danger" && "bg-red-100 text-red-700",
+            color === "danger" && "bg-rose-100 text-rose-700",
           )}
+          aria-hidden="true"
         >
           <Icon className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{cardLabel}</p>
+          <p className="mt-2 truncate font-display text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+          {detail ? <p className="mt-1 truncate text-xs text-muted-foreground">{detail}</p> : null}
         </div>
       </CardContent>
     </Card>

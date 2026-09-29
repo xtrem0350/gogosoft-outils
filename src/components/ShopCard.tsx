@@ -13,11 +13,11 @@ interface ShopCardProps {
 /** Affiche un atelier avec son adresse et son statut. */
 export function ShopCard({ shop, isCurrent = false }: ShopCardProps) {
   return (
-    <Card className="border-0 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-      <CardContent className="flex items-start justify-between gap-4 p-4">
+    <Card className="card-3d min-h-20 rounded-xl border-0 transition-all duration-300 hover:shadow-3d-hover">
+      <CardContent className="flex items-start justify-between gap-4 p-6">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="rounded-md bg-primary/10 p-2 text-primary">
-            <Store className="size-4" />
+          <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+            <Store className="size-5" />
           </div>
           <div className="min-w-0">
             <p className="truncate font-semibold text-foreground">{shop.name}</p>

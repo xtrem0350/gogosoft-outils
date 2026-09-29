@@ -1,10 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Plus, Search, Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 
 import { ClientCard } from "@/components/ClientCard";
-import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,29 +41,27 @@ function ClientsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHero
-        title="Mes clients"
-        subtitle="Tous vos clients enregistrés et leurs historiques."
-        icon={Users}
-        iconColor="green"
-        action={
-          <Button onClick={() => void navigate({ to: "/clients/nouveau" })}>+ Nouveau client</Button>
-        }
-      />
-      <PageSectionTitle
-        icon={Users}
-        color="green"
-        title="Liste des clients"
-        subtitle="Cliquez sur un client pour ouvrir sa fiche."
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">Clients</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{clients.length} client(s) enregistré(s)</p>
+        </div>
+        <Button
+          onClick={() => void navigate({ to: "/clients/nouveau" })}
+          className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
+        >
+          + Nouveau client
+        </Button>
+      </div>
 
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-2.5 size-4 text-muted-foreground" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={query}
           onChange={(event) => void handleSearch(event.target.value)}
-          className="pl-9"
+          className="h-12 rounded-full pl-11"
           placeholder="Rechercher un client"
+          aria-label="Rechercher un client"
         />
       </div>
 

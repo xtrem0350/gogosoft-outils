@@ -29,11 +29,11 @@ export function ToolCard({
   onToggleFavori,
 }: ToolCardProps) {
   const categoryStyles: Record<string, string> = {
-    MTK: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400",
+    MTK: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
     Unisoc: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
     Apple: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
     Drivers: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
-    Autres: "bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400",
+    Autres: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
   };
 
   const categoryIcons: Record<string, typeof Cpu> = {
@@ -64,7 +64,7 @@ export function ToolCard({
 
   return (
     <motion.div variants={slideUp} initial="initial" animate="animate">
-      <Card className="card-elevated hover-lift border-0">
+      <Card className={cn("card-3d hover-lift border-0", view === "list" ? "min-h-20 rounded-xl" : "rounded-2xl")}>
         <CardContent
           className={cn(
             "gap-4 p-4",

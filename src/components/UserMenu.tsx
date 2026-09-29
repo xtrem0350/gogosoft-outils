@@ -46,9 +46,9 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="flex items-center gap-2 px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          className="flex h-11 items-center gap-2 rounded-full px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
-          <Avatar className="size-8 border border-sidebar-border">
+          <Avatar className="size-10 border-2 border-orange-200 ring-2 ring-orange-100">
             {profile?.avatar_url ? (
               <AvatarImage src={profile.avatar_url} alt={resolvedName} />
             ) : null}

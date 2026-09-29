@@ -1,19 +1,19 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Laptop, Package, Smartphone, Wrench } from "lucide-react";
+import { Eye, Laptop, Package, Search, Smartphone, UserRound, Wrench } from "lucide-react";
 import { toast } from "sonner";
 
 import { DeviceCatalogPicker, type CatalogDevice } from "@/components/DeviceCatalogPicker";
+import { EmptyState } from "@/components/EmptyState";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { DeviceSelect } from "@/components/selects/DeviceSelect";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
-import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Link } from "@tanstack/react-router";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { assignTicketToLocation, type StorageLocation } from "@/services/storageService";
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
@@ -46,6 +46,13 @@ const statusLabels: Record<WorkshopTicket["status"], string> = {
   livre: "📦 Livré",
 };
 
+const statusStyles: Record<WorkshopTicket["status"], string> = {
+  en_attente: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+  en_cours: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+  termine: "bg-green-100 text-green-800 hover:bg-green-100",
+  livre: "bg-green-600 text-white hover:bg-green-600",
+};
+
 export function ActivityListPage({
   activityType,
   history = false,
@@ -59,6 +66,7 @@ export function ActivityListPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("tous");
+  const [search, setSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const labels = activityLabels[activityType];
@@ -67,6 +75,12 @@ export function ActivityListPage({
   const heroColor = activityType === "consumable" ? "green" : "orange";
   const filteredTickets = tickets.filter((ticket) => {
     if (statusFilter !== "tous" && ticket.status !== statusFilter) return false;
+    const query = search.trim().toLocaleLowerCase();
+    if (
+      query &&
+      ![ticket.client_name, ticket.client_whatsapp, ticket.device_model]
+        .some((value) => value.toLocaleLowerCase().includes(query))
+    ) return false;
     if (!ticket.created_at) return !startDate && !endDate;
     const created = new Date(ticket.created_at).getTime();
     const start = startDate
@@ -89,88 +103,92 @@ export function ActivityListPage({
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
-      {!history ? (
-        <PageHero
-          title={labels.title}
-          subtitle="Fiches enregistrées pour votre atelier."
-          icon={heroIcon}
-          iconColor={heroColor}
-          action={
-            <Button onClick={() => void navigate({ to: `${basePath}/nouveau` })}>+ {labels.create}</Button>
-          }
-        />
-      ) : (
-        <PageHero
-          title={`Historique ${labels.noun}`}
-          subtitle="Retrouvez les fiches clôturées et leurs diagnostics."
-          icon={heroIcon}
-          iconColor={heroColor}
-        />
-      )}
-      <PageSectionTitle
-        icon={Wrench}
-        color={heroColor}
-        title={history ? `Historique ${labels.noun}` : "Liste des fiches"}
-        subtitle={history ? "Suivez les fiches clôturées et les interventions passées." : "Cliquez sur une fiche pour la voir."}
-      />
-      <div className="flex flex-wrap items-end gap-4 rounded-lg border bg-card p-4">
-        <label className="grid gap-1.5 text-sm font-semibold">
-          Statut
-          <select
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
-            className="h-10 rounded-md border bg-background px-3 font-normal"
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold">{history ? `Historique ${labels.noun}` : labels.title}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{filteredTickets.length} fiche(s) affichée(s)</p>
+        </div>
+        {!history ? (
+          <Button
+            onClick={() => void navigate({ to: `${basePath}/nouveau` })}
+            className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
           >
-            <option value="tous">Tous</option>
-            <option value="en_attente">En attente</option>
-            <option value="en_cours">En cours</option>
-            <option value="termine">Terminé</option>
-            <option value="livre">Livré</option>
-          </select>
-        </label>
-        <label className="grid gap-1.5 text-sm font-semibold">
-          Du
-          <input
-            type="date"
-            value={startDate}
-            max={endDate || undefined}
-            onChange={(event) => setStartDate(event.target.value)}
-            className="h-10 rounded-md border bg-background px-3 font-normal"
+            + {labels.create}
+          </Button>
+        ) : null}
+      </div>
+      <div className="grid gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Rechercher un client ou un appareil"
+            aria-label="Rechercher un client ou un appareil"
+            className="h-12 rounded-full pl-11"
           />
-        </label>
-        <label className="grid gap-1.5 text-sm font-semibold">
-          Au
-          <input
-            type="date"
-            value={endDate}
-            min={startDate || undefined}
-            onChange={(event) => setEndDate(event.target.value)}
-            className="h-10 rounded-md border bg-background px-3 font-normal"
-          />
-        </label>
-        <p className="pb-2 text-sm text-muted-foreground">{filteredTickets.length} fiche(s)</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrer par statut">
+          {[
+            ["tous", "Toutes"],
+            ["en_attente", "En attente"],
+            ["en_cours", "En cours"],
+            ["termine", "Terminé"],
+            ["livre", "Livré"],
+          ].map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={statusFilter === value ? "default" : "outline"}
+              onClick={() => setStatusFilter(value)}
+              className={`shrink-0 rounded-full px-4 ${statusFilter === value ? "bg-orange-600 text-white hover:bg-orange-700" : ""}`}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-end gap-4">
+          <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+            Du
+            <input type="date" value={startDate} max={endDate || undefined} onChange={(event) => setStartDate(event.target.value)} className="h-11 rounded-xl border bg-background px-3 font-normal" />
+          </label>
+          <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+            Au
+            <input type="date" value={endDate} min={startDate || undefined} onChange={(event) => setEndDate(event.target.value)} className="h-11 rounded-xl border bg-background px-3 font-normal" />
+          </label>
+        </div>
       </div>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
       {loading || shopLoading ? <p className="text-sm text-muted-foreground">Chargement…</p> : null}
       {!loading && !shopLoading && filteredTickets.length === 0 ? (
-        <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          Aucune fiche enregistrée.
-        </p>
+        <EmptyState
+          icon={heroIcon}
+          title="Aucune fiche trouvée"
+          description={search ? "Modifiez votre recherche ou les filtres sélectionnés." : "Les nouvelles fiches apparaîtront ici."}
+          {...(!history ? { actionLabel: labels.create, onAction: () => void navigate({ to: `${basePath}/nouveau` }) } : {})}
+        />
       ) : null}
       <div className="grid gap-3">
         {filteredTickets.map((ticket) => (
-          <Card key={ticket.id}>
+          <Card key={ticket.id} className="min-h-20 rounded-xl shadow-sm transition-all duration-300 hover:shadow-3d">
             <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
-              <div>
-                <h2 className="font-semibold">{ticket.device_model}</h2>
-                <p className="text-sm text-muted-foreground">
-                  {ticket.client_name} · {ticket.client_whatsapp}
-                </p>
+              <div className="flex min-w-0 flex-1 items-center gap-4">
+                <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                  <Wrench className="size-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold">{ticket.device_model}</h3>
+                  <p className="truncate text-sm text-muted-foreground">{ticket.client_name} · {ticket.client_whatsapp}</p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                <Badge>{statusLabels[ticket.status]}</Badge>
-                <Button asChild variant="outline" size="sm">
-                  <a href={`${basePath}/${ticket.id}`}>Détails</a>
+                <Badge className={statusStyles[ticket.status]}>{statusLabels[ticket.status]}</Badge>
+                <Button asChild variant="outline" size="sm" className="rounded-full">
+                  <Link to={`${basePath}/$id`} params={{ id: ticket.id }}>
+                    <Eye className="size-4" />
+                    Détails
+                  </Link>
                 </Button>
               </div>
             </CardContent>
@@ -316,133 +334,104 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
       </div>
       <form
         onSubmit={(event) => void submit(event)}
-        className="grid gap-4 rounded-lg border bg-card p-6"
+        className="grid gap-6"
       >
-        {isConsumable ? <Input name="category" placeholder="Catégorie" required /> : null}
-        <div className="grid gap-2">
-          <label className="text-sm font-medium">Client *</label>
-          <ClientSelect
-            shopId={shopId}
-            value={selectedClient?.id}
-            selectedClient={selectedClient ?? undefined}
-            onSelect={selectClient}
-            onCreateNew={() => setCreateClientOpen(true)}
-          />
-          {selectedClient ? (
-            <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
-          ) : null}
-        </div>
-        {isConsumable ? (
-          <Input name="consumable_name" placeholder="Nom du consommable" required />
-        ) : (
-          <div className="grid gap-3">
-            <label className="text-sm font-medium">Appareil *</label>
-            {knownDevicesExist ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={deviceMode === "known" ? "default" : "outline"}
-                  onClick={() => setDeviceMode("known")}
-                >
-                  Réutiliser un appareil existant
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={deviceMode === "catalog" ? "default" : "outline"}
-                  onClick={() => setDeviceMode("catalog")}
-                >
-                  Catalogue
-                </Button>
-              </div>
-            ) : null}
-            {deviceMode === "known" && selectedClient ? (
-              <DeviceSelect
-                shopId={shopId}
-                clientId={selectedClient.id}
-                activityType={activityType}
-                onSelect={setKnownDevice}
-              />
-            ) : deviceMode === "free" ? (
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input
-                  value={deviceModel}
-                  onChange={(event) => setDeviceModel(event.target.value)}
-                  placeholder="Marque et modèle"
-                  required
-                />
-                <Input
-                  value={deviceProcessor}
-                  onChange={(event) => setDeviceProcessor(event.target.value)}
-                  placeholder="Processeur"
-                />
-                <Input
-                  value={deviceImei}
-                  onChange={(event) => setDeviceImei(event.target.value)}
-                  placeholder="IMEI"
-                />
-                <Input
-                  value={deviceSerial}
-                  onChange={(event) => setDeviceSerial(event.target.value)}
-                  placeholder="Numéro de série"
-                />
-                <Input
-                  value={deviceOs}
-                  onChange={(event) => setDeviceOs(event.target.value)}
-                  placeholder="Version OS"
-                />
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="grid gap-4 p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><UserRound className="size-5" /></span>
+              <h2 className="text-lg font-semibold">Informations client</h2>
+            </div>
+            <label className="text-sm font-medium text-slate-700">Client *</label>
+            <ClientSelect
+              shopId={shopId}
+              value={selectedClient?.id}
+              selectedClient={selectedClient ?? undefined}
+              onSelect={selectClient}
+              onCreateNew={() => setCreateClientOpen(true)}
+            />
+            {selectedClient ? <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p> : null}
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="grid gap-4 p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                {isConsumable ? <Package className="size-5" /> : <Smartphone className="size-5" />}
+              </span>
+              <h2 className="text-lg font-semibold">{isConsumable ? "Informations consommable" : "Informations appareil"}</h2>
+            </div>
+            {isConsumable ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input name="category" placeholder="Catégorie" required className="h-12 rounded-xl" />
+                <Input name="consumable_name" placeholder="Nom du consommable" required className="h-12 rounded-xl" />
               </div>
             ) : (
-              <DeviceCatalogPicker
-                shopId={shopId}
-                category={activityType === "computer" ? "laptop" : "smartphone"}
-                onSelect={setCatalogDevice}
-                onFreeEntry={() => setDeviceMode("free")}
-              />
+              <>
+                {knownDevicesExist ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant={deviceMode === "known" ? "default" : "outline"} onClick={() => setDeviceMode("known")} className="h-11 rounded-xl px-4">
+                      Réutiliser un appareil existant
+                    </Button>
+                    <Button type="button" variant={deviceMode === "catalog" ? "default" : "outline"} onClick={() => setDeviceMode("catalog")} className="h-11 rounded-xl px-4">
+                      Catalogue
+                    </Button>
+                  </div>
+                ) : null}
+                {deviceMode === "known" && selectedClient ? (
+                  <DeviceSelect shopId={shopId} clientId={selectedClient.id} activityType={activityType} onSelect={setKnownDevice} />
+                ) : deviceMode === "free" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Input value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} placeholder="Marque et modèle" required className="h-12 rounded-xl" />
+                    <Input value={deviceProcessor} onChange={(event) => setDeviceProcessor(event.target.value)} placeholder="Processeur" className="h-12 rounded-xl" />
+                    <Input value={deviceImei} onChange={(event) => setDeviceImei(event.target.value)} placeholder="IMEI" className="h-12 rounded-xl" />
+                    <Input value={deviceSerial} onChange={(event) => setDeviceSerial(event.target.value)} placeholder="Numéro de série" className="h-12 rounded-xl" />
+                    <Input value={deviceOs} onChange={(event) => setDeviceOs(event.target.value)} placeholder="Version OS" className="h-12 rounded-xl" />
+                  </div>
+                ) : (
+                  <DeviceCatalogPicker shopId={shopId} category={activityType === "computer" ? "laptop" : "smartphone"} onSelect={setCatalogDevice} onFreeEntry={() => setDeviceMode("free")} />
+                )}
+                {devicePhoto ? <img src={devicePhoto} alt={deviceModel} className="size-24 rounded-xl border object-cover" /> : null}
+              </>
             )}
-            {devicePhoto ? (
-              <img
-                src={devicePhoto}
-                alt={deviceModel}
-                className="size-24 rounded-md border object-cover"
-              />
+          </CardContent>
+        </Card>
+
+        {!isConsumable ? (
+          <Card className="rounded-2xl shadow-sm">
+            <CardContent className="grid gap-4 p-6">
+              <div className="flex items-center gap-3">
+                <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><Package className="size-5" /></span>
+                <h2 className="text-lg font-semibold">Emplacement</h2>
+              </div>
+              <label className="text-sm font-medium text-slate-700">Emplacement physique</label>
+              <StorageLocationSelect shopId={shopId} value={location?.id} onSelect={setLocation} />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        <Card className="rounded-2xl shadow-sm">
+          <CardContent className="grid gap-4 p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><Wrench className="size-5" /></span>
+              <h2 className="text-lg font-semibold">{isConsumable ? "Notes" : "Diagnostic"}</h2>
+            </div>
+            {!isConsumable ? (
+              <label className="grid gap-2 text-sm font-medium text-slate-700">
+                Problème constaté
+                <select value={issue} onChange={(event) => setIssue(event.target.value as IssueKey)} className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500">
+                  {Object.entries(ISSUES_DATABASE).map(([key, definition]) => <option key={key} value={key}>{definition.label}</option>)}
+                </select>
+              </label>
             ) : null}
-          </div>
-        )}
-        {!isConsumable ? (
-          <div className="grid gap-2">
-            <label className="text-sm font-medium">Emplacement physique</label>
-            <StorageLocationSelect
-              shopId={shopId}
-              value={location?.id}
-              onSelect={setLocation}
-            />
-          </div>
-        ) : null}
-        {!isConsumable ? (
-          <>
-            <Input name="device_processor" placeholder="Processeur" />
-            <Input name="device_imei" placeholder="IMEI" />
-            <Input name="device_sn" placeholder="Numéro de série" />
-            <label className="grid gap-2 text-sm font-medium">
-              Problème constaté
-              <select
-                value={issue}
-                onChange={(event) => setIssue(event.target.value as IssueKey)}
-                className="h-10 rounded-md border bg-background px-3"
-              >
-                {Object.entries(ISSUES_DATABASE).map(([key, definition]) => (
-                  <option key={key} value={key}>
-                    {definition.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </>
-        ) : null}
-        <Input name="notes" placeholder="Notes" />
-        <Button type="submit">💾 Enregistrer</Button>
+            <Input name="notes" placeholder="Notes complémentaires" className="h-12 rounded-xl" />
+          </CardContent>
+        </Card>
+
+        <Button type="submit" className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end">
+          Enregistrer la fiche
+        </Button>
       </form>
       <QuickCreateClientDialog
         open={createClientOpen}
