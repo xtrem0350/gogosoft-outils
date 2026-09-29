@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -103,12 +102,7 @@ function ParametresPage() {
         subtitle="Configurez votre profil, votre boutique et les options de communication."
         icon={Settings}
         iconColor="orange"
-      />
-      <PageSectionTitle
-        icon={Settings}
-        color="orange"
-        title="Configuration"
-        subtitle="Réglages globaux de la plateforme et de vos outils."
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Paramètres" }]}
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">

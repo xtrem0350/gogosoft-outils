@@ -4,7 +4,6 @@ import { Check, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -71,12 +70,7 @@ function AbonnementPage() {
         subtitle="Suivez votre accès, vos avantages et vos options."
         icon={CreditCard}
         iconColor="green"
-      />
-      <PageSectionTitle
-        icon={CreditCard}
-        color="green"
-        title="Abonnement"
-        subtitle="Choisissez le plan adapté à votre activité."
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Mon forfait" }]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">

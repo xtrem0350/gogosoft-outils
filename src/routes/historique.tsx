@@ -4,7 +4,6 @@ import { History, ScrollText } from "lucide-react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { listLaunches, listLogs } from "@/services/historyService";
@@ -50,12 +49,7 @@ function HistoriquePage() {
         subtitle="Qui a lancé quoi, et quand le catalogue a changé."
         icon={History}
         iconColor="orange"
-      />
-      <PageSectionTitle
-        icon={History}
-        color="orange"
-        title="Traçabilité"
-        subtitle="Suivez les actions et modifications importantes pour votre atelier."
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Historique" }]}
       />
 
       <Tabs defaultValue="launches">

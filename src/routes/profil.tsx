@@ -4,7 +4,6 @@ import { LogOut, ShieldAlert, Store, Trash2, Upload, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -141,12 +140,7 @@ function ProfilPage() {
         subtitle="Gérez vos informations et vos accès à GogoSoft Tools Manager."
         icon={User}
         iconColor="orange"
-      />
-      <PageSectionTitle
-        icon={User}
-        color="orange"
-        title="Compte"
-        subtitle="Mettez à jour vos informations personnelles et votre organisation."
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Mon profil" }]}
       />
       <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-6">

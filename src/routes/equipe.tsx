@@ -4,7 +4,6 @@ import { Mail, UserCog, UserMinus, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
-import { PageSectionTitle } from "@/components/PageSectionTitle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -90,12 +89,7 @@ function EquipePage() {
             Inviter un technicien
           </Button>
         }
-      />
-      <PageSectionTitle
-        icon={UserCog}
-        color="green"
-        title="Équipe"
-        subtitle="Restez aligned sur la gestion des interventions et des compétences."
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Équipe" }]}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

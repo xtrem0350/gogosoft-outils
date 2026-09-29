@@ -67,14 +67,8 @@ function AdminPage() {
         title="Espace Admin"
         subtitle="Supervision globale des ateliers et des forfaits"
         imageUrl="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200"
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Espace Admin" }]}
       />
-      <div className="flex items-center gap-3">
-        <Shield className="size-7 text-orange-500" />
-        <div>
-          <p className="text-sm font-medium text-green-700">Administration</p>
-          <h1 className="text-3xl font-bold">Espace Admin</h1>
-        </div>
-      </div>
       {error ? <p className="rounded-lg bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard

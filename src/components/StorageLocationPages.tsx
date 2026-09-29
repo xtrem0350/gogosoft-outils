@@ -142,6 +142,11 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
             <Plus className="size-4" /> Ajouter un emplacement
           </Button>
         }
+        breadcrumb={
+          plan
+            ? [{ label: "Accueil", to: "/" }, { label: "Plan de l'atelier" }]
+            : [{ label: "Accueil", to: "/" }, { label: "Paramètres", to: "/parametres" }, { label: "Emplacements" }]
+        }
       />
       <div className="grid grid-cols-3 gap-3">
         <Card>

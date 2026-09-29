@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { IconBadge3D } from "@/components/IconBadge3D";
+import { PageBreadcrumb, type BreadcrumbItem } from "@/components/PageBreadcrumb";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ interface PageHeroProps {
   imageUrl?: string;
   showBack?: boolean;
   action?: ReactNode;
+  breadcrumb?: BreadcrumbItem[];
   className?: string;
   titleClassName?: string;
   subtitleClassName?: string;
@@ -27,6 +29,7 @@ export function PageHero({
   imageUrl,
   showBack = false,
   action,
+  breadcrumb,
   className,
   titleClassName = "text-white",
   subtitleClassName = "text-slate-100",
@@ -49,7 +52,17 @@ export function PageHero({
         className="absolute inset-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-orange-900/70 via-orange-800/50 to-green-900/60" />
-      <div className="relative z-10 flex min-h-40 flex-col items-start justify-center gap-3 px-6 py-6 text-left sm:min-h-44 sm:px-8 sm:py-7">
+      {breadcrumb && breadcrumb.length > 0 ? (
+        <div className="absolute left-6 top-5 z-20 sm:left-8 sm:top-6">
+          <PageBreadcrumb items={breadcrumb} />
+        </div>
+      ) : null}
+      <div
+        className={cn(
+          "relative z-10 flex min-h-40 flex-col items-start justify-center gap-3 px-6 py-6 text-left sm:min-h-44 sm:px-8 sm:py-7",
+          breadcrumb && breadcrumb.length > 0 && "pt-14 sm:pt-16",
+        )}
+      >
         {showBack ? (
           <div className="absolute left-4 top-4">
             <Button
