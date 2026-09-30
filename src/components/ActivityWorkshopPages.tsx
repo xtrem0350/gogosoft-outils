@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import { DeviceCatalogPicker, type CatalogDevice } from "@/components/DeviceCatalogPicker";
 import { EmptyState } from "@/components/EmptyState";
+import { PageHero } from "@/components/PageHero";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { DeviceSelect } from "@/components/selects/DeviceSelect";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
@@ -73,6 +74,17 @@ export function ActivityListPage({
   const basePath = activityType === "consumable" ? "/consumable/stock" : `/${activityType}/atelier`;
   const heroIcon = activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package;
   const heroColor = activityType === "consumable" ? "green" : "orange";
+  const breadcrumb = history
+    ? [
+        { label: "Accueil", to: "/" },
+        { label: activityType === "consumable" ? "Consommables" : activityType === "phone" ? "Téléphone" : "Ordinateur" },
+        { label: "Historiques" },
+      ]
+    : [
+        { label: "Accueil", to: "/" },
+        { label: activityType === "consumable" ? "Consommables" : activityType === "phone" ? "Téléphone" : "Ordinateur" },
+        { label: activityType === "consumable" ? "Stock" : "Atelier" },
+      ];
   const filteredTickets = tickets.filter((ticket) => {
     if (statusFilter !== "tous" && ticket.status !== statusFilter) return false;
     const query = search.trim().toLocaleLowerCase();
@@ -103,20 +115,23 @@ export function ActivityListPage({
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">{history ? `Historique ${labels.noun}` : labels.title}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{filteredTickets.length} fiche(s) affichée(s)</p>
-        </div>
-        {!history ? (
-          <Button
-            onClick={() => void navigate({ to: `${basePath}/nouveau` })}
-            className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
-          >
-            + {labels.create}
-          </Button>
-        ) : null}
-      </div>
+      <PageHero
+        title={history ? "Historiques" : activityType === "consumable" ? "Stock" : "Atelier"}
+        subtitle={history ? `Historique des fiches ${labels.noun}.` : `Liste des fiches ${labels.noun} de l'atelier.`}
+        icon={heroIcon}
+        iconColor={heroColor}
+        action={
+          !history ? (
+            <Button
+              onClick={() => void navigate({ to: `${basePath}/nouveau` })}
+              className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
+            >
+              + {labels.create}
+            </Button>
+          ) : undefined
+        }
+        breadcrumb={breadcrumb}
+      />
       <div className="grid gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -328,10 +343,21 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
-      <div>
-        <p className="text-sm font-medium text-primary">{labels.title}</p>
-        <h1 className="mt-2 text-3xl font-bold">{labels.create}</h1>
-      </div>
+      <PageHero
+        title={isConsumable ? "Nouveau produit" : "Nouvelle fiche"}
+        subtitle={
+          isConsumable
+            ? "Ajoutez un produit au stock et suivez sa disponibilité."
+            : "Créez une fiche de réparation avec les informations client et le diagnostic."
+        }
+        icon={isConsumable ? Package : Wrench}
+        iconColor={isConsumable ? "green" : "orange"}
+        breadcrumb={
+          isConsumable
+            ? [{ label: "Accueil", to: "/" }, { label: "Consommables", to: "/consumable/stock" }, { label: "Nouveau produit" }]
+            : [{ label: "Accueil", to: "/" }, { label: activityType === "phone" ? "Téléphone" : "Ordinateur", to: `/${activityType}/atelier` }, { label: "Nouvelle fiche" }]
+        }
+      />
       <form
         onSubmit={(event) => void submit(event)}
         className="grid gap-6"
@@ -457,7 +483,17 @@ export function ActivityDetailsPage({
   if (!ticket) return <p className="text-muted-foreground">Chargement…</p>;
   return (
     <section className="mx-auto max-w-4xl space-y-4">
-      <h1 className="text-3xl font-bold">{ticket.device_model}</h1>
+      <PageHero
+        title={ticket.device_model}
+        subtitle="Détails de la fiche et suivi de l'intervention."
+        icon={activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package}
+        iconColor={activityType === "consumable" ? "green" : "orange"}
+        breadcrumb={
+          activityType === "consumable"
+            ? [{ label: "Accueil", to: "/" }, { label: "Consommables", to: "/consumable/stock" }, { label: "Produit" }]
+            : [{ label: "Accueil", to: "/" }, { label: activityType === "phone" ? "Téléphone" : "Ordinateur", to: `/${activityType}/atelier` }, { label: "Fiche" }]
+        }
+      />
       <Card>
         <CardContent className="space-y-2 p-5">
           <p>{ticket.client_name}</p>
@@ -481,9 +517,17 @@ export function ExperienceBookPage({
 }) {
   return (
     <section className="space-y-3">
-      <h1 className="text-3xl font-bold">
-        Carnet d'expérience {activityLabels[activityType].noun}
-      </h1>
+      <PageHero
+        title="Carnet d'expérience"
+        subtitle={`Historique et notes de travail pour le ${activityLabels[activityType].noun}.`}
+        icon={activityType === "phone" ? Smartphone : Laptop}
+        iconColor="blue"
+        breadcrumb={
+          activityType === "phone"
+            ? [{ label: "Accueil", to: "/" }, { label: "Téléphone" }, { label: "Carnet d'expérience" }]
+            : [{ label: "Accueil", to: "/" }, { label: "Ordinateur" }, { label: "Carnet d'expérience" }]
+        }
+      />
       <p className="text-muted-foreground">Module en construction.</p>
     </section>
   );

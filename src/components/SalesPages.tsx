@@ -22,6 +22,7 @@ import {
 import { toast } from "sonner";
 
 import { EmptyState } from "@/components/EmptyState";
+import { PageHero } from "@/components/PageHero";
 import { PageIdentity } from "@/components/PageIdentity";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { ClientSelect } from "@/components/selects/ClientSelect";
@@ -73,13 +74,18 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
   });
   const isOrders = view === "orders";
   const isDeliveries = view === "deliveries";
-  const title = isOrders ? "📦 Commandes" : isDeliveries ? "🚚 Livraisons" : "🛒 Ventes";
+  const title = isOrders ? "Commandes" : isDeliveries ? "Livraisons" : "Ventes";
   const subtitle = isOrders
     ? "Suivez les commandes à préparer et à remettre aux clients."
     : isDeliveries
       ? "Retrouvez les ventes déjà remises aux clients."
       : "Consultez les ventes de votre boutique et leur état de livraison.";
   const HeadingIcon = isOrders ? ClipboardList : isDeliveries ? Truck : CircleDollarSign;
+  const breadcrumb = isOrders
+    ? [{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Commandes" }]
+    : isDeliveries
+      ? [{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Livraisons" }]
+      : [{ label: "Accueil", to: "/" }, { label: "Ventes" }];
   const theme = isDeliveries
     ? {
         band: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25",
@@ -110,17 +116,20 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
 
   return (
     <section className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold">{title.replace(/^\S+\s/, "")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{filtered.length} vente(s) affichée(s)</p>
-        </div>
-        {view === "all" ? (
-          <Button onClick={() => void navigate({ to: "/sales/nouveau" })} className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95">
-            + Nouvelle vente
-          </Button>
-        ) : null}
-      </div>
+      <PageHero
+        title={title}
+        subtitle={subtitle}
+        icon={HeadingIcon}
+        iconColor="orange"
+        action={
+          view === "all" ? (
+            <Button onClick={() => void navigate({ to: "/sales/nouveau" })} className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95">
+              + Nouvelle vente
+            </Button>
+          ) : undefined
+        }
+        breadcrumb={breadcrumb}
+      />
 
       <div className="grid gap-3 sm:grid-cols-3">
         <SalesMetric icon={Clock3} label="À préparer" value={pendingCount} className={theme.metric} />
@@ -295,6 +304,13 @@ export function NewSalePage() {
   }
   return (
     <section className="mx-auto max-w-3xl space-y-6">
+      <PageHero
+        title="Nouvelle vente"
+        subtitle="Enregistrez une vente et suivez son paiement et sa livraison."
+        icon={ShoppingCart}
+        iconColor="orange"
+        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Nouvelle vente" }]}
+      />
       <form onSubmit={(event) => void submit(event)} className="grid gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
