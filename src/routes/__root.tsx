@@ -165,13 +165,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CurrentShopProvider>
-          {isAuthPage ? (
-            routeOutlet
-          ) : (
-            <AppShell>
-              {routeOutlet}
-            </AppShell>
-          )}
+          {isAuthPage ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
         </CurrentShopProvider>
         <Toaster position="bottom-right" />
       </AuthProvider>

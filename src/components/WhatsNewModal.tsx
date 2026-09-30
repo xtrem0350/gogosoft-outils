@@ -3,12 +3,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getLatestReleaseNote, hasNewVersion, setLastSeenVersion } from "@/lib/changelog";
 
 interface WhatsNewModalProps {
@@ -18,12 +13,7 @@ interface WhatsNewModalProps {
   onRead: () => void;
 }
 
-export function WhatsNewModal({
-  open,
-  enabled,
-  onOpenChange,
-  onRead,
-}: WhatsNewModalProps) {
+export function WhatsNewModal({ open, enabled, onOpenChange, onRead }: WhatsNewModalProps) {
   const note = getLatestReleaseNote();
 
   useEffect(() => {

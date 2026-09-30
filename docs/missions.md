@@ -49,14 +49,14 @@ Le responsable supervise plusieurs points de vente et souhaite conserver une vis
 
 ## Proposition de valeur
 
-| Problème | Solution GogoSoft | Bénéfice |
-| --- | --- | --- |
-| Outils dispersés dans les dossiers Windows | Catalogue centralisé par catégorie, type et boutique | Moins de temps perdu et moins de doublons |
-| Suivi papier des réparations | Fiches d’atelier avec statuts, diagnostic et prix | Meilleure traçabilité du dossier client |
-| Informations partagées dans plusieurs conversations | Clients, notes et historique dans un espace commun | Collaboration plus fiable |
-| Clients difficiles à prévenir | Lien WhatsApp avec message prérempli | Communication plus rapide |
-| Données mélangées entre boutiques | Isolation par boutique et politiques RLS | Confidentialité et contrôle |
-| Paiements logiciels peu adaptés | Tarifs en FCFA et mobile money | Adoption plus accessible |
+| Problème                                            | Solution GogoSoft                                    | Bénéfice                                  |
+| --------------------------------------------------- | ---------------------------------------------------- | ----------------------------------------- |
+| Outils dispersés dans les dossiers Windows          | Catalogue centralisé par catégorie, type et boutique | Moins de temps perdu et moins de doublons |
+| Suivi papier des réparations                        | Fiches d’atelier avec statuts, diagnostic et prix    | Meilleure traçabilité du dossier client   |
+| Informations partagées dans plusieurs conversations | Clients, notes et historique dans un espace commun   | Collaboration plus fiable                 |
+| Clients difficiles à prévenir                       | Lien WhatsApp avec message prérempli                 | Communication plus rapide                 |
+| Données mélangées entre boutiques                   | Isolation par boutique et politiques RLS             | Confidentialité et contrôle               |
+| Paiements logiciels peu adaptés                     | Tarifs en FCFA et mobile money                       | Adoption plus accessible                  |
 
 ## Modèle économique
 

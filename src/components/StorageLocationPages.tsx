@@ -28,7 +28,10 @@ import {
   type StorageLocationStatus,
 } from "@/services/storageService";
 
-const TYPE_ICONS: Record<StorageLocation["location_type"], ComponentType<{ className?: string }>> = {
+const TYPE_ICONS: Record<
+  StorageLocation["location_type"],
+  ComponentType<{ className?: string }>
+> = {
   carton: Package,
   shelf: Layers,
   drawer: Archive,
@@ -44,7 +47,8 @@ const STATUS_LABELS: Record<StorageLocationStatus, string> = {
 
 const STATUS_CLASSES: Record<StorageLocationStatus, string> = {
   available: "bg-green-100 text-green-800 hover:bg-green-100 dark:bg-green-950 dark:text-green-200",
-  occupied: "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-950 dark:text-orange-200",
+  occupied:
+    "bg-orange-100 text-orange-800 hover:bg-orange-100 dark:bg-orange-950 dark:text-orange-200",
   maintenance: "bg-muted text-muted-foreground hover:bg-muted",
 };
 
@@ -100,7 +104,9 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
     [locations],
   );
   const filteredLocations =
-    filter === "all" ? sortedLocations : sortedLocations.filter((location) => location.status === filter);
+    filter === "all"
+      ? sortedLocations
+      : sortedLocations.filter((location) => location.status === filter);
   const ticketById = useMemo(
     () => new Map(tickets.map((ticket) => [ticket.id, ticket])),
     [tickets],
@@ -145,7 +151,11 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
         breadcrumb={
           plan
             ? [{ label: "Accueil", to: "/" }, { label: "Plan de l'atelier" }]
-            : [{ label: "Accueil", to: "/" }, { label: "Paramètres", to: "/parametres" }, { label: "Emplacements" }]
+            : [
+                { label: "Accueil", to: "/" },
+                { label: "Paramètres", to: "/parametres" },
+                { label: "Emplacements" },
+              ]
         }
       />
       <div className="grid grid-cols-3 gap-3">
@@ -209,7 +219,9 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
                     </Badge>
                   </div>
                   {plan && location.description ? (
-                    <p className="line-clamp-2 text-sm text-muted-foreground">{location.description}</p>
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {location.description}
+                    </p>
                   ) : null}
                   {location.status === "occupied" ? (
                     <p className="text-sm text-muted-foreground">
@@ -275,7 +287,10 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
         location={editingLocation}
         onSaved={() => void load()}
       />
-      <AlertDialog open={Boolean(deletingLocation)} onOpenChange={(open) => !open && setDeletingLocation(null)}>
+      <AlertDialog
+        open={Boolean(deletingLocation)}
+        onOpenChange={(open) => !open && setDeletingLocation(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer cet emplacement ?</AlertDialogTitle>

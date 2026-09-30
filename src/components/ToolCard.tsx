@@ -64,7 +64,12 @@ export function ToolCard({
 
   return (
     <motion.div variants={slideUp} initial="initial" animate="animate">
-      <Card className={cn("card-3d hover-lift border-0", view === "list" ? "min-h-20 rounded-xl" : "rounded-2xl")}>
+      <Card
+        className={cn(
+          "card-3d hover-lift border-0",
+          view === "list" ? "min-h-20 rounded-xl" : "rounded-2xl",
+        )}
+      >
         <CardContent
           className={cn(
             "gap-4 p-4",

@@ -10,11 +10,7 @@ interface StorageLocationSelectProps {
   onSelect: (location: StorageLocation) => void;
 }
 
-export function StorageLocationSelect({
-  shopId,
-  value,
-  onSelect,
-}: StorageLocationSelectProps) {
+export function StorageLocationSelect({ shopId, value, onSelect }: StorageLocationSelectProps) {
   const { items, loading } = useAsyncList(shopId, () => getAvailableLocations(shopId ?? ""));
 
   useEffect(() => {

@@ -70,7 +70,12 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
   const query = search.trim().toLocaleLowerCase();
   const filtered = scopedSales.filter((sale) => {
     if (deliveryFilter !== "all" && sale.delivery_status !== deliveryFilter) return false;
-    return !query || [sale.product_name, sale.client_name ?? ""].some((value) => value.toLocaleLowerCase().includes(query));
+    return (
+      !query ||
+      [sale.product_name, sale.client_name ?? ""].some((value) =>
+        value.toLocaleLowerCase().includes(query),
+      )
+    );
   });
   const isOrders = view === "orders";
   const isDeliveries = view === "deliveries";
@@ -100,6 +105,12 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
   const pendingCount = sales.filter((sale) => sale.delivery_status === "pending").length;
   const readyCount = sales.filter((sale) => sale.delivery_status === "ready").length;
   const deliveredCount = sales.filter((sale) => sale.delivery_status === "delivered").length;
+  const deliveryOptions: Array<[string, string]> = [
+    ["all", "Toutes"],
+    ["pending", "À préparer"],
+    ["ready", "Prêtes"],
+    ["delivered", "Remises"],
+  ];
 
   async function deliverSale(saleId: string) {
     setBusySaleId(saleId);
@@ -123,7 +134,10 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
         iconColor="orange"
         action={
           view === "all" ? (
-            <Button onClick={() => void navigate({ to: "/sales/nouveau" })} className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95">
+            <Button
+              onClick={() => void navigate({ to: "/sales/nouveau" })}
+              className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
+            >
               + Nouvelle vente
             </Button>
           ) : undefined
@@ -132,35 +146,53 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <SalesMetric icon={Clock3} label="À préparer" value={pendingCount} className={theme.metric} />
+        <SalesMetric
+          icon={Clock3}
+          label="À préparer"
+          value={pendingCount}
+          className={theme.metric}
+        />
         <SalesMetric icon={Package} label="Prêtes" value={readyCount} className={theme.metric} />
         <SalesMetric icon={Check} label="Remises" value={deliveredCount} className={theme.metric} />
       </div>
 
       {error ? (
-        <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
+        >
           ❌ {error}
         </div>
       ) : null}
       <div className="grid gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:p-6">
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Rechercher un produit ou un client" aria-label="Rechercher une vente" className="h-12 rounded-full pl-11" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Rechercher un produit ou un client"
+            aria-label="Rechercher une vente"
+            className="h-12 rounded-full pl-11"
+          />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrer les ventes">
-          {[
-            ["all", "Toutes"],
-            ["pending", "À préparer"],
-            ["ready", "Prêtes"],
-            ["delivered", "Remises"],
-          ].map(([value, label]) => (
-            <Button key={value} type="button" size="sm" variant={deliveryFilter === value ? "default" : "outline"} onClick={() => setDeliveryFilter(value)} className={`shrink-0 rounded-full px-4 ${deliveryFilter === value ? "bg-orange-600 text-white hover:bg-orange-700" : ""}`}>
+          {deliveryOptions.map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={deliveryFilter === value ? "default" : "outline"}
+              onClick={() => setDeliveryFilter(value ?? "all")}
+              className={`shrink-0 rounded-full px-4 ${deliveryFilter === value ? "bg-orange-600 text-white hover:bg-orange-700" : ""}`}
+            >
               {label}
             </Button>
           ))}
         </div>
       </div>
-      {loading || shopLoading ? <p className="text-sm text-muted-foreground">Chargement des ventes…</p> : null}
+      {loading || shopLoading ? (
+        <p className="text-sm text-muted-foreground">Chargement des ventes…</p>
+      ) : null}
 
       <div className="grid gap-3">
         {filtered.map((sale) => (
@@ -177,14 +209,17 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
                   className="size-12 shrink-0 rounded-full border object-cover"
                 />
               ) : (
-                <div className={`flex size-12 shrink-0 items-center justify-center rounded-full bg-muted ${theme.metric}`}>
+                <div
+                  className={`flex size-12 shrink-0 items-center justify-center rounded-full bg-muted ${theme.metric}`}
+                >
                   <Package className="size-6" aria-hidden="true" />
                 </div>
               )}
               <div className="min-w-0">
                 <h2 className="truncate font-semibold">{sale.product_name}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {sale.client_name ?? "Client non renseigné"} · {sale.quantity} × {sale.unit_price} FCFA
+                  {sale.client_name ?? "Client non renseigné"} · {sale.quantity} × {sale.unit_price}{" "}
+                  FCFA
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {new Date(sale.created_at).toLocaleDateString("fr-FR", { dateStyle: "medium" })}
@@ -193,15 +228,35 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
             </div>
             <div className="flex w-full flex-wrap items-center justify-between gap-3 border-t border-border pt-3 sm:w-auto sm:justify-end sm:border-0 sm:pt-0">
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className={`capitalize ${sale.delivery_status === "delivered" ? "border-green-600 bg-green-600 text-white" : sale.delivery_status === "ready" ? "border-green-200 bg-green-100 text-green-800" : "border-yellow-200 bg-yellow-100 text-yellow-800"}`}>
-                  {sale.delivery_status === "delivered" ? "✅ Remise" : sale.delivery_status === "ready" ? "📦 Prête" : "⏳ À préparer"}
+                <Badge
+                  variant="outline"
+                  className={`capitalize ${sale.delivery_status === "delivered" ? "border-green-600 bg-green-600 text-white" : sale.delivery_status === "ready" ? "border-green-200 bg-green-100 text-green-800" : "border-yellow-200 bg-yellow-100 text-yellow-800"}`}
+                >
+                  {sale.delivery_status === "delivered"
+                    ? "✅ Remise"
+                    : sale.delivery_status === "ready"
+                      ? "📦 Prête"
+                      : "⏳ À préparer"}
                 </Badge>
-                <Badge variant="secondary" className={sale.payment_status === "paid" ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}>
-                  {sale.payment_status === "paid" ? "Payée" : sale.payment_status === "refunded" ? "Remboursée" : "À payer"}
+                <Badge
+                  variant="secondary"
+                  className={
+                    sale.payment_status === "paid"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-orange-100 text-orange-800"
+                  }
+                >
+                  {sale.payment_status === "paid"
+                    ? "Payée"
+                    : sale.payment_status === "refunded"
+                      ? "Remboursée"
+                      : "À payer"}
                 </Badge>
               </div>
               <div className="text-right">
-                <p className="whitespace-nowrap font-bold">{sale.total_price.toLocaleString("fr-FR")} FCFA</p>
+                <p className="whitespace-nowrap font-bold">
+                  {sale.total_price.toLocaleString("fr-FR")} FCFA
+                </p>
                 {isOrders && sale.delivery_status !== "delivered" ? (
                   <Button
                     type="button"
@@ -211,7 +266,8 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
                     disabled={busySaleId === sale.id}
                     onClick={() => void deliverSale(sale.id)}
                   >
-                    <Check aria-hidden="true" /> {busySaleId === sale.id ? "En cours…" : "Marquer remise"}
+                    <Check aria-hidden="true" />{" "}
+                    {busySaleId === sale.id ? "En cours…" : "Marquer remise"}
                   </Button>
                 ) : null}
               </div>
@@ -224,7 +280,12 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
           icon={HeadingIcon}
           title={isDeliveries ? "Aucune livraison" : isOrders ? "Aucune commande" : "Aucune vente"}
           description={search ? "Modifiez votre recherche ou votre filtre." : subtitle}
-          {...(view === "all" ? { actionLabel: "Nouvelle vente", onAction: () => void navigate({ to: "/sales/nouveau" }) } : {})}
+          {...(view === "all"
+            ? {
+                actionLabel: "Nouvelle vente",
+                onAction: () => void navigate({ to: "/sales/nouveau" }),
+              }
+            : {})}
         />
       ) : null}
     </section>
@@ -309,28 +370,52 @@ export function NewSalePage() {
         subtitle="Enregistrez une vente et suivez son paiement et sa livraison."
         icon={ShoppingCart}
         iconColor="orange"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Nouvelle vente" }]}
+        breadcrumb={[
+          { label: "Accueil", to: "/" },
+          { label: "Ventes", to: "/sales" },
+          { label: "Nouvelle vente" },
+        ]}
       />
       <form onSubmit={(event) => void submit(event)} className="grid gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><Package className="size-5" /></span>
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                <Package className="size-5" />
+              </span>
               <h2 className="text-lg font-semibold">Produit</h2>
             </div>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Activité
-              <select value={activityType} onChange={(event) => setActivityType(event.target.value as ActivityType)} className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500">
+              <select
+                value={activityType}
+                onChange={(event) => setActivityType(event.target.value as ActivityType)}
+                className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
+              >
                 <option value="phone">Téléphone</option>
                 <option value="computer">Ordinateur</option>
                 <option value="consumable">Consommable</option>
               </select>
             </label>
-            <Input name="product_name" placeholder="Nom du produit" required className="h-12 rounded-xl" />
-            <Input name="product_description" placeholder="Description" className="h-12 rounded-xl" />
+            <Input
+              name="product_name"
+              placeholder="Nom du produit"
+              required
+              className="h-12 rounded-xl"
+            />
+            <Input
+              name="product_description"
+              placeholder="Description"
+              className="h-12 rounded-xl"
+            />
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Photo du produit
-              <input type="file" accept="image/*" onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)} className="rounded-xl border-2 border-slate-200 p-3 text-sm" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
+                className="rounded-xl border-2 border-slate-200 p-3 text-sm"
+              />
               {photoFile ? <span className="text-xs text-slate-500">{photoFile.name}</span> : null}
             </label>
           </CardContent>
@@ -339,16 +424,37 @@ export function NewSalePage() {
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-green-100 text-green-700"><CircleDollarSign className="size-5" /></span>
+              <span className="flex size-10 items-center justify-center rounded-full bg-green-100 text-green-700">
+                <CircleDollarSign className="size-5" />
+              </span>
               <h2 className="text-lg font-semibold">Quantité et paiement</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input name="quantity" type="number" min="1" defaultValue="1" placeholder="Quantité" required className="h-12 rounded-xl" />
-              <Input name="unit_price" type="number" min="0" placeholder="Prix unitaire (FCFA)" required className="h-12 rounded-xl" />
+              <Input
+                name="quantity"
+                type="number"
+                min="1"
+                defaultValue="1"
+                placeholder="Quantité"
+                required
+                className="h-12 rounded-xl"
+              />
+              <Input
+                name="unit_price"
+                type="number"
+                min="0"
+                placeholder="Prix unitaire (FCFA)"
+                required
+                className="h-12 rounded-xl"
+              />
             </div>
             <label className="grid gap-2 text-sm font-medium text-slate-700">
               Mode de paiement
-              <select name="payment_method" defaultValue="" className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500">
+              <select
+                name="payment_method"
+                defaultValue=""
+                className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
+              >
                 <option value="">Non payé</option>
                 <option value="cash">Espèces</option>
                 <option value="wave">Wave</option>
@@ -363,15 +469,28 @@ export function NewSalePage() {
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><UserRound className="size-5" /></span>
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                <UserRound className="size-5" />
+              </span>
               <h2 className="text-lg font-semibold">Client</h2>
             </div>
             <label className="text-sm font-medium text-slate-700">Client *</label>
-            <ClientSelect shopId={shopId} value={selectedClient?.id} selectedClient={selectedClient ?? undefined} onSelect={setSelectedClient} onCreateNew={() => setCreateClientOpen(true)} />
-            {selectedClient ? <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p> : null}
+            <ClientSelect
+              shopId={shopId}
+              value={selectedClient?.id}
+              selectedClient={selectedClient ?? undefined}
+              onSelect={setSelectedClient}
+              onCreateNew={() => setCreateClientOpen(true)}
+            />
+            {selectedClient ? (
+              <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
+            ) : null}
           </CardContent>
         </Card>
-        <Button type="submit" className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end">
+        <Button
+          type="submit"
+          className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end"
+        >
           Enregistrer la vente
         </Button>
       </form>

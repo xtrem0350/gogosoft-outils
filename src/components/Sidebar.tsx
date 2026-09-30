@@ -128,7 +128,12 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             }
           >
             <CollapsibleTrigger className="group flex h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-              <GroupIcon className={cn("size-4", activeGroup === groupIndex ? "text-orange-600" : "text-slate-500")} />
+              <GroupIcon
+                className={cn(
+                  "size-4",
+                  activeGroup === groupIndex ? "text-orange-600" : "text-slate-500",
+                )}
+              />
               <span className="flex-1">{label}</span>
               <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
             </CollapsibleTrigger>
@@ -144,9 +149,16 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                       "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
                   )}
                 >
-                  <Icon className={cn("size-4 shrink-0", pathname === to ? "text-orange-600" : "text-slate-500")} />
+                  <Icon
+                    className={cn(
+                      "size-4 shrink-0",
+                      pathname === to ? "text-orange-600" : "text-slate-500",
+                    )}
+                  />
                   <span className="min-w-0 flex-1 truncate">{itemLabel}</span>
-                  {pathname === to ? <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" /> : null}
+                  {pathname === to ? (
+                    <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" />
+                  ) : null}
                 </Link>
               ))}
             </CollapsibleContent>

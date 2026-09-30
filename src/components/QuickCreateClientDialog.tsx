@@ -14,11 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  createClient,
-  uploadClientPhoto,
-  type ClientRecord,
-} from "@/services/clientService";
+import { createClient, uploadClientPhoto, type ClientRecord } from "@/services/clientService";
 
 interface QuickCreateClientDialogProps {
   open: boolean;
@@ -106,7 +102,11 @@ export function QuickCreateClientDialog({
           </div>
           <div className="space-y-2">
             <Label>WhatsApp *</Label>
-            <PhoneInput value={whatsapp} onChange={setWhatsapp} className="rounded-md bg-slate-900 p-1" />
+            <PhoneInput
+              value={whatsapp}
+              onChange={setWhatsapp}
+              className="rounded-md bg-slate-900 p-1"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="quick-client-email">Email</Label>

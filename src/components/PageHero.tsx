@@ -39,10 +39,7 @@ export function PageHero({
 
   return (
     <div
-      className={cn(
-        "relative mb-6 overflow-hidden rounded-2xl bg-slate-900 shadow-3d",
-        className,
-      )}
+      className={cn("relative mb-6 overflow-hidden rounded-2xl bg-slate-900 shadow-3d", className)}
     >
       <img
         loading="lazy"
@@ -76,15 +73,36 @@ export function PageHero({
             </Button>
           </div>
         ) : null}
-        {action ? <div className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2">{action}</div> : null}
+        {action ? (
+          <div className="absolute right-4 top-4 sm:right-6 sm:top-1/2 sm:-translate-y-1/2">
+            {action}
+          </div>
+        ) : null}
 
-        {icon ? <IconBadge3D icon={icon} size="md" color={iconColor} className="size-14 rounded-xl [&_svg]:size-7" /> : null}
+        {icon ? (
+          <IconBadge3D
+            icon={icon}
+            size="md"
+            color={iconColor}
+            className="size-14 rounded-xl [&_svg]:size-7"
+          />
+        ) : null}
 
-        <h1 className={cn("max-w-[calc(100%-3rem)] text-2xl font-bold drop-shadow-lg sm:max-w-[calc(100%-12rem)] sm:text-3xl", titleClassName)}>
+        <h1
+          className={cn(
+            "max-w-[calc(100%-3rem)] text-2xl font-bold drop-shadow-lg sm:max-w-[calc(100%-12rem)] sm:text-3xl",
+            titleClassName,
+          )}
+        >
           {title}
         </h1>
         {subtitle ? (
-          <p className={cn("max-w-2xl text-sm text-white/90 drop-shadow sm:text-base", subtitleClassName)}>
+          <p
+            className={cn(
+              "max-w-2xl text-sm text-white/90 drop-shadow sm:text-base",
+              subtitleClassName,
+            )}
+          >
             {subtitle}
           </p>
         ) : null}

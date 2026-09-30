@@ -2,11 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { SearchableSelect } from "@/components/SearchableSelect";
-import {
-  getClientPhotoUrl,
-  getClientsByShop,
-  type ClientRecord,
-} from "@/services/clientService";
+import { getClientPhotoUrl, getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { useAsyncList } from "./useAsyncOptions";
 
 interface Props {
@@ -18,13 +14,7 @@ interface Props {
 }
 
 /** Sélection d'un client existant de l'atelier. */
-export function ClientSelect({
-  shopId,
-  value,
-  selectedClient,
-  onSelect,
-  onCreateNew,
-}: Props) {
+export function ClientSelect({ shopId, value, selectedClient, onSelect, onCreateNew }: Props) {
   const navigate = useNavigate();
   const { items, loading } = useAsyncList(shopId, () => getClientsByShop(shopId ?? ""));
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});

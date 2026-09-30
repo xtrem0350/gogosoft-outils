@@ -43,8 +43,12 @@ export function StatsCard({
           <Icon className="size-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{cardLabel}</p>
-          <p className="mt-2 truncate font-display text-3xl font-bold text-slate-900 dark:text-white">{value}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            {cardLabel}
+          </p>
+          <p className="mt-2 truncate font-display text-3xl font-bold text-slate-900 dark:text-white">
+            {value}
+          </p>
           {detail ? <p className="mt-1 truncate text-xs text-muted-foreground">{detail}</p> : null}
         </div>
       </CardContent>

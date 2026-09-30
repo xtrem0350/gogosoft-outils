@@ -72,17 +72,32 @@ export function ActivityListPage({
   const [endDate, setEndDate] = useState("");
   const labels = activityLabels[activityType];
   const basePath = activityType === "consumable" ? "/consumable/stock" : `/${activityType}/atelier`;
-  const heroIcon = activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package;
+  const heroIcon =
+    activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package;
   const heroColor = activityType === "consumable" ? "green" : "orange";
   const breadcrumb = history
     ? [
         { label: "Accueil", to: "/" },
-        { label: activityType === "consumable" ? "Consommables" : activityType === "phone" ? "Téléphone" : "Ordinateur" },
+        {
+          label:
+            activityType === "consumable"
+              ? "Consommables"
+              : activityType === "phone"
+                ? "Téléphone"
+                : "Ordinateur",
+        },
         { label: "Historiques" },
       ]
     : [
         { label: "Accueil", to: "/" },
-        { label: activityType === "consumable" ? "Consommables" : activityType === "phone" ? "Téléphone" : "Ordinateur" },
+        {
+          label:
+            activityType === "consumable"
+              ? "Consommables"
+              : activityType === "phone"
+                ? "Téléphone"
+                : "Ordinateur",
+        },
         { label: activityType === "consumable" ? "Stock" : "Atelier" },
       ];
   const filteredTickets = tickets.filter((ticket) => {
@@ -90,9 +105,11 @@ export function ActivityListPage({
     const query = search.trim().toLocaleLowerCase();
     if (
       query &&
-      ![ticket.client_name, ticket.client_whatsapp, ticket.device_model]
-        .some((value) => value.toLocaleLowerCase().includes(query))
-    ) return false;
+      ![ticket.client_name, ticket.client_whatsapp, ticket.device_model ?? ""].some((value) =>
+        String(value ?? "").toLocaleLowerCase().includes(query),
+      )
+    )
+      return false;
     if (!ticket.created_at) return !startDate && !endDate;
     const created = new Date(ticket.created_at).getTime();
     const start = startDate
@@ -113,11 +130,23 @@ export function ActivityListPage({
       .finally(() => setLoading(false));
   }, [activityType, shopId, shopLoading]);
 
+  const statusOptions: Array<[string, string]> = [
+    ["tous", "Toutes"],
+    ["en_attente", "En attente"],
+    ["en_cours", "En cours"],
+    ["termine", "Terminé"],
+    ["livre", "Livré"],
+  ];
+
   return (
     <section className="mx-auto max-w-6xl space-y-6">
       <PageHero
         title={history ? "Historiques" : activityType === "consumable" ? "Stock" : "Atelier"}
-        subtitle={history ? `Historique des fiches ${labels.noun}.` : `Liste des fiches ${labels.noun} de l'atelier.`}
+        subtitle={
+          history
+            ? `Historique des fiches ${labels.noun}.`
+            : `Liste des fiches ${labels.noun} de l'atelier.`
+        }
         icon={heroIcon}
         iconColor={heroColor}
         action={
@@ -144,19 +173,13 @@ export function ActivityListPage({
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-1" aria-label="Filtrer par statut">
-          {[
-            ["tous", "Toutes"],
-            ["en_attente", "En attente"],
-            ["en_cours", "En cours"],
-            ["termine", "Terminé"],
-            ["livre", "Livré"],
-          ].map(([value, label]) => (
+          {statusOptions.map(([value, label]) => (
             <Button
               key={value}
               type="button"
               size="sm"
               variant={statusFilter === value ? "default" : "outline"}
-              onClick={() => setStatusFilter(value)}
+              onClick={() => setStatusFilter(value ?? "tous")}
               className={`shrink-0 rounded-full px-4 ${statusFilter === value ? "bg-orange-600 text-white hover:bg-orange-700" : ""}`}
             >
               {label}
@@ -166,11 +189,23 @@ export function ActivityListPage({
         <div className="flex flex-wrap items-end gap-4">
           <label className="grid gap-1.5 text-sm font-medium text-slate-700">
             Du
-            <input type="date" value={startDate} max={endDate || undefined} onChange={(event) => setStartDate(event.target.value)} className="h-11 rounded-xl border bg-background px-3 font-normal" />
+            <input
+              type="date"
+              value={startDate}
+              max={endDate || undefined}
+              onChange={(event) => setStartDate(event.target.value)}
+              className="h-11 rounded-xl border bg-background px-3 font-normal"
+            />
           </label>
           <label className="grid gap-1.5 text-sm font-medium text-slate-700">
             Au
-            <input type="date" value={endDate} min={startDate || undefined} onChange={(event) => setEndDate(event.target.value)} className="h-11 rounded-xl border bg-background px-3 font-normal" />
+            <input
+              type="date"
+              value={endDate}
+              min={startDate || undefined}
+              onChange={(event) => setEndDate(event.target.value)}
+              className="h-11 rounded-xl border bg-background px-3 font-normal"
+            />
           </label>
         </div>
       </div>
@@ -180,30 +215,58 @@ export function ActivityListPage({
         <EmptyState
           icon={heroIcon}
           title="Aucune fiche trouvée"
-          description={search ? "Modifiez votre recherche ou les filtres sélectionnés." : "Les nouvelles fiches apparaîtront ici."}
-          {...(!history ? { actionLabel: labels.create, onAction: () => void navigate({ to: `${basePath}/nouveau` }) } : {})}
+          description={
+            search
+              ? "Modifiez votre recherche ou les filtres sélectionnés."
+              : "Les nouvelles fiches apparaîtront ici."
+          }
+          {...(!history
+            ? {
+                actionLabel: labels.create,
+                onAction: () => void navigate({ to: `${basePath}/nouveau` }),
+              }
+            : {})}
         />
       ) : null}
       <div className="grid gap-3">
         {filteredTickets.map((ticket) => (
-          <Card key={ticket.id} className="min-h-20 rounded-xl shadow-sm transition-all duration-300 hover:shadow-3d">
+          <Card
+            key={ticket.id}
+            className="min-h-20 rounded-xl shadow-sm transition-all duration-300 hover:shadow-3d"
+          >
             <CardContent className="flex flex-wrap items-center justify-between gap-4 p-5">
               <div className="flex min-w-0 flex-1 items-center gap-4">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
                   <Wrench className="size-5" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="truncate font-semibold">{ticket.device_model}</h3>
-                  <p className="truncate text-sm text-muted-foreground">{ticket.client_name} · {ticket.client_whatsapp}</p>
+                  <h3 className="truncate font-semibold">
+                    {ticket.device_model ?? "Fiche technique"}
+                  </h3>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {ticket.client_name} · {ticket.client_whatsapp}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Badge className={statusStyles[ticket.status]}>{statusLabels[ticket.status]}</Badge>
-                <Button asChild variant="outline" size="sm" className="rounded-full">
-                  <Link to={`${basePath}/$id`} params={{ id: ticket.id }}>
-                    <Eye className="size-4" />
-                    Détails
-                  </Link>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full"
+                  onClick={() =>
+                    void navigate({
+                      to:
+                        activityType === "consumable"
+                          ? "/consumable/stock/$id"
+                          : `/${activityType}/atelier/$id`,
+                      params: { id: ticket.id },
+                    })
+                  }
+                >
+                  <Eye className="size-4" />
+                  Détails
                 </Button>
               </div>
             </CardContent>
@@ -310,7 +373,9 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
     const productName = String(values.get("consumable_name") ?? "").trim();
     const model = isConsumable ? productName : deviceModel.trim();
     if (!model) {
-      toast.error(isConsumable ? "Saisissez le nom du consommable." : "Sélectionnez ou saisissez un modèle.");
+      toast.error(
+        isConsumable ? "Saisissez le nom du consommable." : "Sélectionnez ou saisissez un modèle.",
+      );
       return;
     }
     try {
@@ -354,18 +419,28 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         iconColor={isConsumable ? "green" : "orange"}
         breadcrumb={
           isConsumable
-            ? [{ label: "Accueil", to: "/" }, { label: "Consommables", to: "/consumable/stock" }, { label: "Nouveau produit" }]
-            : [{ label: "Accueil", to: "/" }, { label: activityType === "phone" ? "Téléphone" : "Ordinateur", to: `/${activityType}/atelier` }, { label: "Nouvelle fiche" }]
+            ? [
+                { label: "Accueil", to: "/" },
+                { label: "Consommables", to: "/consumable/stock" },
+                { label: "Nouveau produit" },
+              ]
+            : [
+                { label: "Accueil", to: "/" },
+                {
+                  label: activityType === "phone" ? "Téléphone" : "Ordinateur",
+                  to: `/${activityType}/atelier`,
+                },
+                { label: "Nouvelle fiche" },
+              ]
         }
       />
-      <form
-        onSubmit={(event) => void submit(event)}
-        className="grid gap-6"
-      >
+      <form onSubmit={(event) => void submit(event)} className="grid gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><UserRound className="size-5" /></span>
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                <UserRound className="size-5" />
+              </span>
               <h2 className="text-lg font-semibold">Informations client</h2>
             </div>
             <label className="text-sm font-medium text-slate-700">Client *</label>
@@ -376,7 +451,9 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
               onSelect={selectClient}
               onCreateNew={() => setCreateClientOpen(true)}
             />
-            {selectedClient ? <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p> : null}
+            {selectedClient ? (
+              <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -386,39 +463,103 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
               <span className="flex size-10 items-center justify-center rounded-full bg-green-100 text-green-700">
                 {isConsumable ? <Package className="size-5" /> : <Smartphone className="size-5" />}
               </span>
-              <h2 className="text-lg font-semibold">{isConsumable ? "Informations consommable" : "Informations appareil"}</h2>
+              <h2 className="text-lg font-semibold">
+                {isConsumable ? "Informations consommable" : "Informations appareil"}
+              </h2>
             </div>
             {isConsumable ? (
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input name="category" placeholder="Catégorie" required className="h-12 rounded-xl" />
-                <Input name="consumable_name" placeholder="Nom du consommable" required className="h-12 rounded-xl" />
+                <Input
+                  name="category"
+                  placeholder="Catégorie"
+                  required
+                  className="h-12 rounded-xl"
+                />
+                <Input
+                  name="consumable_name"
+                  placeholder="Nom du consommable"
+                  required
+                  className="h-12 rounded-xl"
+                />
               </div>
             ) : (
               <>
                 {knownDevicesExist ? (
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant={deviceMode === "known" ? "default" : "outline"} onClick={() => setDeviceMode("known")} className="h-11 rounded-xl px-4">
+                    <Button
+                      type="button"
+                      variant={deviceMode === "known" ? "default" : "outline"}
+                      onClick={() => setDeviceMode("known")}
+                      className="h-11 rounded-xl px-4"
+                    >
                       Réutiliser un appareil existant
                     </Button>
-                    <Button type="button" variant={deviceMode === "catalog" ? "default" : "outline"} onClick={() => setDeviceMode("catalog")} className="h-11 rounded-xl px-4">
+                    <Button
+                      type="button"
+                      variant={deviceMode === "catalog" ? "default" : "outline"}
+                      onClick={() => setDeviceMode("catalog")}
+                      className="h-11 rounded-xl px-4"
+                    >
                       Catalogue
                     </Button>
                   </div>
                 ) : null}
                 {deviceMode === "known" && selectedClient ? (
-                  <DeviceSelect shopId={shopId} clientId={selectedClient.id} activityType={activityType} onSelect={setKnownDevice} />
+                  <DeviceSelect
+                    shopId={shopId}
+                    clientId={selectedClient.id}
+                    activityType={activityType}
+                    onSelect={setKnownDevice}
+                  />
                 ) : deviceMode === "free" ? (
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Input value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} placeholder="Marque et modèle" required className="h-12 rounded-xl" />
-                    <Input value={deviceProcessor} onChange={(event) => setDeviceProcessor(event.target.value)} placeholder="Processeur" className="h-12 rounded-xl" />
-                    <Input value={deviceImei} onChange={(event) => setDeviceImei(event.target.value)} placeholder="IMEI" className="h-12 rounded-xl" />
-                    <Input value={deviceSerial} onChange={(event) => setDeviceSerial(event.target.value)} placeholder="Numéro de série" className="h-12 rounded-xl" />
-                    <Input value={deviceOs} onChange={(event) => setDeviceOs(event.target.value)} placeholder="Version OS" className="h-12 rounded-xl" />
+                    <Input
+                      value={deviceModel}
+                      onChange={(event) => setDeviceModel(event.target.value)}
+                      placeholder="Marque et modèle"
+                      required
+                      className="h-12 rounded-xl"
+                    />
+                    <Input
+                      value={deviceProcessor}
+                      onChange={(event) => setDeviceProcessor(event.target.value)}
+                      placeholder="Processeur"
+                      className="h-12 rounded-xl"
+                    />
+                    <Input
+                      value={deviceImei}
+                      onChange={(event) => setDeviceImei(event.target.value)}
+                      placeholder="IMEI"
+                      className="h-12 rounded-xl"
+                    />
+                    <Input
+                      value={deviceSerial}
+                      onChange={(event) => setDeviceSerial(event.target.value)}
+                      placeholder="Numéro de série"
+                      className="h-12 rounded-xl"
+                    />
+                    <Input
+                      value={deviceOs}
+                      onChange={(event) => setDeviceOs(event.target.value)}
+                      placeholder="Version OS"
+                      className="h-12 rounded-xl"
+                    />
                   </div>
                 ) : (
-                  <DeviceCatalogPicker shopId={shopId} category={activityType === "computer" ? "laptop" : "smartphone"} onSelect={setCatalogDevice} onFreeEntry={() => setDeviceMode("free")} />
+                  <DeviceCatalogPicker
+                    shopId={shopId}
+                    category={activityType === "computer" ? "laptop" : "smartphone"}
+                    onSelect={setCatalogDevice}
+                    onFreeEntry={() => setDeviceMode("free")}
+                  />
                 )}
-                {devicePhoto ? <img src={devicePhoto} alt={deviceModel} className="size-24 rounded-xl border object-cover" /> : null}
+                {devicePhoto ? (
+                  <img
+                    src={devicePhoto}
+                    alt={deviceModel}
+                    className="size-24 rounded-xl border object-cover"
+                  />
+                ) : null}
               </>
             )}
           </CardContent>
@@ -428,7 +569,9 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
           <Card className="rounded-2xl shadow-sm">
             <CardContent className="grid gap-4 p-6">
               <div className="flex items-center gap-3">
-                <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><Package className="size-5" /></span>
+                <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                  <Package className="size-5" />
+                </span>
                 <h2 className="text-lg font-semibold">Emplacement</h2>
               </div>
               <label className="text-sm font-medium text-slate-700">Emplacement physique</label>
@@ -440,14 +583,24 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
             <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700"><Wrench className="size-5" /></span>
+              <span className="flex size-10 items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                <Wrench className="size-5" />
+              </span>
               <h2 className="text-lg font-semibold">{isConsumable ? "Notes" : "Diagnostic"}</h2>
             </div>
             {!isConsumable ? (
               <label className="grid gap-2 text-sm font-medium text-slate-700">
                 Problème constaté
-                <select value={issue} onChange={(event) => setIssue(event.target.value as IssueKey)} className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500">
-                  {Object.entries(ISSUES_DATABASE).map(([key, definition]) => <option key={key} value={key}>{definition.label}</option>)}
+                <select
+                  value={issue}
+                  onChange={(event) => setIssue(event.target.value as IssueKey)}
+                  className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
+                >
+                  {Object.entries(ISSUES_DATABASE).map(([key, definition]) => (
+                    <option key={key} value={key}>
+                      {definition.label}
+                    </option>
+                  ))}
                 </select>
               </label>
             ) : null}
@@ -455,7 +608,10 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
           </CardContent>
         </Card>
 
-        <Button type="submit" className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end">
+        <Button
+          type="submit"
+          className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end"
+        >
           Enregistrer la fiche
         </Button>
       </form>
@@ -484,14 +640,27 @@ export function ActivityDetailsPage({
   return (
     <section className="mx-auto max-w-4xl space-y-4">
       <PageHero
-        title={ticket.device_model}
+        title={ticket.device_model ?? "Fiche technique"}
         subtitle="Détails de la fiche et suivi de l'intervention."
-        icon={activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package}
+        icon={
+          activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package
+        }
         iconColor={activityType === "consumable" ? "green" : "orange"}
         breadcrumb={
           activityType === "consumable"
-            ? [{ label: "Accueil", to: "/" }, { label: "Consommables", to: "/consumable/stock" }, { label: "Produit" }]
-            : [{ label: "Accueil", to: "/" }, { label: activityType === "phone" ? "Téléphone" : "Ordinateur", to: `/${activityType}/atelier` }, { label: "Fiche" }]
+            ? [
+                { label: "Accueil", to: "/" },
+                { label: "Consommables", to: "/consumable/stock" },
+                { label: "Produit" },
+              ]
+            : [
+                { label: "Accueil", to: "/" },
+                {
+                  label: activityType === "phone" ? "Téléphone" : "Ordinateur",
+                  to: `/${activityType}/atelier`,
+                },
+                { label: "Fiche" },
+              ]
         }
       />
       <Card>
@@ -524,8 +693,16 @@ export function ExperienceBookPage({
         iconColor="blue"
         breadcrumb={
           activityType === "phone"
-            ? [{ label: "Accueil", to: "/" }, { label: "Téléphone" }, { label: "Carnet d'expérience" }]
-            : [{ label: "Accueil", to: "/" }, { label: "Ordinateur" }, { label: "Carnet d'expérience" }]
+            ? [
+                { label: "Accueil", to: "/" },
+                { label: "Téléphone" },
+                { label: "Carnet d'expérience" },
+              ]
+            : [
+                { label: "Accueil", to: "/" },
+                { label: "Ordinateur" },
+                { label: "Carnet d'expérience" },
+              ]
         }
       />
       <p className="text-muted-foreground">Module en construction.</p>

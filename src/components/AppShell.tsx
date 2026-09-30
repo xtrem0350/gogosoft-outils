@@ -1,10 +1,21 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronDown, Laptop, Menu, Plus, Search, ShoppingCart, Smartphone, Sparkles, Users } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  Laptop,
+  Menu,
+  Plus,
+  Search,
+  ShoppingCart,
+  Smartphone,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { PageHero } from "@/components/PageHero";
 import { getPageIcon } from "@/components/PageIdentity";
+import { InactivityWarningModal } from "@/components/InactivityWarningModal";
 import { PricingModal } from "@/components/PricingModal";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
@@ -31,6 +42,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
 import logo from "@/assets/images/profile.png";
 
@@ -106,111 +118,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/parametres/emplacements": "📦 Mes emplacements",
     "/nouveautes": "✨ Nouveautés",
   };
-  const heroRoutes: Record<string, { title: string; subtitle?: string; imageUrl: string }> = {
-    "/atelier": {
-      title: "Mes réparations",
-      subtitle: "Toutes vos fiches en cours et terminées",
-      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
-    },
-    "/atelier/nouveau": {
-      title: "Nouvelle fiche",
-      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
-    },
-    "/phone/atelier": {
-      title: "Fiches téléphone",
-      subtitle: "Suivez les réparations de téléphones",
-      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
-    },
-    "/computer/atelier": {
-      title: "Fiches ordinateur",
-      subtitle: "Suivez les réparations informatiques",
-      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
-    },
-    "/consumable/stock": {
-      title: "Stock consommables",
-      subtitle: "Gérez les consommables de votre atelier",
-      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200",
-    },
-    "/sales": {
-      title: "Ventes",
-      subtitle: "Suivez les ventes de votre boutique",
-      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
-    },
-    "/salles/commandes": {
-      title: "Commandes",
-      subtitle: "Préparez les commandes en attente de remise",
-      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
-    },
-    "/clients": {
-      title: "Mes clients",
-      subtitle: "Tous vos clients enregistrés",
-      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
-    },
-    "/clients/nouveau": {
-      title: "Nouveau client",
-      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
-    },
-    "/boutiques": {
-      title: "Mes ateliers",
-      subtitle: "Gérez vos points de vente",
-      imageUrl: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200",
-    },
-    "/boutiques/nouveau": {
-      title: "Créer un atelier",
-      imageUrl: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1200",
-    },
-    "/equipe": {
-      title: "Mes techniciens",
-      imageUrl: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1200",
-    },
-    "/outils": {
-      title: "Mes outils",
-      subtitle: "Bibliothèque de logiciels de réparation",
-      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200",
-    },
-    "/categories": {
-      title: "Catégories",
-      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200",
-    },
-    "/historique": {
-      title: "Historique",
-      imageUrl: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=1200",
-    },
-    "/statistiques": {
-      title: "Mes stats",
-      imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200",
-    },
-    "/abonnement": {
-      title: "Mon forfait",
-      imageUrl: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200",
-    },
-    "/parametres": {
-      title: "Paramètres",
-      imageUrl: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200",
-    },
-    "/profil": {
-      title: "Mon profil",
-      imageUrl: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=1200",
-    },
-  };
-  const heroRoute =
-    heroRoutes[location.pathname] ??
-    Object.entries(heroRoutes).find(([route]) => location.pathname.startsWith(`${route}/`))?.[1];
   const routeTitle =
     pageTitles[location.pathname] ??
     Object.entries(pageTitles)
       .filter(([route]) => route !== "/" && location.pathname.startsWith(`${route}/`))
       .sort(([first], [second]) => second.length - first.length)[0]?.[1] ??
     "GogoSoft Tools Manager";
-  const pageHero = {
-    ...(heroRoute ?? {
-      imageUrl:
-        "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop",
-    }),
-    title: routeTitle,
-    icon: getPageIcon(location.pathname),
-    subtitle: heroRoute?.subtitle ?? "Suivez et gérez les éléments de cette rubrique.",
-  };
   const CurrentPageIcon = getPageIcon(location.pathname);
   const breadcrumbLabels: Record<string, string> = {
     "/": "Accueil",
@@ -233,6 +146,10 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/nouveautes": "Nouveautés",
   };
   const breadcrumbLabel = breadcrumbLabels[location.pathname] ?? pageTitles[location.pathname];
+
+  const { showWarning, dismissWarning, timeRemaining, logoutNow } = useInactivityLogout({
+    enabled: Boolean(user && !isAuthRoute),
+  });
 
   if (!loading && !user && !isAuthRoute) {
     if (location.pathname === "/") {
@@ -355,10 +272,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
                     <Users /> Nouveau client
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}>
+                  <DropdownMenuItem
+                    onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}
+                  >
                     <Smartphone /> Nouvelle fiche téléphone
                   </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}>
+                  <DropdownMenuItem
+                    onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}
+                  >
                     <Laptop /> Nouvelle fiche ordinateur
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => void navigate({ to: "/sales/nouveau" })}>
@@ -377,10 +298,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           ref={pageScrollRef}
           className="animate-fadeIn min-h-0 flex-1 overflow-y-auto p-4 sm:p-5 lg:p-8"
         >
-          {location.pathname !== "/" &&
-          !["/atelier/plan", "/parametres/emplacements"].includes(location.pathname) ? (
-            <PageHero {...pageHero} showBack />
-          ) : null}
           {breadcrumbLabel ? (
             <Breadcrumb className="mb-4 animate-in slide-in-from-left-4 fade-in duration-300">
               <BreadcrumbList>
@@ -404,6 +321,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           </footer>
         </div>
       </main>
+      {showWarning ? (
+        <InactivityWarningModal
+          open={showWarning}
+          timeRemaining={timeRemaining}
+          onStayLoggedIn={dismissWarning}
+          onLogoutNow={logoutNow}
+        />
+      ) : null}
       <WhatsNewModal
         open={whatsNewOpen}
         enabled={Boolean(user && !isAuthRoute)}

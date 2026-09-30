@@ -4,7 +4,9 @@ import { RELEASE_NOTES } from "@/lib/version";
 export const Route = createFileRoute("/nouveautes")({ component: NouveautesPage });
 
 function NouveautesPage() {
-  const releases = [...RELEASE_NOTES].sort((first, second) => second.date.localeCompare(first.date));
+  const releases = [...RELEASE_NOTES].sort((first, second) =>
+    second.date.localeCompare(first.date),
+  );
 
   return (
     <section className="mx-auto max-w-4xl space-y-6">

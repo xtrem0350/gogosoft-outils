@@ -1,5 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Building2, Mail, Phone, Save, Settings, ShieldAlert, User } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  Mail,
+  Phone,
+  Save,
+  Settings,
+  ShieldAlert,
+  User,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,6 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { getProfile, updateProfile } from "@/services/authService";
@@ -33,6 +49,16 @@ function ParametresPage() {
   const [templates, setTemplates] = useState<Array<{ id: string; name: string; message: string }>>(
     [],
   );
+  const [inactivityTimeout, setInactivityTimeout] = useState<number>(30);
+
+  useEffect(() => {
+    const storedTimeout = Number(window.localStorage.getItem("gogosoft_inactivity_timeout"));
+    setInactivityTimeout(Number.isFinite(storedTimeout) && storedTimeout > 0 ? storedTimeout : 30);
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem("gogosoft_inactivity_timeout", String(inactivityTimeout));
+  }, [inactivityTimeout]);
 
   useEffect(() => {
     void (async () => {
@@ -114,6 +140,31 @@ function ParametresPage() {
         </TabsList>
 
         <TabsContent value="profil" className="mt-6 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sécurité</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="inactivity-timeout">Déconnexion automatique après inactivité</Label>
+                <Select
+                  value={String(inactivityTimeout)}
+                  onValueChange={(value) => setInactivityTimeout(Number(value))}
+                >
+                  <SelectTrigger id="inactivity-timeout" className="w-full md:w-80">
+                    <SelectValue placeholder="Choisir une durée" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">60 minutes</SelectItem>
+                    <SelectItem value="0">Jamais</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Profil</CardTitle>

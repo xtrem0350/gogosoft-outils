@@ -5,7 +5,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { deleteClient, getClientById, getClientPhotoUrl, type ClientRecord } from "@/services/clientService";
+import {
+  deleteClient,
+  getClientById,
+  getClientPhotoUrl,
+  type ClientRecord,
+} from "@/services/clientService";
 import { getTickets, type WorkshopTicket } from "@/services/workshopService";
 
 interface ClientRepair {
@@ -35,16 +40,18 @@ function ClientDetailsPage() {
           getTickets(record.shop_id, "computer"),
         ]);
         setPhotoUrl(photo);
-        setRepairs([
-          ...phoneTickets
-            .filter((ticket) => ticket.client_id === record.id)
-            .map((ticket) => ({ ticket, activityType: "phone" as const })),
-          ...computerTickets
-            .filter((ticket) => ticket.client_id === record.id)
-            .map((ticket) => ({ ticket, activityType: "computer" as const })),
-        ].sort((left, right) =>
-          (right.ticket.created_at ?? "").localeCompare(left.ticket.created_at ?? ""),
-        ));
+        setRepairs(
+          [
+            ...phoneTickets
+              .filter((ticket) => ticket.client_id === record.id)
+              .map((ticket) => ({ ticket, activityType: "phone" as const })),
+            ...computerTickets
+              .filter((ticket) => ticket.client_id === record.id)
+              .map((ticket) => ({ ticket, activityType: "computer" as const })),
+          ].sort((left, right) =>
+            (right.ticket.created_at ?? "").localeCompare(left.ticket.created_at ?? ""),
+          ),
+        );
       })
       .catch(() => setClient(null));
   }, [id]);

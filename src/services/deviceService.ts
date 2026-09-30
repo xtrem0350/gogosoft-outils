@@ -70,14 +70,12 @@ export async function hasDeviceUsedTrial(deviceId: string): Promise<boolean> {
 export async function markTrialAsUsed(userId: string, deviceInfo: DeviceInfo): Promise<void> {
   const { error } = await supabase
     .from("profiles")
-    .update(
-      {
-        device_imei: deviceInfo.imei,
-        device_os: deviceInfo.os,
-        device_build: deviceInfo.build,
-        first_trial_used_at: new Date().toISOString(),
-      } as never,
-    )
+    .update({
+      device_imei: deviceInfo.imei,
+      device_os: deviceInfo.os,
+      device_build: deviceInfo.build,
+      first_trial_used_at: new Date().toISOString(),
+    } as never)
     .eq("id", userId);
   if (error) throw error;
 }

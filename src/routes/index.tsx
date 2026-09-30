@@ -122,8 +122,8 @@ function Index() {
 
   const subscriptionExpired = Boolean(
     subscription &&
-      (subscription.status === "expired" ||
-        (subscription.expires_at && new Date(subscription.expires_at).getTime() <= Date.now())),
+    (subscription.status === "expired" ||
+      (subscription.expires_at && new Date(subscription.expires_at).getTime() <= Date.now())),
   );
 
   useEffect(() => {
@@ -172,14 +172,14 @@ function Index() {
         open={pricingOpen}
         onOpenChange={setPricingOpen}
         isBlocking={subscriptionExpired}
-        onCreateAccount={() =>
-          void navigate({ to: user ? "/abonnement" : "/auth" })
-        }
+        onCreateAccount={() => void navigate({ to: user ? "/abonnement" : "/auth" })}
       />
       <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-700/75">Espace de travail</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-slate-700/75">
+              Espace de travail
+            </p>
             <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
               {greeting} <span className="inline-block animate-pulse">👋</span>
             </h1>
@@ -203,7 +203,10 @@ function Index() {
             </span>
             <p className="font-medium">Votre abonnement expire dans {daysRemaining} jour(s).</p>
           </div>
-          <Button asChild className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95">
+          <Button
+            asChild
+            className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
+          >
             <Link to="/abonnement">Renouveler</Link>
           </Button>
         </div>
@@ -220,18 +223,51 @@ function Index() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
-          { to: "/phone/atelier/nouveau", icon: Smartphone, label: "Nouvelle réparation", description: "Créer une fiche téléphone", color: "orange" as const },
-          { to: "/computer/atelier/nouveau", icon: Laptop, label: "Réparation PC", description: "Prendre en charge un ordinateur", color: "green" as const },
-          { to: "/clients/nouveau", icon: UserPlus, label: "Nouveau client", description: "Ajouter à votre carnet", color: "orange" as const },
-          { to: "/sales/nouveau", icon: ShoppingCart, label: "Nouvelle vente", description: "Enregistrer un produit vendu", color: "green" as const },
+          {
+            to: "/phone/atelier/nouveau",
+            icon: Smartphone,
+            label: "Nouvelle réparation",
+            description: "Créer une fiche téléphone",
+            color: "orange" as const,
+          },
+          {
+            to: "/computer/atelier/nouveau",
+            icon: Laptop,
+            label: "Réparation PC",
+            description: "Prendre en charge un ordinateur",
+            color: "green" as const,
+          },
+          {
+            to: "/clients/nouveau",
+            icon: UserPlus,
+            label: "Nouveau client",
+            description: "Ajouter à votre carnet",
+            color: "orange" as const,
+          },
+          {
+            to: "/sales/nouveau",
+            icon: ShoppingCart,
+            label: "Nouvelle vente",
+            description: "Enregistrer un produit vendu",
+            color: "green" as const,
+          },
         ].map(({ to, icon, label, description, color }) => (
           <Link key={to} to={to} className="group min-w-0">
             <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
               <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
-                <IconBadge3D icon={icon} size="md" color={color} className="size-14 shrink-0 rounded-xl [&_svg]:size-7" />
+                <IconBadge3D
+                  icon={icon}
+                  size="md"
+                  color={color}
+                  className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
+                />
                 <div className="min-w-0">
-                  <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">{label}</p>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">{description}</p>
+                  <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">
+                    {label}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                    {description}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -285,7 +321,10 @@ function Index() {
               <p className="text-sm text-muted-foreground">Aucune activité récente.</p>
             ) : (
               events.map((event) => (
-                <div key={event.id} className="w-64 shrink-0 rounded-xl border border-border/70 bg-background p-4">
+                <div
+                  key={event.id}
+                  className="w-64 shrink-0 rounded-xl border border-border/70 bg-background p-4"
+                >
                   <div className="flex items-center gap-3">
                     <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
                       <Activity className="size-4" />
@@ -294,7 +333,9 @@ function Index() {
                       {formatRelativeTime(event.created_at)}
                     </p>
                   </div>
-                  <p className="mt-3 line-clamp-2 text-sm font-medium">{event.description ?? event.event_type}</p>
+                  <p className="mt-3 line-clamp-2 text-sm font-medium">
+                    {event.description ?? event.event_type}
+                  </p>
                 </div>
               ))
             )}

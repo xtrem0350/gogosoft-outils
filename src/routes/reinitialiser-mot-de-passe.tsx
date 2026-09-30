@@ -36,7 +36,9 @@ function ResetPasswordPage() {
       toast.success("Votre mot de passe a été mis à jour.");
       await navigate({ to: "/auth" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de mettre à jour le mot de passe.");
+      toast.error(
+        error instanceof Error ? error.message : "Impossible de mettre à jour le mot de passe.",
+      );
     } finally {
       setBusy(false);
     }
@@ -50,7 +52,9 @@ function ResetPasswordPage() {
             <KeyRound className="size-5" />
           </div>
           <h1 className="text-3xl font-bold">Nouveau mot de passe</h1>
-          <p className="mt-3 text-sm text-slate-300">Choisissez un mot de passe fort pour sécuriser votre compte.</p>
+          <p className="mt-3 text-sm text-slate-300">
+            Choisissez un mot de passe fort pour sécuriser votre compte.
+          </p>
         </div>
 
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5">

@@ -103,9 +103,7 @@ export async function getLocationById(id: string): Promise<StorageLocation | nul
   }
 }
 
-export async function getLocationByTicketId(
-  ticketId: string,
-): Promise<StorageLocation | null> {
+export async function getLocationByTicketId(ticketId: string): Promise<StorageLocation | null> {
   if (!(await hasSession("getLocationByTicketId"))) return null;
   try {
     const { data, error } = await storageClient

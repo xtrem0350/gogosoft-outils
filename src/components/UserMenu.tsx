@@ -80,8 +80,7 @@ export function UserMenu() {
           Paramètres
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => void navigate({ to: "/nouveautes" })}>
-          <Sparkles className="size-4" />
-          ✨ Nouveautés
+          <Sparkles className="size-4" />✨ Nouveautés
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

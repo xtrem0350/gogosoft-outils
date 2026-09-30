@@ -44,7 +44,9 @@ function ClientsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Clients</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{clients.length} client(s) enregistré(s)</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {clients.length} client(s) enregistré(s)
+          </p>
         </div>
         <Button
           onClick={() => void navigate({ to: "/clients/nouveau" })}

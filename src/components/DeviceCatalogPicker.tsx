@@ -22,8 +22,10 @@ interface DeviceCatalogPickerProps {
   onFreeEntry: () => void;
 }
 
-const PHONE_MODEL = /iphone|galaxy|redmi|pixel|nokia|tecno|itel|infinix|oppo|vivo|huawei|honor|smartphone/i;
-const LAPTOP_MODEL = /laptop|notebook|macbook|thinkpad|thinkbook|ideapad|pavilion|probook|elitebook|inspiron|latitude|vivobook|zenbook|aspire|swift|chromebook/i;
+const PHONE_MODEL =
+  /iphone|galaxy|redmi|pixel|nokia|tecno|itel|infinix|oppo|vivo|huawei|honor|smartphone/i;
+const LAPTOP_MODEL =
+  /laptop|notebook|macbook|thinkpad|thinkbook|ideapad|pavilion|probook|elitebook|inspiron|latitude|vivobook|zenbook|aspire|swift|chromebook/i;
 
 function matchesCategory(guide: RepairGuide, category: DeviceCategory): boolean {
   const model = `${guide.brand} ${guide.device_model}`;
@@ -73,18 +75,20 @@ export function DeviceCatalogPicker({
       />
       {devices.length ? (
         <div className="flex flex-wrap gap-2">
-          {devices.slice(0, 6).map((device) =>
-            device.images?.[0] ? (
-              <img
-                key={device.id}
-                src={device.images[0]}
-                alt={`${device.brand} ${device.device_model}`}
-                title={`${device.brand} ${device.device_model}`}
-                className="size-12 rounded-md border object-cover"
-                loading="lazy"
-              />
-            ) : null,
-          )}
+          {devices
+            .slice(0, 6)
+            .map((device) =>
+              device.images?.[0] ? (
+                <img
+                  key={device.id}
+                  src={device.images[0]}
+                  alt={`${device.brand} ${device.device_model}`}
+                  title={`${device.brand} ${device.device_model}`}
+                  className="size-12 rounded-md border object-cover"
+                  loading="lazy"
+                />
+              ) : null,
+            )}
           {!devices.some((device) => device.images?.[0]) ? (
             <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
               <Image className="size-4" aria-hidden="true" />

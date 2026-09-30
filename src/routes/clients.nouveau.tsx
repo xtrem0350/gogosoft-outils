@@ -63,7 +63,9 @@ function NewClientPage() {
       toast.success("✅ Client ajouté.");
       await navigate({ to: "/clients" });
     } catch (error) {
-      toast.error(`❌ ${error instanceof Error ? error.message : "Impossible de créer le client."}`);
+      toast.error(
+        `❌ ${error instanceof Error ? error.message : "Impossible de créer le client."}`,
+      );
     }
   }
 

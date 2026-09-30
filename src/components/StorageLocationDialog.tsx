@@ -112,7 +112,10 @@ export function StorageLocationDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="storage-type">Type</Label>
-            <Select value={locationType} onValueChange={(value) => setLocationType(value as StorageLocationType)}>
+            <Select
+              value={locationType}
+              onValueChange={(value) => setLocationType(value as StorageLocationType)}
+            >
               <SelectTrigger id="storage-type">
                 <SelectValue />
               </SelectTrigger>
