@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Shield, Settings, Sparkles, User } from "lucide-react";
+import { HelpCircle, LogOut, Shield, Settings, Sparkles, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -81,6 +81,10 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => void navigate({ to: "/nouveautes" })}>
           <Sparkles className="size-4" />✨ Nouveautés
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => void navigate({ to: "/aide" as any })}>
+          <HelpCircle className="size-4" />
+          Aide
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

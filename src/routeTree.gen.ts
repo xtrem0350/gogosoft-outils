@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AbonnementRouteImport } from './routes/abonnement'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AideRouteImport } from './routes/aide'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as EquipeRouteImport } from './routes/equipe'
@@ -68,6 +69,11 @@ const AbonnementRoute = AbonnementRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AideRoute = AideRouteImport.update({
+  id: '/aide',
+  path: '/aide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
   '/admin': typeof AdminRoute
+  '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
   '/admin': typeof AdminRoute
+  '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -380,6 +388,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
   '/admin': typeof AdminRoute
+  '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
   '/equipe': typeof EquipeRoute
@@ -429,6 +438,7 @@ export interface FileRouteTypes {
     | '/'
     | '/abonnement'
     | '/admin'
+    | '/aide'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -476,6 +486,7 @@ export interface FileRouteTypes {
     | '/'
     | '/abonnement'
     | '/admin'
+    | '/aide'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -523,6 +534,7 @@ export interface FileRouteTypes {
     | '/'
     | '/abonnement'
     | '/admin'
+    | '/aide'
     | '/auth'
     | '/categories'
     | '/equipe'
@@ -571,6 +583,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AbonnementRoute: typeof AbonnementRoute
   AdminRoute: typeof AdminRoute
+  AideRoute: typeof AideRoute
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
   EquipeRoute: typeof EquipeRoute
@@ -635,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aide': {
+      id: '/aide'
+      path: '/aide'
+      fullPath: '/aide'
+      preLoaderRoute: typeof AideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -950,6 +970,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AbonnementRoute: AbonnementRoute,
   AdminRoute: AdminRoute,
+  AideRoute: AideRoute,
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
   EquipeRoute: EquipeRoute,

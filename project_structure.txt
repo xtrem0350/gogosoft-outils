@@ -134,6 +134,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useTheme.tsx
 │   │   ├── 📄 useSubscription.ts
 │   │   ├── 📄 useStats.ts
+│   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
 │   │   ├── 📄 useAuth.tsx
 │   │   └── 📄 use-mobile.tsx
@@ -229,6 +230,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 PageSectionTitle.tsx
 │   │   ├── 📄 PageIdentity.tsx
 │   │   ├── 📄 PageHero.tsx
+│   │   ├── 📄 PageBreadcrumb.tsx
+│   │   ├── 📄 InactivityWarningModal.tsx
 │   │   ├── 📄 IconBadge3D.tsx
 │   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx

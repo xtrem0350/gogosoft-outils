@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { getPageIcon } from "@/components/PageIdentity";
+import { HelpButton } from "@/components/HelpButton";
 import { InactivityWarningModal } from "@/components/InactivityWarningModal";
 import { PricingModal } from "@/components/PricingModal";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
@@ -114,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/boutiques": "🏪 Mes ateliers",
     "/profil": "👤 Mon profil",
     "/abonnement": "💳 Mon abonnement",
+    "/aide": "📚 Centre d'aide",
     "/parametres": "⚙️ Paramètres",
     "/parametres/emplacements": "📦 Mes emplacements",
     "/nouveautes": "✨ Nouveautés",
@@ -140,6 +142,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/statistiques": "Stats",
     "/equipe": "Techniciens",
     "/abonnement": "Forfait",
+    "/aide": "Aide",
     "/profil": "Profil",
     "/parametres": "Paramètres",
     "/admin": "Espace Admin",
@@ -329,6 +332,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           onLogoutNow={logoutNow}
         />
       ) : null}
+      <HelpButton />
       <WhatsNewModal
         open={whatsNewOpen}
         enabled={Boolean(user && !isAuthRoute)}

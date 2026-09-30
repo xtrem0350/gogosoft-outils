@@ -1,5 +1,6 @@
 import {
   ChevronDown,
+  CircleHelp,
   FolderTree,
   History,
   Home,
@@ -75,6 +76,7 @@ const navigationGroups: NavigationGroup[] = [
       { label: "Catégories", to: "/categories", icon: FolderTree },
       { label: "Mes ateliers", to: "/boutiques", icon: Store },
       { label: "Équipe", to: "/equipe", icon: UserCog },
+      { label: "Aide", to: "/aide", icon: CircleHelp },
       { label: "Profil", to: "/profil", icon: User },
       { label: "Forfait", to: "/abonnement", icon: Settings },
       { label: "Paramètres", to: "/parametres", icon: Settings },
