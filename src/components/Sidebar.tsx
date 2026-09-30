@@ -1,4 +1,6 @@
 import {
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   CircleHelp,
   FolderTree,
@@ -89,6 +91,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`)),
   );
@@ -129,15 +132,23 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               setOpenGroups((current) => ({ ...current, [groupIndex]: isOpen }))
             }
           >
-            <CollapsibleTrigger className="group flex h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <CollapsibleTrigger
+              title={label}
+              className={cn(
+                "group flex h-10 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                collapsed && "justify-center px-0",
+              )}
+            >
               <GroupIcon
                 className={cn(
                   "size-4",
                   activeGroup === groupIndex ? "text-orange-600" : "text-slate-500",
                 )}
               />
-              <span className="flex-1">{label}</span>
-              <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+              {!collapsed ? <span className="flex-1">{label}</span> : null}
+              {!collapsed ? (
+                <ChevronDown className="size-4 transition-transform group-data-[state=open]:rotate-180" />
+              ) : null}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1">
               {filteredItems.map(({ label: itemLabel, to, icon: Icon }) => (
@@ -145,8 +156,10 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   key={to}
                   to={to}
                   onClick={() => setOpen(false)}
+                  title={itemLabel}
                   className={cn(
                     "flex h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 pl-7 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-sidebar-foreground/65 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
+                    collapsed && "justify-center border-l-0 px-0",
                     pathname === to &&
                       "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
                   )}
@@ -157,8 +170,8 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                       pathname === to ? "text-orange-600" : "text-slate-500",
                     )}
                   />
-                  <span className="min-w-0 flex-1 truncate">{itemLabel}</span>
-                  {pathname === to ? (
+                  {!collapsed ? <span className="min-w-0 flex-1 truncate">{itemLabel}</span> : null}
+                  {!collapsed && pathname === to ? (
                     <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" />
                   ) : null}
                 </Link>
@@ -174,10 +187,15 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <button
       type="button"
       onClick={() => void handleSignOut()}
-      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      aria-label="Déconnexion"
+      title="Déconnexion"
+      className={cn(
+        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-sidebar-foreground/65 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        collapsed && "justify-center px-0",
+      )}
     >
       <LogOut className="size-4" />
-      Déconnexion
+      {!collapsed ? "Déconnexion" : null}
     </button>
   );
 
@@ -185,15 +203,29 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <>
       <aside
         className={cn(
-          "hidden h-screen w-[260px] shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground lg:flex",
+          "hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar py-5 text-sidebar-foreground transition-[width] duration-200 lg:flex",
+          collapsed ? "w-[68px] px-2" : "w-[260px] px-4",
         )}
       >
-        <div className="mb-5 flex shrink-0 items-center justify-between gap-2 px-2">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
-            Espace de travail
-          </p>
+        <div className={cn("mb-5 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between px-2")}>
+          {!collapsed ? (
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
+              Espace de travail
+            </p>
+          ) : null}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={collapsed ? "Afficher la barre latérale" : "Masquer la barre latérale"}
+            title={collapsed ? "Afficher la barre latérale" : "Masquer la barre latérale"}
+            onClick={() => setCollapsed((value) => !value)}
+            className="size-8 shrink-0 text-sidebar-foreground/70 hover:bg-sidebar-accent"
+          >
+            {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
+          </Button>
         </div>
-        <div className="relative mb-4 shrink-0">
+        {!collapsed ? <div className="relative mb-4 shrink-0">
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -201,7 +233,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             aria-label="Rechercher dans le menu"
             className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
           />
-        </div>
+        </div> : null}
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {links}
         </div>
