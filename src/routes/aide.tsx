@@ -31,7 +31,12 @@ import { useMemo, useState } from "react";
 
 import { PageHero } from "@/components/PageHero";
 import { APP_VERSION } from "@/lib/version";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,7 +111,8 @@ const helpSections: HelpSection[] = [
     id: "interface",
     title: "Comprendre l'interface",
     subtitle: "Naviguer en mode pro",
-    description: "Le header, le sidebar, le UserMenu et le dashboard sont pensés pour gagner du temps.",
+    description:
+      "Le header, le sidebar, le UserMenu et le dashboard sont pensés pour gagner du temps.",
     accent: "bg-blue-100 text-blue-700",
     icon: Palette,
     items: [],
@@ -215,19 +221,23 @@ const helpSections: HelpSection[] = [
 const faqs = [
   {
     question: "L'app fonctionne-t-elle sans internet ?",
-    answer: "Oui, elle reste consultable localement, mais la synchronisation et les données partagées nécessitent une connexion active.",
+    answer:
+      "Oui, elle reste consultable localement, mais la synchronisation et les données partagées nécessitent une connexion active.",
   },
   {
     question: "Puis-je avoir plusieurs ateliers ?",
-    answer: "Oui, GogoSoft est conçu pour gérer plusieurs boutiques ou ateliers depuis un seul compte.",
+    answer:
+      "Oui, GogoSoft est conçu pour gérer plusieurs boutiques ou ateliers depuis un seul compte.",
   },
   {
     question: "Comment bloquer un utilisateur abusif ?",
-    answer: "Contactez le support ou le gestionnaire de compte pour sécuriser l'accès et corriger les droits.",
+    answer:
+      "Contactez le support ou le gestionnaire de compte pour sécuriser l'accès et corriger les droits.",
   },
   {
     question: "Puis-je exporter mes données ?",
-    answer: "Oui, la plupart des exports et vérifications de données passent par les paramètres de votre compte.",
+    answer:
+      "Oui, la plupart des exports et vérifications de données passent par les paramètres de votre compte.",
   },
   {
     question: "Comment ajouter un technicien à mon équipe ?",
@@ -235,19 +245,23 @@ const faqs = [
   },
   {
     question: "Comment changer de forfait ?",
-    answer: "Depuis /abonnement, choisissez votre plan et suivez la mise à jour pour activer votre accès.",
+    answer:
+      "Depuis /abonnement, choisissez votre plan et suivez la mise à jour pour activer votre accès.",
   },
   {
     question: "Que se passe-t-il si mon abonnement expire ?",
-    answer: "Vos données restent stockées, mais l'accès à certaines fonctions peut être limité tant que le forfait est renouvelé.",
+    answer:
+      "Vos données restent stockées, mais l'accès à certaines fonctions peut être limité tant que le forfait est renouvelé.",
   },
   {
     question: "Puis-je utiliser GogoSoft sur mon téléphone ?",
-    answer: "Oui, l'application est responsive et fonctionne bien sur smartphone, tablette et ordinateur.",
+    answer:
+      "Oui, l'application est responsive et fonctionne bien sur smartphone, tablette et ordinateur.",
   },
   {
     question: "Comment contacter un client rapidement ?",
-    answer: "Depuis la fiche client ou la fiche réparation, utilisez le bouton WhatsApp pour envoyer un message direct.",
+    answer:
+      "Depuis la fiche client ou la fiche réparation, utilisez le bouton WhatsApp pour envoyer un message direct.",
   },
   {
     question: "Puis-je vendre des accessoires ?",
@@ -259,19 +273,23 @@ const faqs = [
   },
   {
     question: "Le diagnostic est-il obligatoire ?",
-    answer: "Oui, il est fortement recommandé et souvent exigé pour bien documenter la panne constatée.",
+    answer:
+      "Oui, il est fortement recommandé et souvent exigé pour bien documenter la panne constatée.",
   },
   {
     question: "Comment imprimer une facture ?",
-    answer: "Depuis la fiche ou le module de vente, utilisez l'option PDF ou la génération de document disponible.",
+    answer:
+      "Depuis la fiche ou le module de vente, utilisez l'option PDF ou la génération de document disponible.",
   },
   {
     question: "Puis-je restaurer une fiche supprimée ?",
-    answer: "Une confirmation est demandée avant la suppression, et la restauration directe n'est pas prévue pour éviter les erreurs.",
+    answer:
+      "Une confirmation est demandée avant la suppression, et la restauration directe n'est pas prévue pour éviter les erreurs.",
   },
   {
     question: "Comment changer mon nom affiché ?",
-    answer: "Passez par /profil pour modifier votre nom complet et les informations publicitaires du compte.",
+    answer:
+      "Passez par /profil pour modifier votre nom complet et les informations publicitaires du compte.",
   },
 ] as const;
 
@@ -331,7 +349,8 @@ function AidePage() {
         <Alert variant="destructive" className="border-amber-200 bg-amber-50 text-amber-900">
           <AlertCircle className="size-4" />
           <AlertDescription>
-            Aucun résultat pour "{searchQuery}". Contactez le support pour obtenir une réponse rapide.
+            Aucun résultat pour "{searchQuery}". Contactez le support pour obtenir une réponse
+            rapide.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -366,7 +385,9 @@ function AidePage() {
             return (
               <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className={`flex size-10 items-center justify-center rounded-xl ${section.accent}`}>
+                  <div
+                    className={`flex size-10 items-center justify-center rounded-xl ${section.accent}`}
+                  >
                     <Icon className="size-5" />
                   </div>
                   <div>
@@ -407,7 +428,9 @@ function AidePage() {
                                     </div>
                                     <div>
                                       <h3 className="font-semibold">{step.title}</h3>
-                                      <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+                                      <p className="mt-1 text-sm text-muted-foreground">
+                                        {step.description}
+                                      </p>
                                     </div>
                                     <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-orange-700">
                                       Ouvrir <ArrowRight className="size-4" />
@@ -431,8 +454,14 @@ function AidePage() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>Le header affiche le logo, le nom de l’application, le titre actif et la recherche globale.</p>
-                              <p>Vous pouvez lancer une recherche rapide, vérifier les notifications, créer un nouveau client ou un nouveau document et changer le thème.</p>
+                              <p>
+                                Le header affiche le logo, le nom de l’application, le titre actif
+                                et la recherche globale.
+                              </p>
+                              <p>
+                                Vous pouvez lancer une recherche rapide, vérifier les notifications,
+                                créer un nouveau client ou un nouveau document et changer le thème.
+                              </p>
                             </CardContent>
                           </Card>
 
@@ -443,8 +472,15 @@ function AidePage() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>Le sidebar regroupe les fonctions essentielles par famille : accueil, téléphone, ordinateur, consommables, ventes, clients et compte.</p>
-                              <p>Chaque groupe aide à retrouver rapidement l’outil dont vous avez besoin.</p>
+                              <p>
+                                Le sidebar regroupe les fonctions essentielles par famille :
+                                accueil, téléphone, ordinateur, consommables, ventes, clients et
+                                compte.
+                              </p>
+                              <p>
+                                Chaque groupe aide à retrouver rapidement l’outil dont vous avez
+                                besoin.
+                              </p>
                             </CardContent>
                           </Card>
                         </div>
@@ -457,7 +493,10 @@ function AidePage() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>À partir du menu avatar, accédez à votre profil, aux paramètres, à l’aide, aux nouveautés et à la déconnexion.</p>
+                              <p>
+                                À partir du menu avatar, accédez à votre profil, aux paramètres, à
+                                l’aide, aux nouveautés et à la déconnexion.
+                              </p>
                               <p>Le super admin voit aussi l’espace admin dédié.</p>
                             </CardContent>
                           </Card>
@@ -469,7 +508,10 @@ function AidePage() {
                               </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>Le dashboard centralise votre activité, vos statistiques et les alertes intelligentes sur les stocks et les réparations.</p>
+                              <p>
+                                Le dashboard centralise votre activité, vos statistiques et les
+                                alertes intelligentes sur les stocks et les réparations.
+                              </p>
                               <p>Il sert de point de départ pour toute la journée de travail.</p>
                             </CardContent>
                           </Card>
@@ -499,7 +541,8 @@ function AidePage() {
                         <Alert className="border-orange-200 bg-orange-50">
                           <BadgeCheck className="size-4 text-orange-700" />
                           <AlertDescription>
-                            Le suivi de réparation passe par la timeline, les événements de statut et le bouton WhatsApp pour informer le client.
+                            Le suivi de réparation passe par la timeline, les événements de statut
+                            et le bouton WhatsApp pour informer le client.
                           </AlertDescription>
                         </Alert>
                       </div>
@@ -507,42 +550,66 @@ function AidePage() {
 
                     {section.id === "ordinateur" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Pour les PC, utilisez le même workflow que les téléphones en adaptant les modèles et pannes typiques :</p>
+                        <p>
+                          Pour les PC, utilisez le même workflow que les téléphones en adaptant les
+                          modèles et pannes typiques :
+                        </p>
                         <ul className="grid gap-2 pl-5 list-disc">
                           <li>Modèles populaires : HP, Dell, Lenovo, Asus, Acer et MacBook.</li>
-                          <li>Pannes fréquentes : écran, clavier, batterie, OS, RAM ou disque SSD.</li>
-                          <li>Spécificités : processeur, mémoire RAM, version OS et composants de remplacement.</li>
+                          <li>
+                            Pannes fréquentes : écran, clavier, batterie, OS, RAM ou disque SSD.
+                          </li>
+                          <li>
+                            Spécificités : processeur, mémoire RAM, version OS et composants de
+                            remplacement.
+                          </li>
                         </ul>
                       </div>
                     ) : null}
 
                     {section.id === "consommables" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Le module stock permet d’ajouter des pièces, batteries, écrans et câbles, puis d’alerter à partir d’un seuil.</p>
+                        <p>
+                          Le module stock permet d’ajouter des pièces, batteries, écrans et câbles,
+                          puis d’alerter à partir d’un seuil.
+                        </p>
                         <div className="grid gap-3 md:grid-cols-3">
-                          {["Suivre les entrées", "Suivre les sorties", "Réapprovisionner"].map((label) => (
-                            <div key={label} className="rounded-xl border p-3 text-center font-medium text-foreground">
-                              {label}
-                            </div>
-                          ))}
+                          {["Suivre les entrées", "Suivre les sorties", "Réapprovisionner"].map(
+                            (label) => (
+                              <div
+                                key={label}
+                                className="rounded-xl border p-3 text-center font-medium text-foreground"
+                              >
+                                {label}
+                              </div>
+                            ),
+                          )}
                         </div>
                       </div>
                     ) : null}
 
                     {section.id === "ventes" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Pour créer une vente, ouvrez le module Ventes, choisissez le type de produit, définissez le prix, ajoutez une photo et validez avec le bon mode de paiement.</p>
+                        <p>
+                          Pour créer une vente, ouvrez le module Ventes, choisissez le type de
+                          produit, définissez le prix, ajoutez une photo et validez avec le bon mode
+                          de paiement.
+                        </p>
                         <div className="grid gap-3 md:grid-cols-2">
                           <Card className="border-dashed">
                             <CardContent className="p-4">
                               <p className="font-semibold text-foreground">Nouvelle vente</p>
-                              <p className="mt-1">Produit, quantité, prix, paiement et validation.</p>
+                              <p className="mt-1">
+                                Produit, quantité, prix, paiement et validation.
+                              </p>
                             </CardContent>
                           </Card>
                           <Card className="border-dashed">
                             <CardContent className="p-4">
                               <p className="font-semibold text-foreground">Suivi des commandes</p>
-                              <p className="mt-1">Commandes à préparer, livraisons prêtes et ventes livrées.</p>
+                              <p className="mt-1">
+                                Commandes à préparer, livraisons prêtes et ventes livrées.
+                              </p>
                             </CardContent>
                           </Card>
                         </div>
@@ -551,7 +618,10 @@ function AidePage() {
 
                     {section.id === "clients" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Un client bien géré définit la qualité de la relation. Gardez son identité, son WhatsApp, son historique d’achats et de réparations.</p>
+                        <p>
+                          Un client bien géré définit la qualité de la relation. Gardez son
+                          identité, son WhatsApp, son historique d’achats et de réparations.
+                        </p>
                         <ul className="grid gap-2 pl-5 list-disc">
                           <li>Ajouter un client depuis la liste ou le formulaire dédié.</li>
                           <li>Recherche rapide par nom, WhatsApp ou historique.</li>
@@ -562,7 +632,10 @@ function AidePage() {
 
                     {section.id === "emplacements" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Les emplacements permettent de suivre le stockage physique d’un atelier. Pour chaque réparation, choisissez un carton ou un tiroir dédié.</p>
+                        <p>
+                          Les emplacements permettent de suivre le stockage physique d’un atelier.
+                          Pour chaque réparation, choisissez un carton ou un tiroir dédié.
+                        </p>
                         <ul className="grid gap-2 pl-5 list-disc">
                           <li>Créer des emplacements : C1, Tiroir-A, Carton-1.</li>
                           <li>Définir le type : carton, étagère, tiroir, sac, autre.</li>
@@ -573,17 +646,26 @@ function AidePage() {
 
                     {section.id === "ateliers" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Le sélectionneur d’atelier en haut de votre interface permet de passer d’un site à un autre et d’adapter les statistiques et les opérations.</p>
+                        <p>
+                          Le sélectionneur d’atelier en haut de votre interface permet de passer
+                          d’un site à un autre et d’adapter les statistiques et les opérations.
+                        </p>
                         <div className="rounded-xl border p-4">
                           <p className="font-medium text-foreground">Bonnes pratiques</p>
-                          <p className="mt-2">Gardez un atelier par localité, attribuez les techniciens et comparez les performances pour mieux piloter votre entreprise.</p>
+                          <p className="mt-2">
+                            Gardez un atelier par localité, attribuez les techniciens et comparez
+                            les performances pour mieux piloter votre entreprise.
+                          </p>
                         </div>
                       </div>
                     ) : null}
 
                     {section.id === "forfait" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Le forfait current est visible dans le header, et le système propose un essai gratuit pour tester GogoSoft avant de choisir votre plan.</p>
+                        <p>
+                          Le forfait current est visible dans le header, et le système propose un
+                          essai gratuit pour tester GogoSoft avant de choisir votre plan.
+                        </p>
                         <ul className="grid gap-2 pl-5 list-disc">
                           <li>Essai gratuit : 7 jours.</li>
                           <li>Mensuel : 5 000 FCFA.</li>
@@ -595,11 +677,16 @@ function AidePage() {
 
                     {section.id === "securite" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>Les données de chaque atelier sont séparées. La déconnexion automatique sécurise les sessions inactives.</p>
+                        <p>
+                          Les données de chaque atelier sont séparées. La déconnexion automatique
+                          sécurise les sessions inactives.
+                        </p>
                         <ul className="grid gap-2 pl-5 list-disc">
                           <li>Protection par atelier via les règles de sécurité de la base.</li>
                           <li>Déconnexion automatique après 30 minutes d’inactivité.</li>
-                          <li>Mot de passe et réinitialisation rapides depuis /parametres et /auth.</li>
+                          <li>
+                            Mot de passe et réinitialisation rapides depuis /parametres et /auth.
+                          </li>
                         </ul>
                       </div>
                     ) : null}
@@ -608,8 +695,12 @@ function AidePage() {
                       <Accordion type="single" collapsible className="w-full">
                         {visibleFaqs.map((item, index) => (
                           <AccordionItem key={`${item.question}-${index}`} value={`faq-${index}`}>
-                            <AccordionTrigger className="text-left font-medium">{item.question}</AccordionTrigger>
-                            <AccordionContent className="text-sm text-muted-foreground">{item.answer}</AccordionContent>
+                            <AccordionTrigger className="text-left font-medium">
+                              {item.question}
+                            </AccordionTrigger>
+                            <AccordionContent className="text-sm text-muted-foreground">
+                              {item.answer}
+                            </AccordionContent>
                           </AccordionItem>
                         ))}
                       </Accordion>
@@ -627,7 +718,12 @@ function AidePage() {
                             <p>WhatsApp : +225 XX XX XX XX</p>
                             <p>Email : support@gogosoft.ci</p>
                             <p>Horaires : Lundi au samedi, 8h - 18h</p>
-                            <a href="https://wa.me/225XXXXXXXXX" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 font-medium text-emerald-700">
+                            <a
+                              href="https://wa.me/225XXXXXXXXX"
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 font-medium text-emerald-700"
+                            >
                               Ouvrir WhatsApp <ChevronRight className="size-4" />
                             </a>
                           </CardContent>
@@ -639,8 +735,13 @@ function AidePage() {
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <p>Vérifiez votre connexion, votre atelier actif et votre abonnement.</p>
-                            <p>Préparez le nom du module, l’URL de la page et un message détaillé pour une réponse rapide.</p>
+                            <p>
+                              Vérifiez votre connexion, votre atelier actif et votre abonnement.
+                            </p>
+                            <p>
+                              Préparez le nom du module, l’URL de la page et un message détaillé
+                              pour une réponse rapide.
+                            </p>
                           </CardContent>
                         </Card>
                       </div>
@@ -656,7 +757,10 @@ function AidePage() {
       <footer className="border-t pt-6 text-sm text-muted-foreground">
         <p>Version de l'application : v{APP_VERSION}</p>
         <p className="mt-2">
-          Pour voir toutes les nouveautés : <Link to="/nouveautes" className="text-orange-700 hover:underline">Nouveautés</Link>
+          Pour voir toutes les nouveautés :{" "}
+          <Link to="/nouveautes" className="text-orange-700 hover:underline">
+            Nouveautés
+          </Link>
         </p>
       </footer>
     </div>

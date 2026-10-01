@@ -207,7 +207,12 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           collapsed ? "w-[68px] px-2" : "w-[260px] px-4",
         )}
       >
-        <div className={cn("mb-5 flex shrink-0 items-center gap-2", collapsed ? "justify-center" : "justify-between px-2")}>
+        <div
+          className={cn(
+            "mb-5 flex shrink-0 items-center gap-2",
+            collapsed ? "justify-center" : "justify-between px-2",
+          )}
+        >
           {!collapsed ? (
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
               Espace de travail
@@ -225,15 +230,17 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             {collapsed ? <ChevronRight className="size-4" /> : <ChevronLeft className="size-4" />}
           </Button>
         </div>
-        {!collapsed ? <div className="relative mb-4 shrink-0">
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Rechercher..."
-            aria-label="Rechercher dans le menu"
-            className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
-          />
-        </div> : null}
+        {!collapsed ? (
+          <div className="relative mb-4 shrink-0">
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Rechercher..."
+              aria-label="Rechercher dans le menu"
+              className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
+            />
+          </div>
+        ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {links}
         </div>
