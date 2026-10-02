@@ -45,7 +45,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
-import logo from "@/assets/images/profile.png";
+import headerLogo from "@/assets/images/leprofile.png";
 
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -212,7 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <img
               loading="lazy"
               decoding="async"
-              src={logo}
+              src={headerLogo}
               alt="GogoSoft"
               className="size-10 rounded-xl object-cover"
             />

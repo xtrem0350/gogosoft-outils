@@ -4,7 +4,7 @@ import { ArrowRight, Camera, KeyRound, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
-import profileLogo from "@/assets/images/profile.png";
+import authLogo from "@/assets/images/leprofile.png";
 import { PasswordInput } from "@/components/PasswordInput";
 import { PhoneInput } from "@/components/PhoneInput";
 import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
@@ -245,7 +245,7 @@ function AuthPage() {
                         <img
                           loading="lazy"
                           decoding="async"
-                          src={profileLogo}
+                          src={authLogo}
                           alt="GogoSoft logo"
                           className="size-full object-cover"
                         />
@@ -277,7 +277,7 @@ function AuthPage() {
                       <img
                         loading="lazy"
                         decoding="async"
-                        src={profileLogo}
+                        src={authLogo}
                         alt="GogoSoft logo"
                         className="size-full object-cover"
                       />

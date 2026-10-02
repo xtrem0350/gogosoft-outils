@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import profileLogo from "@/assets/images/profile.png";
+import splashLogo from "@/assets/images/profile.png";
 
 export function SplashScreen() {
   if (typeof window === "undefined") return null;
@@ -9,7 +9,7 @@ export function SplashScreen() {
     <div className="bg-hero-ivoirien flex min-h-screen items-center justify-center px-6">
       <div className="flex w-full max-w-md flex-col items-center text-center text-white">
         <motion.img
-          src={profileLogo}
+          src={splashLogo}
           alt="GogoSoft logo"
           className="h-28 w-28 rounded-2xl object-cover shadow-2xl shadow-blue-500/30"
           animate={{ scale: [1, 1.08, 1], opacity: [0.9, 1, 0.95] }}
