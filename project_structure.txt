@@ -102,6 +102,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 atelier.nouveau.tsx
 │   │   ├── 📄 atelier.index.tsx
 │   │   ├── 📄 atelier.$id.tsx
+│   │   ├── 📄 aide.tsx
 │   │   ├── 📄 admin.tsx
 │   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
@@ -233,6 +234,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 PageBreadcrumb.tsx
 │   │   ├── 📄 InactivityWarningModal.tsx
 │   │   ├── 📄 IconBadge3D.tsx
+│   │   ├── 📄 HelpButton.tsx
 │   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
@@ -245,9 +247,10 @@ Structure du projet (avec glob)
 │   │   └── 📄 ActivityWorkshopPages.tsx
 │   ├── 📁 assets/
 │   │   ├── 📁 images/
-│   │   │   ├── 📄 profile.png
 │   │   │   ├── 📄 profile.ico
-│   │   │   └── 📄 logo.png
+│   │   │   ├── 📄 maphoto.png
+│   │   │   ├── 📄 leprofile.png
+│   │   │   └── 📄 auth.ico
 │   │   └── 📄 images
 │   ├── 📄 vite-env.d.ts
 │   ├── 📄 types
