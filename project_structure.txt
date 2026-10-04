@@ -247,7 +247,6 @@ Structure du projet (avec glob)
 │   │   └── 📄 ActivityWorkshopPages.tsx
 │   ├── 📁 assets/
 │   │   ├── 📁 images/
-│   │   │   ├── 📄 profile.ico
 │   │   │   ├── 📄 maphoto.png
 │   │   │   ├── 📄 leprofile.png
 │   │   │   └── 📄 auth.ico

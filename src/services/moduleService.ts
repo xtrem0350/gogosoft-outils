@@ -1,0 +1,170 @@
+import { supabase } from "@/integrations/supabase/client";
+import { createShop, getUserShops, type Shop } from "@/services/shopService";
+
+const PENDING_SELECTION_KEY = "gogosoft.pendingModuleSelection";
+
+export interface ModulePurchaseSelection {
+  moduleCodes: string[];
+  planCode: string;
+  billingCycle: "monthly" | "annual";
+  priceFcfa: number;
+  domainIncluded: boolean;
+}
+
+export interface ActivityModule {
+  code: string;
+  label: string;
+  icon: string;
+  description: string;
+}
+
+export interface PricingPlan {
+  plan_code: string;
+  plan_label: string;
+  min_modules: number;
+  max_modules: number;
+  monthly_price_fcfa: number;
+  annual_price_fcfa: number;
+}
+
+export async function getAvailableModules(): Promise<ActivityModule[]> {
+  const { data, error } = await supabase
+    .from("activity_modules")
+    .select("code, label, icon, description")
+    .eq("is_active", true)
+    .order("label");
+  if (error) throw error;
+  return (data ?? []) as ActivityModule[];
+}
+
+export async function getShopModules(shopId: string): Promise<string[]> {
+  if (!shopId) return [];
+  const { data, error } = await supabase
+    .from("shop_modules")
+    .select("module_code")
+    .eq("shop_id", shopId);
+  if (error) throw error;
+  return ((data ?? []) as Array<{ module_code: string }>).map((module) => module.module_code);
+}
+
+export async function enableShopModules(shopId: string, moduleCodes: string[]): Promise<void> {
+  const uniqueCodes = [...new Set(moduleCodes)];
+  if (!shopId || uniqueCodes.length === 0) return;
+  const rows = uniqueCodes.map((module_code) => ({ shop_id: shopId, module_code }));
+  const { error } = await supabase
+    .from("shop_modules")
+    .upsert(rows, { onConflict: "shop_id,module_code" });
+  if (error) throw error;
+}
+
+export async function disableShopModule(shopId: string, moduleCode: string): Promise<void> {
+  if (!shopId) return;
+  const { error } = await supabase
+    .from("shop_modules")
+    .delete()
+    .eq("shop_id", shopId)
+    .eq("module_code", moduleCode);
+  if (error) throw error;
+}
+
+export async function getPricingPlans(): Promise<PricingPlan[]> {
+  const { data, error } = await supabase
+    .from("pricing_config")
+    .select("plan_code, plan_label, min_modules, max_modules, monthly_price_fcfa, annual_price_fcfa")
+    .eq("is_active", true)
+    .order("min_modules");
+  if (error) throw error;
+  return (data ?? []) as PricingPlan[];
+}
+
+export async function updatePricing(
+  planCode: string,
+  monthlyPriceFcfa: number,
+  annualPriceFcfa: number,
+): Promise<void> {
+  if (!Number.isInteger(monthlyPriceFcfa) || monthlyPriceFcfa < 0) {
+    throw new Error("Le prix mensuel doit être un montant entier positif ou nul.");
+  }
+  if (!Number.isInteger(annualPriceFcfa) || annualPriceFcfa < 0) {
+    throw new Error("Le prix annuel doit être un montant entier positif ou nul.");
+  }
+  const { error } = await supabase
+    .from("pricing_config")
+    .update({
+      monthly_price_fcfa: monthlyPriceFcfa,
+      annual_price_fcfa: annualPriceFcfa,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("plan_code", planCode);
+  if (error) throw error;
+}
+
+export function getPlanForModuleCount(
+  plans: PricingPlan[],
+  count: number,
+): PricingPlan | null {
+  return plans.find((plan) => count >= plan.min_modules && count <= plan.max_modules) ?? null;
+}
+
+export function savePendingModuleSelection(selection: ModulePurchaseSelection): void {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(PENDING_SELECTION_KEY, JSON.stringify(selection));
+}
+
+export function getPendingModuleSelection(): ModulePurchaseSelection | null {
+  if (typeof window === "undefined") return null;
+  const stored = window.localStorage.getItem(PENDING_SELECTION_KEY);
+  if (!stored) return null;
+  try {
+    const value: unknown = JSON.parse(stored);
+    if (
+      typeof value === "object" &&
+      value !== null &&
+      "moduleCodes" in value &&
+      Array.isArray(value.moduleCodes) &&
+      value.moduleCodes.every((code) => typeof code === "string") &&
+      "planCode" in value &&
+      typeof value.planCode === "string" &&
+      "billingCycle" in value &&
+      (value.billingCycle === "monthly" || value.billingCycle === "annual") &&
+      "priceFcfa" in value &&
+      typeof value.priceFcfa === "number" &&
+      "domainIncluded" in value &&
+      typeof value.domainIncluded === "boolean"
+    ) {
+      return value as ModulePurchaseSelection;
+    }
+  } catch {
+    window.localStorage.removeItem(PENDING_SELECTION_KEY);
+  }
+  return null;
+}
+
+export function clearPendingModuleSelection(): void {
+  if (typeof window !== "undefined") window.localStorage.removeItem(PENDING_SELECTION_KEY);
+}
+
+export async function applyModuleSelection(
+  userId: string,
+  selection: ModulePurchaseSelection,
+): Promise<Shop> {
+  const shops = await getUserShops();
+  const userShop = shops[0];
+  const shop =
+    userShop ??
+    (await createShop({
+      name: `Atelier ${(await supabase.auth.getUser()).data.user?.email?.split("@")[0] ?? "GogoSoft"}`,
+    }));
+
+  await enableShopModules(shop.id, selection.moduleCodes);
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      selected_modules: [...new Set(selection.moduleCodes)],
+      price_fcfa: selection.priceFcfa,
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw error;
+  return shop;
+}

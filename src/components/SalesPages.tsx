@@ -42,7 +42,13 @@ import {
 } from "@/services/salesService";
 import type { ActivityType } from "@/services/workshopService";
 
-export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "deliveries" }) {
+export function SalesListPage({
+  view = "all",
+  activityType,
+}: {
+  view?: "all" | "orders" | "deliveries";
+  activityType?: "phone" | "computer";
+}) {
   const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [sales, setSales] = useState<Sale[]>([]);
@@ -53,13 +59,13 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
   const [deliveryFilter, setDeliveryFilter] = useState("all");
   useEffect(() => {
     if (shopLoading || !shopId) return;
-    void listSales(shopId)
+    void listSales(shopId, activityType)
       .then(setSales)
       .catch((reason: unknown) => {
         setError(reason instanceof Error ? reason.message : "Chargement impossible.");
       })
       .finally(() => setLoading(false));
-  }, [shopId, shopLoading]);
+  }, [activityType, shopId, shopLoading]);
   const scopedSales = sales.filter((sale) =>
     view === "orders"
       ? sale.delivery_status !== "delivered"
@@ -79,7 +85,14 @@ export function SalesListPage({ view = "all" }: { view?: "all" | "orders" | "del
   });
   const isOrders = view === "orders";
   const isDeliveries = view === "deliveries";
-  const title = isOrders ? "Commandes" : isDeliveries ? "Livraisons" : "Ventes";
+  const activityLabel = activityType === "phone" ? "téléphone" : "ordinateur";
+  const title = isOrders
+    ? "Commandes"
+    : isDeliveries
+      ? "Livraisons"
+      : activityType
+        ? `Ventes ${activityLabel}`
+        : "Ventes";
   const subtitle = isOrders
     ? "Suivez les commandes à préparer et à remettre aux clients."
     : isDeliveries

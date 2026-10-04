@@ -31,72 +31,135 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useShopModules } from "@/hooks/useShopModules";
 import { signOut } from "@/services/authService";
 
-type NavigationItem = { label: string; to: string; icon: ComponentType<{ className?: string }> };
+type NavigationItem = {
+  label: string;
+  to: string;
+  icon: ComponentType<{ className?: string }>;
+  search?: { activityType: "phone" | "computer" };
+};
 type NavigationGroup = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   items: NavigationItem[];
 };
 
-const navigationGroups: NavigationGroup[] = [
-  {
-    label: "ACCUEIL",
-    icon: Home,
-    items: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
-  },
-  {
-    label: "MON ACTIVITÉ",
-    icon: Wrench,
-    items: [
-      { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
-      { label: "Nouvelle fiche téléphone", to: "/phone/atelier/nouveau", icon: PlusCircle },
-      { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
-      { label: "Historique", to: "/phone/historique", icon: History },
-      { label: "Fiches ordinateur", to: "/computer/atelier", icon: Laptop },
-      { label: "Nouvelle fiche ordinateur", to: "/computer/atelier/nouveau", icon: PlusCircle },
-      { label: "Carnet d'expérience", to: "/computer/carnet", icon: History },
-      { label: "Historique", to: "/computer/historique", icon: History },
-      { label: "Stock", to: "/consumable/stock", icon: Package },
-      { label: "Nouveau produit", to: "/consumable/stock/nouveau", icon: PlusCircle },
-      { label: "Historique", to: "/consumable/historique", icon: History },
-      { label: "Toutes les ventes", to: "/sales", icon: ShoppingCart },
-      { label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle },
-      { label: "Commandes", to: "/sales/commandes", icon: Package },
-      { label: "Livraisons", to: "/sales/livraisons", icon: History },
-      { label: "🗄️ Plan de l'atelier", to: "/atelier/plan", icon: Package },
-    ],
-  },
-  {
-    label: "MON COMPTE",
-    icon: Settings,
-    items: [
-      { label: "Clients", to: "/clients", icon: Users },
-      { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
-      { label: "Outils", to: "/outils", icon: Wrench },
-      { label: "Catégories", to: "/categories", icon: FolderTree },
-      { label: "Mes ateliers", to: "/boutiques", icon: Store },
-      { label: "Équipe", to: "/equipe", icon: UserCog },
-      { label: "Aide", to: "/aide", icon: CircleHelp },
-      { label: "Profil", to: "/profil", icon: User },
-      { label: "Forfait", to: "/abonnement", icon: Settings },
-      { label: "Paramètres", to: "/parametres", icon: Settings },
-    ],
-  },
-];
+function getNavigationGroups(modules: string[]): NavigationGroup[] {
+  const groups: NavigationGroup[] = [
+    {
+      label: "ACCUEIL",
+      icon: Home,
+      items: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
+    },
+  ];
+
+  if (modules.includes("phone_repair")) {
+    groups.push({
+      label: "TÉLÉPHONE",
+      icon: Smartphone,
+      items: [
+        { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
+        { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
+        { label: "Plan de l'atelier", to: "/atelier/plan", icon: Package },
+        { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
+        { label: "Historique", to: "/phone/historique", icon: History },
+      ],
+    });
+  }
+
+  if (modules.includes("computer_repair")) {
+    groups.push({
+      label: "ORDINATEUR",
+      icon: Laptop,
+      items: [
+        { label: "Fiches", to: "/computer/atelier", icon: Laptop },
+        { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+        { label: "Carnet d'expérience", to: "/computer/carnet", icon: History },
+        { label: "Historique", to: "/computer/historique", icon: History },
+      ],
+    });
+  }
+
+  for (const [code, label, activityType] of [
+    ["phone_sale", "VENTE MOBILE", "phone"],
+    ["computer_sale", "VENTE PC", "computer"],
+  ] as const) {
+    if (!modules.includes(code)) continue;
+    groups.push({
+      label,
+      icon: ShoppingCart,
+      items: [
+        { label: "Mes ventes", to: "/sales", icon: ShoppingCart, search: { activityType } },
+        { label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle },
+        { label: "Commandes", to: "/sales/commandes", icon: Package },
+      ],
+    });
+  }
+
+  if (modules.includes("consumable")) {
+    groups.push({
+      label: "CONSOMMABLES",
+      icon: Package,
+      items: [
+        { label: "Stock", to: "/consumable/stock", icon: Package },
+        { label: "Nouveau produit", to: "/consumable/stock/nouveau", icon: PlusCircle },
+        { label: "Historique", to: "/consumable/historique", icon: History },
+      ],
+    });
+  }
+
+  groups.push(
+    {
+      label: "CLIENTS",
+      icon: Users,
+      items: [
+        { label: "Liste", to: "/clients", icon: Users },
+        { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
+      ],
+    },
+    {
+      label: "MON COMPTE",
+      icon: Settings,
+      items: [
+        { label: "Outils", to: "/outils", icon: Wrench },
+        { label: "Catégories", to: "/categories", icon: FolderTree },
+        { label: "Mes ateliers", to: "/boutiques", icon: Store },
+        { label: "Équipe", to: "/equipe", icon: UserCog },
+        { label: "Aide", to: "/aide", icon: CircleHelp },
+        { label: "Profil", to: "/profil", icon: User },
+        { label: "Forfait", to: "/abonnement", icon: Settings },
+        { label: "Mes modules", to: "/parametres", icon: Package },
+        { label: "Paramètres", to: "/parametres", icon: Settings },
+      ],
+    },
+  );
+
+  return groups;
+}
 
 /** Navigation principale de l'espace de travail. */
 export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const routeSearch = useRouterState({ select: (state) => state.location.search });
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const { modules, loading: modulesLoading } = useShopModules();
+  const navigationGroups = getNavigationGroups(modules);
   const activeGroup = navigationGroups.findIndex((group) =>
-    group.items.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`)),
+    group.items.some(
+      (item) =>
+        (pathname === item.to || pathname.startsWith(`${item.to}/`)) &&
+        (!item.search ||
+          (routeSearch as { activityType?: string }).activityType === item.search.activityType),
+    ),
   );
   const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({ [activeGroup]: true });
   const [search, setSearch] = useState("");
+
+  if (modulesLoading) return null;
 
   useEffect(() => {
     if (activeGroup < 0) return;
@@ -151,10 +214,11 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               ) : null}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1">
-              {filteredItems.map(({ label: itemLabel, to, icon: Icon }) => (
+              {filteredItems.map(({ label: itemLabel, to, icon: Icon, search: itemSearch }) => (
                 <Link
                   key={to}
                   to={to}
+                  search={itemSearch ?? {}}
                   onClick={() => setOpen(false)}
                   title={itemLabel}
                   className={cn(
