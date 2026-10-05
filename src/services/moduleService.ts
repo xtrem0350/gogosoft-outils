@@ -106,6 +106,33 @@ export function getPlanForModuleCount(
   return plans.find((plan) => count >= plan.min_modules && count <= plan.max_modules) ?? null;
 }
 
+export async function syncSubscriptionModules(moduleCodes: string[]): Promise<void> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Utilisateur non authentifié.");
+
+  const selectedModules = [...new Set(moduleCodes)];
+  const [plans, { data: subscription, error: subscriptionError }] = await Promise.all([
+    getPricingPlans(),
+    supabase.from("subscriptions").select("plan").eq("user_id", userId).maybeSingle(),
+  ]);
+  if (subscriptionError) throw subscriptionError;
+
+  const plan = getPlanForModuleCount(plans, selectedModules.length);
+  const annual = subscription?.plan === "annuel";
+  const priceFcfa = plan
+    ? annual
+      ? plan.annual_price_fcfa
+      : plan.monthly_price_fcfa
+    : 0;
+  const { error } = await supabase.from("subscriptions").upsert(
+    { user_id: userId, selected_modules: selectedModules, price_fcfa: priceFcfa },
+    { onConflict: "user_id" },
+  );
+  if (error) throw error;
+}
+
 export function savePendingModuleSelection(selection: ModulePurchaseSelection): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(PENDING_SELECTION_KEY, JSON.stringify(selection));
@@ -162,6 +189,11 @@ export async function applyModuleSelection(
       user_id: userId,
       selected_modules: [...new Set(selection.moduleCodes)],
       price_fcfa: selection.priceFcfa,
+      plan: selection.billingCycle === "annual" ? "annuel" : "mensuel",
+      status: "active",
+      expires_at: new Date(
+        Date.now() + (selection.billingCycle === "annual" ? 365 : 30) * 24 * 60 * 60 * 1000,
+      ).toISOString(),
     },
     { onConflict: "user_id" },
   );

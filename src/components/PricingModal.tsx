@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Check, Globe2, Laptop, Monitor, Package, ShoppingCart, Smartphone } from "lucide-react";
+import { Laptop, Monitor, Package, ShoppingCart, Smartphone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,8 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   getAvailableModules,
   getPlanForModuleCount,
@@ -51,8 +49,6 @@ export function PricingModal({
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [domainIncluded, setDomainIncluded] = useState(false);
-  const [domainName, setDomainName] = useState("");
-  const [domainMessage, setDomainMessage] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -86,22 +82,13 @@ export function PricingModal({
   const selectedPrice = selectedPricingPlan
     ? billingCycle === "annual"
       ? selectedPricingPlan.annual_price_fcfa
-      : selectedPricingPlan.monthly_price_fcfa + (domainIncluded ? 10000 : 0)
+      : selectedPricingPlan.monthly_price_fcfa
     : 0;
 
   function toggleModule(code: string, checked: boolean) {
     setSelectedModules((current) =>
       checked ? [...new Set([...current, code])] : current.filter((item) => item !== code),
     );
-  }
-
-  function verifyDomain() {
-    const normalizedName = domainName.trim().toLowerCase();
-    if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(normalizedName)) {
-      setDomainMessage("Saisissez un nom valide, sans espace ni ponctuation.");
-      return;
-    }
-    setDomainMessage("Format valide. La disponibilité sera confirmée lors de l'activation.");
   }
 
   function requestOpenChange(nextOpen: boolean) {
@@ -129,9 +116,11 @@ export function PricingModal({
             Étape {step}/2 : {step === 1 ? "Que faites-vous ?" : "Votre forfait"}
           </DialogTitle>
           <DialogDescription>
-            {isBlocking
-              ? "Votre abonnement a expiré. Choisissez un forfait pour continuer."
-              : "Choisissez les activités de votre boutique et le rythme de facturation."}
+            {step === 1
+              ? "Cochez tout ce qui s'applique à votre activité."
+              : isBlocking
+                ? "Votre abonnement a expiré. Choisissez un forfait pour continuer."
+                : "Choisissez le rythme de facturation adapté à votre activité."}
           </DialogDescription>
         </DialogHeader>
 
@@ -170,12 +159,18 @@ export function PricingModal({
                     </label>
                   );
                 })}
+                <p className="col-span-full text-sm text-muted-foreground">
+                  {selectedModules.length} module(s) sélectionné(s)
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {selectedPricingPlan ? (
                   <section className="rounded-md border p-4">
-                    <p className="font-semibold">Forfait {selectedPricingPlan.plan_label}</p>
+                    <p className="font-semibold">
+                      Votre plan : {selectedPricingPlan.plan_label} (
+                      {selectedPricingPlan.min_modules}-{selectedPricingPlan.max_modules} modules)
+                    </p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {selectedModules.length} module(s) sélectionné(s)
                     </p>
@@ -207,8 +202,13 @@ export function PricingModal({
                               {price.toLocaleString("fr-FR")} FCFA
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              {cycle === "monthly" ? "/ mois" : "/ an · .com inclus"}
+                              {cycle === "monthly" ? "/ mois" : "/ an"}
                             </span>
+                            {cycle === "annual" ? (
+                              <span className="mt-1 text-xs font-medium text-orange-700">
+                                Économisez 2 mois · .com inclus
+                              </span>
+                            ) : null}
                           </button>
                         );
                       })}
@@ -221,51 +221,6 @@ export function PricingModal({
                 )}
 
                 <section className="space-y-3 rounded-md border p-4">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="domain-included"
-                      checked={billingCycle === "annual" || domainIncluded}
-                      disabled={billingCycle === "annual"}
-                      onCheckedChange={(checked) => setDomainIncluded(checked === true)}
-                      className="mt-0.5"
-                    />
-                    <Label htmlFor="domain-included" className="leading-5">
-                      {billingCycle === "annual"
-                        ? "Nom de domaine .com inclus dans la formule annuelle"
-                        : "Ajouter un nom de domaine .com (+ 10 000 FCFA/an)"}
-                    </Label>
-                  </div>
-                  {domainIncluded && billingCycle === "monthly" ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="domain-name">Nom de domaine</Label>
-                      <div className="flex flex-wrap gap-2">
-                        <div className="relative min-w-0 flex-1 basis-48">
-                          <Globe2 className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            id="domain-name"
-                            value={domainName}
-                            onChange={(event) => {
-                              setDomainName(event.target.value);
-                              setDomainMessage("");
-                            }}
-                            placeholder="ex: monatelier-reparation"
-                            className="pr-14 pl-9"
-                          />
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                            .com
-                          </span>
-                        </div>
-                        <Button type="button" variant="outline" onClick={verifyDomain}>
-                          Vérifier la disponibilité
-                        </Button>
-                      </div>
-                      {domainMessage ? (
-                        <p aria-live="polite" className="text-xs text-muted-foreground">
-                          {domainMessage}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : null}
                   <p className="border-t pt-3 text-lg font-bold">
                     Total : {selectedPrice.toLocaleString("fr-FR")} FCFA
                   </p>
@@ -281,7 +236,7 @@ export function PricingModal({
               ) : null}
               {step === 2 ? (
                 <Button type="button" variant="outline" onClick={() => setStep(1)}>
-                  Modifier mes modules
+                  Retour
                 </Button>
               ) : null}
               <Button

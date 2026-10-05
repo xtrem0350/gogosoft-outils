@@ -24,8 +24,8 @@ function useCurrentShopState() {
   const loadingRef = useRef(false);
   const loadedUserRef = useRef<string | null | undefined>(undefined);
 
-  const refresh = useCallback(async (sessionUserId?: string) => {
-    if (loadedUserRef.current === (sessionUserId ?? null) && !loadingRef.current) return;
+  const refresh = useCallback(async (sessionUserId?: string, force = false) => {
+    if (!force && loadedUserRef.current === (sessionUserId ?? null) && !loadingRef.current) return;
     if (loadingRef.current) return;
     loadingRef.current = true;
     setLoading(true);

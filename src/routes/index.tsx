@@ -6,6 +6,7 @@ import {
   ClipboardList,
   CreditCard,
   Laptop,
+  Package,
   Smartphone,
   ShoppingCart,
   UserPlus,
@@ -23,10 +24,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useShopModules } from "@/hooks/useShopModules";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
+import {
+  applyModuleSelection,
+  savePendingModuleSelection,
+  type ModulePurchaseSelection,
+} from "@/services/moduleService";
 import { getEvents, getTickets, type WorkshopEvent } from "@/services/workshopService";
 import type { WorkshopTicket } from "@/types/database";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -68,7 +76,8 @@ function formatRelativeTime(value: string | null) {
 function Index() {
   const navigate = useNavigate();
   const { profile, user, loading: authLoading } = useAuth();
-  const { shop, shopId, loading: shopLoading } = useCurrentShop();
+  const { shop, shopId, loading: shopLoading, refresh: refreshShop } = useCurrentShop();
+  const { modules, hasModule, loading: modulesLoading, refresh: refreshModules } = useShopModules();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
   const [pricingOpen, setPricingOpen] = useState(false);
 
@@ -165,6 +174,78 @@ function Index() {
     currency: "XOF",
     maximumFractionDigits: 0,
   });
+  const quickActions = [
+    ...(hasModule("phone_repair")
+      ? [
+          {
+            to: "/phone/atelier/nouveau",
+            icon: Smartphone,
+            label: "Nouvelle réparation téléphone",
+            description: "Créer une fiche téléphone",
+            color: "orange" as const,
+          },
+        ]
+      : []),
+    ...(hasModule("computer_repair")
+      ? [
+          {
+            to: "/computer/atelier/nouveau",
+            icon: Laptop,
+            label: "Nouvelle réparation PC",
+            description: "Prendre en charge un ordinateur",
+            color: "green" as const,
+          },
+        ]
+      : []),
+    ...(hasModule("phone_sale") || hasModule("computer_sale")
+      ? [
+          {
+            to: "/sales/nouveau",
+            icon: ShoppingCart,
+            label: "Nouvelle vente",
+            description: "Enregistrer un produit vendu",
+            color: "green" as const,
+          },
+        ]
+      : []),
+    ...(hasModule("consumable")
+      ? [
+          {
+            to: "/consumable/stock/nouveau",
+            icon: Package,
+            label: "Ajouter au stock",
+            description: "Enregistrer une pièce ou un accessoire",
+            color: "orange" as const,
+          },
+        ]
+      : []),
+    {
+      to: "/clients/nouveau",
+      icon: UserPlus,
+      label: "Nouveau client",
+      description: "Ajouter à votre carnet",
+      color: "orange" as const,
+    },
+  ];
+
+  async function handlePricingSelection(selection: ModulePurchaseSelection) {
+    if (!user) {
+      savePendingModuleSelection(selection);
+      setPricingOpen(false);
+      await navigate({ to: "/auth" });
+      return;
+    }
+    try {
+      const selectedShop = await applyModuleSelection(user.id, selection);
+      await refreshShop(user.id, true);
+      if (shopId === selectedShop.id) await refreshModules();
+      toast.success("Votre forfait a été activé !");
+      setPricingOpen(false);
+      await navigate({ to: "/" });
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Activation du forfait impossible.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
@@ -172,7 +253,7 @@ function Index() {
         open={pricingOpen}
         onOpenChange={setPricingOpen}
         isBlocking={subscriptionExpired}
-        onCreateAccount={() => void navigate({ to: user ? "/abonnement" : "/auth" })}
+        onCreateAccount={(selection) => void handlePricingSelection(selection)}
       />
       <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
         <div className="relative flex flex-wrap items-center justify-between gap-6">
@@ -221,59 +302,42 @@ function Index() {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        {[
-          {
-            to: "/phone/atelier/nouveau",
-            icon: Smartphone,
-            label: "Nouvelle réparation",
-            description: "Créer une fiche téléphone",
-            color: "orange" as const,
-          },
-          {
-            to: "/computer/atelier/nouveau",
-            icon: Laptop,
-            label: "Réparation PC",
-            description: "Prendre en charge un ordinateur",
-            color: "green" as const,
-          },
-          {
-            to: "/clients/nouveau",
-            icon: UserPlus,
-            label: "Nouveau client",
-            description: "Ajouter à votre carnet",
-            color: "orange" as const,
-          },
-          {
-            to: "/sales/nouveau",
-            icon: ShoppingCart,
-            label: "Nouvelle vente",
-            description: "Enregistrer un produit vendu",
-            color: "green" as const,
-          },
-        ].map(({ to, icon, label, description, color }) => (
-          <Link key={to} to={to} className="group min-w-0">
-            <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
-              <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
-                <IconBadge3D
-                  icon={icon}
-                  size="md"
-                  color={color}
-                  className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
-                />
-                <div className="min-w-0">
-                  <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">
-                    {label}
-                  </p>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                    {description}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+      {modulesLoading ? (
+        <p className="text-sm text-muted-foreground">Chargement des modules…</p>
+      ) : modules.length === 0 ? (
+        <EmptyState
+          icon={Package}
+          title="Aucun module activé"
+          description="Vous n'avez activé aucun module. Allez dans Paramètres > Mes modules pour en activer."
+          actionLabel="Gérer mes modules"
+          onAction={() => void navigate({ to: "/parametres" })}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {quickActions.map(({ to, icon, label, description, color }) => (
+            <Link key={to} to={to} className="group min-w-0">
+              <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
+                <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
+                  <IconBadge3D
+                    icon={icon}
+                    size="md"
+                    color={color}
+                    className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
+                  />
+                  <div className="min-w-0">
+                    <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">
+                      {label}
+                    </p>
+                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                      {description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatsCard

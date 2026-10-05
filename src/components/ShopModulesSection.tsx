@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { notifyShopModulesChanged } from "@/hooks/useShopModules";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ import {
   getPlanForModuleCount,
   getPricingPlans,
   getShopModules,
+  syncSubscriptionModules,
   type ActivityModule,
   type PricingPlan,
 } from "@/services/moduleService";
@@ -97,7 +99,10 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
     if (!shopId) return;
     try {
       await enableShopModules(shopId, [code]);
-      setEnabled((current) => [...current, code]);
+      const next = [...new Set([...enabled, code])];
+      setEnabled(next);
+      notifyShopModulesChanged(shopId);
+      await syncSubscriptionModules(next);
       setAddOpen(false);
       toast.success("Module ajouté.");
     } catch (reason) {
@@ -109,7 +114,10 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
     if (!shopId) return;
     try {
       await disableShopModule(shopId, code);
-      setEnabled((current) => current.filter((c) => c !== code));
+      const next = enabled.filter((currentCode) => currentCode !== code);
+      setEnabled(next);
+      notifyShopModulesChanged(shopId);
+      await syncSubscriptionModules(next);
       toast.success("Module désactivé.");
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Désactivation impossible.");
@@ -141,6 +149,9 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
         <div>
           <CardTitle>Mes modules</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">
+            Gérez les modules que vous utilisez.
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Forfait actuel :{" "}
             {plan ? (
               <Badge variant="secondary">
@@ -171,6 +182,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
                   <p className="font-medium">{m.label}</p>
                   <p className="text-xs text-muted-foreground">{m.description}</p>
                 </div>
+                <Badge variant="secondary">Actif</Badge>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button size="sm" variant="outline">

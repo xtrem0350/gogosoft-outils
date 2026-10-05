@@ -24,6 +24,11 @@ import {
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { supabase } from "@/integrations/supabase/client";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
+import {
+  applyModuleSelection,
+  clearPendingModuleSelection,
+  getPendingModuleSelection,
+} from "@/services/moduleService";
 
 const pseudoSchema = z
   .string()
@@ -105,6 +110,12 @@ function AuthPage() {
           window.sessionStorage.setItem(key, storedSession);
           window.localStorage.removeItem(key);
         }
+      }
+      const pendingSelection = getPendingModuleSelection();
+      if (pendingSelection && sessionData.session?.user.id) {
+        await applyModuleSelection(sessionData.session.user.id, pendingSelection);
+        clearPendingModuleSelection();
+        toast.success("Votre forfait a été activé !");
       }
       if (rememberMe) {
         window.localStorage.setItem("gogosoft.rememberedIdentifier", identifier.trim());
