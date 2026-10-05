@@ -201,7 +201,9 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Ajouter un module</DialogTitle>
-            <DialogDescription>Choisissez une activité à ajouter à votre atelier.</DialogDescription>
+            <DialogDescription>
+              Choisissez une activité à ajouter à votre atelier.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             {available.map((m) => (
