@@ -148,9 +148,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
           <CardTitle>Mes modules</CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Gérez les modules que vous utilisez.
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">Gérez les modules que vous utilisez.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Forfait actuel :{" "}
             {plan ? (

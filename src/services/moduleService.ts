@@ -70,7 +70,9 @@ export async function disableShopModule(shopId: string, moduleCode: string): Pro
 export async function getPricingPlans(): Promise<PricingPlan[]> {
   const { data, error } = await supabase
     .from("pricing_config")
-    .select("plan_code, plan_label, min_modules, max_modules, monthly_price_fcfa, annual_price_fcfa")
+    .select(
+      "plan_code, plan_label, min_modules, max_modules, monthly_price_fcfa, annual_price_fcfa",
+    )
     .eq("is_active", true)
     .order("min_modules");
   if (error) throw error;
@@ -99,10 +101,7 @@ export async function updatePricing(
   if (error) throw error;
 }
 
-export function getPlanForModuleCount(
-  plans: PricingPlan[],
-  count: number,
-): PricingPlan | null {
+export function getPlanForModuleCount(plans: PricingPlan[], count: number): PricingPlan | null {
   return plans.find((plan) => count >= plan.min_modules && count <= plan.max_modules) ?? null;
 }
 
@@ -121,15 +120,13 @@ export async function syncSubscriptionModules(moduleCodes: string[]): Promise<vo
 
   const plan = getPlanForModuleCount(plans, selectedModules.length);
   const annual = subscription?.plan === "annuel";
-  const priceFcfa = plan
-    ? annual
-      ? plan.annual_price_fcfa
-      : plan.monthly_price_fcfa
-    : 0;
-  const { error } = await supabase.from("subscriptions").upsert(
-    { user_id: userId, selected_modules: selectedModules, price_fcfa: priceFcfa },
-    { onConflict: "user_id" },
-  );
+  const priceFcfa = plan ? (annual ? plan.annual_price_fcfa : plan.monthly_price_fcfa) : 0;
+  const { error } = await supabase
+    .from("subscriptions")
+    .upsert(
+      { user_id: userId, selected_modules: selectedModules, price_fcfa: priceFcfa },
+      { onConflict: "user_id" },
+    );
   if (error) throw error;
 }
 

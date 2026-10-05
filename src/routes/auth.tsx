@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import authLogo from "@/assets/images/leprofile.png";
+import { PricingModal } from "@/components/PricingModal";
 import { PasswordInput } from "@/components/PasswordInput";
 import { PhoneInput } from "@/components/PhoneInput";
 import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
@@ -28,6 +29,8 @@ import {
   applyModuleSelection,
   clearPendingModuleSelection,
   getPendingModuleSelection,
+  savePendingModuleSelection,
+  type ModulePurchaseSelection,
 } from "@/services/moduleService";
 
 const pseudoSchema = z
@@ -51,6 +54,7 @@ function AuthPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
+  const [pricingModalOpen, setPricingModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -158,7 +162,16 @@ function AuthPage() {
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
-      toast.success("Compte créé ! Connectez-vous maintenant.");
+      const pricingAlreadyShown = window.localStorage.getItem("gogosoft_pricing_shown");
+      if (pricingAlreadyShown) {
+        setActiveTab("signin");
+        await navigate({ to: "/" });
+        return;
+      }
+
+      window.localStorage.setItem("gogosoft_pricing_shown", "true");
+      setPricingModalOpen(true);
+      toast.success("Compte créé ! Choisissez votre forfait pour commencer.");
       setActiveTab("signin");
       setPassword("");
       setEmail("");
@@ -213,6 +226,13 @@ function AuthPage() {
     }
 
     await submitSignUp();
+  }
+
+  async function handlePricingSelection(selection: ModulePurchaseSelection) {
+    setPricingModalOpen(false);
+    savePendingModuleSelection(selection);
+    setActiveTab("signin");
+    toast.success("Votre sélection a bien été enregistrée. Connectez-vous pour finaliser.");
   }
 
   return (
@@ -470,6 +490,17 @@ function AuthPage() {
           </div>
         </div>
       </div>
+      <PricingModal
+        open={pricingModalOpen}
+        onOpenChange={(nextOpen) => {
+          setPricingModalOpen(nextOpen);
+          if (!nextOpen) {
+            setActiveTab("signin");
+          }
+        }}
+        onCreateAccount={(selection) => void handlePricingSelection(selection)}
+      />
+
       <AlertDialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
