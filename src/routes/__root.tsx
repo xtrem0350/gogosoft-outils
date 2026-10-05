@@ -58,7 +58,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset?: () => void }
       </div>
       <h1 className="mb-2 text-2xl font-bold">Une erreur est survenue</h1>
       <p className="mb-6 max-w-md text-muted-foreground">
-        {(error instanceof Error ? (error instanceof Error ? error.message : "") : undefined) ?? "Une erreur inattendue s'est produite."}
+        {error instanceof Error ? error.message : "Une erreur inattendue s'est produite."}
       </p>
       <div className="flex gap-3">
         <button
