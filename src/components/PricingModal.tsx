@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, Laptop, Monitor, Package, ShoppingCart, Smartphone } from "lucide-react";
 
+import profileLogo from "@/assets/images/leprofile.png";
 import { StepIndicator } from "@/components/StepIndicator";
 import {
   Dialog,
@@ -107,7 +108,7 @@ export function PricingModal({
 
   return (
     <Dialog open={open} onOpenChange={requestOpenChange}>
-      <DialogContent className="max-w-5xl border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
         <DialogTitle className="sr-only">
           {step === 1 ? "Étape 1 : sélection des modules" : "Étape 2 : choix du forfait"}
         </DialogTitle>
@@ -117,7 +118,7 @@ export function PricingModal({
             : "Choisissez le forfait qui correspond à votre activité."}
         </DialogDescription>
 
-        <div className="relative min-h-[640px] w-full overflow-hidden rounded-[28px] shadow-3d">
+        <div className="relative flex max-h-[90vh] min-h-[min(500px,90vh)] w-full flex-col overflow-hidden rounded-[28px] shadow-3d">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
@@ -127,20 +128,25 @@ export function PricingModal({
           />
           <div className="absolute inset-0 bg-gradient-to-br from-orange-900/75 via-black/60 to-green-900/70" />
 
-          <div className="relative z-10 grid min-h-[640px] grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
-            <aside className="hidden flex-col justify-between bg-slate-900/45 p-10 text-white backdrop-blur-sm lg:flex">
+          <div className="relative z-10 grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
+            <aside className="hidden min-h-0 flex-col justify-between gap-6 overflow-y-auto bg-slate-900/45 p-6 text-white backdrop-blur-sm lg:flex">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-4 size-32 overflow-hidden rounded-full border-2 border-white/20 shadow-3d">
+                  <img src={profileLogo} alt="GogoSoft" className="size-full object-cover" />
+                </div>
+                <h2 className="text-2xl font-bold">GogoSoft</h2>
+                <p className="mt-1 text-sm text-white/70">Tools Manager</p>
+              </div>
+
               <div>
-                <p className="text-sm font-medium uppercase tracking-[0.24em] text-orange-200/80">
-                  Bienvenue
-                </p>
-                <h2 className="mt-4 text-3xl font-bold leading-tight">GogoSoft</h2>
-                <p className="mt-3 max-w-xs text-white/80">
+                <h3 className="text-xl font-semibold">Bienvenue sur GogoSoft</h3>
+                <p className="mt-2 max-w-xs text-sm text-white/80">
                   Choisissez uniquement les modules dont vous avez besoin. Payez pour ce que vous
                   utilisez.
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
                   "Sans engagement",
                   "7 jours gratuits",
@@ -161,7 +167,7 @@ export function PricingModal({
               </p>
             </aside>
 
-            <section className="flex flex-col bg-white/95 p-6 backdrop-blur-md sm:p-8 lg:p-10">
+            <section className="flex min-h-0 flex-col overflow-hidden bg-white/95 p-4 backdrop-blur-md sm:p-6">
               <div className="mb-6 flex items-center gap-3">
                 <StepIndicator
                   number={1}
@@ -192,7 +198,7 @@ export function PricingModal({
                   </p>
                 </div>
               ) : (
-                <div className="animate-fadeIn flex flex-1 flex-col">
+                <div className="animate-fadeIn min-h-0 flex-1 overflow-y-auto">
                   {step === 1 ? (
                     <>
                       <div className="space-y-1">
@@ -202,7 +208,7 @@ export function PricingModal({
                         </p>
                       </div>
 
-                      <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      <div className="mt-4 grid gap-3 md:grid-cols-2">
                         {availableModules.map((module) => {
                           const Icon = moduleIcons[module.icon as keyof typeof moduleIcons] ?? Package;
                           const checked = selectedModules.includes(module.code);
@@ -259,7 +265,7 @@ export function PricingModal({
                       </div>
 
                       {selectedPricingPlan ? (
-                        <div className="mt-6 space-y-5">
+                        <div className="mt-4 space-y-3">
                           <section className="rounded-2xl border border-orange-200 bg-orange-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">
                               Votre plan
@@ -345,7 +351,7 @@ export function PricingModal({
                 </div>
               )}
 
-              <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-4">
+              <div className="sticky bottom-0 mt-3 flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white/95 pt-3">
                 {step === 2 ? (
                   <button
                     type="button"

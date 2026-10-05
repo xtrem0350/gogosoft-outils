@@ -27,10 +27,12 @@ import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useShopModules } from "@/hooks/useShopModules";
 import { signOut } from "@/services/authService";
 
@@ -164,8 +166,6 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     setOpenGroups({ [activeGroup]: true });
   }, [activeGroup]);
 
-  if (modulesLoading) return null;
-
   async function handleSignOut() {
     const { error } = await signOut();
     if (error) {
@@ -267,21 +267,20 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     <>
       <aside
         className={cn(
-          "hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar py-5 text-sidebar-foreground transition-[width] duration-200 lg:flex",
+          "hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar px-4 py-5 text-sidebar-foreground transition-[width] duration-200 lg:flex",
           collapsed ? "w-[68px] px-2" : "w-[260px] px-4",
         )}
       >
         <div
           className={cn(
-            "mb-5 flex shrink-0 items-center gap-2",
-            collapsed ? "justify-center" : "justify-between px-2",
+            "mb-3 flex shrink-0 items-center justify-between border-b border-sidebar-border px-2 pb-4",
+            collapsed && "flex-col justify-center gap-2 px-0",
           )}
         >
-          {!collapsed ? (
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sidebar-foreground/45">
-              Espace de travail
-            </p>
-          ) : null}
+          <div className="flex min-w-0 items-center gap-2">
+            <AnimatedLogo compact />
+            {!collapsed ? <span className="truncate font-display text-sm font-semibold">GogoSoft</span> : null}
+          </div>
           <Button
             type="button"
             variant="ghost"
@@ -295,18 +294,18 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           </Button>
         </div>
         {!collapsed ? (
-          <div className="relative mb-4 shrink-0">
+          <div className="relative mb-3 shrink-0 border-b border-sidebar-border pb-3">
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher..."
+              placeholder="Rechercher un module..."
               aria-label="Rechercher dans le menu"
               className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
             />
           </div>
         ) : null}
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {links}
+          {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
         </div>
         <div className="mt-4 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
       </aside>
@@ -318,18 +317,21 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             side="left"
             className="flex h-dvh max-h-dvh w-72 flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
           >
-            <SheetTitle className="mb-8 shrink-0">Espace de travail</SheetTitle>
-            <div className="relative mb-4 shrink-0">
+            <div className="mb-3 flex shrink-0 items-center gap-3 border-b border-sidebar-border pb-4">
+              <AnimatedLogo compact />
+              <SheetTitle className="font-display text-sm">GogoSoft</SheetTitle>
+            </div>
+            <div className="relative mb-3 shrink-0 border-b border-sidebar-border pb-3">
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Rechercher..."
+                placeholder="Rechercher un module..."
                 aria-label="Rechercher dans le menu"
                 className="h-9 border-sidebar-border bg-sidebar-accent text-sidebar-foreground placeholder:text-sidebar-foreground/50"
               />
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
-              {links}
+              {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
             </div>
             <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
           </SheetContent>
