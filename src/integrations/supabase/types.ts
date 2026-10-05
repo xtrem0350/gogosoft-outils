@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_modules: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          label: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -135,6 +165,42 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      pricing_config: {
+        Row: {
+          annual_price_fcfa: number
+          id: string
+          is_active: boolean
+          max_modules: number
+          min_modules: number
+          monthly_price_fcfa: number
+          plan_code: string
+          plan_label: string
+          updated_at: string
+        }
+        Insert: {
+          annual_price_fcfa: number
+          id?: string
+          is_active?: boolean
+          max_modules: number
+          min_modules: number
+          monthly_price_fcfa: number
+          plan_code: string
+          plan_label: string
+          updated_at?: string
+        }
+        Update: {
+          annual_price_fcfa?: number
+          id?: string
+          is_active?: boolean
+          max_modules?: number
+          min_modules?: number
+          monthly_price_fcfa?: number
+          plan_code?: string
+          plan_label?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -268,6 +334,42 @@ export type Database = {
           },
         ]
       }
+      shop_modules: {
+        Row: {
+          enabled_at: string
+          id: string
+          module_code: string
+          shop_id: string
+        }
+        Insert: {
+          enabled_at?: string
+          id?: string
+          module_code: string
+          shop_id: string
+        }
+        Update: {
+          enabled_at?: string
+          id?: string
+          module_code?: string
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_modules_module_code_fkey"
+            columns: ["module_code"]
+            isOneToOne: false
+            referencedRelation: "activity_modules"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "shop_modules_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shops: {
         Row: {
           address: string | null
@@ -304,6 +406,8 @@ export type Database = {
           expires_at: string
           id: string
           plan: string
+          price_fcfa: number
+          selected_modules: string[]
           started_at: string
           status: string
           updated_at: string
@@ -314,6 +418,8 @@ export type Database = {
           expires_at?: string
           id?: string
           plan?: string
+          price_fcfa?: number
+          selected_modules?: string[]
           started_at?: string
           status?: string
           updated_at?: string
@@ -324,6 +430,8 @@ export type Database = {
           expires_at?: string
           id?: string
           plan?: string
+          price_fcfa?: number
+          selected_modules?: string[]
           started_at?: string
           status?: string
           updated_at?: string

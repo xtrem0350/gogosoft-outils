@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
+import { ShopModulesSection } from "@/components/ShopModulesSection";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -132,9 +133,10 @@ function ParametresPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full md:grid-cols-4">
+        <TabsList className="grid w-full md:grid-cols-5">
           <TabsTrigger value="profil">Profil</TabsTrigger>
-          <TabsTrigger value="boutique">Boutique</TabsTrigger>
+          <TabsTrigger value="boutique">Atelier</TabsTrigger>
+          <TabsTrigger value="modules">Mes modules</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
           <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
@@ -271,6 +273,10 @@ function ParametresPage() {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="modules" className="mt-6">
+          <ShopModulesSection shopId={shopId} />
         </TabsContent>
 
         <TabsContent value="whatsapp" className="mt-6">

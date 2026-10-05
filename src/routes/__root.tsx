@@ -42,7 +42,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error?: Error; reset?: () => void }) {
+function ErrorComponent({ error, reset }: { error: unknown; reset?: () => void }) {
   console.error("[ErrorBoundary]", error);
   const router = useRouter();
   useEffect(() => {
@@ -58,7 +58,7 @@ function ErrorComponent({ error, reset }: { error?: Error; reset?: () => void })
       </div>
       <h1 className="mb-2 text-2xl font-bold">Une erreur est survenue</h1>
       <p className="mb-6 max-w-md text-muted-foreground">
-        {error?.message ?? "Une erreur inattendue s'est produite."}
+        {error instanceof Error ? error.message : "Une erreur inattendue s'est produite."}
       </p>
       <div className="flex gap-3">
         <button

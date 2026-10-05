@@ -159,12 +159,12 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({ [activeGroup]: true });
   const [search, setSearch] = useState("");
 
-  if (modulesLoading) return null;
-
   useEffect(() => {
     if (activeGroup < 0) return;
     setOpenGroups({ [activeGroup]: true });
   }, [activeGroup]);
+
+  if (modulesLoading) return null;
 
   async function handleSignOut() {
     const { error } = await signOut();
