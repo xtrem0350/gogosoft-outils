@@ -136,6 +136,15 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
     },
+    {
+      label: "MA BOUTIQUE",
+      icon: Store,
+      items: [
+        { label: "Configuration", to: "/admin/boutique", icon: Store },
+        { label: "Produits", to: "/admin/boutique/produits", icon: Package },
+        { label: "Commandes", to: "/admin/boutique/commandes", icon: ShoppingCart },
+      ],
+    },
   );
 
   return groups;

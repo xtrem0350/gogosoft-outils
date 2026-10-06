@@ -25,6 +25,7 @@ import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitiali
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAnnoncesRouteImport } from './routes/admin.annonces'
+import { Route as AdminBoutiqueRouteImport } from './routes/admin.boutique'
 import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
 import { Route as AdminFinancesRouteImport } from './routes/admin.finances'
 import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
@@ -57,6 +58,9 @@ import { Route as SalesCommandesRouteImport } from './routes/sales/commandes'
 import { Route as SalesLivraisonsRouteImport } from './routes/sales/livraisons'
 import { Route as SalesNouveauRouteImport } from './routes/sales/nouveau'
 import { Route as SallesCommandesRouteImport } from './routes/salles/commandes'
+import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
+import { Route as AdminBoutiqueCommandesRouteImport } from './routes/admin.boutique.commandes'
+import { Route as AdminBoutiqueProduitsRouteImport } from './routes/admin.boutique.produits'
 import { Route as AdminModulesIndexRouteImport } from './routes/admin.modules.index'
 import { Route as AdminModulesAjouterRouteImport } from './routes/admin.modules.ajouter'
 import { Route as AdminModulesNouveauRouteImport } from './routes/admin.modules.nouveau'
@@ -73,6 +77,13 @@ import { Route as ConsumableStockNouveauRouteImport } from './routes/consumable/
 import { Route as PhoneAtelierIndexRouteImport } from './routes/phone/atelier/index'
 import { Route as PhoneAtelierIdRouteImport } from './routes/phone/atelier/$id'
 import { Route as PhoneAtelierNouveauRouteImport } from './routes/phone/atelier/nouveau'
+import { Route as ShopSlugCommandeRouteImport } from './routes/shop.$slug.commande'
+import { Route as ShopSlugPanierRouteImport } from './routes/shop.$slug.panier'
+import { Route as AdminBoutiqueCommandesIdRouteImport } from './routes/admin.boutique.commandes.$id'
+import { Route as AdminBoutiqueProduitsIdRouteImport } from './routes/admin.boutique.produits.$id'
+import { Route as AdminBoutiqueProduitsNouveauRouteImport } from './routes/admin.boutique.produits.nouveau'
+import { Route as ShopSlugConfirmationOrderIdRouteImport } from './routes/shop.$slug.confirmation.$orderId'
+import { Route as ShopSlugProduitIdRouteImport } from './routes/shop.$slug.produit.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -152,6 +163,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminAnnoncesRoute = AdminAnnoncesRouteImport.update({
   id: '/annonces',
   path: '/annonces',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminBoutiqueRoute = AdminBoutiqueRouteImport.update({
+  id: '/boutique',
+  path: '/boutique',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminFacturationRoute = AdminFacturationRouteImport.update({
@@ -314,6 +330,21 @@ const SallesCommandesRoute = SallesCommandesRouteImport.update({
   path: '/salles/commandes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBoutiqueCommandesRoute = AdminBoutiqueCommandesRouteImport.update({
+  id: '/commandes',
+  path: '/commandes',
+  getParentRoute: () => AdminBoutiqueRoute,
+} as any)
+const AdminBoutiqueProduitsRoute = AdminBoutiqueProduitsRouteImport.update({
+  id: '/produits',
+  path: '/produits',
+  getParentRoute: () => AdminBoutiqueRoute,
+} as any)
 const AdminModulesIndexRoute = AdminModulesIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -394,6 +425,44 @@ const PhoneAtelierNouveauRoute = PhoneAtelierNouveauRouteImport.update({
   path: '/phone/atelier/nouveau',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ShopSlugCommandeRoute = ShopSlugCommandeRouteImport.update({
+  id: '/commande',
+  path: '/commande',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugPanierRoute = ShopSlugPanierRouteImport.update({
+  id: '/panier',
+  path: '/panier',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const AdminBoutiqueCommandesIdRoute =
+  AdminBoutiqueCommandesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AdminBoutiqueCommandesRoute,
+  } as any)
+const AdminBoutiqueProduitsIdRoute = AdminBoutiqueProduitsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminBoutiqueProduitsRoute,
+} as any)
+const AdminBoutiqueProduitsNouveauRoute =
+  AdminBoutiqueProduitsNouveauRouteImport.update({
+    id: '/nouveau',
+    path: '/nouveau',
+    getParentRoute: () => AdminBoutiqueProduitsRoute,
+  } as any)
+const ShopSlugConfirmationOrderIdRoute =
+  ShopSlugConfirmationOrderIdRouteImport.update({
+    id: '/confirmation/$orderId',
+    path: '/confirmation/$orderId',
+    getParentRoute: () => ShopSlugRoute,
+  } as any)
+const ShopSlugProduitIdRoute = ShopSlugProduitIdRouteImport.update({
+  id: '/produit/$id',
+  path: '/produit/$id',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -411,6 +480,7 @@ export interface FileRoutesByFullPath {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/finances': typeof AdminFinancesRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -438,12 +508,15 @@ export interface FileRoutesByFullPath {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/admin/boutique/commandes': typeof AdminBoutiqueCommandesRouteWithChildren
+  '/admin/boutique/produits': typeof AdminBoutiqueProduitsRouteWithChildren
   '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
   '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
   '/admin/support/faq': typeof AdminSupportFaqRoute
@@ -456,10 +529,17 @@ export interface FileRoutesByFullPath {
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/shop/$slug/commande': typeof ShopSlugCommandeRoute
+  '/shop/$slug/panier': typeof ShopSlugPanierRoute
   '/admin/modules/': typeof AdminModulesIndexRoute
   '/computer/atelier/': typeof ComputerAtelierIndexRoute
   '/consumable/stock/': typeof ConsumableStockIndexRoute
   '/phone/atelier/': typeof PhoneAtelierIndexRoute
+  '/admin/boutique/commandes/$id': typeof AdminBoutiqueCommandesIdRoute
+  '/admin/boutique/produits/$id': typeof AdminBoutiqueProduitsIdRoute
+  '/admin/boutique/produits/nouveau': typeof AdminBoutiqueProduitsNouveauRoute
+  '/shop/$slug/confirmation/$orderId': typeof ShopSlugConfirmationOrderIdRoute
+  '/shop/$slug/produit/$id': typeof ShopSlugProduitIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -476,6 +556,7 @@ export interface FileRoutesByTo {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/finances': typeof AdminFinancesRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -502,12 +583,15 @@ export interface FileRoutesByTo {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
   '/admin': typeof AdminIndexRoute
   '/atelier': typeof AtelierIndexRoute
   '/boutiques': typeof BoutiquesIndexRoute
   '/clients': typeof ClientsIndexRoute
   '/outils': typeof OutilsIndexRoute
   '/sales': typeof SalesIndexRoute
+  '/admin/boutique/commandes': typeof AdminBoutiqueCommandesRouteWithChildren
+  '/admin/boutique/produits': typeof AdminBoutiqueProduitsRouteWithChildren
   '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
   '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
   '/admin/support/faq': typeof AdminSupportFaqRoute
@@ -520,10 +604,17 @@ export interface FileRoutesByTo {
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/shop/$slug/commande': typeof ShopSlugCommandeRoute
+  '/shop/$slug/panier': typeof ShopSlugPanierRoute
   '/admin/modules': typeof AdminModulesIndexRoute
   '/computer/atelier': typeof ComputerAtelierIndexRoute
   '/consumable/stock': typeof ConsumableStockIndexRoute
   '/phone/atelier': typeof PhoneAtelierIndexRoute
+  '/admin/boutique/commandes/$id': typeof AdminBoutiqueCommandesIdRoute
+  '/admin/boutique/produits/$id': typeof AdminBoutiqueProduitsIdRoute
+  '/admin/boutique/produits/nouveau': typeof AdminBoutiqueProduitsNouveauRoute
+  '/shop/$slug/confirmation/$orderId': typeof ShopSlugConfirmationOrderIdRoute
+  '/shop/$slug/produit/$id': typeof ShopSlugProduitIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -542,6 +633,7 @@ export interface FileRoutesById {
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
   '/admin/facturation': typeof AdminFacturationRoute
   '/admin/finances': typeof AdminFinancesRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -569,12 +661,15 @@ export interface FileRoutesById {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
   '/admin/': typeof AdminIndexRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/admin/boutique/commandes': typeof AdminBoutiqueCommandesRouteWithChildren
+  '/admin/boutique/produits': typeof AdminBoutiqueProduitsRouteWithChildren
   '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
   '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
   '/admin/support/faq': typeof AdminSupportFaqRoute
@@ -587,10 +682,17 @@ export interface FileRoutesById {
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/shop/$slug/commande': typeof ShopSlugCommandeRoute
+  '/shop/$slug/panier': typeof ShopSlugPanierRoute
   '/admin/modules/': typeof AdminModulesIndexRoute
   '/computer/atelier/': typeof ComputerAtelierIndexRoute
   '/consumable/stock/': typeof ConsumableStockIndexRoute
   '/phone/atelier/': typeof PhoneAtelierIndexRoute
+  '/admin/boutique/commandes/$id': typeof AdminBoutiqueCommandesIdRoute
+  '/admin/boutique/produits/$id': typeof AdminBoutiqueProduitsIdRoute
+  '/admin/boutique/produits/nouveau': typeof AdminBoutiqueProduitsNouveauRoute
+  '/shop/$slug/confirmation/$orderId': typeof ShopSlugConfirmationOrderIdRoute
+  '/shop/$slug/produit/$id': typeof ShopSlugProduitIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -610,6 +712,7 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/admin/annonces'
+    | '/admin/boutique'
     | '/admin/facturation'
     | '/admin/finances'
     | '/admin/messages'
@@ -637,12 +740,15 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/shop/$slug'
     | '/admin/'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
     | '/sales/'
+    | '/admin/boutique/commandes'
+    | '/admin/boutique/produits'
     | '/admin/modules/ajouter'
     | '/admin/modules/nouveau'
     | '/admin/support/faq'
@@ -655,10 +761,17 @@ export interface FileRouteTypes {
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/shop/$slug/commande'
+    | '/shop/$slug/panier'
     | '/admin/modules/'
     | '/computer/atelier/'
     | '/consumable/stock/'
     | '/phone/atelier/'
+    | '/admin/boutique/commandes/$id'
+    | '/admin/boutique/produits/$id'
+    | '/admin/boutique/produits/nouveau'
+    | '/shop/$slug/confirmation/$orderId'
+    | '/shop/$slug/produit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -675,6 +788,7 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/admin/annonces'
+    | '/admin/boutique'
     | '/admin/facturation'
     | '/admin/finances'
     | '/admin/messages'
@@ -701,12 +815,15 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/shop/$slug'
     | '/admin'
     | '/atelier'
     | '/boutiques'
     | '/clients'
     | '/outils'
     | '/sales'
+    | '/admin/boutique/commandes'
+    | '/admin/boutique/produits'
     | '/admin/modules/ajouter'
     | '/admin/modules/nouveau'
     | '/admin/support/faq'
@@ -719,10 +836,17 @@ export interface FileRouteTypes {
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/shop/$slug/commande'
+    | '/shop/$slug/panier'
     | '/admin/modules'
     | '/computer/atelier'
     | '/consumable/stock'
     | '/phone/atelier'
+    | '/admin/boutique/commandes/$id'
+    | '/admin/boutique/produits/$id'
+    | '/admin/boutique/produits/nouveau'
+    | '/shop/$slug/confirmation/$orderId'
+    | '/shop/$slug/produit/$id'
   id:
     | '__root__'
     | '/'
@@ -740,6 +864,7 @@ export interface FileRouteTypes {
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
     | '/admin/annonces'
+    | '/admin/boutique'
     | '/admin/facturation'
     | '/admin/finances'
     | '/admin/messages'
@@ -767,12 +892,15 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/shop/$slug'
     | '/admin/'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
     | '/sales/'
+    | '/admin/boutique/commandes'
+    | '/admin/boutique/produits'
     | '/admin/modules/ajouter'
     | '/admin/modules/nouveau'
     | '/admin/support/faq'
@@ -785,10 +913,17 @@ export interface FileRouteTypes {
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/shop/$slug/commande'
+    | '/shop/$slug/panier'
     | '/admin/modules/'
     | '/computer/atelier/'
     | '/consumable/stock/'
     | '/phone/atelier/'
+    | '/admin/boutique/commandes/$id'
+    | '/admin/boutique/produits/$id'
+    | '/admin/boutique/produits/nouveau'
+    | '/shop/$slug/confirmation/$orderId'
+    | '/shop/$slug/produit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -823,6 +958,7 @@ export interface RootRouteChildren {
   SalesLivraisonsRoute: typeof SalesLivraisonsRoute
   SalesNouveauRoute: typeof SalesNouveauRoute
   SallesCommandesRoute: typeof SallesCommandesRoute
+  ShopSlugRoute: typeof ShopSlugRouteWithChildren
   AtelierIndexRoute: typeof AtelierIndexRoute
   BoutiquesIndexRoute: typeof BoutiquesIndexRoute
   ClientsIndexRoute: typeof ClientsIndexRoute
@@ -951,6 +1087,13 @@ declare module '@tanstack/react-router' {
       path: '/annonces'
       fullPath: '/admin/annonces'
       preLoaderRoute: typeof AdminAnnoncesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/boutique': {
+      id: '/admin/boutique'
+      path: '/boutique'
+      fullPath: '/admin/boutique'
+      preLoaderRoute: typeof AdminBoutiqueRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/facturation': {
@@ -1177,6 +1320,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SallesCommandesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop/$slug': {
+      id: '/shop/$slug'
+      path: '/shop/$slug'
+      fullPath: '/shop/$slug'
+      preLoaderRoute: typeof ShopSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/boutique/commandes': {
+      id: '/admin/boutique/commandes'
+      path: '/commandes'
+      fullPath: '/admin/boutique/commandes'
+      preLoaderRoute: typeof AdminBoutiqueCommandesRouteImport
+      parentRoute: typeof AdminBoutiqueRoute
+    }
+    '/admin/boutique/produits': {
+      id: '/admin/boutique/produits'
+      path: '/produits'
+      fullPath: '/admin/boutique/produits'
+      preLoaderRoute: typeof AdminBoutiqueProduitsRouteImport
+      parentRoute: typeof AdminBoutiqueRoute
+    }
     '/admin/modules/': {
       id: '/admin/modules/'
       path: '/'
@@ -1289,8 +1453,100 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PhoneAtelierNouveauRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shop/$slug/commande': {
+      id: '/shop/$slug/commande'
+      path: '/commande'
+      fullPath: '/shop/$slug/commande'
+      preLoaderRoute: typeof ShopSlugCommandeRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/panier': {
+      id: '/shop/$slug/panier'
+      path: '/panier'
+      fullPath: '/shop/$slug/panier'
+      preLoaderRoute: typeof ShopSlugPanierRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/admin/boutique/commandes/$id': {
+      id: '/admin/boutique/commandes/$id'
+      path: '/$id'
+      fullPath: '/admin/boutique/commandes/$id'
+      preLoaderRoute: typeof AdminBoutiqueCommandesIdRouteImport
+      parentRoute: typeof AdminBoutiqueCommandesRoute
+    }
+    '/admin/boutique/produits/$id': {
+      id: '/admin/boutique/produits/$id'
+      path: '/$id'
+      fullPath: '/admin/boutique/produits/$id'
+      preLoaderRoute: typeof AdminBoutiqueProduitsIdRouteImport
+      parentRoute: typeof AdminBoutiqueProduitsRoute
+    }
+    '/admin/boutique/produits/nouveau': {
+      id: '/admin/boutique/produits/nouveau'
+      path: '/nouveau'
+      fullPath: '/admin/boutique/produits/nouveau'
+      preLoaderRoute: typeof AdminBoutiqueProduitsNouveauRouteImport
+      parentRoute: typeof AdminBoutiqueProduitsRoute
+    }
+    '/shop/$slug/confirmation/$orderId': {
+      id: '/shop/$slug/confirmation/$orderId'
+      path: '/confirmation/$orderId'
+      fullPath: '/shop/$slug/confirmation/$orderId'
+      preLoaderRoute: typeof ShopSlugConfirmationOrderIdRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/produit/$id': {
+      id: '/shop/$slug/produit/$id'
+      path: '/produit/$id'
+      fullPath: '/shop/$slug/produit/$id'
+      preLoaderRoute: typeof ShopSlugProduitIdRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
   }
 }
+
+interface AdminBoutiqueCommandesRouteChildren {
+  AdminBoutiqueCommandesIdRoute: typeof AdminBoutiqueCommandesIdRoute
+}
+
+const AdminBoutiqueCommandesRouteChildren: AdminBoutiqueCommandesRouteChildren =
+  {
+    AdminBoutiqueCommandesIdRoute: AdminBoutiqueCommandesIdRoute,
+  }
+
+const AdminBoutiqueCommandesRouteWithChildren =
+  AdminBoutiqueCommandesRoute._addFileChildren(
+    AdminBoutiqueCommandesRouteChildren,
+  )
+
+interface AdminBoutiqueProduitsRouteChildren {
+  AdminBoutiqueProduitsIdRoute: typeof AdminBoutiqueProduitsIdRoute
+  AdminBoutiqueProduitsNouveauRoute: typeof AdminBoutiqueProduitsNouveauRoute
+}
+
+const AdminBoutiqueProduitsRouteChildren: AdminBoutiqueProduitsRouteChildren = {
+  AdminBoutiqueProduitsIdRoute: AdminBoutiqueProduitsIdRoute,
+  AdminBoutiqueProduitsNouveauRoute: AdminBoutiqueProduitsNouveauRoute,
+}
+
+const AdminBoutiqueProduitsRouteWithChildren =
+  AdminBoutiqueProduitsRoute._addFileChildren(
+    AdminBoutiqueProduitsRouteChildren,
+  )
+
+interface AdminBoutiqueRouteChildren {
+  AdminBoutiqueCommandesRoute: typeof AdminBoutiqueCommandesRouteWithChildren
+  AdminBoutiqueProduitsRoute: typeof AdminBoutiqueProduitsRouteWithChildren
+}
+
+const AdminBoutiqueRouteChildren: AdminBoutiqueRouteChildren = {
+  AdminBoutiqueCommandesRoute: AdminBoutiqueCommandesRouteWithChildren,
+  AdminBoutiqueProduitsRoute: AdminBoutiqueProduitsRouteWithChildren,
+}
+
+const AdminBoutiqueRouteWithChildren = AdminBoutiqueRoute._addFileChildren(
+  AdminBoutiqueRouteChildren,
+)
 
 interface AdminModulesRouteChildren {
   AdminModulesAjouterRoute: typeof AdminModulesAjouterRoute
@@ -1338,6 +1594,7 @@ const AdminTenantsRouteWithChildren = AdminTenantsRoute._addFileChildren(
 
 interface AdminRouteChildren {
   AdminAnnoncesRoute: typeof AdminAnnoncesRoute
+  AdminBoutiqueRoute: typeof AdminBoutiqueRouteWithChildren
   AdminFacturationRoute: typeof AdminFacturationRoute
   AdminFinancesRoute: typeof AdminFinancesRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -1352,6 +1609,7 @@ interface AdminRouteChildren {
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminAnnoncesRoute: AdminAnnoncesRoute,
+  AdminBoutiqueRoute: AdminBoutiqueRouteWithChildren,
   AdminFacturationRoute: AdminFacturationRoute,
   AdminFinancesRoute: AdminFinancesRoute,
   AdminMessagesRoute: AdminMessagesRoute,
@@ -1376,6 +1634,24 @@ const ParametresRouteChildren: ParametresRouteChildren = {
 
 const ParametresRouteWithChildren = ParametresRoute._addFileChildren(
   ParametresRouteChildren,
+)
+
+interface ShopSlugRouteChildren {
+  ShopSlugCommandeRoute: typeof ShopSlugCommandeRoute
+  ShopSlugPanierRoute: typeof ShopSlugPanierRoute
+  ShopSlugConfirmationOrderIdRoute: typeof ShopSlugConfirmationOrderIdRoute
+  ShopSlugProduitIdRoute: typeof ShopSlugProduitIdRoute
+}
+
+const ShopSlugRouteChildren: ShopSlugRouteChildren = {
+  ShopSlugCommandeRoute: ShopSlugCommandeRoute,
+  ShopSlugPanierRoute: ShopSlugPanierRoute,
+  ShopSlugConfirmationOrderIdRoute: ShopSlugConfirmationOrderIdRoute,
+  ShopSlugProduitIdRoute: ShopSlugProduitIdRoute,
+}
+
+const ShopSlugRouteWithChildren = ShopSlugRoute._addFileChildren(
+  ShopSlugRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1410,6 +1686,7 @@ const rootRouteChildren: RootRouteChildren = {
   SalesLivraisonsRoute: SalesLivraisonsRoute,
   SalesNouveauRoute: SalesNouveauRoute,
   SallesCommandesRoute: SallesCommandesRoute,
+  ShopSlugRoute: ShopSlugRouteWithChildren,
   AtelierIndexRoute: AtelierIndexRoute,
   BoutiquesIndexRoute: BoutiquesIndexRoute,
   ClientsIndexRoute: ClientsIndexRoute,

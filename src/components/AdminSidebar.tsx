@@ -9,6 +9,7 @@ import {
   Package,
   Settings,
   Shield,
+  Store,
   User,
   Users,
 } from "lucide-react";
@@ -57,6 +58,15 @@ const groups: AdminGroup[] = [
       { label: "Ajouter un module à un abonné", to: "/admin/modules/ajouter", icon: Package },
       { label: "Modules gratuits", to: "/admin/modules?type=free", icon: Package },
       { label: "Nouveaux modules", to: "/admin/modules/nouveau", icon: Package },
+    ],
+  },
+  {
+    label: "MA BOUTIQUE",
+    icon: Store,
+    items: [
+      { label: "Configuration", to: "/admin/boutique", icon: Store },
+      { label: "Produits", to: "/admin/boutique/produits", icon: Package },
+      { label: "Commandes", to: "/admin/boutique/commandes", icon: Package },
     ],
   },
   {

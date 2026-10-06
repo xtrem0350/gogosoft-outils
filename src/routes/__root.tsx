@@ -14,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
+import { CartProvider } from "@/contexts/CartContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
@@ -133,6 +134,7 @@ function RootComponent() {
   const isAuthPage = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
     location.pathname,
   );
+  const isPublicShopRoute = location.pathname.startsWith("/shop/");
   const routeOutlet = (
     <div key={location.pathname} className="page-transition">
       <Outlet />
@@ -165,14 +167,16 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CurrentShopProvider>
-          <SuperAdminRedirect>
-            {isAuthPage ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
-          </SuperAdminRedirect>
-        </CurrentShopProvider>
-        <Toaster position="bottom-right" />
-      </AuthProvider>
+      <CartProvider>
+        <AuthProvider>
+          <CurrentShopProvider>
+            <SuperAdminRedirect>
+              {isAuthPage || isPublicShopRoute ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
+            </SuperAdminRedirect>
+          </CurrentShopProvider>
+          <Toaster position="bottom-right" />
+        </AuthProvider>
+      </CartProvider>
     </QueryClientProvider>
   );
 }
@@ -184,7 +188,7 @@ function SuperAdminRedirect({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading || !user || profile?.is_super_admin !== true) return;
-    const allowedPrefixes = ["/admin", "/profil", "/aide", "/parametres", "/nouveautes"];
+    const allowedPrefixes = ["/admin", "/profil", "/aide", "/parametres", "/nouveautes", "/shop"];
     const isAllowed = allowedPrefixes.some(
       (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
     );

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   getAvailableModules,
-  getPlanForModuleCount,
+  getModulePricingSummary,
   getPricingPlans,
   type ActivityModule,
   type ModulePurchaseSelection,
@@ -42,6 +42,7 @@ export function PricingModal({
   const [availableModules, setAvailableModules] = useState<ActivityModule[]>([]);
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedStorefronts, setSelectedStorefronts] = useState<string[]>([]);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,10 @@ export function PricingModal({
         setAvailableModules(modules);
         setPlans(pricingPlans);
         setSelectedModules((current) =>
-          current.filter((code) => modules.some((module) => module.code === code)),
+          current.filter((code) => modules.some((module) => module.code === code && !module.code.startsWith("shop_"))),
+        );
+        setSelectedStorefronts((current) =>
+          current.filter((code) => modules.some((module) => module.code === code && module.code.startsWith("shop_"))),
         );
       })
       .catch((error: unknown) => {
@@ -76,17 +80,47 @@ export function PricingModal({
     };
   }, [open]);
 
-  const selectedPricingPlan = getPlanForModuleCount(plans, selectedModules.length);
+  const pricing = getModulePricingSummary(plans, selectedModules, selectedStorefronts);
   const selectedModulesDetails = availableModules.filter((module) => selectedModules.includes(module.code));
-  const selectedPrice = selectedPricingPlan
-    ? billingCycle === "annual"
-      ? selectedPricingPlan.annual_price_fcfa
-      : selectedPricingPlan.monthly_price_fcfa
-    : 0;
+  const selectedStorefrontDetails = availableModules.filter((module) => selectedStorefronts.includes(module.code));
+  const selectedPrice = billingCycle === "annual"
+    ? pricing.annualPrice + (domainIncluded ? 10000 : 0)
+    : pricing.monthlyPrice;
+  const selectionCount = selectedModules.length + selectedStorefronts.length;
 
   function toggleModule(code: string, checked: boolean) {
     setSelectedModules((current) =>
       checked ? [...new Set([...current, code])] : current.filter((item) => item !== code),
+    );
+  }
+
+  function toggleStorefront(code: string, checked: boolean) {
+    setSelectedStorefronts((current) =>
+      checked ? [...new Set([...current, code])] : current.filter((item) => item !== code),
+    );
+  }
+
+  function renderModuleCard(module: ActivityModule, storefront: boolean) {
+    const selected = storefront ? selectedStorefronts : selectedModules;
+    const checked = selected.includes(module.code);
+    const Icon = moduleIcons[module.icon as keyof typeof moduleIcons] ?? Package;
+    return (
+      <button
+        key={module.code}
+        type="button"
+        aria-pressed={checked}
+        onClick={() => storefront
+          ? toggleStorefront(module.code, !checked)
+          : toggleModule(module.code, !checked)}
+        className={`group relative flex min-h-[130px] cursor-pointer flex-col rounded-lg border p-4 text-left transition duration-200 hover:border-orange-300 ${
+          checked ? "border-orange-500 bg-orange-50 shadow-sm" : "border-slate-200 bg-white/80"
+        }`}
+      >
+        {checked ? <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-emerald-600 text-white"><Check className="size-4" /></span> : null}
+        <span className={`flex size-11 items-center justify-center rounded-lg ${checked ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600"}`}><Icon className="size-5" /></span>
+        <span className="mt-3 font-semibold text-slate-900">{module.label}</span>
+        <span className="mt-1 text-sm leading-relaxed text-slate-600">{module.description}</span>
+      </button>
     );
   }
 
@@ -95,11 +129,12 @@ export function PricingModal({
   }
 
   function submitSelection() {
-    if (!selectedPricingPlan) return;
+    if (selectionCount === 0 || selectedPrice <= 0) return;
 
     onCreateAccount({
       moduleCodes: selectedModules,
-      planCode: selectedPricingPlan.plan_code,
+      storefrontCodes: selectedStorefronts,
+      planCode: pricing.planCode,
       billingCycle,
       priceFcfa: selectedPrice,
       domainIncluded,
@@ -202,56 +237,27 @@ export function PricingModal({
                   {step === 1 ? (
                     <>
                       <div className="space-y-1">
-                        <h3 className="text-2xl font-bold text-slate-900">Étape 1/2 : Que faites-vous ?</h3>
+                        <h3 className="text-2xl font-bold text-slate-900">Étape 1/2 : votre activité</h3>
                         <p className="text-sm text-slate-500">
-                          Cochez tout ce qui s&apos;applique à votre activité.
+                          Sélectionnez les modules applicatifs et les vitrines nécessaires.
                         </p>
                       </div>
 
-                      <div className="mt-4 grid gap-3 md:grid-cols-2">
-                        {availableModules.map((module) => {
-                          const Icon = moduleIcons[module.icon as keyof typeof moduleIcons] ?? Package;
-                          const checked = selectedModules.includes(module.code);
-                          return (
-                            <button
-                              key={module.code}
-                              type="button"
-                              onClick={() => toggleModule(module.code, !checked)}
-                              className={`group relative flex h-full min-h-[154px] cursor-pointer flex-col rounded-2xl border p-4 text-left transition duration-200 hover:scale-[1.02] ${
-                                checked
-                                  ? "border-orange-500 bg-orange-50 shadow-sm"
-                                  : "border-slate-200 bg-white/80 hover:border-orange-300"
-                              }`}
-                            >
-                              {checked ? (
-                                <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm">
-                                  <Check className="size-4" />
-                                </span>
-                              ) : null}
-                              <div
-                                className={`flex size-12 items-center justify-center rounded-xl ${
-                                  checked ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600"
-                                }`}
-                              >
-                                <Icon className="size-5" />
-                              </div>
-                              <div className="mt-4 min-w-0">
-                                <p className="font-semibold text-slate-900">{module.label}</p>
-                                <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                                  {module.description}
-                                </p>
-                              </div>
-                            </button>
-                          );
-                        })}
+                      <h4 className="mt-5 text-sm font-bold uppercase text-slate-700">Application</h4>
+                      <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                        {availableModules.filter((module) => !module.code.startsWith("shop_")).map((module) => renderModuleCard(module, false))}
+                      </div>
+                      <h4 className="mt-5 text-sm font-bold uppercase text-slate-700">Vitrine</h4>
+                      <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                        {availableModules.filter((module) => module.code.startsWith("shop_")).map((module) => renderModuleCard(module, true))}
                       </div>
 
                       <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                         <p className="text-sm font-medium text-slate-700">
-                          {selectedModules.length} module(s) sélectionné(s)
+                          {selectionCount} option(s) sélectionnée(s)
                         </p>
                         <span className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          {selectedModules.length > 0 ? "Prêt" : "À choisir"}
+                          {selectionCount > 0 ? "Prêt" : "À choisir"}
                         </span>
                       </div>
                     </>
@@ -264,26 +270,14 @@ export function PricingModal({
                         </p>
                       </div>
 
-                      {selectedPricingPlan ? (
+                      {selectionCount > 0 ? (
                         <div className="mt-4 space-y-3">
                           <section className="rounded-2xl border border-orange-200 bg-orange-50 p-5 shadow-sm">
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">
-                              Votre plan
+                              Votre sélection
                             </p>
-                            <div className="mt-3 flex items-start justify-between gap-4">
-                              <div>
-                                <h4 className="text-2xl font-bold text-slate-900">
-                                  {selectedPricingPlan.plan_label}
-                                </h4>
-                                <p className="mt-1 text-sm text-slate-600">
-                                  {selectedPricingPlan.min_modules}-{selectedPricingPlan.max_modules} modules
-                                </p>
-                              </div>
-                              <div className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-orange-700 ring-1 ring-orange-200">
-                                Adapté
-                              </div>
-                            </div>
-
+                            {pricing.appPlan ? <p className="mt-3 font-semibold text-slate-900">{pricing.appPlan.plan_label} · {pricing.appPlan.monthly_price_fcfa.toLocaleString("fr-FR")} FCFA/mois</p> : null}
+                            {pricing.storefrontPlan ? <p className="mt-1 font-semibold text-slate-900">{pricing.storefrontPlan.plan_label} · {pricing.storefrontPlan.monthly_price_fcfa.toLocaleString("fr-FR")} FCFA/mois</p> : null}
                             <div className="mt-4 flex flex-wrap gap-2">
                               {selectedModulesDetails.map((module) => (
                                 <span
@@ -293,57 +287,33 @@ export function PricingModal({
                                   {module.label}
                                 </span>
                               ))}
+                              {selectedStorefrontDetails.map((module) => (
+                                <span key={module.code} className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">{module.label}</span>
+                              ))}
                             </div>
                           </section>
 
                           <div className="grid gap-3 sm:grid-cols-2">
-                            {(["monthly", "annual"] as const).map((cycle) => {
-                              const price =
-                                cycle === "annual"
-                                  ? selectedPricingPlan.annual_price_fcfa
-                                  : selectedPricingPlan.monthly_price_fcfa;
-                              const isSelected = billingCycle === cycle;
-                              return (
-                                <button
-                                  key={cycle}
-                                  type="button"
-                                  onClick={() => {
-                                    setBillingCycle(cycle);
-                                    setDomainIncluded(cycle === "annual");
-                                  }}
-                                  className={`min-h-[160px] rounded-2xl border p-4 text-left transition-all duration-200 ${
-                                    isSelected
-                                      ? "border-orange-500 bg-orange-50 shadow-sm ring-1 ring-orange-200"
-                                      : "border-slate-200 bg-white/80 hover:border-orange-300"
-                                  }`}
-                                >
-                                  <span className="text-lg font-semibold text-slate-900">
-                                    {cycle === "monthly" ? "Mensuel" : "Annuel"}
-                                  </span>
-                                  <div className="mt-3">
-                                    <span className="text-3xl font-bold text-slate-900">
-                                      {price.toLocaleString("fr-FR")}
-                                    </span>
-                                    <span className="ml-1 text-sm font-medium text-slate-500">
-                                      FCFA
-                                    </span>
-                                  </div>
-                                  <p className="mt-1 text-sm text-slate-500">
-                                    {cycle === "monthly" ? "/ mois" : "/ an"}
-                                  </p>
-                                  {cycle === "annual" ? (
-                                    <span className="mt-3 inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
-                                      Économisez 2 mois · domaine .com inclus
-                                    </span>
-                                  ) : null}
-                                </button>
-                              );
-                            })}
+                            {(["monthly", "annual"] as const).map((cycle) => (
+                              <button key={cycle} type="button" aria-pressed={billingCycle === cycle} onClick={() => {
+                                setBillingCycle(cycle);
+                                if (cycle === "monthly") setDomainIncluded(false);
+                              }} className={`min-h-28 rounded-lg border p-4 text-left transition ${billingCycle === cycle ? "border-orange-600 bg-orange-50 ring-1 ring-orange-300" : "border-slate-200 bg-white hover:border-orange-300"}`}>
+                                <span className="text-sm font-semibold text-slate-700">Total {cycle === "monthly" ? "mensuel" : "annuel"}</span>
+                                <span className="mt-2 block text-2xl font-bold text-slate-900">{(cycle === "monthly" ? pricing.monthlyPrice : pricing.annualPrice + (domainIncluded ? 10000 : 0)).toLocaleString("fr-FR")} FCFA</span>
+                                <span className="text-xs text-slate-500">{cycle === "monthly" ? "/ mois" : "/ an"}</span>
+                              </button>
+                            ))}
                           </div>
+                          <label className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4 text-sm">
+                            <span><span className="block font-semibold text-slate-800">Nom de domaine .com</span><span className="mt-1 block text-slate-500">10 000 FCFA/an · SSL inclus gratuitement</span></span>
+                            <input type="checkbox" checked={domainIncluded} disabled={billingCycle !== "annual"} onChange={(event) => setDomainIncluded(event.target.checked)} className="size-5 accent-orange-600 disabled:opacity-50" />
+                          </label>
+                          <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Récapitulatif : {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois · {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an hors domaine · domaine {domainIncluded ? "inclus dans le total annuel" : "non sélectionné"}.</p>
                         </div>
                       ) : (
                         <p role="alert" className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-                          Aucun forfait ne correspond à votre sélection.
+                          Choisissez au moins un module applicatif ou une vitrine.
                         </p>
                       )}
                     </>
@@ -367,7 +337,7 @@ export function PricingModal({
                 {step === 1 ? (
                   <button
                     type="button"
-                    disabled={selectedModules.length === 0 || loading}
+                    disabled={selectionCount === 0 || loading}
                     onClick={() => setStep(2)}
                     className={`ml-auto h-12 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d transition-all duration-200 hover:bg-ivoirien-hover ${
                       selectedModules.length === 0 ? "animate-pulse" : ""
@@ -378,7 +348,7 @@ export function PricingModal({
                 ) : (
                   <button
                     type="button"
-                    disabled={loading || !selectedPricingPlan}
+                    disabled={loading || selectionCount === 0 || selectedPrice <= 0}
                     onClick={submitSelection}
                     className="ml-auto h-12 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d transition-all duration-200 hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
                   >

@@ -5,6 +5,7 @@ const PENDING_SELECTION_KEY = "gogosoft.pendingModuleSelection";
 
 export interface ModulePurchaseSelection {
   moduleCodes: string[];
+  storefrontCodes: string[];
   planCode: string;
   billingCycle: "monthly" | "annual";
   priceFcfa: number;
@@ -25,6 +26,44 @@ export interface PricingPlan {
   max_modules: number;
   monthly_price_fcfa: number;
   annual_price_fcfa: number;
+}
+
+const STOREFRONT_CODES = ["shop_phone", "shop_computer"];
+
+export interface ModulePricingSummary {
+  appPlan: PricingPlan | null;
+  storefrontPlan: PricingPlan | null;
+  monthlyPrice: number;
+  annualPrice: number;
+  planCode: string;
+}
+
+export function getModulePricingSummary(
+  plans: PricingPlan[],
+  moduleCodes: string[],
+  storefrontCodes: string[],
+): ModulePricingSummary {
+  const uniqueModules = [...new Set(moduleCodes)];
+  const uniqueStorefronts = [...new Set(storefrontCodes)];
+  const appPlanCode =
+    uniqueModules.length === 0
+      ? null
+      : uniqueModules.length === 1
+        ? "app_1"
+        : uniqueModules.length === 2
+          ? "app_2"
+          : "app_all";
+  const storefrontPlanCode =
+    uniqueStorefronts.length === 0 ? null : uniqueStorefronts.length === 1 ? "shop_1" : "shop_2";
+  const appPlan = plans.find((plan) => plan.plan_code === appPlanCode) ?? null;
+  const storefrontPlan = plans.find((plan) => plan.plan_code === storefrontPlanCode) ?? null;
+  return {
+    appPlan,
+    storefrontPlan,
+    monthlyPrice: (appPlan?.monthly_price_fcfa ?? 0) + (storefrontPlan?.monthly_price_fcfa ?? 0),
+    annualPrice: (appPlan?.annual_price_fcfa ?? 0) + (storefrontPlan?.annual_price_fcfa ?? 0),
+    planCode: [appPlanCode, storefrontPlanCode].filter(Boolean).join("+") || "free",
+  };
 }
 
 export async function getAvailableModules(): Promise<ActivityModule[]> {
@@ -122,21 +161,32 @@ export async function syncSubscriptionModules(moduleCodes: string[]): Promise<vo
   if (!userId) throw new Error("Utilisateur non authentifié.");
 
   const selectedModules = [...new Set(moduleCodes)];
+  const appCodes = selectedModules.filter((code) => !STOREFRONT_CODES.includes(code));
+  const storefrontCodes = selectedModules.filter((code) => STOREFRONT_CODES.includes(code));
   const [plans, { data: subscription, error: subscriptionError }] = await Promise.all([
     getPricingPlans(),
-    supabase.from("subscriptions").select("plan").eq("user_id", userId).maybeSingle(),
+    supabase
+      .from("subscriptions")
+      .select("plan, domain_included")
+      .eq("user_id", userId)
+      .maybeSingle(),
   ]);
   if (subscriptionError) throw subscriptionError;
 
-  const plan = getPlanForModuleCount(plans, selectedModules.length);
+  const pricing = getModulePricingSummary(plans, appCodes, storefrontCodes);
   const annual = subscription?.plan === "annuel";
-  const priceFcfa = plan ? (annual ? plan.annual_price_fcfa : plan.monthly_price_fcfa) : 0;
-  const { error } = await supabase
-    .from("subscriptions")
-    .upsert(
-      { user_id: userId, selected_modules: selectedModules, price_fcfa: priceFcfa },
-      { onConflict: "user_id" },
-    );
+  const priceFcfa = annual
+    ? pricing.annualPrice + (subscription?.domain_included ? 10000 : 0)
+    : pricing.monthlyPrice;
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      selected_modules: appCodes,
+      storefront_modules: storefrontCodes,
+      price_fcfa: priceFcfa,
+    },
+    { onConflict: "user_id" },
+  );
   if (error) throw error;
 }
 
@@ -157,6 +207,9 @@ export function getPendingModuleSelection(): ModulePurchaseSelection | null {
       "moduleCodes" in value &&
       Array.isArray(value.moduleCodes) &&
       value.moduleCodes.every((code) => typeof code === "string") &&
+      (!("storefrontCodes" in value) ||
+        (Array.isArray(value.storefrontCodes) &&
+          value.storefrontCodes.every((code) => typeof code === "string"))) &&
       "planCode" in value &&
       typeof value.planCode === "string" &&
       "billingCycle" in value &&
@@ -166,7 +219,13 @@ export function getPendingModuleSelection(): ModulePurchaseSelection | null {
       "domainIncluded" in value &&
       typeof value.domainIncluded === "boolean"
     ) {
-      return value as ModulePurchaseSelection;
+      return {
+        ...value,
+        storefrontCodes:
+          "storefrontCodes" in value && Array.isArray(value.storefrontCodes)
+            ? value.storefrontCodes.filter((code): code is string => typeof code === "string")
+            : [],
+      } as ModulePurchaseSelection;
     }
   } catch {
     window.localStorage.removeItem(PENDING_SELECTION_KEY);
@@ -182,7 +241,35 @@ export async function applyModuleSelection(
   userId: string,
   selection: ModulePurchaseSelection,
 ): Promise<Shop> {
-  const shops = await getUserShops();
+  const selectedModules = [...new Set(selection.moduleCodes)];
+  const selectedStorefronts = [...new Set(selection.storefrontCodes)];
+  const selectedCodes = [...selectedModules, ...selectedStorefronts];
+  if (selectedCodes.length === 0) throw new Error("Sélectionnez au moins une option.");
+  if (selection.domainIncluded && selection.billingCycle !== "annual") {
+    throw new Error("Le domaine .com est disponible uniquement avec un abonnement annuel.");
+  }
+
+  const [shops, availableModules, plans] = await Promise.all([
+    getUserShops(),
+    getAvailableModules(),
+    getPricingPlans(),
+  ]);
+  const availableCodes = new Set(availableModules.map((module) => module.code));
+  if (selectedCodes.some((code) => !availableCodes.has(code))) {
+    throw new Error("La sélection contient un module indisponible.");
+  }
+  const pricing = getModulePricingSummary(plans, selectedModules, selectedStorefronts);
+  if (
+    (selectedModules.length > 0 && !pricing.appPlan) ||
+    (selectedStorefronts.length > 0 && !pricing.storefrontPlan)
+  ) {
+    throw new Error("Aucun tarif actif ne correspond à la sélection.");
+  }
+  const priceFcfa = selection.billingCycle === "annual"
+    ? pricing.annualPrice + (selection.domainIncluded ? 10000 : 0)
+    : pricing.monthlyPrice;
+  if (priceFcfa <= 0) throw new Error("Le tarif calculé est invalide.");
+
   const userShop = shops[0];
   const shop =
     userShop ??
@@ -190,12 +277,19 @@ export async function applyModuleSelection(
       name: `Atelier ${(await supabase.auth.getUser()).data.user?.email?.split("@")[0] ?? "GogoSoft"}`,
     }));
 
-  await enableShopModules(shop.id, selection.moduleCodes);
+  const currentCodes = await getShopModules(shop.id);
+  await enableShopModules(shop.id, selectedCodes);
+  const removedCodes = currentCodes.filter(
+    (code) => availableCodes.has(code) && !selectedCodes.includes(code),
+  );
+  await Promise.all(removedCodes.map((code) => disableShopModule(shop.id, code)));
   const { error } = await supabase.from("subscriptions").upsert(
     {
       user_id: userId,
-      selected_modules: [...new Set(selection.moduleCodes)],
-      price_fcfa: selection.priceFcfa,
+      selected_modules: selectedModules,
+      storefront_modules: selectedStorefronts,
+      domain_included: selection.domainIncluded,
+      price_fcfa: priceFcfa,
       plan: selection.billingCycle === "annual" ? "annuel" : "mensuel",
       status: "active",
       expires_at: new Date(

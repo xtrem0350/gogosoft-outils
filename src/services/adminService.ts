@@ -51,7 +51,9 @@ async function loadAdminData() {
     supabase.from("profiles").select("id, email, full_name, created_at"),
     supabase
       .from("subscriptions")
-      .select("user_id, plan, status, expires_at, price_fcfa, selected_modules"),
+      .select(
+        "user_id, plan, status, expires_at, price_fcfa, selected_modules, storefront_modules",
+      ),
     supabase.from("shops").select("id, name, owner_id"),
   ]);
   if (profilesResult.error) throw profilesResult.error;
@@ -71,7 +73,8 @@ export async function getAllTenants(filters: TenantFilters = {}): Promise<AdminT
     const tenantShops = shops.filter((shop) => shop.owner_id === profile.id);
     const expiresAt = subscription?.expires_at ?? null;
     const active =
-      subscription?.status === "active" && (!expiresAt || new Date(expiresAt).getTime() > Date.now());
+      subscription?.status === "active" &&
+      (!expiresAt || new Date(expiresAt).getTime() > Date.now());
     return {
       id: profile.id,
       name: profile.full_name ?? profile.email ?? "Utilisateur",
@@ -80,9 +83,12 @@ export async function getAllTenants(filters: TenantFilters = {}): Promise<AdminT
       expiresAt,
       shops: tenantShops.length,
       shopDetails: tenantShops.map((shop) => ({ id: shop.id, name: shop.name })),
-      modules: subscription?.selected_modules ?? [],
+      modules: [
+        ...(subscription?.selected_modules ?? []),
+        ...(subscription?.storefront_modules ?? []),
+      ],
       createdAt: profile.created_at,
-      status: active ? "active" : subscription?.status ?? "late",
+      status: active ? "active" : (subscription?.status ?? "late"),
     };
   });
   if (filters.status === "active") return tenants.filter((tenant) => tenant.status === "active");
@@ -227,7 +233,7 @@ export async function revokeTenant(
 
 export async function sendGlobalNotification(message: string): Promise<void> {
   const { data: userData } = await supabase.auth.getUser();
-  const { error } = await supabase.from("platform_notifications" as any).insert({
+  const { error } = await supabase.from("platform_notifications").insert({
     message,
     created_by: userData.user?.id ?? null,
   });
@@ -238,7 +244,7 @@ export async function getGlobalNotifications(): Promise<
   Array<{ id: string; message: string; created_at: string }>
 > {
   const { data, error } = await supabase
-    .from("platform_notifications" as any)
+    .from("platform_notifications")
     .select("id, message, created_at")
     .order("created_at", { ascending: false })
     .limit(20);
@@ -247,19 +253,33 @@ export async function getGlobalNotifications(): Promise<
 }
 
 export async function getSupportTickets(): Promise<
-  Array<{ id: string; user_id: string; subject: string; message: string; status: string; created_at: string }>
+  Array<{
+    id: string;
+    user_id: string;
+    subject: string;
+    message: string;
+    status: string;
+    created_at: string;
+  }>
 > {
   const { data, error } = await supabase
-    .from("platform_support_tickets" as any)
+    .from("platform_support_tickets")
     .select("id, user_id, subject, message, status, created_at")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Array<{ id: string; user_id: string; subject: string; message: string; status: string; created_at: string }>;
+  return (data ?? []) as Array<{
+    id: string;
+    user_id: string;
+    subject: string;
+    message: string;
+    status: string;
+    created_at: string;
+  }>;
 }
 
-export async function getTenantHistory(tenantId: string): Promise<
-  Array<{ id: string; action: string; metadata: unknown; created_at: string }>
-> {
+export async function getTenantHistory(
+  tenantId: string,
+): Promise<Array<{ id: string; action: string; metadata: unknown; created_at: string }>> {
   const { data, error } = await supabase
     .from("audit_logs")
     .select("id, action, metadata, created_at")
@@ -267,7 +287,12 @@ export async function getTenantHistory(tenantId: string): Promise<
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
-  return (data ?? []) as Array<{ id: string; action: string; metadata: unknown; created_at: string }>;
+  return (data ?? []) as Array<{
+    id: string;
+    action: string;
+    metadata: unknown;
+    created_at: string;
+  }>;
 }
 
 export async function getExpiringSubscriptions(days = 7): Promise<AdminSubscription[]> {

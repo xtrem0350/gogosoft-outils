@@ -18,12 +18,16 @@ const planStyles: Record<string, string> = {
 
 /** Affiche l'état de l'abonnement actuel et le solde de jours disponibles. */
 export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
-  const activeSubscription = subscription ?? {
+  const activeSubscription: SubscriptionSummary = subscription ?? {
     plan: "trial",
     status: "active",
     expires_at: null,
     isActive: true,
     daysRemaining: 7,
+    price_fcfa: 0,
+    selected_modules: [],
+    storefront_modules: [],
+    domain_included: false,
   };
 
   const planClass =
@@ -52,6 +56,21 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
           </p>
           <p className="mt-1">{activeSubscription.daysRemaining} jours restants</p>
         </div>
+
+        {activeSubscription.price_fcfa > 0 ? (
+          <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+            <p className="text-muted-foreground">Tarif sélectionné</p>
+            <p className="mt-1 font-semibold text-foreground">
+              {activeSubscription.price_fcfa.toLocaleString("fr-FR")} FCFA/{activeSubscription.plan === "annuel" ? "an" : "mois"}
+            </p>
+            {activeSubscription.domain_included ? <p className="mt-1 text-xs text-muted-foreground">Domaine .com inclus · SSL gratuit</p> : null}
+            {[...activeSubscription.selected_modules, ...activeSubscription.storefront_modules].length > 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {activeSubscription.selected_modules.length + activeSubscription.storefront_modules.length} option(s) activée(s)
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <Button className="w-full" variant="secondary">
           <Sparkles className="size-4" />

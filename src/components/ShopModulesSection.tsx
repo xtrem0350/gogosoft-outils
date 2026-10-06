@@ -37,7 +37,7 @@ import {
   disableShopModule,
   enableShopModules,
   getAvailableModules,
-  getPlanForModuleCount,
+  getModulePricingSummary,
   getPricingPlans,
   getShopModules,
   syncSubscriptionModules,
@@ -141,7 +141,9 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
 
   const active = all.filter((m) => enabled.includes(m.code));
   const available = all.filter((m) => !enabled.includes(m.code));
-  const plan = getPlanForModuleCount(plans, active.length);
+  const appCodes = active.filter((module) => !module.code.startsWith("shop_")).map((module) => module.code);
+  const storefrontCodes = active.filter((module) => module.code.startsWith("shop_")).map((module) => module.code);
+  const pricing = getModulePricingSummary(plans, appCodes, storefrontCodes);
 
   return (
     <Card>
@@ -150,10 +152,10 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
           <CardTitle>Mes modules</CardTitle>
           <p className="mt-1 text-sm text-muted-foreground">Gérez les modules que vous utilisez.</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Forfait actuel :{" "}
-            {plan ? (
+            Tarifs actuels :{" "}
+            {pricing.monthlyPrice > 0 ? (
               <Badge variant="secondary">
-                {plan.plan_label} — {plan.monthly_price_fcfa.toLocaleString("fr-FR")} FCFA/mois
+                {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois · {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an
               </Badge>
             ) : (
               "aucun"

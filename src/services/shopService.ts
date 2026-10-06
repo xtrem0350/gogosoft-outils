@@ -9,6 +9,22 @@ export interface Shop {
   phone?: string | null;
   owner_id?: string | null;
   created_at?: string | null;
+  is_online_shop?: boolean;
+  shop_slug?: string | null;
+  shop_logo_url?: string | null;
+  shop_description?: string | null;
+  shop_banner_url?: string | null;
+  shop_phone?: string | null;
+  shop_address?: string | null;
+  shop_whatsapp?: string | null;
+  accepts_wave?: boolean;
+  accepts_orange_money?: boolean;
+  accepts_mtn?: boolean;
+  accepts_moov?: boolean;
+  accepts_cash_on_pickup?: boolean;
+  accepts_cash_on_delivery?: boolean;
+  delivery_fee?: number;
+  delivery_available?: boolean;
 }
 
 export interface CreateShopData {

@@ -1,15 +1,45 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { AlertCircle, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 
 import { PricingModal } from "@/components/PricingModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { notifyShopModulesChanged, useShopModules } from "@/hooks/useShopModules";
+import { applyModuleSelection } from "@/services/moduleService";
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isActive, loading } = useSubscription();
+  const { user } = useAuth();
+  const { shopId, refresh: refreshShop } = useCurrentShop();
+  const { refresh: refreshModules } = useShopModules();
+  const [savingSelection, setSavingSelection] = useState(false);
+
+  async function selectModules(selection: Parameters<typeof applyModuleSelection>[1]) {
+    if (!user) {
+      void navigate({ to: "/auth" });
+      return;
+    }
+    setSavingSelection(true);
+    try {
+      const shop = await applyModuleSelection(user.id, selection);
+      await refreshShop(user.id, true);
+      notifyShopModulesChanged(shop.id);
+      if (shopId === shop.id) await refreshModules();
+      toast.success("Votre sélection a été activée.");
+      await navigate({ to: "/" });
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Activation impossible.");
+    } finally {
+      setSavingSelection(false);
+    }
+  }
 
   if (location.pathname === "/abonnement") {
     return <>{children}</>;
@@ -30,7 +60,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
           open
           isBlocking
           onOpenChange={() => undefined}
-          onCreateAccount={() => void navigate({ to: "/abonnement" })}
+          onCreateAccount={(selection) => void selectModules(selection)}
         />
         <Card className="w-full border-destructive/30 bg-destructive/5">
           <CardContent className="space-y-5 p-8 text-center">
@@ -46,7 +76,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
                 Réactivez votre accès pour continuer à gérer votre atelier et vos clients.
               </p>
             </div>
-            <Button className="w-full" onClick={() => void navigate({ to: "/abonnement" })}>
+            <Button className="w-full" disabled={savingSelection} onClick={() => void navigate({ to: "/abonnement" })}>
               Renouveler
               <ArrowRight className="size-4" />
             </Button>

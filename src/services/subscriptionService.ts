@@ -11,6 +11,10 @@ export interface SubscriptionSummary {
   expires_at: string | null;
   isActive: boolean;
   daysRemaining: number;
+  price_fcfa: number;
+  selected_modules: string[];
+  storefront_modules: string[];
+  domain_included: boolean;
 }
 
 /** Récupère l'abonnement de l'utilisateur courant. */
@@ -40,6 +44,10 @@ export async function getMySubscription(): Promise<SubscriptionSummary | null> {
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       isActive: true,
       daysRemaining: 7,
+      price_fcfa: 0,
+      selected_modules: [],
+      storefront_modules: [],
+      domain_included: false,
     };
   }
 
@@ -132,5 +140,13 @@ function normalizeSubscription(data: Record<string, unknown>): SubscriptionSumma
     expires_at: expiresAt,
     isActive: status === "active" && (expiresAt ? new Date(expiresAt).getTime() > now : true),
     daysRemaining,
+    price_fcfa: typeof data["price_fcfa"] === "number" ? data["price_fcfa"] : 0,
+    selected_modules: Array.isArray(data["selected_modules"])
+      ? data["selected_modules"].filter((value): value is string => typeof value === "string")
+      : [],
+    storefront_modules: Array.isArray(data["storefront_modules"])
+      ? data["storefront_modules"].filter((value): value is string => typeof value === "string")
+      : [],
+    domain_included: data["domain_included"] === true,
   };
 }

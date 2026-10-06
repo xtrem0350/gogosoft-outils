@@ -46,6 +46,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
+import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
 
 /** Layout unique de l'application. */
@@ -169,7 +170,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               setPricingPromptOpen(open);
               if (!open) void navigate({ to: "/auth" });
             }}
-            onCreateAccount={() => void navigate({ to: "/auth" })}
+            onCreateAccount={(selection) => {
+              savePendingModuleSelection(selection);
+              void navigate({ to: "/auth" });
+            }}
           />
         </>
       );
