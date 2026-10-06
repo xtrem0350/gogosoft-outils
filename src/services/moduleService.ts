@@ -265,9 +265,10 @@ export async function applyModuleSelection(
   ) {
     throw new Error("Aucun tarif actif ne correspond à la sélection.");
   }
-  const priceFcfa = selection.billingCycle === "annual"
-    ? pricing.annualPrice + (selection.domainIncluded ? 10000 : 0)
-    : pricing.monthlyPrice;
+  const priceFcfa =
+    selection.billingCycle === "annual"
+      ? pricing.annualPrice + (selection.domainIncluded ? 10000 : 0)
+      : pricing.monthlyPrice;
   if (priceFcfa <= 0) throw new Error("Le tarif calculé est invalide.");
 
   const userShop = shops[0];

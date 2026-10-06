@@ -204,29 +204,33 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <div className="lg:hidden">
-              {isSuperAdmin ? <AdminSidebar
-                mobileTrigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="flex size-10 items-center justify-center text-orange-600"
-                    aria-label="Ouvrir le menu administrateur"
-                  >
-                    <Menu />
-                  </Button>
-                }
-              /> : <Sidebar
-                mobileTrigger={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
-                    aria-label="Ouvrir le menu"
-                  >
-                    <Menu />
-                  </Button>
-                }
-              />}
+              {isSuperAdmin ? (
+                <AdminSidebar
+                  mobileTrigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex size-10 items-center justify-center text-orange-600"
+                      aria-label="Ouvrir le menu administrateur"
+                    >
+                      <Menu />
+                    </Button>
+                  }
+                />
+              ) : (
+                <Sidebar
+                  mobileTrigger={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
+                      aria-label="Ouvrir le menu"
+                    >
+                      <Menu />
+                    </Button>
+                  }
+                />
+              )}
             </div>
             <img
               loading="lazy"
@@ -277,39 +281,41 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            {!isSuperAdmin ? <div className="hidden sm:block">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    disabled={!shopId}
-                    className="h-10 rounded-full bg-ivoirien px-4 font-semibold text-white shadow-3d transition-transform hover:bg-ivoirien-hover active:scale-95"
-                  >
-                    <Plus />
-                    Nouveau
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
-                    <Users /> Nouveau client
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}
-                  >
-                    <Smartphone /> Nouvelle fiche téléphone
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}
-                  >
-                    <Laptop /> Nouvelle fiche ordinateur
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onSelect={() => void navigate({ to: "/sales/nouveau" })}>
-                    <ShoppingCart /> Nouvelle vente
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div> : null}
+            {!isSuperAdmin ? (
+              <div className="hidden sm:block">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      disabled={!shopId}
+                      className="h-10 rounded-full bg-ivoirien px-4 font-semibold text-white shadow-3d transition-transform hover:bg-ivoirien-hover active:scale-95"
+                    >
+                      <Plus />
+                      Nouveau
+                      <ChevronDown className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
+                      <Users /> Nouveau client
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}
+                    >
+                      <Smartphone /> Nouvelle fiche téléphone
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}
+                    >
+                      <Laptop /> Nouvelle fiche ordinateur
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void navigate({ to: "/sales/nouveau" })}>
+                      <ShoppingCart /> Nouvelle vente
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : null}
             {!isSuperAdmin ? <ShopSelector /> : null}
             <ThemeToggle />
             <UserMenu />

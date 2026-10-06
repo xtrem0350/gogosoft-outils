@@ -141,8 +141,12 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
 
   const active = all.filter((m) => enabled.includes(m.code));
   const available = all.filter((m) => !enabled.includes(m.code));
-  const appCodes = active.filter((module) => !module.code.startsWith("shop_")).map((module) => module.code);
-  const storefrontCodes = active.filter((module) => module.code.startsWith("shop_")).map((module) => module.code);
+  const appCodes = active
+    .filter((module) => !module.code.startsWith("shop_"))
+    .map((module) => module.code);
+  const storefrontCodes = active
+    .filter((module) => module.code.startsWith("shop_"))
+    .map((module) => module.code);
   const pricing = getModulePricingSummary(plans, appCodes, storefrontCodes);
 
   return (
@@ -155,7 +159,8 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
             Tarifs actuels :{" "}
             {pricing.monthlyPrice > 0 ? (
               <Badge variant="secondary">
-                {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois · {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an
+                {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois ·{" "}
+                {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an
               </Badge>
             ) : (
               "aucun"

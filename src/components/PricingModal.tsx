@@ -3,12 +3,7 @@ import { Check, Laptop, Monitor, Package, ShoppingCart, Smartphone } from "lucid
 
 import profileLogo from "@/assets/images/leprofile.png";
 import { StepIndicator } from "@/components/StepIndicator";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   getAvailableModules,
   getModulePricingSummary,
@@ -61,10 +56,14 @@ export function PricingModal({
         setAvailableModules(modules);
         setPlans(pricingPlans);
         setSelectedModules((current) =>
-          current.filter((code) => modules.some((module) => module.code === code && !module.code.startsWith("shop_"))),
+          current.filter((code) =>
+            modules.some((module) => module.code === code && !module.code.startsWith("shop_")),
+          ),
         );
         setSelectedStorefronts((current) =>
-          current.filter((code) => modules.some((module) => module.code === code && module.code.startsWith("shop_"))),
+          current.filter((code) =>
+            modules.some((module) => module.code === code && module.code.startsWith("shop_")),
+          ),
         );
       })
       .catch((error: unknown) => {
@@ -81,11 +80,16 @@ export function PricingModal({
   }, [open]);
 
   const pricing = getModulePricingSummary(plans, selectedModules, selectedStorefronts);
-  const selectedModulesDetails = availableModules.filter((module) => selectedModules.includes(module.code));
-  const selectedStorefrontDetails = availableModules.filter((module) => selectedStorefronts.includes(module.code));
-  const selectedPrice = billingCycle === "annual"
-    ? pricing.annualPrice + (domainIncluded ? 10000 : 0)
-    : pricing.monthlyPrice;
+  const selectedModulesDetails = availableModules.filter((module) =>
+    selectedModules.includes(module.code),
+  );
+  const selectedStorefrontDetails = availableModules.filter((module) =>
+    selectedStorefronts.includes(module.code),
+  );
+  const selectedPrice =
+    billingCycle === "annual"
+      ? pricing.annualPrice + (domainIncluded ? 10000 : 0)
+      : pricing.monthlyPrice;
   const selectionCount = selectedModules.length + selectedStorefronts.length;
 
   function toggleModule(code: string, checked: boolean) {
@@ -109,15 +113,23 @@ export function PricingModal({
         key={module.code}
         type="button"
         aria-pressed={checked}
-        onClick={() => storefront
-          ? toggleStorefront(module.code, !checked)
-          : toggleModule(module.code, !checked)}
+        onClick={() =>
+          storefront ? toggleStorefront(module.code, !checked) : toggleModule(module.code, !checked)
+        }
         className={`group relative flex min-h-[130px] cursor-pointer flex-col rounded-lg border p-4 text-left transition duration-200 hover:border-orange-300 ${
           checked ? "border-orange-500 bg-orange-50 shadow-sm" : "border-slate-200 bg-white/80"
         }`}
       >
-        {checked ? <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-emerald-600 text-white"><Check className="size-4" /></span> : null}
-        <span className={`flex size-11 items-center justify-center rounded-lg ${checked ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600"}`}><Icon className="size-5" /></span>
+        {checked ? (
+          <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-emerald-600 text-white">
+            <Check className="size-4" />
+          </span>
+        ) : null}
+        <span
+          className={`flex size-11 items-center justify-center rounded-lg ${checked ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-600"}`}
+        >
+          <Icon className="size-5" />
+        </span>
         <span className="mt-3 font-semibold text-slate-900">{module.label}</span>
         <span className="mt-1 text-sm leading-relaxed text-slate-600">{module.description}</span>
       </button>
@@ -237,19 +249,27 @@ export function PricingModal({
                   {step === 1 ? (
                     <>
                       <div className="space-y-1">
-                        <h3 className="text-2xl font-bold text-slate-900">Étape 1/2 : votre activité</h3>
+                        <h3 className="text-2xl font-bold text-slate-900">
+                          Étape 1/2 : votre activité
+                        </h3>
                         <p className="text-sm text-slate-500">
                           Sélectionnez les modules applicatifs et les vitrines nécessaires.
                         </p>
                       </div>
 
-                      <h4 className="mt-5 text-sm font-bold uppercase text-slate-700">Application</h4>
+                      <h4 className="mt-5 text-sm font-bold uppercase text-slate-700">
+                        Application
+                      </h4>
                       <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                        {availableModules.filter((module) => !module.code.startsWith("shop_")).map((module) => renderModuleCard(module, false))}
+                        {availableModules
+                          .filter((module) => !module.code.startsWith("shop_"))
+                          .map((module) => renderModuleCard(module, false))}
                       </div>
                       <h4 className="mt-5 text-sm font-bold uppercase text-slate-700">Vitrine</h4>
                       <div className="mt-2 grid gap-3 sm:grid-cols-2">
-                        {availableModules.filter((module) => module.code.startsWith("shop_")).map((module) => renderModuleCard(module, true))}
+                        {availableModules
+                          .filter((module) => module.code.startsWith("shop_"))
+                          .map((module) => renderModuleCard(module, true))}
                       </div>
 
                       <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
@@ -264,7 +284,9 @@ export function PricingModal({
                   ) : (
                     <>
                       <div className="space-y-1">
-                        <h3 className="text-2xl font-bold text-slate-900">Étape 2/2 : Votre forfait</h3>
+                        <h3 className="text-2xl font-bold text-slate-900">
+                          Étape 2/2 : Votre forfait
+                        </h3>
                         <p className="text-sm text-slate-500">
                           Voici le plan adapté à vos besoins.
                         </p>
@@ -276,8 +298,20 @@ export function PricingModal({
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">
                               Votre sélection
                             </p>
-                            {pricing.appPlan ? <p className="mt-3 font-semibold text-slate-900">{pricing.appPlan.plan_label} · {pricing.appPlan.monthly_price_fcfa.toLocaleString("fr-FR")} FCFA/mois</p> : null}
-                            {pricing.storefrontPlan ? <p className="mt-1 font-semibold text-slate-900">{pricing.storefrontPlan.plan_label} · {pricing.storefrontPlan.monthly_price_fcfa.toLocaleString("fr-FR")} FCFA/mois</p> : null}
+                            {pricing.appPlan ? (
+                              <p className="mt-3 font-semibold text-slate-900">
+                                {pricing.appPlan.plan_label} ·{" "}
+                                {pricing.appPlan.monthly_price_fcfa.toLocaleString("fr-FR")}{" "}
+                                FCFA/mois
+                              </p>
+                            ) : null}
+                            {pricing.storefrontPlan ? (
+                              <p className="mt-1 font-semibold text-slate-900">
+                                {pricing.storefrontPlan.plan_label} ·{" "}
+                                {pricing.storefrontPlan.monthly_price_fcfa.toLocaleString("fr-FR")}{" "}
+                                FCFA/mois
+                              </p>
+                            ) : null}
                             <div className="mt-4 flex flex-wrap gap-2">
                               {selectedModulesDetails.map((module) => (
                                 <span
@@ -288,31 +322,73 @@ export function PricingModal({
                                 </span>
                               ))}
                               {selectedStorefrontDetails.map((module) => (
-                                <span key={module.code} className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700">{module.label}</span>
+                                <span
+                                  key={module.code}
+                                  className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700"
+                                >
+                                  {module.label}
+                                </span>
                               ))}
                             </div>
                           </section>
 
                           <div className="grid gap-3 sm:grid-cols-2">
                             {(["monthly", "annual"] as const).map((cycle) => (
-                              <button key={cycle} type="button" aria-pressed={billingCycle === cycle} onClick={() => {
-                                setBillingCycle(cycle);
-                                if (cycle === "monthly") setDomainIncluded(false);
-                              }} className={`min-h-28 rounded-lg border p-4 text-left transition ${billingCycle === cycle ? "border-orange-600 bg-orange-50 ring-1 ring-orange-300" : "border-slate-200 bg-white hover:border-orange-300"}`}>
-                                <span className="text-sm font-semibold text-slate-700">Total {cycle === "monthly" ? "mensuel" : "annuel"}</span>
-                                <span className="mt-2 block text-2xl font-bold text-slate-900">{(cycle === "monthly" ? pricing.monthlyPrice : pricing.annualPrice + (domainIncluded ? 10000 : 0)).toLocaleString("fr-FR")} FCFA</span>
-                                <span className="text-xs text-slate-500">{cycle === "monthly" ? "/ mois" : "/ an"}</span>
+                              <button
+                                key={cycle}
+                                type="button"
+                                aria-pressed={billingCycle === cycle}
+                                onClick={() => {
+                                  setBillingCycle(cycle);
+                                  if (cycle === "monthly") setDomainIncluded(false);
+                                }}
+                                className={`min-h-28 rounded-lg border p-4 text-left transition ${billingCycle === cycle ? "border-orange-600 bg-orange-50 ring-1 ring-orange-300" : "border-slate-200 bg-white hover:border-orange-300"}`}
+                              >
+                                <span className="text-sm font-semibold text-slate-700">
+                                  Total {cycle === "monthly" ? "mensuel" : "annuel"}
+                                </span>
+                                <span className="mt-2 block text-2xl font-bold text-slate-900">
+                                  {(cycle === "monthly"
+                                    ? pricing.monthlyPrice
+                                    : pricing.annualPrice + (domainIncluded ? 10000 : 0)
+                                  ).toLocaleString("fr-FR")}{" "}
+                                  FCFA
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {cycle === "monthly" ? "/ mois" : "/ an"}
+                                </span>
                               </button>
                             ))}
                           </div>
                           <label className="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4 text-sm">
-                            <span><span className="block font-semibold text-slate-800">Nom de domaine .com</span><span className="mt-1 block text-slate-500">10 000 FCFA/an · SSL inclus gratuitement</span></span>
-                            <input type="checkbox" checked={domainIncluded} disabled={billingCycle !== "annual"} onChange={(event) => setDomainIncluded(event.target.checked)} className="size-5 accent-orange-600 disabled:opacity-50" />
+                            <span>
+                              <span className="block font-semibold text-slate-800">
+                                Nom de domaine .com
+                              </span>
+                              <span className="mt-1 block text-slate-500">
+                                10 000 FCFA/an · SSL inclus gratuitement
+                              </span>
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={domainIncluded}
+                              disabled={billingCycle !== "annual"}
+                              onChange={(event) => setDomainIncluded(event.target.checked)}
+                              className="size-5 accent-orange-600 disabled:opacity-50"
+                            />
                           </label>
-                          <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Récapitulatif : {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois · {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an hors domaine · domaine {domainIncluded ? "inclus dans le total annuel" : "non sélectionné"}.</p>
+                          <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">
+                            Récapitulatif : {pricing.monthlyPrice.toLocaleString("fr-FR")} FCFA/mois
+                            · {pricing.annualPrice.toLocaleString("fr-FR")} FCFA/an hors domaine ·
+                            domaine{" "}
+                            {domainIncluded ? "inclus dans le total annuel" : "non sélectionné"}.
+                          </p>
                         </div>
                       ) : (
-                        <p role="alert" className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+                        <p
+                          role="alert"
+                          className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600"
+                        >
                           Choisissez au moins un module applicatif ou une vitrine.
                         </p>
                       )}

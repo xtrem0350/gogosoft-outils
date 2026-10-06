@@ -288,7 +288,9 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
         >
           <div className="flex min-w-0 items-center gap-2">
             <AnimatedLogo compact />
-            {!collapsed ? <span className="truncate font-display text-sm font-semibold">GogoSoft</span> : null}
+            {!collapsed ? (
+              <span className="truncate font-display text-sm font-semibold">GogoSoft</span>
+            ) : null}
           </div>
           <Button
             type="button"

@@ -61,12 +61,20 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
           <div className="rounded-lg border bg-muted/30 p-3 text-sm">
             <p className="text-muted-foreground">Tarif sélectionné</p>
             <p className="mt-1 font-semibold text-foreground">
-              {activeSubscription.price_fcfa.toLocaleString("fr-FR")} FCFA/{activeSubscription.plan === "annuel" ? "an" : "mois"}
+              {activeSubscription.price_fcfa.toLocaleString("fr-FR")} FCFA/
+              {activeSubscription.plan === "annuel" ? "an" : "mois"}
             </p>
-            {activeSubscription.domain_included ? <p className="mt-1 text-xs text-muted-foreground">Domaine .com inclus · SSL gratuit</p> : null}
-            {[...activeSubscription.selected_modules, ...activeSubscription.storefront_modules].length > 0 ? (
+            {activeSubscription.domain_included ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Domaine .com inclus · SSL gratuit
+              </p>
+            ) : null}
+            {[...activeSubscription.selected_modules, ...activeSubscription.storefront_modules]
+              .length > 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">
-                {activeSubscription.selected_modules.length + activeSubscription.storefront_modules.length} option(s) activée(s)
+                {activeSubscription.selected_modules.length +
+                  activeSubscription.storefront_modules.length}{" "}
+                option(s) activée(s)
               </p>
             ) : null}
           </div>

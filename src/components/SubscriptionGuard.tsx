@@ -76,7 +76,11 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
                 Réactivez votre accès pour continuer à gérer votre atelier et vos clients.
               </p>
             </div>
-            <Button className="w-full" disabled={savingSelection} onClick={() => void navigate({ to: "/abonnement" })}>
+            <Button
+              className="w-full"
+              disabled={savingSelection}
+              onClick={() => void navigate({ to: "/abonnement" })}
+            >
               Renouveler
               <ArrowRight className="size-4" />
             </Button>

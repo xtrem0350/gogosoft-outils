@@ -132,12 +132,17 @@ export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = 
           <div className="space-y-1">
             {items.map(({ label: itemLabel, to, icon: Icon }) => {
               const href = to.split("?")[0] ?? to;
-              const active = pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
+              const active =
+                pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
               return (
                 <Link
                   key={to}
                   to={href as any}
-                  search={to.includes("?") ? (Object.fromEntries(new URLSearchParams(to.split("?")[1])) as any) : ({} as any)}
+                  search={
+                    to.includes("?")
+                      ? (Object.fromEntries(new URLSearchParams(to.split("?")[1])) as any)
+                      : ({} as any)
+                  }
                   onClick={() => setOpen(false)}
                   className={cn(
                     "flex min-h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-800 hover:text-white",
@@ -180,10 +185,15 @@ export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = 
       {mobileTrigger ? (
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>{mobileTrigger}</SheetTrigger>
-          <SheetContent side="left" className="flex h-dvh w-80 flex-col border-slate-700 bg-slate-900 p-0 text-white">
+          <SheetContent
+            side="left"
+            className="flex h-dvh w-80 flex-col border-slate-700 bg-slate-900 p-0 text-white"
+          >
             <div className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-700 px-5">
               <Shield className="size-6 text-orange-400" />
-              <SheetTitle className="font-display text-sm font-bold text-white">GOGOSOFT ADMIN</SheetTitle>
+              <SheetTitle className="font-display text-sm font-bold text-white">
+                GOGOSOFT ADMIN
+              </SheetTitle>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5">{navigation}</div>
             <div className="shrink-0 border-t border-slate-700 p-3">{signOutButton}</div>
