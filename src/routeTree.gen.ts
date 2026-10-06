@@ -23,6 +23,17 @@ import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAnnoncesRouteImport } from './routes/admin.annonces'
+import { Route as AdminFacturationRouteImport } from './routes/admin.facturation'
+import { Route as AdminFinancesRouteImport } from './routes/admin.finances'
+import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
+import { Route as AdminModulesRouteImport } from './routes/admin.modules'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
+import { Route as AdminPaiementsRouteImport } from './routes/admin.paiements'
+import { Route as AdminPrixRouteImport } from './routes/admin.prix'
+import { Route as AdminSupportRouteImport } from './routes/admin.support'
+import { Route as AdminTenantsRouteImport } from './routes/admin.tenants'
 import { Route as AtelierIndexRouteImport } from './routes/atelier.index'
 import { Route as AtelierIdRouteImport } from './routes/atelier.$id'
 import { Route as AtelierNouveauRouteImport } from './routes/atelier.nouveau'
@@ -46,6 +57,13 @@ import { Route as SalesCommandesRouteImport } from './routes/sales/commandes'
 import { Route as SalesLivraisonsRouteImport } from './routes/sales/livraisons'
 import { Route as SalesNouveauRouteImport } from './routes/sales/nouveau'
 import { Route as SallesCommandesRouteImport } from './routes/salles/commandes'
+import { Route as AdminModulesIndexRouteImport } from './routes/admin.modules.index'
+import { Route as AdminModulesAjouterRouteImport } from './routes/admin.modules.ajouter'
+import { Route as AdminModulesNouveauRouteImport } from './routes/admin.modules.nouveau'
+import { Route as AdminSupportFaqRouteImport } from './routes/admin.support.faq'
+import { Route as AdminSupportMessagesRouteImport } from './routes/admin.support.messages'
+import { Route as AdminTenantsIdRouteImport } from './routes/admin.tenants.$id'
+import { Route as AdminTenantsHistoriqueRouteImport } from './routes/admin.tenants.historique'
 import { Route as ComputerAtelierIndexRouteImport } from './routes/computer/atelier/index'
 import { Route as ComputerAtelierIdRouteImport } from './routes/computer/atelier/$id'
 import { Route as ComputerAtelierNouveauRouteImport } from './routes/computer/atelier/nouveau'
@@ -125,6 +143,61 @@ const StatistiquesRoute = StatistiquesRouteImport.update({
   id: '/statistiques',
   path: '/statistiques',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAnnoncesRoute = AdminAnnoncesRouteImport.update({
+  id: '/annonces',
+  path: '/annonces',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFacturationRoute = AdminFacturationRouteImport.update({
+  id: '/facturation',
+  path: '/facturation',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFinancesRoute = AdminFinancesRouteImport.update({
+  id: '/finances',
+  path: '/finances',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminModulesRoute = AdminModulesRouteImport.update({
+  id: '/modules',
+  path: '/modules',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaiementsRoute = AdminPaiementsRouteImport.update({
+  id: '/paiements',
+  path: '/paiements',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPrixRoute = AdminPrixRouteImport.update({
+  id: '/prix',
+  path: '/prix',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSupportRoute = AdminSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTenantsRoute = AdminTenantsRouteImport.update({
+  id: '/tenants',
+  path: '/tenants',
+  getParentRoute: () => AdminRoute,
 } as any)
 const AtelierIndexRoute = AtelierIndexRouteImport.update({
   id: '/atelier/',
@@ -241,6 +314,41 @@ const SallesCommandesRoute = SallesCommandesRouteImport.update({
   path: '/salles/commandes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminModulesIndexRoute = AdminModulesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminModulesRoute,
+} as any)
+const AdminModulesAjouterRoute = AdminModulesAjouterRouteImport.update({
+  id: '/ajouter',
+  path: '/ajouter',
+  getParentRoute: () => AdminModulesRoute,
+} as any)
+const AdminModulesNouveauRoute = AdminModulesNouveauRouteImport.update({
+  id: '/nouveau',
+  path: '/nouveau',
+  getParentRoute: () => AdminModulesRoute,
+} as any)
+const AdminSupportFaqRoute = AdminSupportFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => AdminSupportRoute,
+} as any)
+const AdminSupportMessagesRoute = AdminSupportMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AdminSupportRoute,
+} as any)
+const AdminTenantsIdRoute = AdminTenantsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AdminTenantsRoute,
+} as any)
+const AdminTenantsHistoriqueRoute = AdminTenantsHistoriqueRouteImport.update({
+  id: '/historique',
+  path: '/historique',
+  getParentRoute: () => AdminTenantsRoute,
+} as any)
 const ComputerAtelierIndexRoute = ComputerAtelierIndexRouteImport.update({
   id: '/computer/atelier/',
   path: '/computer/atelier/',
@@ -290,7 +398,7 @@ const PhoneAtelierNouveauRoute = PhoneAtelierNouveauRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
@@ -302,6 +410,16 @@ export interface FileRoutesByFullPath {
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
+  '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/finances': typeof AdminFinancesRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/modules': typeof AdminModulesRouteWithChildren
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/paiements': typeof AdminPaiementsRoute
+  '/admin/prix': typeof AdminPrixRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
   '/atelier/plan': typeof AtelierPlanRoute
@@ -320,17 +438,25 @@ export interface FileRoutesByFullPath {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/admin/': typeof AdminIndexRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
+  '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
+  '/admin/support/faq': typeof AdminSupportFaqRoute
+  '/admin/support/messages': typeof AdminSupportMessagesRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
+  '/admin/tenants/historique': typeof AdminTenantsHistoriqueRoute
   '/computer/atelier/$id': typeof ComputerAtelierIdRoute
   '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
   '/consumable/stock/$id': typeof ConsumableStockIdRoute
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/admin/modules/': typeof AdminModulesIndexRoute
   '/computer/atelier/': typeof ComputerAtelierIndexRoute
   '/consumable/stock/': typeof ConsumableStockIndexRoute
   '/phone/atelier/': typeof PhoneAtelierIndexRoute
@@ -338,7 +464,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
-  '/admin': typeof AdminRoute
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
@@ -350,6 +475,15 @@ export interface FileRoutesByTo {
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
+  '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/finances': typeof AdminFinancesRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/paiements': typeof AdminPaiementsRoute
+  '/admin/prix': typeof AdminPrixRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
   '/atelier/plan': typeof AtelierPlanRoute
@@ -368,17 +502,25 @@ export interface FileRoutesByTo {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/admin': typeof AdminIndexRoute
   '/atelier': typeof AtelierIndexRoute
   '/boutiques': typeof BoutiquesIndexRoute
   '/clients': typeof ClientsIndexRoute
   '/outils': typeof OutilsIndexRoute
   '/sales': typeof SalesIndexRoute
+  '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
+  '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
+  '/admin/support/faq': typeof AdminSupportFaqRoute
+  '/admin/support/messages': typeof AdminSupportMessagesRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
+  '/admin/tenants/historique': typeof AdminTenantsHistoriqueRoute
   '/computer/atelier/$id': typeof ComputerAtelierIdRoute
   '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
   '/consumable/stock/$id': typeof ConsumableStockIdRoute
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/admin/modules': typeof AdminModulesIndexRoute
   '/computer/atelier': typeof ComputerAtelierIndexRoute
   '/consumable/stock': typeof ConsumableStockIndexRoute
   '/phone/atelier': typeof PhoneAtelierIndexRoute
@@ -387,7 +529,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/abonnement': typeof AbonnementRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
@@ -399,6 +541,16 @@ export interface FileRoutesById {
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
+  '/admin/annonces': typeof AdminAnnoncesRoute
+  '/admin/facturation': typeof AdminFacturationRoute
+  '/admin/finances': typeof AdminFinancesRoute
+  '/admin/messages': typeof AdminMessagesRoute
+  '/admin/modules': typeof AdminModulesRouteWithChildren
+  '/admin/notifications': typeof AdminNotificationsRoute
+  '/admin/paiements': typeof AdminPaiementsRoute
+  '/admin/prix': typeof AdminPrixRoute
+  '/admin/support': typeof AdminSupportRouteWithChildren
+  '/admin/tenants': typeof AdminTenantsRouteWithChildren
   '/atelier/$id': typeof AtelierIdRoute
   '/atelier/nouveau': typeof AtelierNouveauRoute
   '/atelier/plan': typeof AtelierPlanRoute
@@ -417,17 +569,25 @@ export interface FileRoutesById {
   '/sales/livraisons': typeof SalesLivraisonsRoute
   '/sales/nouveau': typeof SalesNouveauRoute
   '/salles/commandes': typeof SallesCommandesRoute
+  '/admin/': typeof AdminIndexRoute
   '/atelier/': typeof AtelierIndexRoute
   '/boutiques/': typeof BoutiquesIndexRoute
   '/clients/': typeof ClientsIndexRoute
   '/outils/': typeof OutilsIndexRoute
   '/sales/': typeof SalesIndexRoute
+  '/admin/modules/ajouter': typeof AdminModulesAjouterRoute
+  '/admin/modules/nouveau': typeof AdminModulesNouveauRoute
+  '/admin/support/faq': typeof AdminSupportFaqRoute
+  '/admin/support/messages': typeof AdminSupportMessagesRoute
+  '/admin/tenants/$id': typeof AdminTenantsIdRoute
+  '/admin/tenants/historique': typeof AdminTenantsHistoriqueRoute
   '/computer/atelier/$id': typeof ComputerAtelierIdRoute
   '/computer/atelier/nouveau': typeof ComputerAtelierNouveauRoute
   '/consumable/stock/$id': typeof ConsumableStockIdRoute
   '/consumable/stock/nouveau': typeof ConsumableStockNouveauRoute
   '/phone/atelier/$id': typeof PhoneAtelierIdRoute
   '/phone/atelier/nouveau': typeof PhoneAtelierNouveauRoute
+  '/admin/modules/': typeof AdminModulesIndexRoute
   '/computer/atelier/': typeof ComputerAtelierIndexRoute
   '/consumable/stock/': typeof ConsumableStockIndexRoute
   '/phone/atelier/': typeof PhoneAtelierIndexRoute
@@ -449,6 +609,16 @@ export interface FileRouteTypes {
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
+    | '/admin/annonces'
+    | '/admin/facturation'
+    | '/admin/finances'
+    | '/admin/messages'
+    | '/admin/modules'
+    | '/admin/notifications'
+    | '/admin/paiements'
+    | '/admin/prix'
+    | '/admin/support'
+    | '/admin/tenants'
     | '/atelier/$id'
     | '/atelier/nouveau'
     | '/atelier/plan'
@@ -467,17 +637,25 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/admin/'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
     | '/sales/'
+    | '/admin/modules/ajouter'
+    | '/admin/modules/nouveau'
+    | '/admin/support/faq'
+    | '/admin/support/messages'
+    | '/admin/tenants/$id'
+    | '/admin/tenants/historique'
     | '/computer/atelier/$id'
     | '/computer/atelier/nouveau'
     | '/consumable/stock/$id'
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/admin/modules/'
     | '/computer/atelier/'
     | '/consumable/stock/'
     | '/phone/atelier/'
@@ -485,7 +663,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/abonnement'
-    | '/admin'
     | '/aide'
     | '/auth'
     | '/categories'
@@ -497,6 +674,15 @@ export interface FileRouteTypes {
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
+    | '/admin/annonces'
+    | '/admin/facturation'
+    | '/admin/finances'
+    | '/admin/messages'
+    | '/admin/notifications'
+    | '/admin/paiements'
+    | '/admin/prix'
+    | '/admin/support'
+    | '/admin/tenants'
     | '/atelier/$id'
     | '/atelier/nouveau'
     | '/atelier/plan'
@@ -515,17 +701,25 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/admin'
     | '/atelier'
     | '/boutiques'
     | '/clients'
     | '/outils'
     | '/sales'
+    | '/admin/modules/ajouter'
+    | '/admin/modules/nouveau'
+    | '/admin/support/faq'
+    | '/admin/support/messages'
+    | '/admin/tenants/$id'
+    | '/admin/tenants/historique'
     | '/computer/atelier/$id'
     | '/computer/atelier/nouveau'
     | '/consumable/stock/$id'
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/admin/modules'
     | '/computer/atelier'
     | '/consumable/stock'
     | '/phone/atelier'
@@ -545,6 +739,16 @@ export interface FileRouteTypes {
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
+    | '/admin/annonces'
+    | '/admin/facturation'
+    | '/admin/finances'
+    | '/admin/messages'
+    | '/admin/modules'
+    | '/admin/notifications'
+    | '/admin/paiements'
+    | '/admin/prix'
+    | '/admin/support'
+    | '/admin/tenants'
     | '/atelier/$id'
     | '/atelier/nouveau'
     | '/atelier/plan'
@@ -563,17 +767,25 @@ export interface FileRouteTypes {
     | '/sales/livraisons'
     | '/sales/nouveau'
     | '/salles/commandes'
+    | '/admin/'
     | '/atelier/'
     | '/boutiques/'
     | '/clients/'
     | '/outils/'
     | '/sales/'
+    | '/admin/modules/ajouter'
+    | '/admin/modules/nouveau'
+    | '/admin/support/faq'
+    | '/admin/support/messages'
+    | '/admin/tenants/$id'
+    | '/admin/tenants/historique'
     | '/computer/atelier/$id'
     | '/computer/atelier/nouveau'
     | '/consumable/stock/$id'
     | '/consumable/stock/nouveau'
     | '/phone/atelier/$id'
     | '/phone/atelier/nouveau'
+    | '/admin/modules/'
     | '/computer/atelier/'
     | '/consumable/stock/'
     | '/phone/atelier/'
@@ -582,7 +794,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AbonnementRoute: typeof AbonnementRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   AideRoute: typeof AideRoute
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
@@ -726,6 +938,83 @@ declare module '@tanstack/react-router' {
       fullPath: '/statistiques'
       preLoaderRoute: typeof StatistiquesRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/annonces': {
+      id: '/admin/annonces'
+      path: '/annonces'
+      fullPath: '/admin/annonces'
+      preLoaderRoute: typeof AdminAnnoncesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/facturation': {
+      id: '/admin/facturation'
+      path: '/facturation'
+      fullPath: '/admin/facturation'
+      preLoaderRoute: typeof AdminFacturationRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/finances': {
+      id: '/admin/finances'
+      path: '/finances'
+      fullPath: '/admin/finances'
+      preLoaderRoute: typeof AdminFinancesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/modules': {
+      id: '/admin/modules'
+      path: '/modules'
+      fullPath: '/admin/modules'
+      preLoaderRoute: typeof AdminModulesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/paiements': {
+      id: '/admin/paiements'
+      path: '/paiements'
+      fullPath: '/admin/paiements'
+      preLoaderRoute: typeof AdminPaiementsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/prix': {
+      id: '/admin/prix'
+      path: '/prix'
+      fullPath: '/admin/prix'
+      preLoaderRoute: typeof AdminPrixRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/support': {
+      id: '/admin/support'
+      path: '/support'
+      fullPath: '/admin/support'
+      preLoaderRoute: typeof AdminSupportRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tenants': {
+      id: '/admin/tenants'
+      path: '/tenants'
+      fullPath: '/admin/tenants'
+      preLoaderRoute: typeof AdminTenantsRouteImport
+      parentRoute: typeof AdminRoute
     }
     '/atelier/': {
       id: '/atelier/'
@@ -888,6 +1177,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SallesCommandesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/modules/': {
+      id: '/admin/modules/'
+      path: '/'
+      fullPath: '/admin/modules/'
+      preLoaderRoute: typeof AdminModulesIndexRouteImport
+      parentRoute: typeof AdminModulesRoute
+    }
+    '/admin/modules/ajouter': {
+      id: '/admin/modules/ajouter'
+      path: '/ajouter'
+      fullPath: '/admin/modules/ajouter'
+      preLoaderRoute: typeof AdminModulesAjouterRouteImport
+      parentRoute: typeof AdminModulesRoute
+    }
+    '/admin/modules/nouveau': {
+      id: '/admin/modules/nouveau'
+      path: '/nouveau'
+      fullPath: '/admin/modules/nouveau'
+      preLoaderRoute: typeof AdminModulesNouveauRouteImport
+      parentRoute: typeof AdminModulesRoute
+    }
+    '/admin/support/faq': {
+      id: '/admin/support/faq'
+      path: '/faq'
+      fullPath: '/admin/support/faq'
+      preLoaderRoute: typeof AdminSupportFaqRouteImport
+      parentRoute: typeof AdminSupportRoute
+    }
+    '/admin/support/messages': {
+      id: '/admin/support/messages'
+      path: '/messages'
+      fullPath: '/admin/support/messages'
+      preLoaderRoute: typeof AdminSupportMessagesRouteImport
+      parentRoute: typeof AdminSupportRoute
+    }
+    '/admin/tenants/$id': {
+      id: '/admin/tenants/$id'
+      path: '/$id'
+      fullPath: '/admin/tenants/$id'
+      preLoaderRoute: typeof AdminTenantsIdRouteImport
+      parentRoute: typeof AdminTenantsRoute
+    }
+    '/admin/tenants/historique': {
+      id: '/admin/tenants/historique'
+      path: '/historique'
+      fullPath: '/admin/tenants/historique'
+      preLoaderRoute: typeof AdminTenantsHistoriqueRouteImport
+      parentRoute: typeof AdminTenantsRoute
+    }
     '/computer/atelier/': {
       id: '/computer/atelier/'
       path: '/computer/atelier'
@@ -954,6 +1292,80 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AdminModulesRouteChildren {
+  AdminModulesAjouterRoute: typeof AdminModulesAjouterRoute
+  AdminModulesNouveauRoute: typeof AdminModulesNouveauRoute
+  AdminModulesIndexRoute: typeof AdminModulesIndexRoute
+}
+
+const AdminModulesRouteChildren: AdminModulesRouteChildren = {
+  AdminModulesAjouterRoute: AdminModulesAjouterRoute,
+  AdminModulesNouveauRoute: AdminModulesNouveauRoute,
+  AdminModulesIndexRoute: AdminModulesIndexRoute,
+}
+
+const AdminModulesRouteWithChildren = AdminModulesRoute._addFileChildren(
+  AdminModulesRouteChildren,
+)
+
+interface AdminSupportRouteChildren {
+  AdminSupportFaqRoute: typeof AdminSupportFaqRoute
+  AdminSupportMessagesRoute: typeof AdminSupportMessagesRoute
+}
+
+const AdminSupportRouteChildren: AdminSupportRouteChildren = {
+  AdminSupportFaqRoute: AdminSupportFaqRoute,
+  AdminSupportMessagesRoute: AdminSupportMessagesRoute,
+}
+
+const AdminSupportRouteWithChildren = AdminSupportRoute._addFileChildren(
+  AdminSupportRouteChildren,
+)
+
+interface AdminTenantsRouteChildren {
+  AdminTenantsIdRoute: typeof AdminTenantsIdRoute
+  AdminTenantsHistoriqueRoute: typeof AdminTenantsHistoriqueRoute
+}
+
+const AdminTenantsRouteChildren: AdminTenantsRouteChildren = {
+  AdminTenantsIdRoute: AdminTenantsIdRoute,
+  AdminTenantsHistoriqueRoute: AdminTenantsHistoriqueRoute,
+}
+
+const AdminTenantsRouteWithChildren = AdminTenantsRoute._addFileChildren(
+  AdminTenantsRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminAnnoncesRoute: typeof AdminAnnoncesRoute
+  AdminFacturationRoute: typeof AdminFacturationRoute
+  AdminFinancesRoute: typeof AdminFinancesRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
+  AdminModulesRoute: typeof AdminModulesRouteWithChildren
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
+  AdminPaiementsRoute: typeof AdminPaiementsRoute
+  AdminPrixRoute: typeof AdminPrixRoute
+  AdminSupportRoute: typeof AdminSupportRouteWithChildren
+  AdminTenantsRoute: typeof AdminTenantsRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAnnoncesRoute: AdminAnnoncesRoute,
+  AdminFacturationRoute: AdminFacturationRoute,
+  AdminFinancesRoute: AdminFinancesRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
+  AdminModulesRoute: AdminModulesRouteWithChildren,
+  AdminNotificationsRoute: AdminNotificationsRoute,
+  AdminPaiementsRoute: AdminPaiementsRoute,
+  AdminPrixRoute: AdminPrixRoute,
+  AdminSupportRoute: AdminSupportRouteWithChildren,
+  AdminTenantsRoute: AdminTenantsRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface ParametresRouteChildren {
   ParametresEmplacementsRoute: typeof ParametresEmplacementsRoute
 }
@@ -969,7 +1381,7 @@ const ParametresRouteWithChildren = ParametresRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AbonnementRoute: AbonnementRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   AideRoute: AideRoute,
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,

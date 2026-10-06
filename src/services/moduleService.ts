@@ -83,6 +83,8 @@ export async function updatePricing(
   planCode: string,
   monthlyPriceFcfa: number,
   annualPriceFcfa: number,
+  minModules?: number,
+  maxModules?: number,
 ): Promise<void> {
   if (!Number.isInteger(monthlyPriceFcfa) || monthlyPriceFcfa < 0) {
     throw new Error("Le prix mensuel doit être un montant entier positif ou nul.");
@@ -90,11 +92,19 @@ export async function updatePricing(
   if (!Number.isInteger(annualPriceFcfa) || annualPriceFcfa < 0) {
     throw new Error("Le prix annuel doit être un montant entier positif ou nul.");
   }
+  if (
+    (minModules !== undefined && (!Number.isInteger(minModules) || minModules < 1)) ||
+    (maxModules !== undefined && (!Number.isInteger(maxModules) || maxModules < (minModules ?? 1)))
+  ) {
+    throw new Error("La plage de modules est invalide.");
+  }
   const { error } = await supabase
     .from("pricing_config")
     .update({
       monthly_price_fcfa: monthlyPriceFcfa,
       annual_price_fcfa: annualPriceFcfa,
+      ...(minModules === undefined ? {} : { min_modules: minModules }),
+      ...(maxModules === undefined ? {} : { max_modules: maxModules }),
       updated_at: new Date().toISOString(),
     })
     .eq("plan_code", planCode);

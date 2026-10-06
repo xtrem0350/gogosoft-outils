@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { HelpCircle, LogOut, Shield, Settings, Sparkles, User } from "lucide-react";
+import { CreditCard, HelpCircle, LogOut, Package, Shield, Settings, Sparkles, User, Users } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
@@ -66,22 +66,39 @@ export function UserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {isSuperAdmin ? (
-          <DropdownMenuItem onClick={() => void navigate({ to: "/admin" })}>
-            <Shield className="size-4" />
-            Espace Admin
-          </DropdownMenuItem>
-        ) : null}
-        <DropdownMenuItem onClick={() => void navigate({ to: "/profil" })}>
-          <User className="size-4" />
-          Mon profil
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
-          <Settings className="size-4" />
-          Paramètres
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => void navigate({ to: "/nouveautes" })}>
-          <Sparkles className="size-4" />✨ Nouveautés
-        </DropdownMenuItem>
+          <>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/admin" as any })}>
+              <Shield className="size-4" /> Vue d'ensemble
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/admin/tenants" as any })}>
+              <Users className="size-4" /> Abonnés
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/admin/modules" as any })}>
+              <Package className="size-4" /> Modules
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/admin/paiements" as any })}>
+              <CreditCard className="size-4" /> Paiements
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/profil" })}>
+              <User className="size-4" /> Mon profil
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
+              <Package className="size-4" /> Mes modules
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/abonnement" as any })}>
+              <CreditCard className="size-4" /> Mon forfait
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
+              <Settings className="size-4" /> Paramètres
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/nouveautes" })}>
+              <Sparkles className="size-4" /> Nouveautés
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuItem onClick={() => void navigate({ to: "/aide" as any })}>
           <HelpCircle className="size-4" />
           Aide

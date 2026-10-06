@@ -3,6 +3,7 @@ import {
   Outlet,
   Link,
   createRootRouteWithContext,
+  useNavigate,
   useRouter,
   useLocation,
   HeadContent,
@@ -15,6 +16,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { CurrentShopProvider } from "@/hooks/useCurrentShop";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -165,10 +167,29 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CurrentShopProvider>
-          {isAuthPage ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
+          <SuperAdminRedirect>
+            {isAuthPage ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
+          </SuperAdminRedirect>
         </CurrentShopProvider>
         <Toaster position="bottom-right" />
       </AuthProvider>
     </QueryClientProvider>
   );
+}
+
+function SuperAdminRedirect({ children }: { children: ReactNode }) {
+  const { user, profile, loading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (loading || !user || profile?.is_super_admin !== true) return;
+    const allowedPrefixes = ["/admin", "/profil", "/aide", "/parametres", "/nouveautes"];
+    const isAllowed = allowedPrefixes.some(
+      (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
+    );
+    if (!isAllowed) void navigate({ to: "/admin" });
+  }, [loading, location.pathname, navigate, profile?.is_super_admin, user]);
+
+  return children;
 }

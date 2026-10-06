@@ -3,6 +3,7 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20261006090000_admin_platform.sql
 │   │   ├── 📄 20261006000000_backfill_shop_modules.sql
 │   │   ├── 📄 20261005110544_8098a51b-a58c-4bda-a163-182a6084d95a.sql
 │   │   ├── 📄 20261003000000_activity_modules.sql
@@ -108,6 +109,24 @@ Structure du projet (avec glob)
 │   │   ├── 📄 atelier.$id.tsx
 │   │   ├── 📄 aide.tsx
 │   │   ├── 📄 admin.tsx
+│   │   ├── 📄 admin.tenants.tsx
+│   │   ├── 📄 admin.tenants.historique.tsx
+│   │   ├── 📄 admin.tenants.$id.tsx
+│   │   ├── 📄 admin.support.tsx
+│   │   ├── 📄 admin.support.messages.tsx
+│   │   ├── 📄 admin.support.faq.tsx
+│   │   ├── 📄 admin.prix.tsx
+│   │   ├── 📄 admin.paiements.tsx
+│   │   ├── 📄 admin.notifications.tsx
+│   │   ├── 📄 admin.modules.tsx
+│   │   ├── 📄 admin.modules.nouveau.tsx
+│   │   ├── 📄 admin.modules.index.tsx
+│   │   ├── 📄 admin.modules.ajouter.tsx
+│   │   ├── 📄 admin.messages.tsx
+│   │   ├── 📄 admin.index.tsx
+│   │   ├── 📄 admin.finances.tsx
+│   │   ├── 📄 admin.facturation.tsx
+│   │   ├── 📄 admin.annonces.tsx
 │   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
 │   │   ├── 📄 whatsapp.ts
@@ -217,6 +236,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 SubscriptionBadge.tsx
 │   │   ├── 📄 StorageLocationPages.tsx
 │   │   ├── 📄 StorageLocationDialog.tsx
+│   │   ├── 📄 StepIndicator.tsx
 │   │   ├── 📄 StatsCard.tsx
 │   │   ├── 📄 SplashScreen.tsx
 │   │   ├── 📄 Sidebar.tsx
@@ -249,6 +269,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   ├── 📄 AnimatedLogo.tsx
+│   │   ├── 📄 AdminSidebar.tsx
+│   │   ├── 📄 AdminInfoPage.tsx
 │   │   ├── 📄 AddWorkshopEvent.tsx
 │   │   └── 📄 ActivityWorkshopPages.tsx
 │   ├── 📁 assets/

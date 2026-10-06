@@ -14,6 +14,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminSidebar } from "@/components/AdminSidebar";
 import { getPageIcon } from "@/components/PageIdentity";
 import { HelpButton } from "@/components/HelpButton";
 import { InactivityWarningModal } from "@/components/InactivityWarningModal";
@@ -56,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
   const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
   useEffect(() => {
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -78,12 +79,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     setShowNewBadge(Boolean(user && !isAuthRoute && hasNewVersion()));
   }, [isAuthRoute, user?.id]);
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const isShopExemptRoute =
+    isSuperAdmin ||
+    isAdminRoute ||
     location.pathname.startsWith("/boutiques") ||
     location.pathname === "/abonnement" ||
     location.pathname === "/parametres";
-  const isExemptRoute = isAuthRoute || location.pathname === "/abonnement";
-  const loading = authLoading || (!isAuthRoute && shopLoading);
+  const isExemptRoute = isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin;
+  const loading = authLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
@@ -191,12 +195,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar />
+      {isSuperAdmin ? <AdminSidebar /> : <Sidebar />}
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <div className="lg:hidden">
-              <Sidebar
+              {isSuperAdmin ? <AdminSidebar
+                mobileTrigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="flex size-10 items-center justify-center text-orange-600"
+                    aria-label="Ouvrir le menu administrateur"
+                  >
+                    <Menu />
+                  </Button>
+                }
+              /> : <Sidebar
                 mobileTrigger={
                   <Button
                     variant="ghost"
@@ -207,7 +222,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <Menu />
                   </Button>
                 }
-              />
+              />}
             </div>
             <img
               loading="lazy"
@@ -221,7 +236,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="size-5 shrink-0 text-orange-500 xl:hidden"
             />
             <h1 className="truncate font-display text-base font-semibold text-sidebar-foreground sm:text-lg">
-              GogoSoft Tools Manager
+              {isSuperAdmin ? "GogoSoft Admin" : "GogoSoft Tools Manager"}
             </h1>
             {showNewBadge ? (
               <Button
@@ -258,7 +273,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            <div className="hidden sm:block">
+            {!isSuperAdmin ? <div className="hidden sm:block">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -290,8 +305,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-            <ShopSelector />
+            </div> : null}
+            {!isSuperAdmin ? <ShopSelector /> : null}
             <ThemeToggle />
             <UserMenu />
           </div>
