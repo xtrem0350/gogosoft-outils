@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
-  const { shopId, loading: shopLoading } = useCurrentShop();
+  const { shopId, shops, loading: shopLoading } = useCurrentShop();
   useEffect(() => {
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (!loading && user && !shopId && !isShopExemptRoute) {
-    void navigate({ to: "/boutiques/nouveau" });
+    void navigate({ to: shops.length > 0 ? "/boutiques" : "/boutiques/nouveau" });
     return <LoadingShell />;
   }
 
@@ -269,7 +269,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               variant="ghost"
               size="icon"
               aria-label="Notifications"
-              className="relative flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
+              className="relative hidden size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50 sm:flex"
             >
               <Bell />
             </Button>

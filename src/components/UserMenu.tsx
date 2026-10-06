@@ -50,7 +50,12 @@ export function UserMenu() {
         >
           <Avatar className="size-10 border-2 border-orange-200 ring-2 ring-orange-100">
             {profile?.avatar_url ? (
-              <AvatarImage src={profile.avatar_url} alt={resolvedName} />
+              <AvatarImage
+                src={profile.avatar_url}
+                alt={resolvedName}
+                loading="eager"
+                fetchPriority="high"
+              />
             ) : null}
             <AvatarFallback className="bg-sidebar-primary/20 text-xs text-sidebar-foreground">
               {initials}
