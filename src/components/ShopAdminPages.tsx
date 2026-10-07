@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
@@ -82,15 +82,17 @@ function OwnerGate({ children }: { children: (shop: Shop) => ReactNode }) {
   const { shop, loading: shopLoading } = useCurrentShop();
   const { user, loading: authLoading } = useAuth();
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
+  const shopId = shop?.id;
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!shop || !user) {
+    if (!shopId || !userId) {
       setIsOwner(false);
       return;
     }
     let active = true;
     setIsOwner(null);
-    void isCurrentUserShopOwner(shop.id)
+    void isCurrentUserShopOwner(shopId)
       .then((result) => {
         if (active) setIsOwner(result);
       })
@@ -100,7 +102,7 @@ function OwnerGate({ children }: { children: (shop: Shop) => ReactNode }) {
     return () => {
       active = false;
     };
-  }, [shop?.id, user?.id]);
+  }, [shopId, userId]);
 
   if (shopLoading || authLoading || (shop && user && isOwner === null))
     return <p className="p-8 text-sm text-muted-foreground">Vérification du propriétaire…</p>;
@@ -396,7 +398,7 @@ function ProductsList({ shop }: { shop: Shop }) {
   const [products, setProducts] = useState<OnlineProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       setProducts(await listShopProducts(shop.id));
@@ -406,10 +408,10 @@ function ProductsList({ shop }: { shop: Shop }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [shop.id]);
   useEffect(() => {
     void load();
-  }, [shop.id]);
+  }, [load]);
 
   async function toggle(product: OnlineProduct, field: "is_available" | "is_featured") {
     try {
@@ -454,7 +456,7 @@ function ProductsList({ shop }: { shop: Shop }) {
         iconColor="orange"
         action={
           <Button
-            onClick={() => void navigate({ to: "/admin/boutique/produits/nouveau" as any })}
+            onClick={() => void navigate({ to: "/admin/boutique/produits/nouveau" })}
             className="bg-ivoirien text-white"
           >
             <Plus className="size-4" /> Ajouter un produit
@@ -477,7 +479,7 @@ function ProductsList({ shop }: { shop: Shop }) {
             <div>
               <Button
                 className="mt-4 bg-ivoirien text-white"
-                onClick={() => void navigate({ to: "/admin/boutique/produits/nouveau" as any })}
+                onClick={() => void navigate({ to: "/admin/boutique/produits/nouveau" })}
               >
                 Créer un produit
               </Button>
@@ -525,7 +527,10 @@ function ProductsList({ shop }: { shop: Shop }) {
                   size="sm"
                   variant="outline"
                   onClick={() =>
-                    void navigate({ to: `/admin/boutique/produits/${product.id}` as any })
+                    void navigate({
+                      to: "/admin/boutique/produits/$id",
+                      params: { id: product.id },
+                    })
                   }
                 >
                   <Pencil className="size-4" /> Modifier
@@ -660,7 +665,7 @@ function ProductEditor({ shop, productId }: { shop: Shop; productId?: string }) 
         productId,
       );
       toast.success(productId ? "Produit modifié." : "Produit ajouté.");
-      await navigate({ to: "/admin/boutique/produits" as any });
+      await navigate({ to: "/admin/boutique/produits" });
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Enregistrement impossible.");
     } finally {
@@ -931,7 +936,12 @@ function OrdersList({ shop }: { shop: Shop }) {
           <button
             key={order.id}
             type="button"
-            onClick={() => void navigate({ to: `/admin/boutique/commandes/${order.id}` as any })}
+            onClick={() =>
+              void navigate({
+                to: "/admin/boutique/commandes/$id",
+                params: { id: order.id },
+              })
+            }
             className="grid w-full gap-3 rounded-lg border bg-white p-4 text-left shadow-sm transition hover:border-orange-300 sm:grid-cols-[1fr_auto_auto] sm:items-center"
           >
             <span>
@@ -973,7 +983,7 @@ function OrderDetail({ shop, orderId }: { shop: Shop; orderId: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const result = await getShopOrder(shop.id, orderId);
       setOrder(result);
@@ -987,10 +997,10 @@ function OrderDetail({ shop, orderId }: { shop: Shop; orderId: string }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [orderId, shop.id]);
   useEffect(() => {
     void load();
-  }, [orderId, shop.id]);
+  }, [load]);
 
   async function saveStatus() {
     if (!order) return;

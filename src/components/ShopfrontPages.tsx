@@ -84,7 +84,7 @@ function ShopHeader({ shop }: { shop: OnlineShop }) {
   return (
     <header className="border-b border-orange-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Link to={`/shop/${shop.shop_slug}` as any} className="flex min-w-0 items-center gap-3">
+           <Link to="/shop/$slug" params={{ slug: shop.shop_slug }} className="flex min-w-0 items-center gap-3">
           {shop.shop_logo_url ? (
             <img src={shop.shop_logo_url} alt="" className="size-11 rounded-lg object-cover" />
           ) : (
@@ -97,7 +97,8 @@ function ShopHeader({ shop }: { shop: OnlineShop }) {
           </span>
         </Link>
         <Link
-          to={`/shop/${shop.shop_slug}/panier` as any}
+           to="/shop/$slug/panier"
+           params={{ slug: shop.shop_slug }}
           className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-800 transition hover:border-orange-400 hover:bg-orange-50"
           aria-label={`Panier, ${itemCount} article(s)`}
         >
@@ -167,7 +168,7 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
 
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-orange-200 hover:shadow-md">
-      <Link to={`/shop/${shop.shop_slug}/produit/${product.id}` as any} className="block">
+       <Link to="/shop/$slug/produit/$id" params={{ slug: shop.shop_slug, id: product.id }} className="block">
         <div className="relative aspect-[4/3] bg-slate-100">
           {product.image_urls[0] ? (
             <img
@@ -397,7 +398,8 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
     <ShopFrame shop={shop}>
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Link
-          to={`/shop/${slug}` as any}
+          to="/shop/$slug"
+          params={{ slug }}
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-orange-700"
         >
           <ArrowLeft className="size-4" /> Retour au catalogue
@@ -488,7 +490,7 @@ export function PublicCartPage({ slug }: { slug: string }) {
             <p className="mt-3 font-semibold">Votre panier est vide</p>
             <Button
               className="mt-5 bg-ivoirien text-white"
-              onClick={() => void navigate({ to: `/shop/${slug}` as any })}
+              onClick={() => void navigate({ to: "/shop/$slug", params: { slug } })}
             >
               Découvrir les produits
             </Button>
@@ -567,7 +569,7 @@ export function PublicCartPage({ slug }: { slug: string }) {
               </p>
               <Button
                 className="mt-5 h-12 w-full bg-ivoirien font-semibold text-white shadow-3d hover:bg-ivoirien-hover"
-                onClick={() => void navigate({ to: `/shop/${slug}/commande` as any })}
+                onClick={() => void navigate({ to: "/shop/$slug/commande", params: { slug } })}
               >
                 Passer commande <ArrowRight className="size-4" />
               </Button>
@@ -579,6 +581,18 @@ export function PublicCartPage({ slug }: { slug: string }) {
   );
 }
 
+function getPaymentOptions(shop: OnlineShop | null, delivery: boolean): OrderPaymentMethod[] {
+  if (!shop) return [];
+  return [
+    ...(shop.accepts_wave ? ["wave" as const] : []),
+    ...(shop.accepts_orange_money ? ["orange_money" as const] : []),
+    ...(shop.accepts_mtn ? ["mtn" as const] : []),
+    ...(shop.accepts_moov ? ["moov" as const] : []),
+    ...(!delivery && shop.accepts_cash_on_pickup ? ["cash_on_pickup" as const] : []),
+    ...(delivery && shop.accepts_cash_on_delivery ? ["cash_on_delivery" as const] : []),
+  ];
+}
+
 export function PublicCheckoutPage({ slug }: { slug: string }) {
   const { shop, loading, error } = useOnlineShop(slug);
   const navigate = useNavigate();
@@ -587,19 +601,12 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
   const [paymentMethod, setPaymentMethod] = useState<OrderPaymentMethod | "">("");
   const [submitting, setSubmitting] = useState(false);
 
-  const paymentOptions: OrderPaymentMethod[] = shop
-    ? [
-        ...(shop.accepts_wave ? ["wave" as const] : []),
-        ...(shop.accepts_orange_money ? ["orange_money" as const] : []),
-        ...(shop.accepts_mtn ? ["mtn" as const] : []),
-        ...(shop.accepts_moov ? ["moov" as const] : []),
-        ...(!delivery && shop.accepts_cash_on_pickup ? ["cash_on_pickup" as const] : []),
-        ...(delivery && shop.accepts_cash_on_delivery ? ["cash_on_delivery" as const] : []),
-      ]
-    : [];
+  const paymentOptions = getPaymentOptions(shop, delivery);
 
   useEffect(() => {
-    if (paymentMethod && !paymentOptions.includes(paymentMethod)) setPaymentMethod("");
+    if (paymentMethod && !getPaymentOptions(shop, delivery).includes(paymentMethod)) {
+      setPaymentMethod("");
+    }
   }, [delivery, paymentMethod, shop]);
 
   if (loading) return <PublicState message="Chargement de la commande…" loading />;
@@ -629,8 +636,9 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
       });
       cart.clearCart();
       await navigate({
-        to: `/shop/${slug}/confirmation/${order.id}` as any,
-        search: { token: order.tracking_token } as any,
+        to: "/shop/$slug/confirmation/$orderId",
+        params: { slug, orderId: order.id },
+        search: { token: order.tracking_token },
       });
     } catch (reason) {
       toast.error(
@@ -647,7 +655,8 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
       <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[1fr_340px] sm:px-6">
         <section>
           <Link
-            to={`/shop/${slug}/panier` as any}
+            to="/shop/$slug/panier"
+            params={{ slug }}
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600"
           >
             <ArrowLeft className="size-4" /> Retour au panier
@@ -883,7 +892,8 @@ export function PublicOrderConfirmationPage({
         ) : null}
         <div>
           <Link
-            to={`/shop/${slug}` as any}
+            to="/shop/$slug"
+            params={{ slug }}
             className="mt-5 inline-flex items-center gap-2 font-semibold text-orange-700"
           >
             Retour à la boutique <ArrowRight className="size-4" />

@@ -60,6 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
+  const userId = user?.id;
   useEffect(() => {
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
@@ -78,8 +79,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.clearTimeout(timeout);
   }, [authLoading, location.pathname, user]);
   useEffect(() => {
-    setShowNewBadge(Boolean(user && !isAuthRoute && hasNewVersion()));
-  }, [isAuthRoute, user?.id]);
+    setShowNewBadge(Boolean(userId && !isAuthRoute && hasNewVersion()));
+  }, [isAuthRoute, userId]);
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isShopExemptRoute =
     isSuperAdmin ||

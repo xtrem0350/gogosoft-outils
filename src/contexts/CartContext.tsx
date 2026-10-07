@@ -1,24 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { CartContext, type CartItem } from "@/contexts/cartContextStore";
 
-export interface CartItem {
-  product_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  image_url: string | null;
-}
-
-type ShopCarts = Record<string, CartItem[]>;
-
-interface CartContextValue {
-  carts: ShopCarts;
-  addItem: (shopId: string, item: CartItem) => void;
-  removeItem: (shopId: string, productId: string) => void;
-  updateQuantity: (shopId: string, productId: string, quantity: number) => void;
-  clearCart: (shopId: string) => void;
-}
-
-const CartContext = createContext<CartContextValue | null>(null);
+export type { CartItem } from "@/contexts/cartContextStore";
 const STORAGE_KEY = "gogosoft_cart";
 
 function isCartItem(value: unknown): value is CartItem {
@@ -116,20 +99,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
     </CartContext.Provider>
   );
-}
-
-export function useCart(shopId: string) {
-  const context = useContext(CartContext);
-  if (!context) throw new Error("useCart doit être utilisé dans CartProvider.");
-  const items = context.carts[shopId] ?? [];
-  return {
-    items,
-    addItem: (item: CartItem) => context.addItem(shopId, item),
-    removeItem: (productId: string) => context.removeItem(shopId, productId),
-    updateQuantity: (productId: string, quantity: number) =>
-      context.updateQuantity(shopId, productId, quantity),
-    clearCart: () => context.clearCart(shopId),
-    total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
-    itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-  };
 }
