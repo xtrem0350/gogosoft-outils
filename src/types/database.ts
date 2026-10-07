@@ -15,9 +15,27 @@ export type LogAction = "create" | "update" | "delete" | "restore";
 /** Rôle applicatif d'un utilisateur. */
 export type AppRole = "admin" | "technicien" | "lecteur";
 
-export type Tool = Database["public"]["Tables"]["tools"]["Row"];
-export type ToolInsert = Database["public"]["Tables"]["tools"]["Insert"];
-export type ToolUpdate = Database["public"]["Tables"]["tools"]["Update"];
+type GeneratedTool = Database["public"]["Tables"]["tools"]["Row"];
+type GeneratedToolInsert = Database["public"]["Tables"]["tools"]["Insert"];
+type GeneratedToolUpdate = Database["public"]["Tables"]["tools"]["Update"];
+
+type ToolShopFields = {
+  shop_id: string | null;
+  launch_count: number;
+  last_used_at: string | null;
+  deleted_at: string | null;
+};
+
+type ToolShopInsertFields = {
+  shop_id?: string | null;
+  launch_count?: number;
+  last_used_at?: string | null;
+  deleted_at?: string | null;
+};
+
+export type Tool = GeneratedTool & ToolShopFields;
+export type ToolInsert = GeneratedToolInsert & ToolShopInsertFields;
+export type ToolUpdate = GeneratedToolUpdate & ToolShopInsertFields;
 export type ToolLaunch = Database["public"]["Tables"]["tool_launches"]["Row"];
 export type ToolLog = Database["public"]["Tables"]["tool_logs"]["Row"];
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {

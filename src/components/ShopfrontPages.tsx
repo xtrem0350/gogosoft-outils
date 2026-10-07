@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 
 import brandLogo from "@/assets/images/leprofile.png";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -84,7 +84,11 @@ function ShopHeader({ shop }: { shop: OnlineShop }) {
   return (
     <header className="border-b border-orange-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-           <Link to="/shop/$slug" params={{ slug: shop.shop_slug }} className="flex min-w-0 items-center gap-3">
+        <Link
+          to="/shop/$slug"
+          params={{ slug: shop.shop_slug }}
+          className="flex min-w-0 items-center gap-3"
+        >
           {shop.shop_logo_url ? (
             <img src={shop.shop_logo_url} alt="" className="size-11 rounded-lg object-cover" />
           ) : (
@@ -97,8 +101,8 @@ function ShopHeader({ shop }: { shop: OnlineShop }) {
           </span>
         </Link>
         <Link
-           to="/shop/$slug/panier"
-           params={{ slug: shop.shop_slug }}
+          to="/shop/$slug/panier"
+          params={{ slug: shop.shop_slug }}
           className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-800 transition hover:border-orange-400 hover:bg-orange-50"
           aria-label={`Panier, ${itemCount} article(s)`}
         >
@@ -168,7 +172,11 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
 
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-orange-200 hover:shadow-md">
-       <Link to="/shop/$slug/produit/$id" params={{ slug: shop.shop_slug, id: product.id }} className="block">
+      <Link
+        to="/shop/$slug/produit/$id"
+        params={{ slug: shop.shop_slug, id: product.id }}
+        className="block"
+      >
         <div className="relative aspect-[4/3] bg-slate-100">
           {product.image_urls[0] ? (
             <img

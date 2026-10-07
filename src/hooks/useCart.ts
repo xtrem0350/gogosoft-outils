@@ -8,7 +8,8 @@ export function useCart(shopId: string) {
   const items = context.carts[shopId] ?? [];
   return {
     items,
-    addItem: (item: import("@/contexts/cartContextStore").CartItem) => context.addItem(shopId, item),
+    addItem: (item: import("@/contexts/cartContextStore").CartItem) =>
+      context.addItem(shopId, item),
     removeItem: (productId: string) => context.removeItem(shopId, productId),
     updateQuantity: (productId: string, quantity: number) =>
       context.updateQuantity(shopId, productId, quantity),

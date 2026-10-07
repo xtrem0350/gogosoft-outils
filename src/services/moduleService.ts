@@ -331,20 +331,22 @@ export function getPendingModuleSelection(): ModulePurchaseSelection | null {
       const record = value as Record<string, unknown>;
       return {
         moduleCodes: value.moduleCodes as string[],
-        storefrontCodes: Array.isArray(record.storefrontCodes)
-          ? (record.storefrontCodes as unknown[]).filter(
+        storefrontCodes: Array.isArray(record["storefrontCodes"])
+          ? (record["storefrontCodes"] as unknown[]).filter(
               (code): code is string => typeof code === "string",
             )
           : [],
-        licenseCode: typeof record.licenseCode === "string" ? record.licenseCode : null,
+        licenseCode: typeof record["licenseCode"] === "string" ? record["licenseCode"] : null,
         subscriptionCode:
-          typeof record.subscriptionCode === "string" ? record.subscriptionCode : null,
+          typeof record["subscriptionCode"] === "string" ? record["subscriptionCode"] : null,
         shopSubscriptionCode:
-          typeof record.shopSubscriptionCode === "string" ? record.shopSubscriptionCode : null,
+          typeof record["shopSubscriptionCode"] === "string"
+            ? record["shopSubscriptionCode"]
+            : null,
         durationMonths: value.durationMonths,
-        domainCode: typeof record.domainCode === "string" ? record.domainCode : null,
+        domainCode: typeof record["domainCode"] === "string" ? record["domainCode"] : null,
         priceFcfa: value.priceFcfa,
-        trial: record.trial === true,
+        trial: record["trial"] === true,
       };
     }
   } catch {

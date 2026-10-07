@@ -1043,28 +1043,37 @@ function OrderDetail({ shop, orderId }: { shop: Shop; orderId: string }) {
         <section className="rounded-lg border bg-white p-5">
           <h2 className="font-bold">Articles</h2>
           <div className="mt-4 divide-y">
-            {order.order_items.map((item) => (
-              <div key={item.id} className="flex items-center gap-3 py-3">
-                {item.product_image_url ? (
-                  <img
-                    src={item.product_image_url}
-                    alt=""
-                    className="size-14 rounded object-cover"
-                  />
-                ) : (
-                  <span className="grid size-14 place-items-center rounded bg-slate-100">
-                    <Package className="size-5 text-slate-500" />
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{item.product_name}</p>
-                  <p className="text-sm text-slate-500">
-                    {item.quantity} × {formatPrice(item.unit_price)}
-                  </p>
+            {order.order_items.map(
+              (item: {
+                id: string;
+                product_image_url: string | null;
+                product_name: string;
+                quantity: number;
+                unit_price: number;
+                total: number;
+              }) => (
+                <div key={item.id} className="flex items-center gap-3 py-3">
+                  {item.product_image_url ? (
+                    <img
+                      src={item.product_image_url}
+                      alt=""
+                      className="size-14 rounded object-cover"
+                    />
+                  ) : (
+                    <span className="grid size-14 place-items-center rounded bg-slate-100">
+                      <Package className="size-5 text-slate-500" />
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{item.product_name}</p>
+                    <p className="text-sm text-slate-500">
+                      {item.quantity} × {formatPrice(item.unit_price)}
+                    </p>
+                  </div>
+                  <p className="font-bold">{formatPrice(item.total)}</p>
                 </div>
-                <p className="font-bold">{formatPrice(item.total)}</p>
-              </div>
-            ))}
+              ),
+            )}
           </div>
           <div className="ml-auto mt-4 max-w-xs space-y-2 border-t pt-4 text-sm">
             <p className="flex justify-between">

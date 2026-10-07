@@ -74,9 +74,7 @@ export function PricingModal({
       .then(([modulePricing, activityModules, licenseList, appList, shopList, domainList]) => {
         if (!active) return;
         setModules(modulePricing);
-        setStorefrontModules(
-          activityModules.filter((module) => module.code.startsWith("shop_")),
-        );
+        setStorefrontModules(activityModules.filter((module) => module.code.startsWith("shop_")));
         setLicenses(licenseList);
         setAppDurations(appList);
         setShopDurations(shopList);
@@ -85,7 +83,7 @@ export function PricingModal({
           setDurationMonths((current) =>
             appList.some((item) => item.duration_months === current)
               ? current
-              : appList[0].duration_months,
+              : (appList[0]?.duration_months ?? current),
           );
         }
       })
@@ -111,8 +109,7 @@ export function PricingModal({
     selectedStorefronts.length === 0
       ? null
       : `shop_${Math.min(selectedStorefronts.length, 2)}_${durationMonths}m`;
-  const shopSubscription =
-    shopDurations.find((item) => item.code === shopSubscriptionCode) ?? null;
+  const shopSubscription = shopDurations.find((item) => item.code === shopSubscriptionCode) ?? null;
   const domain = domains.find((item) => item.code === domainCode) ?? null;
   const totalPrice =
     (license?.price_fcfa ?? 0) +
@@ -148,7 +145,9 @@ export function PricingModal({
         key={code}
         type="button"
         aria-pressed={checked}
-        onClick={() => (storefront ? toggleStorefront(code, !checked) : toggleModule(code, !checked))}
+        onClick={() =>
+          storefront ? toggleStorefront(code, !checked) : toggleModule(code, !checked)
+        }
         className={`group relative flex min-h-[130px] cursor-pointer flex-col rounded-lg border p-4 text-left transition duration-200 hover:border-orange-300 ${
           checked ? "border-orange-500 bg-orange-50 shadow-sm" : "border-slate-200 bg-white/80"
         }`}
@@ -392,9 +391,7 @@ export function PricingModal({
                               {duration.price_fcfa.toLocaleString("fr-FR")} FCFA
                             </span>
                             {duration.description ? (
-                              <span className="text-xs text-slate-500">
-                                {duration.description}
-                              </span>
+                              <span className="text-xs text-slate-500">{duration.description}</span>
                             ) : null}
                           </button>
                         ))}

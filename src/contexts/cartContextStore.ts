@@ -8,7 +8,7 @@ export interface CartItem {
   image_url: string | null;
 }
 
-type ShopCarts = Record<string, CartItem[]>;
+export type ShopCarts = Record<string, CartItem[]>;
 
 export interface CartContextValue {
   carts: ShopCarts;

@@ -1,8 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
 
-export type OnlineShop =
-  Database["public"]["Functions"]["get_public_shop_by_slug"]["Returns"][number];
+type PublicShopRow = Database["public"]["Functions"]["get_public_shop_by_slug"]["Returns"][number];
+export type OnlineShop = Omit<PublicShopRow, "shop_slug"> & { shop_slug: string };
 export type OnlineProduct = Database["public"]["Tables"]["products"]["Row"];
 export type OnlineOrder = Database["public"]["Tables"]["orders"]["Row"];
 export type OnlineOrderItem = Database["public"]["Tables"]["order_items"]["Row"];
@@ -88,7 +88,9 @@ export async function getShopBySlug(slug: string): Promise<OnlineShop | null> {
     p_slug: slug.trim().toLowerCase(),
   });
   if (error) throw error;
-  return data?.[0] ?? null;
+  const shop = data?.[0];
+  if (!shop || typeof shop.shop_slug !== "string") return null;
+  return { ...shop, shop_slug: shop.shop_slug };
 }
 
 export async function getPublicProducts(

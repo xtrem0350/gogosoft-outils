@@ -106,7 +106,9 @@ export function ActivityListPage({
     if (
       query &&
       ![ticket.client_name, ticket.client_whatsapp, ticket.device_model ?? ""].some((value) =>
-        String(value ?? "").toLocaleLowerCase().includes(query),
+        String(value ?? "")
+          .toLocaleLowerCase()
+          .includes(query),
       )
     )
       return false;

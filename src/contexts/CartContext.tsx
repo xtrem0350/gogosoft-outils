@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { CartContext, type CartItem } from "@/contexts/cartContextStore";
+import { CartContext, type CartItem, type ShopCarts } from "@/contexts/cartContextStore";
 
-export type { CartItem } from "@/contexts/cartContextStore";
+export type { CartItem, ShopCarts } from "@/contexts/cartContextStore";
+
 const STORAGE_KEY = "gogosoft_cart";
 
 function isCartItem(value: unknown): value is CartItem {
@@ -52,11 +53,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [carts, hydrated]);
 
   function addItem(shopId: string, item: CartItem) {
-    setCarts((current) => {
+    setCarts((current: ShopCarts) => {
       const shopItems = current[shopId] ?? [];
-      const existing = shopItems.find((entry) => entry.product_id === item.product_id);
+      const existing = shopItems.find((entry: CartItem) => entry.product_id === item.product_id);
       const nextItems = existing
-        ? shopItems.map((entry) =>
+        ? shopItems.map((entry: CartItem) =>
             entry.product_id === item.product_id
               ? { ...entry, quantity: Math.min(99, entry.quantity + item.quantity) }
               : entry,
@@ -67,9 +68,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   function removeItem(shopId: string, productId: string) {
-    setCarts((current) => ({
+    setCarts((current: ShopCarts) => ({
       ...current,
-      [shopId]: (current[shopId] ?? []).filter((item) => item.product_id !== productId),
+      [shopId]: (current[shopId] ?? []).filter((item: CartItem) => item.product_id !== productId),
     }));
   }
 
@@ -78,16 +79,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       removeItem(shopId, productId);
       return;
     }
-    setCarts((current) => ({
+    setCarts((current: ShopCarts) => ({
       ...current,
-      [shopId]: (current[shopId] ?? []).map((item) =>
+      [shopId]: (current[shopId] ?? []).map((item: CartItem) =>
         item.product_id === productId ? { ...item, quantity: Math.min(99, quantity) } : item,
       ),
     }));
   }
 
   function clearCart(shopId: string) {
-    setCarts((current) => {
+    setCarts((current: ShopCarts) => {
       const next = { ...current };
       delete next[shopId];
       return next;
