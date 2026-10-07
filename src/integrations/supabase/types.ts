@@ -168,242 +168,6 @@ export type Database = {
         }
         Relationships: []
       }
-      platform_notifications: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          message: string
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          message: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          message?: string
-        }
-        Relationships: []
-      }
-      platform_support_tickets: {
-        Row: {
-          created_at: string
-          id: string
-          message: string
-          status: string
-          subject: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          message: string
-          status?: string
-          subject: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          status?: string
-          subject?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      products: {
-        Row: {
-          category: string
-          characteristics: Json
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          image_urls: string[]
-          is_available: boolean
-          is_featured: boolean
-          name: string
-          price: number
-          shop_id: string
-          stock: number
-          updated_at: string
-        }
-        Insert: {
-          category?: string
-          characteristics?: Json
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          image_urls?: string[]
-          is_available?: boolean
-          is_featured?: boolean
-          name: string
-          price: number
-          shop_id: string
-          stock?: number
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          characteristics?: Json
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          image_urls?: string[]
-          is_available?: boolean
-          is_featured?: boolean
-          name?: string
-          price?: number
-          shop_id?: string
-          stock?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "products_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      orders: {
-        Row: {
-          client_address: string | null
-          client_id: string | null
-          client_name: string
-          client_notes: string | null
-          client_whatsapp: string
-          created_at: string
-          delivery_fee: number
-          delivery_status: string
-          id: string
-          internal_notes: string | null
-          order_number: string
-          payment_method: string
-          payment_status: string
-          shop_id: string
-          subtotal: number
-          total: number
-          tracking_token: string
-          updated_at: string
-        }
-        Insert: {
-          client_address?: string | null
-          client_id?: string | null
-          client_name: string
-          client_notes?: string | null
-          client_whatsapp: string
-          created_at?: string
-          delivery_fee?: number
-          delivery_status?: string
-          id?: string
-          internal_notes?: string | null
-          order_number: string
-          payment_method: string
-          payment_status?: string
-          shop_id: string
-          subtotal: number
-          total: number
-          tracking_token?: string
-          updated_at?: string
-        }
-        Update: {
-          client_address?: string | null
-          client_id?: string | null
-          client_name?: string
-          client_notes?: string | null
-          client_whatsapp?: string
-          created_at?: string
-          delivery_fee?: number
-          delivery_status?: string
-          id?: string
-          internal_notes?: string | null
-          order_number?: string
-          payment_method?: string
-          payment_status?: string
-          shop_id?: string
-          subtotal?: number
-          total?: number
-          tracking_token?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "orders_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      order_items: {
-        Row: {
-          id: string
-          order_id: string
-          product_id: string | null
-          product_image_url: string | null
-          product_name: string
-          quantity: number
-          total: number
-          unit_price: number
-        }
-        Insert: {
-          id?: string
-          order_id: string
-          product_id?: string | null
-          product_image_url?: string | null
-          product_name: string
-          quantity?: number
-          total: number
-          unit_price: number
-        }
-        Update: {
-          id?: string
-          order_id?: string
-          product_id?: string | null
-          product_image_url?: string | null
-          product_name?: string
-          quantity?: number
-          total?: number
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "order_items_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pricing_config: {
         Row: {
           annual_price_fcfa: number
@@ -608,78 +372,30 @@ export type Database = {
       }
       shops: {
         Row: {
-          accepts_cash_on_delivery: boolean
-          accepts_cash_on_pickup: boolean
-          accepts_moov: boolean
-          accepts_mtn: boolean
-          accepts_orange_money: boolean
-          accepts_wave: boolean
           address: string | null
           created_at: string
-          delivery_available: boolean
-          delivery_fee: number
           id: string
-          is_online_shop: boolean
           name: string
           owner_id: string
           phone: string | null
-          shop_address: string | null
-          shop_banner_url: string | null
-          shop_description: string | null
-          shop_logo_url: string | null
-          shop_phone: string | null
-          shop_slug: string | null
-          shop_whatsapp: string | null
           updated_at: string
         }
         Insert: {
-          accepts_cash_on_delivery?: boolean
-          accepts_cash_on_pickup?: boolean
-          accepts_moov?: boolean
-          accepts_mtn?: boolean
-          accepts_orange_money?: boolean
-          accepts_wave?: boolean
           address?: string | null
           created_at?: string
-          delivery_available?: boolean
-          delivery_fee?: number
           id?: string
-          is_online_shop?: boolean
           name: string
           owner_id: string
           phone?: string | null
-          shop_address?: string | null
-          shop_banner_url?: string | null
-          shop_description?: string | null
-          shop_logo_url?: string | null
-          shop_phone?: string | null
-          shop_slug?: string | null
-          shop_whatsapp?: string | null
           updated_at?: string
         }
         Update: {
-          accepts_cash_on_delivery?: boolean
-          accepts_cash_on_pickup?: boolean
-          accepts_moov?: boolean
-          accepts_mtn?: boolean
-          accepts_orange_money?: boolean
-          accepts_wave?: boolean
           address?: string | null
           created_at?: string
-          delivery_available?: boolean
-          delivery_fee?: number
           id?: string
-          is_online_shop?: boolean
           name?: string
           owner_id?: string
           phone?: string | null
-          shop_address?: string | null
-          shop_banner_url?: string | null
-          shop_description?: string | null
-          shop_logo_url?: string | null
-          shop_phone?: string | null
-          shop_slug?: string | null
-          shop_whatsapp?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -687,7 +403,6 @@ export type Database = {
       subscriptions: {
         Row: {
           created_at: string
-          domain_included: boolean
           expires_at: string
           id: string
           plan: string
@@ -695,13 +410,11 @@ export type Database = {
           selected_modules: string[]
           started_at: string
           status: string
-          storefront_modules: string[]
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          domain_included?: boolean
           expires_at?: string
           id?: string
           plan?: string
@@ -709,13 +422,11 @@ export type Database = {
           selected_modules?: string[]
           started_at?: string
           status?: string
-          storefront_modules?: string[]
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          domain_included?: boolean
           expires_at?: string
           id?: string
           plan?: string
@@ -723,7 +434,6 @@ export type Database = {
           selected_modules?: string[]
           started_at?: string
           status?: string
-          storefront_modules?: string[]
           updated_at?: string
           user_id?: string
         }
@@ -1067,49 +777,6 @@ export type Database = {
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
       register_launch: {
         Args: { _action: string; _tool_id: string }
-        Returns: undefined
-      }
-      get_public_shop_by_slug: {
-        Args: { p_slug: string }
-        Returns: {
-          accepts_cash_on_delivery: boolean
-          accepts_cash_on_pickup: boolean
-          accepts_moov: boolean
-          accepts_mtn: boolean
-          accepts_orange_money: boolean
-          accepts_wave: boolean
-          delivery_available: boolean
-          delivery_fee: number
-          id: string
-          name: string
-          shop_address: string | null
-          shop_banner_url: string | null
-          shop_description: string | null
-          shop_logo_url: string | null
-          shop_phone: string | null
-          shop_slug: string
-          shop_whatsapp: string | null
-        }[]
-      }
-      create_public_order: {
-        Args: {
-          p_client_address: string | null
-          p_client_name: string
-          p_client_notes: string | null
-          p_client_whatsapp: string
-          p_delivery: boolean
-          p_items: Json
-          p_payment_method: string
-          p_shop_id: string
-        }
-        Returns: Json
-      }
-      get_public_order: {
-        Args: { p_order_id: string; p_tracking_token: string }
-        Returns: Json
-      }
-      update_shop_order: {
-        Args: { p_delivery_status: string; p_order_id: string; p_payment_status: string }
         Returns: undefined
       }
     }
