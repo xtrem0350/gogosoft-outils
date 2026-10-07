@@ -1,15 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 
 import { PublicShopPage } from "@/components/ShopfrontPages";
 import type { ProductCategory } from "@/services/shopOnlineService";
 
 export const Route = createFileRoute("/shop/$slug")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    category:
-      search["category"] === "phone" || search["category"] === "computer"
-        ? search["category"]
-        : undefined,
-  }),
+  validateSearch: z.object({ category: z.enum(["phone", "computer"]).optional() }),
   component: ShopRoute,
 });
 

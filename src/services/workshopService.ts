@@ -234,6 +234,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const ticket: WorkshopTicket = {
       id: `demo-ticket-${crypto.randomUUID()}`,
       shop_id: DEMO_SHOP_ID,
+      activity_type: data.activity_type ?? "phone",
       client_id: data.client_id ?? null,
       client_name: data.client_name,
       client_whatsapp: data.client_whatsapp,
@@ -244,7 +245,9 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       device_os_version: data.device_os_version ?? null,
       issues: data.issues,
       status: "en_attente",
-      diagnosis: data.diagnosis ?? null,
+      diagnosis: data.diagnosis
+        ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
+        : null,
       notes: data.notes ?? null,
       price_estimate: null,
       price_final: null,

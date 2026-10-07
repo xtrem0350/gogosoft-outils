@@ -50,6 +50,7 @@ export type WorkshopStatus = "en_attente" | "en_cours" | "termine" | "livre";
 export type WorkshopTicket = {
   id: string;
   shop_id: string | null;
+  activity_type?: "phone" | "computer" | "consumable";
   client_id: string | null;
   client_name: string | null;
   client_whatsapp: string | null;

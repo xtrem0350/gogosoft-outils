@@ -226,7 +226,7 @@ export function PublicShopPage({
   category: initialCategory,
 }: {
   slug: string;
-  category?: ProductCategory;
+  category?: ProductCategory | undefined;
 }) {
   const { shop, loading, error } = useOnlineShop(slug);
   const [products, setProducts] = useState<OnlineProduct[]>([]);
