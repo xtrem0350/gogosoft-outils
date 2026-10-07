@@ -18,6 +18,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { getPageIcon } from "@/components/PageIdentity";
 import { HelpButton } from "@/components/HelpButton";
 import { InactivityWarningModal } from "@/components/InactivityWarningModal";
+import { DemoBanner } from "@/components/DemoBanner";
 import { PricingModal } from "@/components/PricingModal";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
@@ -46,6 +47,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
+import { getDemoInfo } from "@/services/demoService";
 import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
 
@@ -57,10 +59,30 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showNewBadge, setShowNewBadge] = useState(false);
   const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
   const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
+  const [demoInfo, setDemoInfo] = useState<Awaited<ReturnType<typeof getDemoInfo>>>(null);
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const userId = user?.id;
+  useEffect(() => {
+    let active = true;
+    if (!userId) {
+      setDemoInfo(null);
+      return () => {
+        active = false;
+      };
+    }
+    void getDemoInfo()
+      .then((info) => {
+        if (active) setDemoInfo(info?.is_demo === true ? info : null);
+      })
+      .catch(() => {
+        if (active) setDemoInfo(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [userId]);
   useEffect(() => {
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
@@ -199,7 +221,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
+    <>
+      {demoInfo?.is_demo === true ? (
+        <DemoBanner expiresAt={demoInfo.demo_expires_at} />
+      ) : null}
+      <div
+        className={`flex h-screen overflow-hidden bg-background ${
+          demoInfo?.is_demo === true ? "pt-10" : ""
+        }`}
+      >
       {isSuperAdmin ? <AdminSidebar /> : <Sidebar />}
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
@@ -332,11 +362,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">Accueil</Link>
+                    <Link to="/dashboard">Accueil</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-                {location.pathname !== "/" ? <BreadcrumbSeparator /> : null}
-                {location.pathname !== "/" ? (
+                {location.pathname !== "/dashboard" ? <BreadcrumbSeparator /> : null}
+                {location.pathname !== "/dashboard" ? (
                   <BreadcrumbItem>
                     <BreadcrumbPage>{breadcrumbLabel}</BreadcrumbPage>
                   </BreadcrumbItem>
@@ -373,7 +403,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           void navigate({ to: "/clients/$id", params: { id: client.id } });
         }}
       />
-    </div>
+      </div>
+    </>
   );
 }
 

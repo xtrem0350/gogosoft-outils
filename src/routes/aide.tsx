@@ -329,7 +329,7 @@ function AidePage() {
         subtitle="Tout ce qu'il faut savoir pour utiliser GogoSoft"
         icon={BookOpen}
         iconColor="orange"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Aide" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Aide" }]}
       />
 
       <div className="rounded-2xl border bg-card p-4 shadow-sm">

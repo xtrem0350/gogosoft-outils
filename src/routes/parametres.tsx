@@ -129,7 +129,7 @@ function ParametresPage() {
         subtitle="Configurez votre profil, votre boutique et les options de communication."
         icon={Settings}
         iconColor="orange"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Paramètres" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Paramètres" }]}
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">

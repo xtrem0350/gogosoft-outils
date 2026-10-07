@@ -1,504 +1,221 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  Activity,
-  AlertTriangle,
-  ArrowUpRight,
-  ClipboardList,
-  CreditCard,
+  Check,
   Laptop,
   Package,
-  Smartphone,
   ShoppingCart,
-  UserPlus,
-  UserRound,
+  Smartphone,
+  Sparkles,
   Wrench,
+  type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
-import { EmptyState } from "@/components/EmptyState";
-import { IconBadge3D } from "@/components/IconBadge3D";
-import { PricingModal } from "@/components/PricingModal";
-import { StatsCard } from "@/components/StatsCard";
-import { SubscriptionBadge } from "@/components/SubscriptionBadge";
+import profileLogo from "@/assets/images/leprofile.png";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/useAuth";
-import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { useShopModules } from "@/hooks/useShopModules";
-import { useSubscription } from "@/hooks/useSubscription";
-import { getClientsByShop, type ClientRecord } from "@/services/clientService";
-import {
-  applyModuleSelection,
-  savePendingModuleSelection,
-  type ModulePurchaseSelection,
-} from "@/services/moduleService";
-import { getEvents, getTickets, type WorkshopEvent } from "@/services/workshopService";
-import type { WorkshopTicket } from "@/types/database";
-import { toast } from "sonner";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Tableau de bord — GogoSoft Tools Manager" },
-      {
-        name: "description",
-        content:
-          "Vue d'ensemble de votre atelier de réparation : réparations en cours, clients et abonnement.",
-      },
-      { property: "og:title", content: "Tableau de bord — GogoSoft Tools Manager" },
-      {
-        property: "og:description",
-        content: "Vue d'ensemble de votre atelier de réparation mobile.",
-      },
-    ],
-  }),
-  component: Index,
-});
+export const Route = createFileRoute("/")({ component: LandingPage });
 
-const STATUS_LABELS: Record<string, string> = {
-  en_attente: "⏳ En attente",
-  en_cours: "⚙️ En cours",
-  termine: "✅ Terminé",
-  livre: "📦 Livré",
-};
+function LandingPage() {
+  return (
+    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50">
+      <header className="fixed top-0 z-50 w-full border-b border-orange-100 bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <img src={profileLogo} alt="GogoSoft" className="size-10 rounded-full" />
+            <span className="text-lg font-bold text-slate-900">GogoSoft</span>
+          </div>
+          <div className="flex gap-3">
+            <Link to="/auth">
+              <Button variant="ghost">Se connecter</Button>
+            </Link>
+            <Link to="/auth">
+              <Button className="bg-ivoirien bg-ivoirien-hover shadow-3d">Créer un compte</Button>
+            </Link>
+          </div>
+        </div>
+      </header>
 
-function formatRelativeTime(value: string | null) {
-  if (!value) return "Date inconnue";
-  const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
-  if (minutes < 1) return "À l'instant";
-  if (minutes < 60) return `Il y a ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `Il y a ${hours} h`;
-  const days = Math.floor(hours / 24);
-  return `Il y a ${days} j`;
+      <section className="px-6 pb-20 pt-32">
+        <div className="mx-auto max-w-4xl text-center">
+          <div className="mb-6 inline-block rounded-full bg-orange-100 px-4 py-2 text-sm font-medium text-orange-700">
+            🇨🇮 Solution ivoirienne
+          </div>
+          <h1 className="mb-6 text-5xl font-bold text-slate-900 md:text-6xl">
+            Gérez votre atelier
+            <br />
+            <span className="bg-gradient-to-r from-orange-500 to-green-600 bg-clip-text text-transparent">
+              comme un pro.
+            </span>
+          </h1>
+          <p className="mx-auto mb-10 max-w-2xl text-xl text-slate-600">
+            Réparations, ventes, consommables, clients, vitrine en ligne. Une seule application pour
+            tout gérer.
+          </p>
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
+            <Link to="/demo">
+              <Button
+                size="lg"
+                className="h-14 bg-ivoirien bg-ivoirien-hover px-8 text-lg shadow-3d"
+              >
+                🎮 Tester la démo gratuitement
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="lg" variant="outline" className="h-14 px-8 text-lg">
+                Créer mon compte
+              </Button>
+            </Link>
+          </div>
+          <p className="mt-4 text-sm text-slate-500">1 jour d&apos;essai gratuit · Sans engagement</p>
+        </div>
+      </section>
+
+      <section className="bg-white py-20 px-6">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="mb-12 text-center text-3xl font-bold">Choisissez uniquement ce que vous utilisez</h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            <ModuleCard
+              icon={Smartphone}
+              title="Réparation Téléphone"
+              description="Fiches, diagnostics, WhatsApp auto"
+              color="orange"
+            />
+            <ModuleCard
+              icon={Laptop}
+              title="Réparation PC"
+              description="Maintenance, pièces, suivi"
+              color="orange"
+            />
+            <ModuleCard
+              icon={ShoppingCart}
+              title="Ventes"
+              description="Téléphones, PC, accessoires"
+              color="green"
+            />
+            <ModuleCard
+              icon={Package}
+              title="Consommables"
+              description="Stock, alertes, réappro"
+              color="green"
+            />
+            <ModuleCard
+              icon={Wrench}
+              title="Vitrine en ligne"
+              description="Boutique publique 24h/24"
+              color="orange"
+            />
+            <ModuleCard
+              icon={Sparkles}
+              title="Multi-ateliers"
+              description="Gérez plusieurs boutiques"
+              color="green"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-gradient-to-br from-orange-50 to-green-50 py-20 px-6">
+        <div className="mx-auto max-w-4xl">
+          <h2 className="mb-4 text-center text-3xl font-bold">Tarifs simples et transparents</h2>
+          <p className="mb-12 text-center text-slate-600">À partir de 6 000 FCFA/mois</p>
+          <div className="grid gap-6 md:grid-cols-3">
+            <PriceCard
+              title="Application"
+              price="6 000"
+              subtitle="1 module / mois"
+              features={["1 module au choix", "Support WhatsApp", "Multi-appareils"]}
+            />
+            <PriceCard
+              title="Pro"
+              price="10 000"
+              subtitle="2 modules / mois"
+              featured
+              features={["2 modules au choix", "Support prioritaire", "Multi-appareils"]}
+            />
+            <PriceCard
+              title="Vitrine"
+              price="20 000"
+              subtitle="1 côté / mois"
+              features={["Boutique publique", "Commandes en ligne", "Paiement Wave/OM"]}
+            />
+          </div>
+          <p className="mt-8 text-center text-slate-500">+ Nom de domaine .com : 10 000 FCFA/an</p>
+        </div>
+      </section>
+
+      <section className="bg-slate-900 py-20 px-6 text-white">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="mb-6 text-4xl font-bold">Prêt à tester ?</h2>
+          <p className="mb-10 text-xl text-slate-300">Démarrez votre essai gratuit en 30 secondes.</p>
+          <Link to="/demo">
+            <Button size="lg" className="h-14 bg-ivoirien bg-ivoirien-hover px-10 text-lg shadow-3d">
+              🎮 Tester maintenant
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      <footer className="bg-slate-950 py-10 px-6 text-center text-sm text-slate-400">
+        <p>© 2026 GogoSoft · Développé par Thierry GOGO & Co · Abidjan, Côte d&apos;Ivoire</p>
+      </footer>
+    </main>
+  );
 }
 
-function Index() {
-  const navigate = useNavigate();
-  const { profile, user, loading: authLoading } = useAuth();
-  const { shop, shopId, loading: shopLoading, refresh: refreshShop } = useCurrentShop();
-  const { modules, hasModule, loading: modulesLoading, refresh: refreshModules } = useShopModules();
-  const { subscription, daysRemaining, loading: subLoading } = useSubscription();
-  const [pricingOpen, setPricingOpen] = useState(false);
-
-  const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
-  const [clients, setClients] = useState<ClientRecord[]>([]);
-  const [events, setEvents] = useState<WorkshopEvent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    if (!shopId) {
-      setTickets([]);
-      setClients([]);
-      setEvents([]);
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const [ticketList, clientList] = await Promise.all([
-        getTickets(shopId),
-        getClientsByShop(shopId),
-      ]);
-      const eventLists = await Promise.all(
-        ticketList.slice(0, 5).map((ticket) => getEvents(ticket.id)),
-      );
-      setTickets(ticketList);
-      setClients(clientList);
-      setEvents(
-        eventLists
-          .flat()
-          .sort((left, right) => (right.created_at ?? "").localeCompare(left.created_at ?? ""))
-          .slice(0, 5),
-      );
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "Impossible de charger les données de la boutique.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [shopId]);
-
-  useEffect(() => {
-    if (shopLoading) return;
-    void load();
-  }, [load, shopLoading]);
-
-  const subscriptionExpired = Boolean(
-    subscription &&
-    (subscription.status === "expired" ||
-      (subscription.expires_at && new Date(subscription.expires_at).getTime() <= Date.now())),
-  );
-
-  useEffect(() => {
-    if (subLoading || !subscriptionExpired) return;
-    setPricingOpen(true);
-  }, [subLoading, subscriptionExpired]);
-
-  useEffect(() => {
-    if (authLoading || user || typeof window === "undefined") return;
-    if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
-
-    const timeout = window.setTimeout(() => {
-      setPricingOpen(true);
-      window.localStorage.setItem("gogosoft_pricing_shown", "true");
-    }, 2000);
-
-    return () => window.clearTimeout(timeout);
-  }, [authLoading, user]);
-
-  const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
-  const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
-  const busy = shopLoading || loading;
-  const displayName =
-    profile?.nom?.trim() ||
-    (user?.user_metadata["full_name"] as string | undefined)?.trim() ||
-    user?.email?.split("@")[0] ||
-    "Réparateur";
-  const firstName = displayName.split(" ")[0] ?? displayName;
-  const currentHour = new Date().getHours();
-  const greeting =
-    currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
-  const roleLabel = profile?.role ?? "Réparateur";
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlyRevenue = tickets
-    .filter((ticket) => ticket.created_at?.startsWith(currentMonth))
-    .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0);
-  const formatAmount = new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "XOF",
-    maximumFractionDigits: 0,
-  });
-  const quickActions = [
-    ...(hasModule("phone_repair")
-      ? [
-          {
-            to: "/phone/atelier/nouveau",
-            icon: Smartphone,
-            label: "Nouvelle réparation téléphone",
-            description: "Créer une fiche téléphone",
-            color: "orange" as const,
-          },
-        ]
-      : []),
-    ...(hasModule("computer_repair")
-      ? [
-          {
-            to: "/computer/atelier/nouveau",
-            icon: Laptop,
-            label: "Nouvelle réparation PC",
-            description: "Prendre en charge un ordinateur",
-            color: "green" as const,
-          },
-        ]
-      : []),
-    ...(hasModule("phone_sale") || hasModule("computer_sale")
-      ? [
-          {
-            to: "/sales/nouveau",
-            icon: ShoppingCart,
-            label: "Nouvelle vente",
-            description: "Enregistrer un produit vendu",
-            color: "green" as const,
-          },
-        ]
-      : []),
-    ...(hasModule("consumable")
-      ? [
-          {
-            to: "/consumable/stock/nouveau",
-            icon: Package,
-            label: "Ajouter au stock",
-            description: "Enregistrer une pièce ou un accessoire",
-            color: "orange" as const,
-          },
-        ]
-      : []),
-    {
-      to: "/clients/nouveau",
-      icon: UserPlus,
-      label: "Nouveau client",
-      description: "Ajouter à votre carnet",
-      color: "orange" as const,
-    },
-  ];
-
-  async function handlePricingSelection(selection: ModulePurchaseSelection) {
-    if (!user) {
-      savePendingModuleSelection(selection);
-      setPricingOpen(false);
-      await navigate({ to: "/auth" });
-      return;
-    }
-    try {
-      const selectedShop = await applyModuleSelection(user.id, selection);
-      await refreshShop(user.id, true);
-      if (shopId === selectedShop.id) await refreshModules();
-      toast.success("Votre forfait a été activé !");
-      setPricingOpen(false);
-      await navigate({ to: "/" });
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Activation du forfait impossible.");
-    }
-  }
-
+function ModuleCard({
+  icon: Icon,
+  title,
+  description,
+  color,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  color: "orange" | "green";
+}) {
   return (
-    <div className="mx-auto max-w-7xl space-y-8">
-      <PricingModal
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-        isBlocking={subscriptionExpired}
-        onCreateAccount={(selection) => void handlePricingSelection(selection)}
-      />
-      <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-700/75">
-              Espace de travail
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
-              {greeting} <span className="inline-block animate-pulse">👋</span>
-            </h1>
-            <p className="mt-2 text-base text-slate-700">Que voulez-vous faire aujourd'hui ?</p>
-            {subscription ? <SubscriptionBadge subscription={subscription} /> : null}
-            <p className="mt-3 text-sm font-medium text-slate-700/80">
-              {roleLabel} · {shop?.name ?? "Votre atelier"}
-            </p>
-          </div>
-          <div className="hidden rounded-2xl border border-white/60 bg-white/35 p-3 shadow-3d sm:block">
-            <IconBadge3D icon={Wrench} size="lg" color="orange" />
-          </div>
-        </div>
+    <div className="card-3d p-6 transition-all hover:shadow-3d-hover">
+      <div
+        className={`mb-4 flex size-12 items-center justify-center rounded-xl ${
+          color === "orange" ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600"
+        }`}
+      >
+        <Icon className="size-6" />
       </div>
+      <h3 className="mb-2 text-lg font-bold">{title}</h3>
+      <p className="text-sm text-slate-500">{description}</p>
+    </div>
+  );
+}
 
-      {showRenewalBanner ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-900 shadow-sm">
-          <div className="flex items-center gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
-              <AlertTriangle className="size-5" aria-hidden="true" />
-            </span>
-            <p className="font-medium">Votre abonnement expire dans {daysRemaining} jour(s).</p>
-          </div>
-          <Button
-            asChild
-            className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
-          >
-            <Link to="/abonnement">Renouveler</Link>
-          </Button>
-        </div>
-      ) : null}
-
-      {error ? (
-        <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}{" "}
-          <button type="button" className="font-semibold underline" onClick={() => void load()}>
-            Réessayer
-          </button>
-        </div>
-      ) : null}
-
-      {modulesLoading ? (
-        <p className="text-sm text-muted-foreground">Chargement des modules…</p>
-      ) : modules.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title="Aucun module activé"
-          description="Vous n'avez activé aucun module. Allez dans Paramètres > Mes modules pour en activer."
-          actionLabel="Gérer mes modules"
-          onAction={() => void navigate({ to: "/parametres" })}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {quickActions.map(({ to, icon, label, description, color }) => (
-            <Link key={to} to={to} className="group min-w-0">
-              <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
-                <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
-                  <IconBadge3D
-                    icon={icon}
-                    size="md"
-                    color={color}
-                    className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">
-                      {label}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
-                      {description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard
-          title="Réparations en cours"
-          value={busy ? "…" : enCours}
-          icon={Activity}
-          trend={`${tickets.length} fiche(s) au total`}
-          color="success"
-        />
-        <StatsCard
-          title="Clients enregistrés"
-          value={busy ? "…" : clients.length}
-          icon={UserRound}
-          trend="Base de la boutique"
-          color="primary"
-        />
-        <StatsCard
-          title="CA du mois"
-          value={busy ? "…" : formatAmount.format(monthlyRevenue)}
-          icon={CreditCard}
-          trend="Selon les montants des fiches"
-          color="warning"
-        />
-        <StatsCard
-          title="Jours restants abonnement"
-          value={subLoading ? "…" : daysRemaining}
-          icon={ClipboardList}
-          trend={subscription?.plan ? `Formule ${subscription.plan}` : "Aucun abonnement"}
-          color="danger"
-        />
+function PriceCard({
+  title,
+  price,
+  subtitle,
+  features,
+  featured,
+}: {
+  title: string;
+  price: string;
+  subtitle: string;
+  features: string[];
+  featured?: boolean;
+}) {
+  return (
+    <div className={`card-3d p-6 ${featured ? "scale-105 ring-2 ring-orange-500" : ""}`}>
+      {featured ? <div className="mb-2 text-xs font-bold text-orange-600">RECOMMANDÉ</div> : null}
+      <h3 className="mb-1 text-xl font-bold">{title}</h3>
+      <p className="mb-4 text-sm text-slate-500">{subtitle}</p>
+      <div className="mb-6 text-3xl font-bold">
+        {price} <span className="text-sm text-slate-500">FCFA</span>
       </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="card-3d rounded-2xl border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
-          <CardHeader>
-            <CardTitle>Activité récente</CardTitle>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Les dernières actions sur vos fiches.
-            </p>
-          </CardHeader>
-          <CardContent className="flex gap-4 overflow-x-auto pb-5">
-            {busy ? (
-              <p className="text-sm text-muted-foreground">Chargement…</p>
-            ) : events.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Aucune activité récente.</p>
-            ) : (
-              events.map((event) => (
-                <div
-                  key={event.id}
-                  className="w-64 shrink-0 rounded-xl border border-border/70 bg-background p-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
-                      <Activity className="size-4" />
-                    </div>
-                    <p className="text-xs font-semibold text-orange-700">
-                      {formatRelativeTime(event.created_at)}
-                    </p>
-                  </div>
-                  <p className="mt-3 line-clamp-2 text-sm font-medium">
-                    {event.description ?? event.event_type}
-                  </p>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-        <Card className="card-3d rounded-2xl border-0">
-          <CardHeader className="flex-row items-center justify-between gap-3">
-            <div>
-              <CardTitle>Réparations récentes</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Les 5 dernières fiches de l'atelier.
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/atelier">
-                Voir tout
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {busy ? (
-              <p className="text-sm text-muted-foreground">Chargement…</p>
-            ) : tickets.length === 0 ? (
-              <EmptyState
-                icon={Wrench}
-                title="Aucune réparation"
-                description="Créez votre première fiche d'atelier pour suivre une réparation."
-                actionLabel="Nouvelle fiche"
-                onAction={() => void navigate({ to: "/atelier/nouveau" })}
-              />
-            ) : (
-              tickets.slice(0, 5).map((repair) => (
-                <Link
-                  key={repair.id}
-                  to="/atelier/$id"
-                  params={{ id: repair.id }}
-                  className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50"
-                >
-                  <div>
-                    <p className="text-sm font-semibold">{repair.client_name}</p>
-                    <p className="text-xs text-muted-foreground">{repair.device_model}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {STATUS_LABELS[repair.status] ?? repair.status}
-                  </span>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="card-3d rounded-2xl border-0">
-          <CardHeader className="flex-row items-center justify-between gap-3">
-            <div>
-              <CardTitle>Clients récents</CardTitle>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Les derniers clients enregistrés.
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/clients">
-                Voir tout
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {busy ? (
-              <p className="text-sm text-muted-foreground">Chargement…</p>
-            ) : clients.length === 0 ? (
-              <EmptyState
-                icon={UserRound}
-                title="Aucun client"
-                description="Enregistrez vos clients pour retrouver leur historique de réparations."
-                actionLabel="Nouveau client"
-                onAction={() => void navigate({ to: "/clients/nouveau" })}
-              />
-            ) : (
-              clients.slice(0, 5).map((client) => (
-                <Link
-                  key={client.id}
-                  to="/clients/$id"
-                  params={{ id: client.id }}
-                  className="flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{client.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{client.whatsapp}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {client.total_repairs ?? 0} réparation(s)
-                  </span>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
+      <ul className="mb-6 space-y-2">
+        {features.map((feature, index) => (
+          <li key={`${title}-${index}`} className="flex items-center gap-2 text-sm">
+            <Check className="size-4 text-green-600" /> {feature}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

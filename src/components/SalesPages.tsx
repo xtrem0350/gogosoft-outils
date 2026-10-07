@@ -100,10 +100,10 @@ export function SalesListPage({
       : "Consultez les ventes de votre boutique et leur état de livraison.";
   const HeadingIcon = isOrders ? ClipboardList : isDeliveries ? Truck : CircleDollarSign;
   const breadcrumb = isOrders
-    ? [{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Commandes" }]
+    ? [{ label: "Accueil", to: "/dashboard" }, { label: "Ventes", to: "/sales" }, { label: "Commandes" }]
     : isDeliveries
-      ? [{ label: "Accueil", to: "/" }, { label: "Ventes", to: "/sales" }, { label: "Livraisons" }]
-      : [{ label: "Accueil", to: "/" }, { label: "Ventes" }];
+      ? [{ label: "Accueil", to: "/dashboard" }, { label: "Ventes", to: "/sales" }, { label: "Livraisons" }]
+      : [{ label: "Accueil", to: "/dashboard" }, { label: "Ventes" }];
   const theme = isDeliveries
     ? {
         band: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-900 dark:bg-emerald-950/25",
@@ -384,7 +384,7 @@ export function NewSalePage() {
         icon={ShoppingCart}
         iconColor="orange"
         breadcrumb={[
-          { label: "Accueil", to: "/" },
+          { label: "Accueil", to: "/dashboard" },
           { label: "Ventes", to: "/sales" },
           { label: "Nouvelle vente" },
         ]}

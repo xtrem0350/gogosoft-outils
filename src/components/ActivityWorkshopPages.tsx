@@ -77,7 +77,7 @@ export function ActivityListPage({
   const heroColor = activityType === "consumable" ? "green" : "orange";
   const breadcrumb = history
     ? [
-        { label: "Accueil", to: "/" },
+        { label: "Accueil", to: "/dashboard" },
         {
           label:
             activityType === "consumable"
@@ -89,7 +89,7 @@ export function ActivityListPage({
         { label: "Historiques" },
       ]
     : [
-        { label: "Accueil", to: "/" },
+        { label: "Accueil", to: "/dashboard" },
         {
           label:
             activityType === "consumable"
@@ -422,12 +422,12 @@ export function NewActivityPage({ activityType }: { activityType: ActivityType }
         breadcrumb={
           isConsumable
             ? [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 { label: "Consommables", to: "/consumable/stock" },
                 { label: "Nouveau produit" },
               ]
             : [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 {
                   label: activityType === "phone" ? "Téléphone" : "Ordinateur",
                   to: `/${activityType}/atelier`,
@@ -651,12 +651,12 @@ export function ActivityDetailsPage({
         breadcrumb={
           activityType === "consumable"
             ? [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 { label: "Consommables", to: "/consumable/stock" },
                 { label: "Produit" },
               ]
             : [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 {
                   label: activityType === "phone" ? "Téléphone" : "Ordinateur",
                   to: `/${activityType}/atelier`,
@@ -696,12 +696,12 @@ export function ExperienceBookPage({
         breadcrumb={
           activityType === "phone"
             ? [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 { label: "Téléphone" },
                 { label: "Carnet d'expérience" },
               ]
             : [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 { label: "Ordinateur" },
                 { label: "Carnet d'expérience" },
               ]

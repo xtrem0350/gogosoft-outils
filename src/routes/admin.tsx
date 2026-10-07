@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin")({
       .select("is_super_admin")
       .eq("id", data.user.id)
       .maybeSingle();
-    if (!profile?.is_super_admin) throw redirect({ to: "/" });
+    if (!profile?.is_super_admin) throw redirect({ to: "/dashboard" });
   },
   component: AdminLayout,
 });

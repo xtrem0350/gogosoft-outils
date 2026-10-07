@@ -15,6 +15,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
@@ -113,6 +115,16 @@ const AuthRoute = AuthRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EquipeRoute = EquipeRouteImport.update({
@@ -471,6 +483,8 @@ export interface FileRoutesByFullPath {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -547,6 +561,8 @@ export interface FileRoutesByTo {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -624,6 +640,8 @@ export interface FileRoutesById {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/categories': typeof CategoriesRoute
+  '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -703,6 +721,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/categories'
+    | '/dashboard'
+    | '/demo'
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
@@ -779,6 +799,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/categories'
+    | '/dashboard'
+    | '/demo'
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
@@ -855,6 +877,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/categories'
+    | '/dashboard'
+    | '/demo'
     | '/equipe'
     | '/historique'
     | '/mot-de-passe-oublie'
@@ -933,6 +957,8 @@ export interface RootRouteChildren {
   AideRoute: typeof AideRoute
   AuthRoute: typeof AuthRoute
   CategoriesRoute: typeof CategoriesRoute
+  DashboardRoute: typeof DashboardRoute
+  DemoRoute: typeof DemoRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
@@ -1017,6 +1043,20 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/equipe': {
@@ -1661,6 +1701,8 @@ const rootRouteChildren: RootRouteChildren = {
   AideRoute: AideRoute,
   AuthRoute: AuthRoute,
   CategoriesRoute: CategoriesRoute,
+  DashboardRoute: DashboardRoute,
+  DemoRoute: DemoRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,

@@ -150,9 +150,9 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
         }
         breadcrumb={
           plan
-            ? [{ label: "Accueil", to: "/" }, { label: "Plan de l'atelier" }]
+            ? [{ label: "Accueil", to: "/dashboard" }, { label: "Plan de l'atelier" }]
             : [
-                { label: "Accueil", to: "/" },
+                { label: "Accueil", to: "/dashboard" },
                 { label: "Paramètres", to: "/parametres" },
                 { label: "Emplacements" },
               ]

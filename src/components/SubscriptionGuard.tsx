@@ -33,7 +33,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
       notifyShopModulesChanged(shop.id);
       if (shopId === shop.id) await refreshModules();
       toast.success("Votre sélection a été activée.");
-      await navigate({ to: "/" });
+      await navigate({ to: "/dashboard" });
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Activation impossible.");
     } finally {

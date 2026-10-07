@@ -89,7 +89,7 @@ function EquipePage() {
             Inviter un technicien
           </Button>
         }
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Équipe" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Équipe" }]}
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">

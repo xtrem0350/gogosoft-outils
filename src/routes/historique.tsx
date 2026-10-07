@@ -49,7 +49,7 @@ function HistoriquePage() {
         subtitle="Qui a lancé quoi, et quand le catalogue a changé."
         icon={History}
         iconColor="orange"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Historique" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Historique" }]}
       />
 
       <Tabs defaultValue="launches">

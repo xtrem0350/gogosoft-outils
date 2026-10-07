@@ -131,9 +131,14 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const isAuthPage = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
-    location.pathname,
-  );
+  const publicRoutes = [
+    "/",
+    "/auth",
+    "/mot-de-passe-oublie",
+    "/reinitialiser-mot-de-passe",
+    "/demo",
+  ];
+  const isStandalonePage = publicRoutes.includes(location.pathname);
   const isPublicShopRoute = location.pathname.startsWith("/shop/");
   const routeOutlet = (
     <div key={location.pathname} className="page-transition">
@@ -171,7 +176,7 @@ function RootComponent() {
         <AuthProvider>
           <CurrentShopProvider>
             <SuperAdminRedirect>
-              {isAuthPage || isPublicShopRoute ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
+              {isStandalonePage || isPublicShopRoute ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
             </SuperAdminRedirect>
           </CurrentShopProvider>
           <Toaster position="bottom-right" />
@@ -188,7 +193,15 @@ function SuperAdminRedirect({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading || !user || profile?.is_super_admin !== true) return;
-    const allowedPrefixes = ["/admin", "/profil", "/aide", "/parametres", "/nouveautes", "/shop"];
+    const allowedPrefixes = [
+      "/admin",
+      "/profil",
+      "/aide",
+      "/parametres",
+      "/nouveautes",
+      "/shop",
+      "/demo",
+    ];
     const isAllowed = allowedPrefixes.some(
       (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
     );

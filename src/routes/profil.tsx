@@ -140,7 +140,7 @@ function ProfilPage() {
         subtitle="Gérez vos informations et vos accès à GogoSoft Tools Manager."
         icon={User}
         iconColor="orange"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Mon profil" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Mon profil" }]}
       />
       <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
         <div className="space-y-6">

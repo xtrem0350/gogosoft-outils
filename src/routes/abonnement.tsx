@@ -70,7 +70,7 @@ function AbonnementPage() {
         subtitle="Suivez votre accès, vos avantages et vos options."
         icon={CreditCard}
         iconColor="green"
-        breadcrumb={[{ label: "Accueil", to: "/" }, { label: "Mon forfait" }]}
+        breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Mon forfait" }]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">

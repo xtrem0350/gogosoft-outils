@@ -127,7 +127,7 @@ function AuthPage() {
         window.localStorage.removeItem("gogosoft.rememberedIdentifier");
       }
       console.info("[auth] sign-in:success");
-      await navigate({ to: "/" });
+      await navigate({ to: "/dashboard" });
     } catch (error) {
       console.error("[auth] sign-in:exception", error);
       toast.error(error instanceof Error ? error.message : "Connexion impossible.");
@@ -165,7 +165,7 @@ function AuthPage() {
       const pricingAlreadyShown = window.localStorage.getItem("gogosoft_pricing_shown");
       if (pricingAlreadyShown) {
         setActiveTab("signin");
-        await navigate({ to: "/" });
+        await navigate({ to: "/boutiques/nouveau" });
         return;
       }
 

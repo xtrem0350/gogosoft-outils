@@ -53,7 +53,7 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     {
       label: "ACCUEIL",
       icon: Home,
-      items: [{ label: "Dashboard", to: "/", icon: LayoutDashboard }],
+      items: [{ label: "Dashboard", to: "/dashboard", icon: LayoutDashboard }],
     },
   ];
 
