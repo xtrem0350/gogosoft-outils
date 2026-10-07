@@ -1,29 +1,44 @@
 import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, Gamepad2, Laptop, Package, ShoppingCart, Smartphone } from "lucide-react";
+import {
+  Check,
+  Gamepad2,
+  Laptop,
+  Package,
+  ShoppingCart,
+  Smartphone,
+  Sparkles,
+  Store,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
-import { startDemo } from "@/services/demoService";
+import { getDemoModuleCodes, selectedDemoModuleIds, startDemo } from "@/services/demoService";
+import { MODULES, MODULE_IDS, moduleIdsFromShopCodes, type ModuleId } from "@/types/modules";
 
 export const Route = createFileRoute("/demo")({ component: DemoPage });
 
-const demoModules: Array<{ code: string; name: string; icon: LucideIcon }> = [
-  { code: "repair_phone", name: "Réparation Téléphone", icon: Smartphone },
-  { code: "repair_computer", name: "Réparation PC", icon: Laptop },
-  { code: "sale_phone", name: "Vente Téléphone", icon: ShoppingCart },
-  { code: "sale_computer", name: "Vente PC", icon: ShoppingCart },
-  { code: "consumable", name: "Consommables", icon: Package },
-];
+const moduleIcons: Record<ModuleId, LucideIcon> = {
+  "reparation-telephone": Smartphone,
+  "reparation-pc": Laptop,
+  "vente-telephone": ShoppingCart,
+  "vente-pc": ShoppingCart,
+  consommables: Package,
+  "vitrine-telephone": Smartphone,
+  "vitrine-pc": Laptop,
+  "multi-ateliers": Store,
+};
 
 function DemoPage() {
   const navigate = useNavigate();
-  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedModules, setSelectedModules] = useState<ModuleId[]>(() =>
+    moduleIdsFromShopCodes(getDemoModuleCodes()),
+  );
   const [starting, setStarting] = useState(false);
 
-  function toggleModule(code: string) {
+  function toggleModule(code: ModuleId) {
     setSelectedModules((current) =>
       current.includes(code) ? current.filter((item) => item !== code) : [...current, code],
     );
@@ -32,7 +47,7 @@ function DemoPage() {
   async function handleStartDemo() {
     setStarting(true);
     try {
-      await startDemo(selectedModules);
+      await startDemo(selectedDemoModuleIds(selectedModules));
       await navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de démarrer la démo.");
@@ -53,7 +68,9 @@ function DemoPage() {
 
         <section aria-label="Modules de démonstration">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {demoModules.map(({ code, name, icon: Icon }) => {
+            {MODULE_IDS.map((code) => {
+              const { label, description } = MODULES[code];
+              const Icon = moduleIcons[code];
               const selected = selectedModules.includes(code);
               return (
                 <button
@@ -74,7 +91,10 @@ function DemoPage() {
                   >
                     <Icon className="size-5" aria-hidden="true" />
                   </span>
-                  <span className="min-w-0 flex-1 font-semibold text-slate-900">{name}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold text-slate-900">{label}</span>
+                    <span className="mt-1 block text-sm text-slate-500">{description}</span>
+                  </span>
                   <span
                     aria-hidden="true"
                     className={`grid size-5 shrink-0 place-items-center rounded border ${

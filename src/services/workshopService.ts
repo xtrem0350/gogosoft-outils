@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { WorkshopTicket } from "@/types/database";
+import {
+  DEMO_SHOP_ID,
+  getDemoEvents,
+  getDemoTickets,
+  isDemoMode,
+  updateDemoSession,
+} from "@/services/demoService";
 
 export type { WorkshopTicket } from "@/types/database";
 export type ActivityType = "phone" | "computer" | "consumable";
@@ -222,6 +229,50 @@ export function generateDiagnosis(issues: IssueKey[]): WorkshopDiagnosis {
 
 /** Crée une fiche d'atelier et son diagnostic. */
 export async function createTicket(data: CreateTicketData): Promise<WorkshopTicket> {
+  if (isDemoMode()) {
+    const now = new Date().toISOString();
+    const ticket: WorkshopTicket = {
+      id: `demo-ticket-${crypto.randomUUID()}`,
+      shop_id: DEMO_SHOP_ID,
+      client_id: data.client_id ?? null,
+      client_name: data.client_name,
+      client_whatsapp: data.client_whatsapp,
+      device_model: data.device_model,
+      device_processor: data.device_processor ?? null,
+      device_imei: data.device_imei ?? null,
+      device_sn: data.device_sn ?? null,
+      device_os_version: data.device_os_version ?? null,
+      issues: data.issues,
+      status: "en_attente",
+      diagnosis: data.diagnosis ?? null,
+      notes: data.notes ?? null,
+      price_estimate: null,
+      price_final: null,
+      notified_at: null,
+      entry_fee: data.entry_fee ?? null,
+      entry_fee_paid: data.entry_fee_paid ?? false,
+      diagnostic_notes: data.diagnostic_notes ?? null,
+      created_by: null,
+      created_at: now,
+      updated_at: now,
+    };
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: [ticket, ...session.tickets],
+      events: [
+        {
+          id: `demo-event-${crypto.randomUUID()}`,
+          ticket_id: ticket.id,
+          event_type: "received",
+          description: "Appareil réceptionné à l'atelier.",
+          created_by: null,
+          created_at: now,
+        },
+        ...session.events,
+      ],
+    }));
+    return ticket;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const shopId = requireShopId(data.shop_id);
   console.log("[workshopService] called", { hasSession: true, shopId });
@@ -261,6 +312,7 @@ export async function getTickets(
   shopId: string | null | undefined,
   activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket[]> {
+  if (isDemoMode()) return getDemoTickets(activityType);
   if (!(await hasActiveSession()) || !shopId) return [];
   const { data, error } = await supabase
     .from("workshop_tickets")
@@ -277,6 +329,11 @@ export async function getTicketById(
   id: string,
   activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket | null> {
+  if (isDemoMode()) {
+    return getDemoTickets().find(
+      (ticket) => ticket.id === id && ticket.activity_type === activityType,
+    ) ?? null;
+  }
   if (!(await hasActiveSession())) return null;
   try {
     const { data, error } = await supabase
@@ -301,6 +358,19 @@ export async function updateTicketStatus(
   status: WorkshopStatus,
   activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket> {
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== id || ticket.activity_type !== activityType) return ticket;
+        updated = { ...ticket, status, updated_at: new Date().toISOString() };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Fiche atelier introuvable.");
+    return updated;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
     const { data, error } = await supabase
@@ -324,6 +394,20 @@ export async function markTicketNotified(
   id: string,
   activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket> {
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    const now = new Date().toISOString();
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== id || ticket.activity_type !== activityType) return ticket;
+        updated = { ...ticket, notified_at: now, updated_at: now };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Fiche atelier introuvable.");
+    return updated;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
     const { data, error } = await supabase
@@ -352,6 +436,16 @@ export async function deleteTicket(
   id: string,
   activityType: ActivityType = "phone",
 ): Promise<void> {
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.filter(
+        (ticket) => ticket.id !== id || ticket.activity_type !== activityType,
+      ),
+      events: session.events.filter((event) => event.ticket_id !== id),
+    }));
+    return;
+  }
   if (!(await hasActiveSession())) return;
   try {
     const { error } = await supabase
@@ -373,6 +467,26 @@ export async function searchDevices(
   activityType: ActivityType = "phone",
   clientId?: string,
 ): Promise<KnownDevice[]> {
+  if (isDemoMode()) {
+    const queryText = query.trim().toLocaleLowerCase();
+    const seen = new Set<string>();
+    return getDemoTickets(activityType)
+      .filter((ticket) => !clientId || ticket.client_id === clientId)
+      .filter((ticket) => !queryText || (ticket.device_model ?? "").toLocaleLowerCase().includes(queryText))
+      .map((ticket) => ({
+        device_model: ticket.device_model ?? "",
+        device_imei: ticket.device_imei,
+        device_sn: ticket.device_sn,
+        device_processor: ticket.device_processor,
+        device_os_version: ticket.device_os_version,
+      }))
+      .filter((device) => {
+        const key = device.device_imei ?? device.device_sn ?? device.device_model;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }
   if (!(await hasActiveSession()) || !shopId) return [];
   const q = query.trim().replace(/[,()%]/g, "");
   if (q.length === 1) return [];
@@ -404,6 +518,7 @@ export async function searchDevices(
 
 /** Récupère l'historique chronologique d'une intervention. */
 export async function getEvents(ticketId: string): Promise<WorkshopEvent[]> {
+  if (isDemoMode()) return getDemoEvents(ticketId);
   if (!(await hasActiveSession())) return [];
   const { data, error } = await supabase
     .from("workshop_events")
@@ -420,6 +535,18 @@ export async function addEvent(
   eventType: WorkshopEventType,
   description?: string,
 ): Promise<WorkshopEvent> {
+  if (isDemoMode()) {
+    const event: WorkshopEvent = {
+      id: `demo-event-${crypto.randomUUID()}`,
+      ticket_id: ticketId,
+      event_type: eventType,
+      description: description ?? null,
+      created_by: null,
+      created_at: new Date().toISOString(),
+    };
+    updateDemoSession((session) => ({ ...session, events: [...session.events, event] }));
+    return event;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data: auth } = await supabase.auth.getUser();
   const { data, error } = await supabase
@@ -441,6 +568,19 @@ export async function markEntryFeePaid(
   id: string,
   activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket> {
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== id || ticket.activity_type !== activityType) return ticket;
+        updated = { ...ticket, entry_fee_paid: true, updated_at: new Date().toISOString() };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Fiche atelier introuvable.");
+    return updated;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("workshop_tickets")

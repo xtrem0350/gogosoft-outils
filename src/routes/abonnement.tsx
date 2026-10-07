@@ -9,13 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { createPayment, simulatePaymentSuccess } from "@/services/paymentService";
 import { getMySubscription, type SubscriptionSummary } from "@/services/subscriptionService";
+import { isDemoMode } from "@/services/demoService";
 
 export const Route = createFileRoute("/abonnement")({
   component: AbonnementPage,
 });
 
 const plans = [
-  { key: "trial", label: "Trial", price: "Gratuit", days: 7, description: "Essai de 7 jours" },
+  { key: "trial", label: "Trial", price: "0 FCFA", days: 1, description: "Essai de 1 jour" },
   {
     key: "mensuel",
     label: "Mensuel",
@@ -33,6 +34,7 @@ const plans = [
 ] as const;
 
 function AbonnementPage() {
+  const demo = isDemoMode();
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
 
   useEffect(() => {
@@ -42,6 +44,10 @@ function AbonnementPage() {
   }, []);
 
   async function subscribe(plan: (typeof plans)[number]) {
+    if (demo) {
+      toast.info("Les tarifs sont indicatifs en démo. Créez un compte pour souscrire.");
+      return;
+    }
     try {
       const { data: userData } = await (
         await import("@/integrations/supabase/client")
@@ -104,7 +110,7 @@ function AbonnementPage() {
               </div>
             ))}
 
-            <Button
+            {!demo ? <Button
               variant="secondary"
               className="w-full"
               onClick={async () => {
@@ -129,7 +135,7 @@ function AbonnementPage() {
               }}
             >
               Simuler un paiement réussi
-            </Button>
+            </Button> : null}
           </CardContent>
         </Card>
       </div>

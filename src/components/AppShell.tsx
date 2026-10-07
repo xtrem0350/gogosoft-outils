@@ -47,7 +47,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
-import { getDemoInfo } from "@/services/demoService";
+import { endDemo, getDemoInfo, isDemoMode, readDemoSession } from "@/services/demoService";
 import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
 
@@ -59,7 +59,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showNewBadge, setShowNewBadge] = useState(false);
   const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
   const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
-  const [demoInfo, setDemoInfo] = useState<Awaited<ReturnType<typeof getDemoInfo>>>(null);
+  const [demoInfo, setDemoInfo] = useState<Awaited<ReturnType<typeof getDemoInfo>>>(() => {
+    const session = readDemoSession();
+    return session ? { is_demo: true, demo_expires_at: session.expires_at } : null;
+  });
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
@@ -67,7 +70,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     if (!userId) {
-      setDemoInfo(null);
+      const session = readDemoSession();
+      setDemoInfo(session ? { is_demo: true, demo_expires_at: session.expires_at } : null);
       return () => {
         active = false;
       };
@@ -110,7 +114,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     location.pathname.startsWith("/boutiques") ||
     location.pathname === "/abonnement" ||
     location.pathname === "/parametres";
-  const isExemptRoute = isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin;
+  const isExemptRoute =
+    isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
   const loading = authLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
@@ -182,7 +187,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     enabled: Boolean(user && !isAuthRoute),
   });
 
-  if (!loading && !user && !isAuthRoute) {
+  if (!loading && !user && !isAuthRoute && !isDemoMode()) {
     if (location.pathname === "/") {
       return (
         <>
@@ -223,7 +228,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       {demoInfo?.is_demo === true ? (
-        <DemoBanner expiresAt={demoInfo.demo_expires_at} />
+        <DemoBanner
+          expiresAt={demoInfo.demo_expires_at}
+          onCreateAccount={() => {
+            endDemo();
+            void navigate({ to: "/auth" });
+          }}
+        />
       ) : null}
       <div
         className={`flex h-screen overflow-hidden bg-background ${

@@ -64,7 +64,7 @@ export async function simulatePaymentSuccess(paymentId: string): Promise<Payment
   if (updateError) throw updateError;
 
   const durationMap: Record<string, number> = {
-    trial: 7,
+    trial: 1,
     mensuel: 30,
     annuel: 365,
   };

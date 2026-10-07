@@ -3,6 +3,7 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20261007000000_vitrine_pricing.sql
 │   │   ├── 📄 20261006090000_admin_platform.sql
 │   │   ├── 📄 20261006000000_backfill_shop_modules.sql
 │   │   ├── 📄 20261005110544_8098a51b-a58c-4bda-a163-182a6084d95a.sql
@@ -35,6 +36,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 subscriptionService.ts
 │   │   ├── 📄 storageService.ts
 │   │   ├── 📄 shopService.ts
+│   │   ├── 📄 shopOnlineService.ts
 │   │   ├── 📄 salesService.ts
 │   │   ├── 📄 paymentService.ts
 │   │   ├── 📄 moduleService.ts
@@ -42,6 +44,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 historyService.ts
 │   │   ├── 📄 guideService.ts
 │   │   ├── 📄 deviceService.ts
+│   │   ├── 📄 demoService.ts
 │   │   ├── 📄 clientService.ts
 │   │   ├── 📄 authService.ts
 │   │   └── 📄 adminService.ts
@@ -78,6 +81,11 @@ Structure du projet (avec glob)
 │   │   │   └── 📄 atelier
 │   │   ├── 📄 __root.tsx
 │   │   ├── 📄 statistiques.tsx
+│   │   ├── 📄 shop.$slug.tsx
+│   │   ├── 📄 shop.$slug.produit.$id.tsx
+│   │   ├── 📄 shop.$slug.panier.tsx
+│   │   ├── 📄 shop.$slug.confirmation.$orderId.tsx
+│   │   ├── 📄 shop.$slug.commande.tsx
 │   │   ├── 📄 salles
 │   │   ├── 📄 sales
 │   │   ├── 📄 reinitialiser-mot-de-passe.tsx
@@ -93,6 +101,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
+│   │   ├── 📄 demo.tsx
+│   │   ├── 📄 dashboard.tsx
 │   │   ├── 📄 consumable
 │   │   ├── 📄 computer
 │   │   ├── 📄 clients.nouveau.tsx
@@ -126,6 +136,12 @@ Structure du projet (avec glob)
 │   │   ├── 📄 admin.index.tsx
 │   │   ├── 📄 admin.finances.tsx
 │   │   ├── 📄 admin.facturation.tsx
+│   │   ├── 📄 admin.boutique.tsx
+│   │   ├── 📄 admin.boutique.produits.tsx
+│   │   ├── 📄 admin.boutique.produits.nouveau.tsx
+│   │   ├── 📄 admin.boutique.produits.$id.tsx
+│   │   ├── 📄 admin.boutique.commandes.tsx
+│   │   ├── 📄 admin.boutique.commandes.$id.tsx
 │   │   ├── 📄 admin.annonces.tsx
 │   │   └── 📄 abonnement.tsx
 │   ├── 📁 lib/
@@ -161,8 +177,12 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useShopModules.ts
 │   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
+│   │   ├── 📄 useCart.ts
 │   │   ├── 📄 useAuth.tsx
 │   │   └── 📄 use-mobile.tsx
+│   ├── 📁 contexts/
+│   │   ├── 📄 cartContextStore.ts
+│   │   └── 📄 CartContext.tsx
 │   ├── 📁 components/
 │   │   ├── 📁 ui/
 │   │   │   ├── 📄 tooltip.tsx
@@ -242,7 +262,9 @@ Structure du projet (avec glob)
 │   │   ├── 📄 Sidebar.tsx
 │   │   ├── 📄 ShopSelector.tsx
 │   │   ├── 📄 ShopModulesSection.tsx
+│   │   ├── 📄 ShopfrontPages.tsx
 │   │   ├── 📄 ShopCard.tsx
+│   │   ├── 📄 ShopAdminPages.tsx
 │   │   ├── 📄 selects
 │   │   ├── 📄 SearchableSelect.tsx
 │   │   ├── 📄 SalesPages.tsx
@@ -264,6 +286,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
+│   │   ├── 📄 DemoBanner.tsx
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
@@ -293,10 +316,15 @@ Structure du projet (avec glob)
 │   ├── 📄 lib
 │   ├── 📄 integrations
 │   ├── 📄 hooks
+│   ├── 📄 contexts
 │   ├── 📄 components
 │   └── 📄 assets
 ├── 📁 docs/
+│   ├── 📄 vitrine.md
 │   ├── 📄 versioning.md
+│   ├── 📄 rapport03.md
+│   ├── 📄 rapport02.md
+│   ├── 📄 rapport01.md
 │   ├── 📄 prompt.md
 │   ├── 📄 missions.md
 │   └── 📄 domain-workflow.md

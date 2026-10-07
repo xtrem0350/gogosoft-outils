@@ -2,17 +2,19 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
+import { isDemoMode } from "@/services/demoService";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading } = useAuth();
+  const demo = isDemoMode();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !demo) {
       void navigate({ to: "/auth", search: { redirect: location.pathname } });
     }
-  }, [loading, location.pathname, navigate, user]);
+  }, [demo, loading, location.pathname, navigate, user]);
 
   if (loading) {
     return (
@@ -22,7 +24,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!user && !demo) {
     return null;
   }
 

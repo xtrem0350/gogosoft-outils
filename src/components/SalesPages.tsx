@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import type { ClientRecord } from "@/services/clientService";
 import {
   createSale,
@@ -332,10 +333,21 @@ function SalesMetric({
 export function NewSalePage() {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
+  const { activeModules } = useActiveModules();
+  const allowedSalesTypes = [
+    ...(activeModules.includes("vente-telephone") ? (["phone"] as const) : []),
+    ...(activeModules.includes("vente-pc") ? (["computer"] as const) : []),
+  ];
   const [activityType, setActivityType] = useState<ActivityType>("phone");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
   const [createClientOpen, setCreateClientOpen] = useState(false);
+  useEffect(() => {
+    if (allowedSalesTypes.length > 0 && !allowedSalesTypes.includes(activityType as "phone" | "computer")) {
+      const firstAllowed = allowedSalesTypes[0];
+      if (firstAllowed) setActivityType(firstAllowed);
+    }
+  }, [activityType, allowedSalesTypes.join(",")]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!shopId) {
@@ -405,9 +417,8 @@ export function NewSalePage() {
                 onChange={(event) => setActivityType(event.target.value as ActivityType)}
                 className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
               >
-                <option value="phone">Téléphone</option>
-                <option value="computer">Ordinateur</option>
-                <option value="consumable">Consommable</option>
+                {allowedSalesTypes.includes("phone") ? <option value="phone">Téléphone</option> : null}
+                {allowedSalesTypes.includes("computer") ? <option value="computer">Ordinateur</option> : null}
               </select>
             </label>
             <Input

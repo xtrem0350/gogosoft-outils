@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { ActivityType } from "@/services/workshopService";
+import { DEMO_SHOP_ID, getDemoSales, isDemoMode, updateDemoSession } from "@/services/demoService";
 
 export type SalePaymentStatus = "pending" | "paid" | "refunded";
 export type SaleDeliveryStatus = "pending" | "ready" | "delivered";
@@ -32,6 +33,7 @@ export interface Sale {
 export type CreateSaleData = Omit<Sale, "id" | "created_by" | "created_at" | "updated_at">;
 
 export async function listSales(shopId: string, activityType?: ActivityType): Promise<Sale[]> {
+  if (isDemoMode()) return getDemoSales(activityType === "phone" || activityType === "computer" ? activityType : undefined);
   if (!(await hasActiveSession())) return [];
   let query = supabase
     .from("sales")
@@ -45,6 +47,7 @@ export async function listSales(shopId: string, activityType?: ActivityType): Pr
 }
 
 export async function getSaleById(id: string): Promise<Sale | null> {
+  if (isDemoMode()) return getDemoSales().find((sale) => sale.id === id) ?? null;
   if (!(await hasActiveSession())) return null;
   const { data, error } = await supabase.from("sales").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
@@ -52,6 +55,19 @@ export async function getSaleById(id: string): Promise<Sale | null> {
 }
 
 export async function createSale(data: CreateSaleData): Promise<Sale> {
+  if (isDemoMode()) {
+    const now = new Date().toISOString();
+    const sale: Sale = {
+      ...data,
+      id: `demo-sale-${crypto.randomUUID()}`,
+      shop_id: DEMO_SHOP_ID,
+      created_by: null,
+      created_at: now,
+      updated_at: now,
+    };
+    updateDemoSession((session) => ({ ...session, sales: [sale, ...session.sales] }));
+    return sale;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data: auth } = await supabase.auth.getUser();
   const { data: sale, error } = await supabase
@@ -64,6 +80,19 @@ export async function createSale(data: CreateSaleData): Promise<Sale> {
 }
 
 export async function updateSale(id: string, data: Partial<CreateSaleData>): Promise<Sale> {
+  if (isDemoMode()) {
+    let updated: Sale | undefined;
+    updateDemoSession((session) => ({
+      ...session,
+      sales: session.sales.map((sale) => {
+        if (sale.id !== id) return sale;
+        updated = { ...sale, ...data, updated_at: new Date().toISOString() };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Vente introuvable.");
+    return updated;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data: sale, error } = await supabase
     .from("sales")
@@ -76,6 +105,13 @@ export async function updateSale(id: string, data: Partial<CreateSaleData>): Pro
 }
 
 export async function deleteSale(id: string): Promise<void> {
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      sales: session.sales.filter((sale) => sale.id !== id),
+    }));
+    return;
+  }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { error } = await supabase.from("sales").delete().eq("id", id);
   if (error) throw error;
@@ -90,6 +126,7 @@ export async function markAsDelivered(id: string): Promise<Sale> {
 }
 
 export async function uploadSalePhoto(shopId: string, file: File): Promise<string> {
+  if (isDemoMode()) throw new Error("L'envoi d'image n'est pas disponible en mode démo.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".jpg";
   const path = `${requireShopId(shopId)}/${crypto.randomUUID()}${extension}`;

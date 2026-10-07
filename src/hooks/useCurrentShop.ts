@@ -12,6 +12,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { getUserShops, type Shop } from "@/services/shopService";
+import { DEMO_SHOP_ID, DEMO_SHOP_SLUG, DEMO_SESSION_CHANGED_EVENT, readDemoSession } from "@/services/demoService";
 
 const STORAGE_KEY = "gogosoft.currentShopId";
 type CurrentShopValue = ReturnType<typeof useCurrentShopState>;
@@ -31,6 +32,19 @@ function useCurrentShopState() {
     setLoading(true);
     try {
       if (!sessionUserId) {
+        const demoSession = readDemoSession();
+        if (demoSession) {
+          const demoShop: Shop = {
+            id: DEMO_SHOP_ID,
+            name: "Atelier de démonstration",
+            shop_slug: DEMO_SHOP_SLUG,
+            is_online_shop: true,
+          };
+          setShops([demoShop]);
+          setShop(demoShop);
+          loadedUserRef.current = "demo";
+          return;
+        }
         setShops([]);
         setShop(null);
         window.localStorage.removeItem(STORAGE_KEY);
@@ -71,6 +85,8 @@ function useCurrentShopState() {
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       syncSession(session?.user.id);
     });
+    const onDemoSessionChanged = () => void refresh(undefined, true);
+    window.addEventListener(DEMO_SESSION_CHANGED_EVENT, onDemoSessionChanged);
 
     void supabase.auth.getSession().then(({ data }) => {
       syncSession(data.session?.user.id);
@@ -79,6 +95,7 @@ function useCurrentShopState() {
     return () => {
       mounted = false;
       authListener.subscription.unsubscribe();
+      window.removeEventListener(DEMO_SESSION_CHANGED_EVENT, onDemoSessionChanged);
     };
   }, [refresh]);
 

@@ -1,6 +1,7 @@
 /** Services de gestion de l'abonnement et de l'état de la licence. */
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession } from "@/lib/supabaseGuard";
+import { isDemoMode, readDemoSession } from "@/services/demoService";
 
 export type SubscriptionPlan = "trial" | "mensuel" | "annuel";
 export type SubscriptionStatus = "active" | "expired" | "cancelled";
@@ -19,6 +20,25 @@ export interface SubscriptionSummary {
 
 /** Récupère l'abonnement de l'utilisateur courant. */
 export async function getMySubscription(): Promise<SubscriptionSummary | null> {
+  const demoSession = readDemoSession();
+  if (demoSession) {
+    const expiresAt = demoSession.expires_at;
+    const daysRemaining = Math.max(
+      0,
+      Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (24 * 60 * 60 * 1000)),
+    );
+    return {
+      plan: "trial",
+      status: daysRemaining > 0 ? "active" : "expired",
+      expires_at: expiresAt,
+      isActive: daysRemaining > 0,
+      daysRemaining,
+      price_fcfa: 0,
+      selected_modules: demoSession.modules.filter((code) => !code.startsWith("shop_")),
+      storefront_modules: demoSession.modules.filter((code) => code.startsWith("shop_")),
+      domain_included: false,
+    };
+  }
   const hasSession = await hasActiveSession();
   console.log("[subscriptionService] called", { hasSession, shopId: null });
   if (!hasSession) return null;
@@ -41,9 +61,9 @@ export async function getMySubscription(): Promise<SubscriptionSummary | null> {
     return {
       plan: "trial",
       status: "active",
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       isActive: true,
-      daysRemaining: 7,
+      daysRemaining: 1,
       price_fcfa: 0,
       selected_modules: [],
       storefront_modules: [],
@@ -64,6 +84,7 @@ export function isSubscriptionActive(
 
 /** Démarre une période d'essai. */
 export async function startTrial(userId: string): Promise<SubscriptionSummary> {
+  if (isDemoMode()) throw new Error("Un essai local ne crée pas d'abonnement Supabase.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
     .from("subscriptions")
@@ -72,7 +93,7 @@ export async function startTrial(userId: string): Promise<SubscriptionSummary> {
         user_id: userId,
         plan: "trial",
         status: "active",
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       },
       { onConflict: "user_id" },
     )
@@ -89,6 +110,7 @@ export async function upgradePlan(
   plan: SubscriptionPlan,
   durationDays: number,
 ): Promise<SubscriptionSummary> {
+  if (isDemoMode()) throw new Error("La modification du forfait est indisponible en démo.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const expiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
@@ -113,6 +135,7 @@ export async function upgradePlan(
 export async function checkExpiration(): Promise<SubscriptionSummary | null> {
   const sub = await getMySubscription();
   if (!sub) return null;
+  if (isDemoMode()) return sub;
 
   const expiresAt = sub.expires_at ? new Date(sub.expires_at) : null;
   const now = new Date();

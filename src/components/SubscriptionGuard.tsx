@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { notifyShopModulesChanged, useShopModules } from "@/hooks/useShopModules";
 import { applyModuleSelection } from "@/services/moduleService";
+import { isDemoMode } from "@/services/demoService";
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { shopId, refresh: refreshShop } = useCurrentShop();
   const { refresh: refreshModules } = useShopModules();
+  const demo = isDemoMode();
   const [savingSelection, setSavingSelection] = useState(false);
 
   async function selectModules(selection: Parameters<typeof applyModuleSelection>[1]) {
@@ -44,6 +46,8 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   if (location.pathname === "/abonnement") {
     return <>{children}</>;
   }
+
+  if (demo) return <>{children}</>;
 
   if (loading) {
     return (

@@ -221,13 +221,23 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
   );
 }
 
-export function PublicShopPage({ slug }: { slug: string }) {
+export function PublicShopPage({
+  slug,
+  category: initialCategory,
+}: {
+  slug: string;
+  category?: ProductCategory;
+}) {
   const { shop, loading, error } = useOnlineShop(slug);
   const [products, setProducts] = useState<OnlineProduct[]>([]);
-  const [category, setCategory] = useState<ProductCategory | "all">("all");
+  const [category, setCategory] = useState<ProductCategory | "all">(initialCategory ?? "all");
   const [search, setSearch] = useState("");
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setCategory(initialCategory ?? "all");
+  }, [initialCategory]);
 
   useEffect(() => {
     if (!shop) return;

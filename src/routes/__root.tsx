@@ -14,7 +14,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
+import { ModuleRouteGuard } from "@/components/ModuleRouteGuard";
 import { CartProvider } from "@/contexts/CartContext";
+import { ActiveModulesProvider } from "@/contexts/ActiveModulesContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
@@ -175,9 +177,17 @@ function RootComponent() {
       <CartProvider>
         <AuthProvider>
           <CurrentShopProvider>
-            <SuperAdminRedirect>
-              {isStandalonePage || isPublicShopRoute ? routeOutlet : <AppShell>{routeOutlet}</AppShell>}
-            </SuperAdminRedirect>
+            <ActiveModulesProvider>
+              <SuperAdminRedirect>
+                {isStandalonePage || isPublicShopRoute ? (
+                  routeOutlet
+                ) : (
+                  <ModuleRouteGuard>
+                    <AppShell>{routeOutlet}</AppShell>
+                  </ModuleRouteGuard>
+                )}
+              </SuperAdminRedirect>
+            </ActiveModulesProvider>
           </CurrentShopProvider>
           <Toaster position="bottom-right" />
         </AuthProvider>

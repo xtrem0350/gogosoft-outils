@@ -23,7 +23,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
     status: "active",
     expires_at: null,
     isActive: true,
-    daysRemaining: 7,
+    daysRemaining: 1,
     price_fcfa: 0,
     selected_modules: [],
     storefront_modules: [],
@@ -52,7 +52,7 @@ export function SubscriptionCard({ subscription }: SubscriptionCardProps) {
           <p className="mt-2 font-medium text-foreground">
             {activeSubscription.expires_at
               ? new Date(activeSubscription.expires_at).toLocaleDateString("fr-FR")
-              : "7 jours"}
+              : `${activeSubscription.daysRemaining ?? 1} jour${activeSubscription.daysRemaining === 1 ? "" : "s"}`}
           </p>
           <p className="mt-1">{activeSubscription.daysRemaining} jours restants</p>
         </div>

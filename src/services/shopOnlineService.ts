@@ -1,5 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database, Json } from "@/integrations/supabase/types";
+import {
+  DEMO_SHOP_ID,
+  DEMO_SHOP_SLUG,
+  getDemoProductById,
+  getDemoProducts,
+  isDemoMode,
+} from "@/services/demoService";
 
 type PublicShopRow = Database["public"]["Functions"]["get_public_shop_by_slug"]["Returns"][number];
 export type OnlineShop = Omit<PublicShopRow, "shop_slug"> & { shop_slug: string };
@@ -84,6 +91,27 @@ export interface ProductInput {
 }
 
 export async function getShopBySlug(slug: string): Promise<OnlineShop | null> {
+  if (isDemoMode() && slug.trim().toLowerCase() === DEMO_SHOP_SLUG) {
+    return {
+      id: DEMO_SHOP_ID,
+      name: "Atelier de démonstration GogoSoft",
+      shop_address: "Abidjan, Côte d'Ivoire",
+      shop_banner_url: "",
+      shop_description: "Catalogue de démonstration. Les commandes ne sont pas enregistrées.",
+      shop_logo_url: "",
+      shop_phone: "+225 07 00 00 00 00",
+      shop_slug: DEMO_SHOP_SLUG,
+      shop_whatsapp: "+2250700000000",
+      accepts_cash_on_delivery: false,
+      accepts_cash_on_pickup: false,
+      accepts_moov: false,
+      accepts_mtn: false,
+      accepts_orange_money: false,
+      accepts_wave: false,
+      delivery_available: false,
+      delivery_fee: 0,
+    };
+  }
   const { data, error } = await supabase.rpc("get_public_shop_by_slug", {
     p_slug: slug.trim().toLowerCase(),
   });
@@ -97,6 +125,9 @@ export async function getPublicProducts(
   shopId: string,
   filters: { category?: ProductCategory; search?: string } = {},
 ): Promise<OnlineProduct[]> {
+  if (isDemoMode() && shopId === DEMO_SHOP_ID) {
+    return getDemoProducts(filters).filter((product) => product.is_available);
+  }
   let query = supabase.from("products").select("*").eq("shop_id", shopId).eq("is_available", true);
   if (filters.category) query = query.eq("category", filters.category);
   if (filters.search?.trim()) query = query.ilike("name", `%${filters.search.trim()}%`);
@@ -108,6 +139,7 @@ export async function getPublicProducts(
 }
 
 export async function getProductById(id: string, shopId: string): Promise<OnlineProduct | null> {
+  if (isDemoMode() && shopId === DEMO_SHOP_ID) return getDemoProductById(id);
   const { data, error } = await supabase
     .from("products")
     .select("*")
@@ -129,6 +161,9 @@ export async function createPublicOrder(input: {
   delivery: boolean;
   items: Array<{ product_id: string; quantity: number }>;
 }): Promise<PublicOrderResult> {
+  if (isDemoMode()) {
+    throw new Error("Les commandes ne sont pas disponibles en mode démo.");
+  }
   const { data, error } = await supabase.rpc("create_public_order", {
     p_shop_id: input.shopId,
     p_client_name: input.clientName,
@@ -164,6 +199,7 @@ export async function getPublicOrder(
   orderId: string,
   trackingToken: string,
 ): Promise<PublicOrderDetail | null> {
+  if (isDemoMode()) return null;
   const { data, error } = await supabase.rpc("get_public_order", {
     p_order_id: orderId,
     p_tracking_token: trackingToken,

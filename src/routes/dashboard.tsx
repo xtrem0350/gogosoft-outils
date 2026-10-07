@@ -27,6 +27,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useShopModules } from "@/hooks/useShopModules";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
+import { listSales, type Sale } from "@/services/salesService";
 import {
   applyModuleSelection,
   savePendingModuleSelection,
@@ -83,6 +84,7 @@ function DashboardPage() {
 
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [sales, setSales] = useState<Sale[]>([]);
   const [events, setEvents] = useState<WorkshopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,15 +100,28 @@ function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const [ticketList, clientList] = await Promise.all([
-        getTickets(shopId),
-        getClientsByShop(shopId),
+      const activityTypes = [
+        ...(hasModule("phone_repair") ? (["phone"] as const) : []),
+        ...(hasModule("computer_repair") ? (["computer"] as const) : []),
+      ];
+      const saleTypes = [
+        ...(hasModule("phone_sale") ? (["phone"] as const) : []),
+        ...(hasModule("computer_sale") ? (["computer"] as const) : []),
+      ];
+      const [ticketLists, clientList, saleLists] = await Promise.all([
+        Promise.all(activityTypes.map((type) => getTickets(shopId, type))),
+        activityTypes.length > 0 || saleTypes.length > 0
+          ? getClientsByShop(shopId)
+          : Promise.resolve([]),
+        Promise.all(saleTypes.map((type) => listSales(shopId, type))),
       ]);
+      const ticketList = ticketLists.flat();
       const eventLists = await Promise.all(
         ticketList.slice(0, 5).map((ticket) => getEvents(ticket.id)),
       );
       setTickets(ticketList);
       setClients(clientList);
+      setSales(saleLists.flat());
       setEvents(
         eventLists
           .flat()
@@ -122,7 +137,7 @@ function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  }, [shopId]);
+  }, [hasModule, shopId]);
 
   useEffect(() => {
     if (shopLoading) return;
@@ -168,7 +183,13 @@ function DashboardPage() {
   const currentMonth = new Date().toISOString().slice(0, 7);
   const monthlyRevenue = tickets
     .filter((ticket) => ticket.created_at?.startsWith(currentMonth))
-    .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0);
+    .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0) +
+    sales
+      .filter((sale) => sale.created_at.startsWith(currentMonth))
+      .reduce((total, sale) => total + sale.total_price, 0);
+  const hasRepairModule = hasModule("phone_repair") || hasModule("computer_repair");
+  const hasSalesModule = hasModule("phone_sale") || hasModule("computer_sale");
+  const hasClientModule = hasRepairModule || hasSalesModule;
   const formatAmount = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: "XOF",
@@ -219,13 +240,15 @@ function DashboardPage() {
           },
         ]
       : []),
-    {
+    ...(hasClientModule
+      ? [{
       to: "/clients/nouveau",
       icon: UserPlus,
       label: "Nouveau client",
       description: "Ajouter à votre carnet",
       color: "orange" as const,
-    },
+    }]
+      : []),
   ];
 
   async function handlePricingSelection(selection: ModulePurchaseSelection) {
@@ -308,9 +331,9 @@ function DashboardPage() {
         <EmptyState
           icon={Package}
           title="Aucun module activé"
-          description="Vous n'avez activé aucun module. Allez dans Paramètres > Mes modules pour en activer."
-          actionLabel="Gérer mes modules"
-          onAction={() => void navigate({ to: "/parametres" })}
+          description="Choisissez les modules à découvrir pour afficher les outils de votre atelier."
+          actionLabel="Choisir mes modules"
+          onAction={() => void navigate({ to: "/demo" })}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -340,27 +363,34 @@ function DashboardPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard
+        {hasRepairModule ? <StatsCard
           title="Réparations en cours"
           value={busy ? "…" : enCours}
           icon={Activity}
           trend={`${tickets.length} fiche(s) au total`}
           color="success"
-        />
-        <StatsCard
+        /> : null}
+        {hasClientModule ? <StatsCard
           title="Clients enregistrés"
           value={busy ? "…" : clients.length}
           icon={UserRound}
           trend="Base de la boutique"
           color="primary"
-        />
-        <StatsCard
+        /> : null}
+        {hasRepairModule || hasSalesModule ? <StatsCard
           title="CA du mois"
           value={busy ? "…" : formatAmount.format(monthlyRevenue)}
           icon={CreditCard}
           trend="Selon les montants des fiches"
           color="warning"
-        />
+        /> : null}
+        {hasSalesModule ? <StatsCard
+          title="Ventes enregistrées"
+          value={busy ? "…" : sales.length}
+          icon={ShoppingCart}
+          trend="Selon les modules de vente actifs"
+          color="success"
+        /> : null}
         <StatsCard
           title="Jours restants abonnement"
           value={subLoading ? "…" : daysRemaining}
@@ -405,7 +435,7 @@ function DashboardPage() {
             )}
           </CardContent>
         </Card>
-        <Card className="card-3d rounded-2xl border-0">
+        {hasRepairModule ? <Card className="card-3d rounded-2xl border-0">
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>Réparations récentes</CardTitle>
@@ -450,9 +480,9 @@ function DashboardPage() {
               ))
             )}
           </CardContent>
-        </Card>
+        </Card> : null}
 
-        <Card className="card-3d rounded-2xl border-0">
+        {hasClientModule ? <Card className="card-3d rounded-2xl border-0">
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
               <CardTitle>Clients récents</CardTitle>
@@ -497,7 +527,7 @@ function DashboardPage() {
               ))
             )}
           </CardContent>
-        </Card>
+        </Card> : null}
       </div>
     </div>
   );

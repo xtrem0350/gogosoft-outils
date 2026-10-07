@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CartContext, type CartItem, type ShopCarts } from "@/contexts/cartContextStore";
+import { DEMO_SHOP_ID } from "@/services/demoService";
 
 export type { CartItem, ShopCarts } from "@/contexts/cartContextStore";
 
 const STORAGE_KEY = "gogosoft_cart";
+const DEMO_CART_KEY = "gogosoft.demo.cart";
 
 function isCartItem(value: unknown): value is CartItem {
   if (typeof value !== "object" || value === null) return false;
@@ -26,12 +28,15 @@ function readCarts(): ShopCarts {
   try {
     const saved: unknown = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
     if (typeof saved !== "object" || saved === null || Array.isArray(saved)) return {};
-    return Object.fromEntries(
+    const carts = Object.fromEntries(
       Object.entries(saved).map(([shopId, items]) => [
         shopId,
         Array.isArray(items) ? items.filter(isCartItem) : [],
       ]),
     );
+    const demoItems: unknown = JSON.parse(window.sessionStorage.getItem(DEMO_CART_KEY) ?? "[]");
+    if (Array.isArray(demoItems)) carts[DEMO_SHOP_ID] = demoItems.filter(isCartItem);
+    return carts;
   } catch {
     window.localStorage.removeItem(STORAGE_KEY);
     return {};
@@ -49,7 +54,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(carts));
+    const persistentCarts = { ...carts };
+    const demoItems = persistentCarts[DEMO_SHOP_ID] ?? [];
+    delete persistentCarts[DEMO_SHOP_ID];
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(persistentCarts));
+    window.sessionStorage.setItem(DEMO_CART_KEY, JSON.stringify(demoItems));
   }, [carts, hydrated]);
 
   function addItem(shopId: string, item: CartItem) {

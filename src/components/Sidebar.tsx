@@ -33,14 +33,17 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useShopModules } from "@/hooks/useShopModules";
 import { signOut } from "@/services/authService";
+import { DEMO_SHOP_SLUG, endDemo, isDemoMode } from "@/services/demoService";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useActiveModules } from "@/contexts/ActiveModulesContext";
+import { MODULES, type ModuleId } from "@/types/modules";
 
 type NavigationItem = {
   label: string;
   to: string;
   icon: ComponentType<{ className?: string }>;
-  search?: { activityType: "phone" | "computer" };
+  search?: { activityType?: "phone" | "computer"; category?: "phone" | "computer" };
 };
 type NavigationGroup = {
   label: string;
@@ -48,7 +51,13 @@ type NavigationGroup = {
   items: NavigationItem[];
 };
 
-function getNavigationGroups(modules: string[]): NavigationGroup[] {
+function getNavigationGroups(
+  activeModules: ModuleId[],
+  isDemo: boolean,
+  shopSlug: string | null,
+): NavigationGroup[] {
+  const activeSidebarKeys = new Set(activeModules.flatMap((id) => MODULES[id].sidebarKeys));
+  const hasKey = (key: string) => activeSidebarKeys.has(key);
   const groups: NavigationGroup[] = [
     {
       label: "ACCUEIL",
@@ -57,7 +66,7 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     },
   ];
 
-  if (modules.includes("phone_repair")) {
+  if (hasKey("phone_repair")) {
     groups.push({
       label: "TÉLÉPHONE",
       icon: Smartphone,
@@ -71,7 +80,7 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     });
   }
 
-  if (modules.includes("computer_repair")) {
+  if (hasKey("computer_repair")) {
     groups.push({
       label: "ORDINATEUR",
       icon: Laptop,
@@ -88,7 +97,7 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     ["phone_sale", "VENTE MOBILE", "phone"],
     ["computer_sale", "VENTE PC", "computer"],
   ] as const) {
-    if (!modules.includes(code)) continue;
+    if (!hasKey(code)) continue;
     groups.push({
       label,
       icon: ShoppingCart,
@@ -100,7 +109,7 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     });
   }
 
-  if (modules.includes("consumable")) {
+  if (hasKey("consumable")) {
     groups.push({
       label: "CONSOMMABLES",
       icon: Package,
@@ -112,19 +121,50 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
     });
   }
 
-  groups.push(
-    {
+  const storefrontItems: NavigationItem[] = [];
+  const publicShopSlug = shopSlug ?? DEMO_SHOP_SLUG;
+  if (hasKey("shop_phone")) {
+    storefrontItems.push({
+      label: "Vitrine Téléphone",
+      to: `/shop/${publicShopSlug}`,
+      icon: Smartphone,
+      search: { category: "phone" },
+    });
+  }
+  if (hasKey("shop_computer")) {
+    storefrontItems.push({
+      label: "Vitrine PC",
+      to: `/shop/${publicShopSlug}`,
+      icon: Laptop,
+      search: { category: "computer" },
+    });
+  }
+  if (storefrontItems.length > 0) {
+    groups.push({ label: "VITRINES", icon: Store, items: storefrontItems });
+  }
+
+  if (activeModules.some((id) =>
+    ["reparation-telephone", "reparation-pc", "vente-telephone", "vente-pc"].includes(id),
+  )) {
+    groups.push({
       label: "CLIENTS",
       icon: Users,
       items: [
         { label: "Liste", to: "/clients", icon: Users },
         { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
       ],
-    },
-    {
+    });
+  }
+
+  groups.push({
       label: "MON COMPTE",
       icon: Settings,
-      items: [
+      items: isDemo
+        ? [
+            { label: "Forfait", to: "/abonnement", icon: Settings },
+            { label: "Paramètres", to: "/parametres", icon: Settings },
+          ]
+        : [
         { label: "Outils", to: "/outils", icon: Wrench },
         { label: "Catégories", to: "/categories", icon: FolderTree },
         { label: "Mes ateliers", to: "/boutiques", icon: Store },
@@ -135,8 +175,10 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
         { label: "Mes modules", to: "/parametres", icon: Package },
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
-    },
-    {
+    });
+
+  if (!isDemo && (hasKey("shop_phone") || hasKey("shop_computer"))) {
+    groups.push({
       label: "MA BOUTIQUE",
       icon: Store,
       items: [
@@ -144,8 +186,8 @@ function getNavigationGroups(modules: string[]): NavigationGroup[] {
         { label: "Produits", to: "/admin/boutique/produits", icon: Package },
         { label: "Commandes", to: "/admin/boutique/commandes", icon: ShoppingCart },
       ],
-    },
-  );
+    });
+  }
 
   return groups;
 }
@@ -157,14 +199,18 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const { modules, loading: modulesLoading } = useShopModules();
-  const navigationGroups = getNavigationGroups(modules);
+  const { activeModules, loading: modulesLoading, isDemo: demo } = useActiveModules();
+  const { shop } = useCurrentShop();
+  const navigationGroups = getNavigationGroups(activeModules, demo, shop?.shop_slug ?? null);
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some(
       (item) =>
         (pathname === item.to || pathname.startsWith(`${item.to}/`)) &&
         (!item.search ||
-          (routeSearch as { activityType?: string }).activityType === item.search.activityType),
+          (!item.search.activityType ||
+            (routeSearch as { activityType?: string }).activityType === item.search.activityType) &&
+          (!item.search.category ||
+            (routeSearch as { category?: string }).category === item.search.category)),
     ),
   );
   const [openGroups, setOpenGroups] = useState<Record<number, boolean>>({ [activeGroup]: true });
@@ -176,6 +222,12 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   }, [activeGroup]);
 
   async function handleSignOut() {
+    if (demo) {
+      endDemo();
+      toast.success("La session de démonstration a été fermée.");
+      await navigate({ to: "/" });
+      return;
+    }
     const { error } = await signOut();
     if (error) {
       toast.error(error.message);
@@ -225,7 +277,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             <CollapsibleContent className="space-y-1 pt-1">
               {filteredItems.map(({ label: itemLabel, to, icon: Icon, search: itemSearch }) => (
                 <Link
-                  key={to}
+                  key={`${to}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
                   to={to}
                   search={itemSearch ?? {}}
                   onClick={() => setOpen(false)}
