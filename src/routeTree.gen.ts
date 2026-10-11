@@ -14,6 +14,7 @@ import { Route as AbonnementRouteImport } from './routes/abonnement'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BienvenueRouteImport } from './routes/bienvenue'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -110,6 +111,11 @@ const AideRoute = AideRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BienvenueRoute = BienvenueRouteImport.update({
+  id: '/bienvenue',
+  path: '/bienvenue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -482,6 +488,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
+  '/bienvenue': typeof BienvenueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -560,6 +567,7 @@ export interface FileRoutesByTo {
   '/abonnement': typeof AbonnementRoute
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
+  '/bienvenue': typeof BienvenueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -639,6 +647,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
+  '/bienvenue': typeof BienvenueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -720,6 +729,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aide'
     | '/auth'
+    | '/bienvenue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -798,6 +808,7 @@ export interface FileRouteTypes {
     | '/abonnement'
     | '/aide'
     | '/auth'
+    | '/bienvenue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -876,6 +887,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/aide'
     | '/auth'
+    | '/bienvenue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -956,6 +968,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AideRoute: typeof AideRoute
   AuthRoute: typeof AuthRoute
+  BienvenueRoute: typeof BienvenueRoute
   CategoriesRoute: typeof CategoriesRoute
   DashboardRoute: typeof DashboardRoute
   DemoRoute: typeof DemoRoute
@@ -1036,6 +1049,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/bienvenue': {
+      id: '/bienvenue'
+      path: '/bienvenue'
+      fullPath: '/bienvenue'
+      preLoaderRoute: typeof BienvenueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -1700,6 +1720,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AideRoute: AideRoute,
   AuthRoute: AuthRoute,
+  BienvenueRoute: BienvenueRoute,
   CategoriesRoute: CategoriesRoute,
   DashboardRoute: DashboardRoute,
   DemoRoute: DemoRoute,

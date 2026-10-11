@@ -135,6 +135,7 @@ function RootComponent() {
   const location = useLocation();
   const publicRoutes = [
     "/",
+    "/bienvenue",
     "/auth",
     "/mot-de-passe-oublie",
     "/reinitialiser-mot-de-passe",

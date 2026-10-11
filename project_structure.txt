@@ -27,6 +27,7 @@ Structure du projet (avec glob)
 │   └── 📄 config.toml
 ├── 📁 src/
 │   ├── 📁 types/
+│   │   ├── 📄 modules.ts
 │   │   └── 📄 database.ts
 │   ├── 📁 styles/
 │   │   └── 📄 design-system.css
@@ -182,7 +183,10 @@ Structure du projet (avec glob)
 │   │   └── 📄 use-mobile.tsx
 │   ├── 📁 contexts/
 │   │   ├── 📄 cartContextStore.ts
-│   │   └── 📄 CartContext.tsx
+│   │   ├── 📄 CartContext.tsx
+│   │   └── 📄 ActiveModulesContext.tsx
+│   ├── 📁 constants/
+│   │   └── 📄 pricing.ts
 │   ├── 📁 components/
 │   │   ├── 📁 ui/
 │   │   │   ├── 📄 tooltip.tsx
@@ -280,6 +284,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 PageIdentity.tsx
 │   │   ├── 📄 PageHero.tsx
 │   │   ├── 📄 PageBreadcrumb.tsx
+│   │   ├── 📄 ModuleRouteGuard.tsx
 │   │   ├── 📄 InactivityWarningModal.tsx
 │   │   ├── 📄 IconBadge3D.tsx
 │   │   ├── 📄 HelpButton.tsx
@@ -317,11 +322,13 @@ Structure du projet (avec glob)
 │   ├── 📄 integrations
 │   ├── 📄 hooks
 │   ├── 📄 contexts
+│   ├── 📄 constants
 │   ├── 📄 components
 │   └── 📄 assets
 ├── 📁 docs/
 │   ├── 📄 vitrine.md
 │   ├── 📄 versioning.md
+│   ├── 📄 rapport04.md
 │   ├── 📄 rapport03.md
 │   ├── 📄 rapport02.md
 │   ├── 📄 rapport01.md
