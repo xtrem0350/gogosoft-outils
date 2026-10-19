@@ -1,4 +1,13 @@
-export const WELCOME_PRICING = [
+export interface PricingPlan {
+  id: string;
+  title: string;
+  price: number;
+  subtitle: string;
+  features: readonly string[];
+  featured?: boolean;
+}
+
+export const WELCOME_PRICING: readonly PricingPlan[] = [
   {
     id: "essentiel",
     title: "Essentiel",
@@ -21,4 +30,4 @@ export const WELCOME_PRICING = [
     subtitle: "Boutique en ligne / mois",
     features: ["Vitrine tel/PC", "Commandes en ligne", "Domaine .com + SSL GRATUIT"],
   },
-] as const;
+];

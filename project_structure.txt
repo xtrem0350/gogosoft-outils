@@ -113,6 +113,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 boutiques.nouveau.tsx
 │   │   ├── 📄 boutiques.index.tsx
 │   │   ├── 📄 boutiques.$id.tsx
+│   │   ├── 📄 bienvenue.tsx
 │   │   ├── 📄 auth.tsx
 │   │   ├── 📄 atelier.plan.tsx
 │   │   ├── 📄 atelier.nouveau.tsx
@@ -332,6 +333,7 @@ Structure du projet (avec glob)
 │   ├── 📄 rapport03.md
 │   ├── 📄 rapport02.md
 │   ├── 📄 rapport01.md
+│   ├── 📄 rappord10.md
 │   ├── 📄 prompt.md
 │   ├── 📄 missions.md
 │   └── 📄 domain-workflow.md
