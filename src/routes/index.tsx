@@ -94,7 +94,26 @@ function readSelectedModules(): ModuleId[] {
   }
 }
 
-export const Route = createFileRoute("/")({ component: HomePage });
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
+      {
+        name: "description",
+        content:
+          "Choisissez vos modules (réparation, vente, vitrine) et essayez GogoSoft gratuitement pendant 1 jour.",
+      },
+      { property: "og:title", content: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
+      {
+        property: "og:description",
+        content: "Réparations, clients, ventes et boutique en ligne pour réparateurs. Essai gratuit 1 jour.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: HomePage,
+});
 
 function HomePage() {
   const navigate = useNavigate();
