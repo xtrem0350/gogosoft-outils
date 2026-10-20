@@ -193,6 +193,25 @@ export function AppShell({ children }: { children: ReactNode }) {
     enabled: Boolean(user && !isAuthRoute),
   });
 
+  const mustLeaveSignedOut =
+    !loading && !user && !isAuthRoute && !isDemoMode() && location.pathname !== "/";
+  const mustPickShop = !loading && Boolean(user) && !shopId && !isShopExemptRoute;
+
+  // Les redirections se font après le rendu (jamais pendant), pour éviter les mises à jour React en cours de rendu.
+  useEffect(() => {
+    if (mustLeaveSignedOut) {
+      if (hasDemoExpiredNotice()) {
+        void navigate({ to: "/" });
+      } else {
+        void navigate({ to: "/auth", search: { redirect: location.pathname } });
+      }
+      return;
+    }
+    if (mustPickShop) {
+      void navigate({ to: shops.length > 0 ? "/boutiques" : "/boutiques/nouveau" });
+    }
+  }, [location.pathname, mustLeaveSignedOut, mustPickShop, navigate, shops.length]);
+
   if (!loading && !user && !isAuthRoute && !isDemoMode()) {
     if (location.pathname === "/") {
       return (
@@ -212,16 +231,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </>
       );
     }
-    if (hasDemoExpiredNotice()) {
-      void navigate({ to: "/" });
-    } else {
-      void navigate({ to: "/auth", search: { redirect: location.pathname } });
-    }
     return <LoadingShell />;
   }
 
-  if (!loading && user && !shopId && !isShopExemptRoute) {
-    void navigate({ to: shops.length > 0 ? "/boutiques" : "/boutiques/nouveau" });
+  if (mustPickShop) {
     return <LoadingShell />;
   }
 
