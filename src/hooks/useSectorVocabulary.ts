@@ -49,7 +49,7 @@ export function useAggregatedVocabulary(): SectorVocabulary {
     if (sectorIds.length === 0) return NEUTRAL_VOCABULARY;
     if (sectorIds.length === 1) {
       const onlySectorId = sectorIds[0];
-      return onlySectorId ? SECTORS[onlySectorId] ?? NEUTRAL_VOCABULARY : NEUTRAL_VOCABULARY;
+      return onlySectorId ? (SECTORS[onlySectorId] ?? NEUTRAL_VOCABULARY) : NEUTRAL_VOCABULARY;
     }
 
     const vocabularies = sectorIds

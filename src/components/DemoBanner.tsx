@@ -9,9 +9,7 @@ export function DemoBanner({
   expiresAt: string | null;
   onCreateAccount: () => void;
 }) {
-  const [remaining, setRemaining] = useState(() =>
-    expiresAt ? formatDemoTime(expiresAt) : "—",
-  );
+  const [remaining, setRemaining] = useState(() => (expiresAt ? formatDemoTime(expiresAt) : "—"));
 
   useEffect(() => {
     const updateRemaining = () => {
