@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatDemoTime } from "@/services/demoService";
+import { formatDemoTime, readDemoSession } from "@/services/demoService";
 
 export function DemoBanner({
   expiresAt,
@@ -15,7 +15,10 @@ export function DemoBanner({
 
   useEffect(() => {
     const updateRemaining = () => {
-      setRemaining(expiresAt ? formatDemoTime(expiresAt) : "—");
+      const next = expiresAt ? formatDemoTime(expiresAt) : "—";
+      setRemaining(next);
+      // La lecture efface la session expirée et prévient l'application.
+      if (next === "Expiré") readDemoSession();
     };
     updateRemaining();
     const interval = window.setInterval(updateRemaining, 1000);

@@ -47,7 +47,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { hasNewVersion } from "@/lib/changelog";
-import { endDemo, getDemoInfo, isDemoMode, readDemoSession } from "@/services/demoService";
+import {
+  endDemo,
+  getDemoInfo,
+  hasDemoExpiredNotice,
+  isDemoMode,
+  readDemoSession,
+} from "@/services/demoService";
 import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
 
@@ -206,7 +212,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         </>
       );
     }
-    void navigate({ to: "/auth", search: { redirect: location.pathname } });
+    if (hasDemoExpiredNotice()) {
+      void navigate({ to: "/" });
+    } else {
+      void navigate({ to: "/auth", search: { redirect: location.pathname } });
+    }
     return <LoadingShell />;
   }
 

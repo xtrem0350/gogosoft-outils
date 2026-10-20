@@ -17,7 +17,12 @@ import { Button } from "@/components/ui/button";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { WELCOME_PRICING } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
-import { isDemoMode, selectedDemoModuleIds, startDemo } from "@/services/demoService";
+import {
+  consumeDemoExpiredNotice,
+  isDemoMode,
+  selectedDemoModuleIds,
+  startDemo,
+} from "@/services/demoService";
 import { type ModuleId } from "@/types/modules";
 
 const WELCOME_MODULES: Array<{
@@ -107,6 +112,12 @@ function HomePage() {
     if (loading) return;
     if (user || isDemoMode()) {
       void navigate({ to: "/dashboard" });
+      return;
+    }
+    if (consumeDemoExpiredNotice()) {
+      toast.error("Votre essai de démo a expiré. Ses données ont été effacées.", {
+        description: "Relancez un essai gratuit ou créez votre compte pour continuer.",
+      });
     }
   }, [loading, navigate, user]);
 

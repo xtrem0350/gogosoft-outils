@@ -328,6 +328,7 @@ export function updateDemoSession(update: (session: DemoSession) => DemoSession)
 export async function startDemo(selectedModules: string[]): Promise<DemoSession> {
   if (selectedModules.length === 0) throw new Error("Sélectionnez au moins un module.");
   window.sessionStorage.removeItem("gogosoft.demo.cart");
+  window.sessionStorage.removeItem(DEMO_EXPIRED_KEY);
   const session = createSeedSession(selectedModules);
   saveSession(session);
   return session;
