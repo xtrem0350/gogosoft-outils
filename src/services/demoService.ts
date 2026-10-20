@@ -10,6 +10,7 @@ import { demoCodesFromModuleIds } from "@/types/modules";
 export const DEMO_SESSION_KEY = "gogosoft.demo.session";
 export const DEMO_MODULES_KEY = "gogosoft.demo.modules";
 export const DEMO_SESSION_CHANGED_EVENT = "gogosoft:demo-session-changed";
+const DEMO_EXPIRED_KEY = "gogosoft.demo.expired";
 export const DEMO_SHOP_ID = "gogosoft-demo-shop";
 export const DEMO_SHOP_SLUG = "demo-gogosoft";
 
@@ -45,11 +46,47 @@ function getStoredSession(): DemoSession | null {
     ) {
       return null;
     }
+    const expiresAt = new Date(record["expires_at"]).getTime();
+    if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+      clearExpiredSession();
+      return null;
+    }
     return value as DemoSession;
   } catch {
     window.sessionStorage.removeItem(DEMO_SESSION_KEY);
     return null;
   }
+}
+
+/**
+ * Efface une session de démo expirée et mémorise l'expiration pour l'afficher sur l'accueil.
+ * L'événement est différé pour ne pas déclencher de mise à jour pendant un rendu React.
+ */
+function clearExpiredSession(): void {
+  window.sessionStorage.removeItem(DEMO_SESSION_KEY);
+  window.sessionStorage.removeItem(DEMO_MODULES_KEY);
+  window.sessionStorage.removeItem("gogosoft.demo.cart");
+  window.sessionStorage.setItem(DEMO_EXPIRED_KEY, "true");
+  window.setTimeout(() => window.dispatchEvent(new Event(DEMO_SESSION_CHANGED_EVENT)), 0);
+}
+
+/**
+ * Indique si une session de démo vient d'expirer (sans consommer l'information).
+ * @returns true si une démo a expiré depuis le dernier affichage de l'accueil.
+ */
+export function hasDemoExpiredNotice(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.sessionStorage.getItem(DEMO_EXPIRED_KEY) === "true";
+}
+
+/**
+ * Lit puis efface l'indicateur d'expiration de démo.
+ * @returns true si une démo avait expiré.
+ */
+export function consumeDemoExpiredNotice(): boolean {
+  const expired = hasDemoExpiredNotice();
+  if (expired) window.sessionStorage.removeItem(DEMO_EXPIRED_KEY);
+  return expired;
 }
 
 function saveSession(session: DemoSession): void {
