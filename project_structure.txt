@@ -335,6 +335,7 @@ Structure du projet (avec glob)
 │   ├── 📄 rapport01.md
 │   ├── 📄 rappord10.md
 │   ├── 📄 prompt.md
+│   ├── 📄 point.md
 │   ├── 📄 missions.md
 │   └── 📄 domain-workflow.md
 ├── 📄 vite.config.ts
