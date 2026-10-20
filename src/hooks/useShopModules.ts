@@ -4,6 +4,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { getShopModules } from "@/services/moduleService";
 import {
   DEMO_SESSION_CHANGED_EVENT,
+  DEMO_SHOP_ID,
   getDemoModuleCodes,
   isDemoMode,
 } from "@/services/demoService";
@@ -26,7 +27,8 @@ export function useShopModules() {
       setLoading(false);
       return;
     }
-    if (!shopId) {
+    // Juste après la sortie de démo, shopId peut encore valoir l'atelier fictif : aucune requête réelle.
+    if (!shopId || shopId === DEMO_SHOP_ID) {
       setModules([]);
       setLoading(false);
       return;

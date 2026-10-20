@@ -17,7 +17,12 @@ import { Button } from "@/components/ui/button";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { WELCOME_PRICING } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
-import { isDemoMode, selectedDemoModuleIds, startDemo } from "@/services/demoService";
+import {
+  consumeDemoExpiredNotice,
+  isDemoMode,
+  selectedDemoModuleIds,
+  startDemo,
+} from "@/services/demoService";
 import { type ModuleId } from "@/types/modules";
 
 const WELCOME_MODULES: Array<{
@@ -89,7 +94,26 @@ function readSelectedModules(): ModuleId[] {
   }
 }
 
-export const Route = createFileRoute("/")({ component: HomePage });
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
+      {
+        name: "description",
+        content:
+          "Choisissez vos modules (réparation, vente, vitrine) et essayez GogoSoft gratuitement pendant 1 jour.",
+      },
+      { property: "og:title", content: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
+      {
+        property: "og:description",
+        content: "Réparations, clients, ventes et boutique en ligne pour réparateurs. Essai gratuit 1 jour.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: HomePage,
+});
 
 function HomePage() {
   const navigate = useNavigate();
@@ -107,6 +131,12 @@ function HomePage() {
     if (loading) return;
     if (user || isDemoMode()) {
       void navigate({ to: "/dashboard" });
+      return;
+    }
+    if (consumeDemoExpiredNotice()) {
+      toast.error("Votre essai de démo a expiré. Ses données ont été effacées.", {
+        description: "Relancez un essai gratuit ou créez votre compte pour continuer.",
+      });
     }
   }, [loading, navigate, user]);
 

@@ -1,6 +1,7 @@
 import type { ModuleId } from "@/types/modules";
 
-export type SectorModuleId = Exclude<ModuleId, "multi-ateliers">;
+/** Modules métier ayant un vocabulaire propre. Le stock ("consommables") et "multi-ateliers" n'en ont pas (Option A). */
+export type SectorModuleId = Exclude<ModuleId, "multi-ateliers" | "consommables">;
 
 export type SectorCategory = "reparation" | "vente" | "vitrine";
 export type SectorDevice = "telephone" | "pc";
