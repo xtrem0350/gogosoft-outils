@@ -4,6 +4,7 @@ import { BookOpen, Laptop, Plus, Search, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddDeviceModal } from "@/components/AddDeviceModal";
+import { useAvailableCategories } from "@/hooks/useAvailableCategories";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,73 +13,97 @@ import {
   getDeviceCatalog,
   searchDevices,
   type DeviceCatalogItem,
-  type DeviceCatalogType,
+  type DeviceCatalogCategory,
 } from "@/services/deviceCatalogService";
 
 export const Route = createFileRoute("/catalogue")({ component: DeviceCatalogPage });
 
-type DeviceFilter = "all" | "phone" | "computer";
+type DeviceFilter = "all" | "smartphone" | "laptop" | "tablet";
 
 const FILTERS: Array<{ value: DeviceFilter; label: string }> = [
   { value: "all", label: "Tous" },
-  { value: "phone", label: "Téléphones" },
-  { value: "computer", label: "Ordinateurs" },
+  { value: "smartphone", label: "Téléphones" },
+  { value: "laptop", label: "Ordinateurs" },
+  { value: "tablet", label: "Tablettes" },
 ];
-
 export function DeviceCatalogPage() {
+  const { categories, hasPhones, hasComputers, hasTablets } = useAvailableCategories();
   const [devices, setDevices] = useState<DeviceCatalogItem[]>([]);
-  const [filter, setFilter] = useState<DeviceFilter>("all");
+  const [filterCategory, setFilterCategory] = useState<DeviceFilter>("all");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [addOpen, setAddOpen] = useState(false);
-  const [initialDeviceType, setInitialDeviceType] = useState<DeviceCatalogType>("phone");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [defaultCategoryOverride, setDefaultCategoryOverride] = useState<DeviceCatalogCategory>();
+  const visibleFilters = FILTERS.filter(({ value }) =>
+    value === "all" ||
+    (value === "smartphone" && hasPhones) ||
+    (value === "laptop" && hasComputers) ||
+    (value === "tablet" && hasTablets),
+  );
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    if (filterCategory === "smartphone" && !hasPhones) setFilterCategory("all");
+    if (filterCategory === "laptop" && !hasComputers) setFilterCategory("all");
+    if (filterCategory === "tablet" && !hasTablets) setFilterCategory("all");
+  }, [filterCategory, hasComputers, hasPhones, hasTablets]);
+
+  const loadDevices = useCallback(async () => {
     setLoading(true);
     try {
-      const next = query.trim() ? await searchDevices(query) : await getDeviceCatalog();
-      setDevices(next.filter((device) => filter === "all" || device.device_type === filter));
+      const next = query.trim()
+        ? await searchDevices(query, categories)
+        : await getDeviceCatalog(categories);
+      const filtered = next.filter((device) => {
+        if (filterCategory === "all") return true;
+        if (filterCategory === "laptop") return device.category === "laptop" || device.category === "desktop";
+        return device.category === filterCategory;
+      });
+      console.log("[catalogue] loaded:", filtered.length, "devices");
+      setDevices(filtered);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Catalogue indisponible.");
       setDevices([]);
     } finally {
       setLoading(false);
     }
-  }, [filter, query]);
+  }, [categories, filterCategory, query]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void loadDevices();
+  }, [loadDevices]);
 
-  function openAdd(deviceType: DeviceCatalogType = filter === "all" ? "phone" : filter) {
-    setInitialDeviceType(deviceType);
-    setAddOpen(true);
+  function openAdd(category?: DeviceCatalogCategory) {
+    setDefaultCategoryOverride(category);
+    setShowAddModal(true);
   }
 
+  const defaultCategory = defaultCategoryOverride ?? (
+    filterCategory === "all" ? undefined : filterCategory
+  );
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHero
         title="Catalogue appareils"
-        subtitle="Modèles disponibles pour vos fiches de réparation."
+        subtitle={`${devices.length} appareil${devices.length === 1 ? "" : "s"} · Modèles disponibles pour vos fiches de réparation.`}
         icon={BookOpen}
         iconColor="orange"
         action={(
           <Button type="button" onClick={() => openAdd()} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
-            <Plus className="size-4" /> Ajouter un appareil
+            <Plus className="mr-2 size-4" /> Ajouter un appareil
           </Button>
         )}
       />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2" role="group" aria-label="Filtrer le catalogue">
-          {FILTERS.map(({ value, label }) => (
+          {visibleFilters.map(({ value, label }) => (
             <Button
               key={value}
               type="button"
-              variant={filter === value ? "default" : "outline"}
-              aria-pressed={filter === value}
-              onClick={() => setFilter(value)}
-              className={filter === value ? "bg-ivoirien text-white" : ""}
+              variant={filterCategory === value ? "default" : "outline"}
+              aria-pressed={filterCategory === value}
+              onClick={() => setFilterCategory(value)}
+              className={filterCategory === value ? "bg-ivoirien text-white" : ""}
             >
               {label}
             </Button>
@@ -120,14 +145,22 @@ export function DeviceCatalogPage() {
             </div>
             <CardContent className="space-y-3 p-4">
               <div className="flex items-start gap-3">
-                {device.device_type === "computer" ? <Laptop className="mt-1 size-4 shrink-0 text-orange-700" /> : <Smartphone className="mt-1 size-4 shrink-0 text-orange-700" />}
+                {device.category === "laptop" || device.category === "desktop"
+                  ? <Laptop className="mt-1 size-4 shrink-0 text-orange-700" />
+                  : <Smartphone className="mt-1 size-4 shrink-0 text-orange-700" />}
                 <div className="min-w-0">
                   <p className="font-bold">{device.brand}</p>
                   <p className="truncate text-sm text-slate-700">{device.model}</p>
                   {device.os ? <p className="mt-1 text-xs text-muted-foreground">{device.os}</p> : null}
+                  {device.release_year ? <p className="text-xs text-muted-foreground">{device.release_year}</p> : null}
+                  {Object.keys(device.specs).length > 0 ? (
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {Object.entries(device.specs).slice(0, 2).map(([key, value]) => `${key}: ${String(value)}`).join(" · ")}
+                    </p>
+                  ) : null}
                 </div>
               </div>
-              <Button type="button" variant="outline" className="w-full" onClick={() => openAdd(device.device_type)}>
+              <Button type="button" variant="outline" className="w-full" onClick={() => openAdd(device.category)}>
                 <Plus className="size-4" /> Ajouter un appareil similaire
               </Button>
             </CardContent>
@@ -136,10 +169,18 @@ export function DeviceCatalogPage() {
       </div>
 
       <AddDeviceModal
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        initialDeviceType={initialDeviceType}
-        onAdded={() => void load()}
+        open={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setDefaultCategoryOverride(undefined);
+        }}
+        defaultCategory={defaultCategory}
+        allowedCategories={categories}
+        onSuccess={() => {
+          setShowAddModal(false);
+          setDefaultCategoryOverride(undefined);
+          void loadDevices();
+        }}
       />
     </div>
   );

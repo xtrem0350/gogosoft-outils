@@ -5,9 +5,16 @@ import { toast } from "sonner";
 import { AddDeviceModal } from "@/components/AddDeviceModal";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { Button } from "@/components/ui/button";
-import { getDeviceCatalog, type DeviceCatalogItem, type DeviceCatalogType } from "@/services/deviceCatalogService";
+import {
+  getDeviceCatalog,
+  type DeviceCatalogCategory,
+  type DeviceCatalogItem,
+  type DeviceCatalogType,
+} from "@/services/deviceCatalogService";
 
 export type DeviceCategory = "smartphone" | "laptop";
+const PHONE_CATALOG_CATEGORIES: DeviceCatalogCategory[] = ["smartphone", "tablet"];
+const COMPUTER_CATALOG_CATEGORIES: DeviceCatalogCategory[] = ["laptop", "desktop"];
 
 export interface CatalogDevice {
   brand: string;
@@ -31,6 +38,8 @@ export function DeviceCatalogPicker({
   onFreeEntry,
 }: DeviceCatalogPickerProps) {
   const deviceType: DeviceCatalogType = category === "laptop" ? "computer" : "phone";
+  const allowedCategories =
+    category === "laptop" ? COMPUTER_CATALOG_CATEGORIES : PHONE_CATALOG_CATEGORIES;
   const [devices, setDevices] = useState<DeviceCatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
@@ -115,6 +124,8 @@ export function DeviceCatalogPicker({
         open={addOpen}
         onClose={() => setAddOpen(false)}
         initialDeviceType={deviceType}
+        allowedCategories={allowedCategories}
+        defaultCategory={category === "laptop" ? "laptop" : "smartphone"}
         onAdded={(device) => {
           setDevices((current) => [device, ...current]);
           selectDevice(device);
