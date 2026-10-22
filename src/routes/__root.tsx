@@ -20,6 +20,7 @@ import { ActiveModulesProvider } from "@/contexts/ActiveModulesContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { CurrentShopProvider } from "@/hooks/useCurrentShop";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -198,26 +199,21 @@ function RootComponent() {
 }
 
 function SuperAdminRedirect({ children }: { children: ReactNode }) {
-  const { user, profile, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const { isSuperAdminAccount, viewMode } = useUserRole();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading || !user || profile?.is_super_admin !== true) return;
-    const allowedPrefixes = [
-      "/admin",
-      "/profil",
-      "/aide",
-      "/parametres",
-      "/nouveautes",
-      "/shop",
-      "/demo",
-    ];
+    if (loading || !user || !isSuperAdminAccount) return;
+    const allowedPrefixes = viewMode === "admin"
+      ? ["/admin", "/profil", "/aide", "/nouveautes"]
+      : ["/", "/dashboard", "/auth", "/boutiques", "/profil", "/aide", "/parametres", "/shop", "/demo", "/caisse", "/catalogue"];
     const isAllowed = allowedPrefixes.some(
       (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
     );
-    if (!isAllowed) void navigate({ to: "/admin" });
-  }, [loading, location.pathname, navigate, profile?.is_super_admin, user]);
+    if (!isAllowed) void navigate({ to: viewMode === "admin" ? "/admin" : "/dashboard" });
+  }, [isSuperAdminAccount, loading, location.pathname, navigate, user, viewMode]);
 
   return children;
 }

@@ -602,6 +602,26 @@ export async function getTickets(
   return (data ?? []) as WorkshopTicket[];
 }
 
+/** Récupère uniquement les fiches assignées à un technicien donné. */
+export async function getTicketsByTechnician(
+  shopId: string | null | undefined,
+  technicianId: string,
+  activityType: ActivityType = "phone",
+): Promise<WorkshopTicket[]> {
+  if (isDemoMode()) {
+    return getDemoTickets(activityType).filter((ticket) => ticket.technicien_id === technicianId);
+  }
+  if (!(await hasActiveSession()) || !shopId) return [];
+  const { data, error } = await (supabase.from("workshop_tickets" as any) as any)
+    .select("*")
+    .eq("shop_id", requireShopId(shopId))
+    .eq("technicien_id", technicianId)
+    .eq("activity_type", activityType)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as WorkshopTicket[];
+}
+
 /** Récupère une fiche par son identifiant. */
 export async function getTicketById(
   id: string,

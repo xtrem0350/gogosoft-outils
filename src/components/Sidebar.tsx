@@ -3,6 +3,7 @@ import {
   ChevronRight,
   ChevronDown,
   CircleHelp,
+  BookOpen,
   FolderTree,
   History,
   Home,
@@ -21,6 +22,7 @@ import {
   UserRound,
   Users,
   Wrench,
+  Wallet,
 } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState, type ComponentType, type ReactNode } from "react";
@@ -37,6 +39,7 @@ import { signOut } from "@/services/authService";
 import { DEMO_SHOP_SLUG, endDemo, isDemoMode } from "@/services/demoService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
+import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { MODULES, type ModuleId } from "@/types/modules";
 import type { SectorVocabulary } from "@/types/sectors";
@@ -59,6 +62,7 @@ function getNavigationGroups(
   shopSlug: string | null,
   hasShop: boolean,
   vocabulary: SectorVocabulary,
+  role: UserRole,
 ): NavigationGroup[] {
   const activeSidebarKeys = new Set(activeModules.flatMap((id) => MODULES[id].sidebarKeys));
   const hasKey = (key: string) => activeSidebarKeys.has(key);
@@ -70,6 +74,39 @@ function getNavigationGroups(
       items: [{ label: "Dashboard", to: "/dashboard", icon: LayoutDashboard }],
     },
   ];
+
+  if (role === "technicien") {
+    if (hasKey("phone_repair")) {
+      groups.push({ label: "TÉLÉPHONE", icon: Smartphone, items: [
+        { label: "Mes fiches", to: "/phone/atelier", icon: Smartphone },
+        { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
+        { label: "Historique", to: "/phone/historique", icon: History },
+        { label: "Carnet", to: "/phone/carnet", icon: History },
+      ] });
+    }
+    if (hasModule("reparation-pc") || hasKey("computer_repair")) {
+      groups.push({ label: "ORDINATEUR", icon: Laptop, items: [
+        { label: "Mes fiches", to: "/computer/atelier", icon: Laptop },
+        { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+        { label: "Historique", to: "/computer/historique", icon: History },
+        { label: "Carnet", to: "/computer/carnet", icon: History },
+      ] });
+    }
+    groups.push(
+      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
+    );
+    return groups;
+  }
+
+  if (role === "caissier") {
+    return [
+      groups[0]!,
+      { label: "CAISSE", icon: Wallet, items: [{ label: "Caisse", to: "/caisse", icon: Wallet }] },
+      { label: "VENTES", icon: ShoppingCart, items: [{ label: "Ventes", to: "/sales", icon: ShoppingCart }] },
+      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+    ];
+  }
 
   if (hasKey("phone_repair")) {
     groups.push({
@@ -162,6 +199,15 @@ function getNavigationGroups(
     ],
   });
 
+  groups.push({
+    label: "OUTILS",
+    icon: Wrench,
+    items: [
+      { label: "Caisse", to: "/caisse", icon: Wallet },
+      { label: "Catalogue", to: "/catalogue", icon: BookOpen },
+    ],
+  });
+
   if (hasShop) {
     groups.push({
       label: "PERSONNEL",
@@ -215,6 +261,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeModules, loading: modulesLoading, isDemo: demo } = useActiveModules();
   const { shop } = useCurrentShop();
+  const { role, isSuperAdminAccount, viewMode, setViewMode } = useUserRole();
   const vocabulary = useSectorVocabulary();
   const navigationGroups = getNavigationGroups(
     activeModules,
@@ -222,6 +269,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     shop?.shop_slug ?? null,
     Boolean(shop?.id),
     vocabulary,
+    role,
   );
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some(
@@ -345,6 +393,23 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     </button>
   );
 
+  const roleSwitchButton = isSuperAdminAccount ? (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => {
+        const nextMode = viewMode === "admin" ? "shop" : "admin";
+        setViewMode(nextMode);
+        void navigate({ to: nextMode === "admin" ? "/admin" : "/dashboard" });
+      }}
+      title={viewMode === "admin" ? "Voir mon atelier" : "Mode admin"}
+      className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
+    >
+      {viewMode === "admin" ? <Store className="size-4" /> : <Settings className="size-4" />}
+      {!collapsed ? (viewMode === "admin" ? "Voir mon atelier" : "Mode admin") : null}
+    </Button>
+  ) : null;
+
   return (
     <>
       <aside
@@ -391,7 +456,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
         <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
         </div>
-        <div className="mt-4 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
+        <div className="mt-4 shrink-0 border-t border-sidebar-border pt-4">{roleSwitchButton}{signOutButton}</div>
       </aside>
 
       {mobileTrigger ? (
@@ -417,7 +482,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
               {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
             </div>
-            <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{signOutButton}</div>
+            <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{roleSwitchButton}{signOutButton}</div>
           </SheetContent>
         </Sheet>
       ) : null}

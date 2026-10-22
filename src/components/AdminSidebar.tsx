@@ -9,7 +9,6 @@ import {
   Package,
   Settings,
   Shield,
-  Store,
   User,
   Users,
 } from "lucide-react";
@@ -21,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 
 type AdminItem = {
   label: string;
@@ -58,15 +59,6 @@ const groups: AdminGroup[] = [
       { label: "Ajouter un module à un abonné", to: "/admin/modules/ajouter", icon: Package },
       { label: "Modules gratuits", to: "/admin/modules?type=free", icon: Package },
       { label: "Nouveaux modules", to: "/admin/modules/nouveau", icon: Package },
-    ],
-  },
-  {
-    label: "MA BOUTIQUE",
-    icon: Store,
-    items: [
-      { label: "Configuration", to: "/admin/boutique", icon: Store },
-      { label: "Produits", to: "/admin/boutique/produits", icon: Package },
-      { label: "Commandes", to: "/admin/boutique/commandes", icon: Package },
     ],
   },
   {
@@ -110,6 +102,8 @@ const groups: AdminGroup[] = [
 export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const navigate = useNavigate();
+  const { isSuperAdminAccount, setViewMode } = useUserRole();
+  const { shopId } = useCurrentShop();
   const [open, setOpen] = useState(false);
 
   async function handleSignOut() {
@@ -172,6 +166,20 @@ export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = 
     </Button>
   );
 
+  const switchToShop = isSuperAdminAccount && shopId ? (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={() => {
+        setViewMode("shop");
+        void navigate({ to: "/dashboard" });
+      }}
+      className="mb-2 w-full justify-start gap-3 text-slate-300 hover:bg-slate-800 hover:text-white"
+    >
+      <Users className="size-4" /> Voir mon atelier
+    </Button>
+  ) : null;
+
   return (
     <>
       <aside className="hidden h-screen w-[272px] shrink-0 flex-col bg-slate-900 text-white lg:flex">
@@ -180,7 +188,7 @@ export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = 
           <span className="font-display text-sm font-bold">GOGOSOFT ADMIN</span>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5">{navigation}</div>
-        <div className="shrink-0 border-t border-slate-700 p-3">{signOutButton}</div>
+        <div className="shrink-0 border-t border-slate-700 p-3">{switchToShop}{signOutButton}</div>
       </aside>
       {mobileTrigger ? (
         <Sheet open={open} onOpenChange={setOpen}>
@@ -196,7 +204,7 @@ export function AdminSidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = 
               </SheetTitle>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-3 py-5">{navigation}</div>
-            <div className="shrink-0 border-t border-slate-700 p-3">{signOutButton}</div>
+            <div className="shrink-0 border-t border-slate-700 p-3">{switchToShop}{signOutButton}</div>
           </SheetContent>
         </Sheet>
       ) : null}

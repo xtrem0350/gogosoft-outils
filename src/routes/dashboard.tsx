@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   UserPlus,
   UserRound,
+  Wallet,
   Wrench,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -23,11 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRole } from "@/hooks/useUserRole";
 import { useShopModules } from "@/hooks/useShopModules";
 import { useSubscription } from "@/hooks/useSubscription";
+import { getCashSummary } from "@/services/cashService";
+import { getAllTenants, getExpiringSubscriptions, getGlobalStats, getRecentSignups, type AdminStats, type AdminTenant, type AdminSubscription } from "@/services/adminService";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { listSales, type Sale } from "@/services/salesService";
-import { getEvents, getTickets, type WorkshopEvent } from "@/services/workshopService";
+import { getEvents, getTickets, getTicketsByTechnician, type WorkshopEvent } from "@/services/workshopService";
 import type { WorkshopTicket } from "@/types/database";
 
 export const Route = createFileRoute("/dashboard")({
@@ -46,7 +50,7 @@ export const Route = createFileRoute("/dashboard")({
       },
     ],
   }),
-  component: DashboardPage,
+  component: DashboardRouter,
 });
 
 const STATUS_LABELS: Record<string, string> = {
@@ -67,7 +71,17 @@ function formatRelativeTime(value: string | null) {
   return `Il y a ${days} j`;
 }
 
-function DashboardPage() {
+function DashboardRouter() {
+  const { role, loading } = useUserRole();
+  if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement du rôle…</p>;
+  if (role === "technicien") return <TechnicianDashboard />;
+  if (role === "caissier") return <CashierDashboard />;
+  if (role === "super_admin") return <PlatformDashboard />;
+  if (role === "owner") return <OwnerDashboard />;
+  return <EmptyState icon={UserRound} title="Rôle non attribué" description="Contactez le propriétaire de la boutique pour obtenir un accès." />;
+}
+
+function OwnerDashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const { shop, shopId, loading: shopLoading } = useCurrentShop();
@@ -149,12 +163,11 @@ function DashboardPage() {
   const greeting =
     currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
   const roleLabel = profile?.role ?? "Réparateur";
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthlyRevenue = tickets
-    .filter((ticket) => ticket.created_at?.startsWith(currentMonth))
+  const todayRevenue = tickets
+    .filter((ticket) => ticket.created_at && new Date(ticket.created_at).toDateString() === new Date().toDateString())
     .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0) +
     sales
-      .filter((sale) => sale.created_at.startsWith(currentMonth))
+      .filter((sale) => sale.payment_status === "paid" && new Date(sale.created_at).toDateString() === new Date().toDateString())
       .reduce((total, sale) => total + sale.total_price, 0);
   const hasPhoneRepairModule = hasModule("repair_phone");
   const hasComputerRepairModule = hasModule("repair_computer");
@@ -167,7 +180,7 @@ function DashboardPage() {
     maximumFractionDigits: 0,
   });
   const quickActions = [
-    ...(hasModule("phone_repair")
+    ...(hasModule("repair_phone")
       ? [
           {
             to: "/phone/atelier/nouveau",
@@ -178,7 +191,7 @@ function DashboardPage() {
           },
         ]
       : []),
-    ...(hasModule("computer_repair")
+    ...(hasModule("repair_computer")
       ? [
           {
             to: "/computer/atelier/nouveau",
@@ -189,7 +202,7 @@ function DashboardPage() {
           },
         ]
       : []),
-    ...(hasModule("phone_sale") || hasModule("computer_sale")
+    ...(hasModule("sale_phone") || hasModule("sale_computer")
       ? [
           {
             to: "/sales/nouveau",
@@ -200,6 +213,13 @@ function DashboardPage() {
           },
         ]
       : []),
+    {
+      to: "/caisse",
+      icon: Wallet,
+      label: "Voir la caisse",
+      description: "Suivre les encaissements du jour",
+      color: "orange" as const,
+    },
     ...(hasModule("consumable")
       ? [
           {
@@ -324,10 +344,10 @@ function DashboardPage() {
           color="primary"
         /> : null}
         {hasRepairModule || hasSalesModule ? <StatsCard
-          title="CA du mois"
-          value={busy ? "…" : formatAmount.format(monthlyRevenue)}
+          title="CA du jour"
+          value={busy ? "…" : formatAmount.format(todayRevenue)}
           icon={CreditCard}
-          trend="Selon les montants des fiches"
+          trend="Atelier et ventes réglées aujourd'hui"
           color="warning"
         /> : null}
         {hasSalesModule ? <StatsCard

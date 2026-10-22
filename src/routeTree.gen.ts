@@ -15,6 +15,8 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AideRouteImport } from './routes/aide'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BienvenueRouteImport } from './routes/bienvenue'
+import { Route as CaisseRouteImport } from './routes/caisse'
+import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
@@ -117,6 +119,16 @@ const AuthRoute = AuthRouteImport.update({
 const BienvenueRoute = BienvenueRouteImport.update({
   id: '/bienvenue',
   path: '/bienvenue',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaisseRoute = CaisseRouteImport.update({
+  id: '/caisse',
+  path: '/caisse',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CatalogueRoute = CatalogueRouteImport.update({
+  id: '/catalogue',
+  path: '/catalogue',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategoriesRoute = CategoriesRouteImport.update({
@@ -495,6 +507,8 @@ export interface FileRoutesByFullPath {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/bienvenue': typeof BienvenueRoute
+  '/caisse': typeof CaisseRoute
+  '/catalogue': typeof CatalogueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -575,6 +589,8 @@ export interface FileRoutesByTo {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/bienvenue': typeof BienvenueRoute
+  '/caisse': typeof CaisseRoute
+  '/catalogue': typeof CatalogueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -656,6 +672,8 @@ export interface FileRoutesById {
   '/aide': typeof AideRoute
   '/auth': typeof AuthRoute
   '/bienvenue': typeof BienvenueRoute
+  '/caisse': typeof CaisseRoute
+  '/catalogue': typeof CatalogueRoute
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
@@ -739,6 +757,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/bienvenue'
+    | '/caisse'
+    | '/catalogue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -819,6 +839,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/bienvenue'
+    | '/caisse'
+    | '/catalogue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -899,6 +921,8 @@ export interface FileRouteTypes {
     | '/aide'
     | '/auth'
     | '/bienvenue'
+    | '/caisse'
+    | '/catalogue'
     | '/categories'
     | '/dashboard'
     | '/demo'
@@ -981,6 +1005,8 @@ export interface RootRouteChildren {
   AideRoute: typeof AideRoute
   AuthRoute: typeof AuthRoute
   BienvenueRoute: typeof BienvenueRoute
+  CaisseRoute: typeof CaisseRoute
+  CatalogueRoute: typeof CatalogueRoute
   CategoriesRoute: typeof CategoriesRoute
   DashboardRoute: typeof DashboardRoute
   DemoRoute: typeof DemoRoute
@@ -1069,6 +1095,20 @@ declare module '@tanstack/react-router' {
       path: '/bienvenue'
       fullPath: '/bienvenue'
       preLoaderRoute: typeof BienvenueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/caisse': {
+      id: '/caisse'
+      path: '/caisse'
+      fullPath: '/caisse'
+      preLoaderRoute: typeof CaisseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/catalogue': {
+      id: '/catalogue'
+      path: '/catalogue'
+      fullPath: '/catalogue'
+      preLoaderRoute: typeof CatalogueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/categories': {
@@ -1741,6 +1781,8 @@ const rootRouteChildren: RootRouteChildren = {
   AideRoute: AideRoute,
   AuthRoute: AuthRoute,
   BienvenueRoute: BienvenueRoute,
+  CaisseRoute: CaisseRoute,
+  CatalogueRoute: CatalogueRoute,
   CategoriesRoute: CategoriesRoute,
   DashboardRoute: DashboardRoute,
   DemoRoute: DemoRoute,

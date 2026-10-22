@@ -137,6 +137,19 @@ function AuthPage() {
         window.localStorage.removeItem("gogosoft.rememberedIdentifier");
       }
       console.info("[auth] sign-in:success");
+      const signedInUserId = sessionData.session?.user.id;
+      if (signedInUserId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("is_super_admin")
+          .eq("id", signedInUserId)
+          .maybeSingle();
+        if (profile?.is_super_admin === true) {
+          const viewMode = window.sessionStorage.getItem("gogosoft.viewMode");
+          await navigate({ to: viewMode === "shop" ? "/dashboard" : "/admin" });
+          return;
+        }
+      }
       const shops = await getUserShops();
       if (shops.length === 0) {
         toast.info("Créez votre boutique pour continuer.");

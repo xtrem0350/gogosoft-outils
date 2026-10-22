@@ -16,6 +16,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleGuard } from "@/components/RoleGuard";
 import { AdminSidebar } from "@/components/AdminSidebar";
 import { getPageIcon } from "@/components/PageIdentity";
 import { HelpButton } from "@/components/HelpButton";
@@ -46,6 +47,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
@@ -61,6 +63,21 @@ import {
 import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
 
+function requiredRoles(pathname: string): UserRole[] | null {
+  if (pathname.startsWith("/admin")) return ["super_admin"];
+  if (pathname.startsWith("/caisse") || pathname.startsWith("/sales")) return ["owner", "caissier"];
+  if (pathname.startsWith("/equipe") || pathname.startsWith("/parametres") || pathname.startsWith("/abonnement")) {
+    return ["owner"];
+  }
+  if (pathname.startsWith("/phone/atelier") || pathname.startsWith("/phone/historique") || pathname.startsWith("/phone/carnet") || pathname.startsWith("/computer/atelier") || pathname.startsWith("/computer/historique") || pathname.startsWith("/computer/carnet")) {
+    return ["owner", "technicien"];
+  }
+  if (pathname.startsWith("/clients") || pathname.startsWith("/catalogue")) {
+    return ["owner", "technicien", "caissier"];
+  }
+  return null;
+}
+
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -74,7 +91,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     return session ? { is_demo: true, demo_expires_at: session.expires_at } : null;
   });
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const { isSuperAdmin, loading: roleLoading } = useUserRole();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
@@ -128,7 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     location.pathname === "/parametres";
   const isExemptRoute =
     isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
-  const loading = authLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
+  const loading = authLoading || roleLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
@@ -304,13 +322,17 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (loading) return <LoadingShell />;
 
-  const content = isExemptRoute ? (
+  const baseContent = isExemptRoute ? (
     <>{children}</>
   ) : (
     <ProtectedRoute>
       <SubscriptionGuard>{children}</SubscriptionGuard>
     </ProtectedRoute>
   );
+  const allowedRoles = requiredRoles(location.pathname);
+  const content = allowedRoles ? (
+    <RoleGuard allowedRoles={allowedRoles}>{baseContent}</RoleGuard>
+  ) : baseContent;
 
   return (
     <>
@@ -437,7 +459,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenu>
               </div>
             ) : null}
-            {!isSuperAdmin ? <ShopSelector /> : null}
+              {!isSuperAdmin ? <ShopSelector /> : null}
             <ThemeToggle />
             <UserMenu />
           </div>

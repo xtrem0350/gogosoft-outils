@@ -57,6 +57,7 @@ import {
 } from "@/services/storageService";
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
 import { getClientById, type ClientRecord } from "@/services/clientService";
+import { getTeamMembers } from "@/services/teamService";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { getEvents, addEvent, createWorkshopPayment, updateWorkshopTicket } from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
@@ -406,7 +407,7 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
     setDeviceProcessor(device.processor ?? "");
     setDeviceImei("");
     setDeviceSerial("");
-    setDeviceOs("");
+    setDeviceOs(device.os ?? "");
     setDevicePhoto(device.imageUrl);
   }
 
@@ -773,6 +774,7 @@ function NewWorkshopTicketPage({
   );
   const [location, setLocation] = useState<StorageLocation | null>(null);
   const [technician, setTechnician] = useState<MemberOption | null>(null);
+  const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdTicket, setCreatedTicket] = useState<WorkshopTicket | null>(null);
   const [createdAt] = useState(() => new Date());
@@ -849,7 +851,7 @@ function NewWorkshopTicketPage({
     setDeviceProcessor(device.processor ?? "");
     setDeviceImei("");
     setDeviceSerial("");
-    setDeviceOs("");
+    setDeviceOs(device.os ?? "");
     setDevicePhoto(device.imageUrl);
   }
 
@@ -1467,7 +1469,19 @@ export function ActivityDetailsPage({
         }
         setTicket(result);
         setTechnician(null);
+        setTechnicianAvatarUrl(null);
         if (result.technicien_id) {
+          if (shopId) {
+            void getTeamMembers(shopId).then((members) => {
+              if (active) {
+                setTechnicianAvatarUrl(
+                  members.find((member) => member.user_id === result.technicien_id)?.avatar_url ?? null,
+                );
+              }
+            }).catch(() => {
+              if (active) setTechnicianAvatarUrl(null);
+            });
+          }
           void supabase
             .from("profiles")
             .select("id, full_name, email")
@@ -1721,6 +1735,18 @@ export function ActivityDetailsPage({
         <CardContent className="space-y-2 p-5">
           <p className="font-semibold">{ticket.client_name}</p>
           <p>{ticket.client_whatsapp}</p>
+          {technician ? (
+            <div className="flex items-center gap-2 pt-1 text-sm">
+              {technicianAvatarUrl ? (
+                <img src={technicianAvatarUrl} alt="" className="size-8 rounded-full object-cover" />
+              ) : (
+                <span className="flex size-8 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-orange-800">
+                  {(technician.name.trim().slice(0, 1) || "?").toUpperCase()}
+                </span>
+              )}
+              <span><span className="text-muted-foreground">Technicien assigné · </span>{technician.name}</span>
+            </div>
+          ) : null}
           {ticket.notes ? <p className="whitespace-pre-wrap">{ticket.notes}</p> : null}
           <Badge className={statusStyles[ticket.status]}>{statusLabels[ticket.status]}</Badge>
           {ticket.status !== "livre" ? (

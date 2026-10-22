@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Mail, UserCog, UserMinus, UserPlus, Users } from "lucide-react";
+import { Camera, Mail, UserCog, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
@@ -16,23 +16,16 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { addShopMember, getShopMembers } from "@/services/shopService";
+import { addShopMember } from "@/services/shopService";
+import { getTeamMembers, updateMemberRole, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
 function EquipePage() {
-  const [members, setMembers] = useState<
-    Array<{
-      id: string;
-      user_id: string | null;
-      role: string;
-      full_name?: string | null;
-      email?: string | null;
-      created_at?: string | null;
-    }>
-  >([]);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -44,19 +37,8 @@ function EquipePage() {
       return;
     }
 
-    void getShopMembers(shopId)
-      .then((data) =>
-        setMembers(
-          data as Array<{
-            id: string;
-            user_id: string | null;
-            role: string;
-            full_name?: string | null;
-            email?: string | null;
-            created_at?: string | null;
-          }>,
-        ),
-      )
+    void getTeamMembers(shopId)
+      .then(setMembers)
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, [shopId]);
@@ -82,19 +64,36 @@ function EquipePage() {
       toast.success("Membre ajouté à l'atelier.");
       setOpen(false);
       setEmail("");
-      const next = await getShopMembers(shopId);
-      setMembers(
-        next as Array<{
-          id: string;
-          user_id: string | null;
-          role: string;
-          full_name?: string | null;
-          email?: string | null;
-          created_at?: string | null;
-        }>,
-      );
+      setMembers(await getTeamMembers(shopId));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invitation impossible.");
+    }
+  }
+
+  async function refreshMembers() {
+    if (!shopId) return;
+    setMembers(await getTeamMembers(shopId));
+  }
+
+  async function changeRole(member: TeamMember, role: "owner" | "technicien") {
+    if (!shopId) return;
+    try {
+      await updateMemberRole(shopId, member.user_id, role);
+      toast.success("Rôle mis à jour.");
+      await refreshMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier le rôle.");
+    }
+  }
+
+  async function changeAvatar(member: TeamMember, file: File | undefined) {
+    if (!shopId || !file) return;
+    try {
+      await uploadTeamAvatar(shopId, member.user_id, file);
+      toast.success("Photo de profil mise à jour.");
+      await refreshMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'envoyer la photo.");
     }
   }
 
@@ -136,19 +135,51 @@ function EquipePage() {
             const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
             return (
               <Card key={member.id}>
-                <CardContent className="flex items-center justify-between gap-4 p-4">
+                <CardContent className="space-y-4 p-4">
                   <div className="flex items-center gap-3">
-                    <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                      {displayName.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium">{displayName}</p>
-                      <p className="text-xs text-muted-foreground">{member.role || "Inconnu"}</p>
+                    {member.avatar_url ? (
+                      <img src={member.avatar_url} alt={`Photo de ${displayName}`} className="size-16 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-orange-100 text-lg font-semibold text-orange-800">
+                        {(displayName.trim().slice(0, 1) || "?").toUpperCase()}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{displayName}</p>
+                      <p className="truncate text-sm text-muted-foreground">{member.email ?? "E-mail indisponible"}</p>
+                      <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
+                        {member.role || "Inconnu"}
+                      </span>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" aria-label="Retirer" title="Retirer">
-                    <UserMinus className="size-4" />
-                  </Button>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 hover:text-orange-700">
+                      <Camera className="size-4" /> Changer la photo
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="sr-only"
+                        aria-label={`Changer la photo de ${displayName}`}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          void changeAvatar(member, file);
+                        }}
+                      />
+                    </label>
+                    <Select
+                      value={member.role === "owner" ? "owner" : "technicien"}
+                      onValueChange={(role) => void changeRole(member, role as "owner" | "technicien")}
+                    >
+                      <SelectTrigger className="h-9 w-36" aria-label={`Rôle de ${displayName}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="owner">Propriétaire</SelectItem>
+                        <SelectItem value="technicien">Technicien</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardContent>
               </Card>
             );

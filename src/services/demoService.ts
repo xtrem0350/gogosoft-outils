@@ -27,6 +27,21 @@ export interface DemoSession {
   products: OnlineProduct[];
   events: WorkshopEvent[];
   workshop_payments?: WorkshopPaymentRecord[];
+  cash_closures?: DemoCashClosure[];
+}
+
+export interface DemoCashClosure {
+  id: string;
+  shop_id: string;
+  period_start: string;
+  period_end: string;
+  total_workshop: number;
+  total_sales: number;
+  total_general: number;
+  breakdown: Record<string, number>;
+  closed_by: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 function getStoredSession(): DemoSession | null {
@@ -315,6 +330,7 @@ function createSeedSession(selectedModules: string[]): DemoSession {
     products,
     events,
     workshop_payments,
+    cash_closures: [],
   };
 }
 
@@ -341,6 +357,17 @@ export function updateDemoModules(moduleCodes: string[]): void {
 export function updateDemoSession(update: (session: DemoSession) => DemoSession): void {
   const session = getStoredSession();
   if (session) saveSession(update(session));
+}
+
+export function getDemoCashClosures(): DemoCashClosure[] {
+  return getStoredSession()?.cash_closures ?? [];
+}
+
+export function addDemoCashClosure(closure: DemoCashClosure): void {
+  updateDemoSession((session) => ({
+    ...session,
+    cash_closures: [closure, ...(session.cash_closures ?? [])],
+  }));
 }
 
 export async function startDemo(selectedModules: string[]): Promise<DemoSession> {
