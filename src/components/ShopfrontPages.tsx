@@ -80,29 +80,29 @@ function useOnlineShop(slug: string) {
 }
 
 function ShopHeader({ shop }: { shop: OnlineShop }) {
-  const { itemCount } = useCart(shop.id);
+  const { itemCount } = useCart(shop["id"]);
   return (
     <header className="border-b border-orange-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link
           to="/shop/$slug"
-          params={{ slug: shop.shop_slug }}
+          params={{ slug: shop["shop_slug"] }}
           className="flex min-w-0 items-center gap-3"
         >
-          {shop.shop_logo_url ? (
-            <img src={shop.shop_logo_url} alt="" className="size-11 rounded-lg object-cover" />
+          {shop["shop_logo_url"] ? (
+            <img src={shop["shop_logo_url"]} alt="" className="size-11 rounded-lg object-cover" />
           ) : (
             <span className="flex size-11 items-center justify-center rounded-lg bg-orange-100 text-orange-700">
               <Store className="size-5" />
             </span>
           )}
           <span className="truncate font-display text-base font-bold text-slate-900 sm:text-lg">
-            {shop.name}
+            {shop["name"]}
           </span>
         </Link>
         <Link
           to="/shop/$slug/panier"
-          params={{ slug: shop.shop_slug }}
+          params={{ slug: shop["shop_slug"] }}
           className="relative inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 text-slate-800 transition hover:border-orange-400 hover:bg-orange-50"
           aria-label={`Panier, ${itemCount} article(s)`}
         >
@@ -126,8 +126,8 @@ function ShopFrame({ shop, children }: { shop: OnlineShop; children: ReactNode }
       <footer className="mt-16 border-t border-slate-200 bg-slate-50">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6 text-sm text-slate-600 sm:px-6">
           <p>
-            {shop.name}
-            {shop.shop_address ? ` · ${shop.shop_address}` : ""}
+            {shop["name"]}
+            {shop["shop_address"] ? ` · ${shop["shop_address"]}` : ""}
           </p>
           <a href="/" className="inline-flex items-center gap-2 font-semibold text-slate-800">
             <img src={brandLogo} alt="GogoSoft" className="size-6 rounded object-cover" />
@@ -158,7 +158,7 @@ function PublicState({ message, loading = false }: { message: string; loading?: 
 }
 
 function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProduct }) {
-  const { addItem } = useCart(shop.id);
+  const { addItem } = useCart(shop["id"]);
   function addToCart() {
     addItem({
       product_id: product.id,
@@ -174,7 +174,7 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:border-orange-200 hover:shadow-md">
       <Link
         to="/shop/$slug/produit/$id"
-        params={{ slug: shop.shop_slug, id: product.id }}
+        params={{ slug: shop["shop_slug"], id: product.id }}
         className="block"
       >
         <div className="relative aspect-[4/3] bg-slate-100">
@@ -244,7 +244,7 @@ export function PublicShopPage({
     let active = true;
     setProductsLoading(true);
     setProductsError(null);
-    void getPublicProducts(shop.id, {
+    void getPublicProducts(shop["id"], {
       ...(category === "all" ? {} : { category }),
       ...(search ? { search } : {}),
     })
@@ -267,14 +267,14 @@ export function PublicShopPage({
   if (error || !shop)
     return <PublicState message={error ?? "Cette boutique n'existe pas ou n'est pas publiée."} />;
 
-  const whatsapp = shop.shop_whatsapp?.replace(/\D/g, "");
+  const whatsapp = shop["shop_whatsapp"]?.replace(/\D/g, "");
   return (
     <ShopFrame shop={shop}>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <section className="relative flex min-h-56 items-end overflow-hidden rounded-lg bg-slate-900 p-6 text-white sm:min-h-72 sm:p-10">
-          {shop.shop_banner_url ? (
+          {shop["shop_banner_url"] ? (
             <img
-              src={shop.shop_banner_url}
+              src={shop["shop_banner_url"]}
               alt=""
               className="absolute inset-0 size-full object-cover"
             />
@@ -282,10 +282,10 @@ export function PublicShopPage({
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
           <div className="relative max-w-2xl">
             <p className="text-sm font-semibold uppercase text-orange-200">Boutique en ligne</p>
-            <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{shop.name}</h1>
-            {shop.shop_description ? (
+            <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{shop["name"]}</h1>
+            {shop["shop_description"] ? (
               <p className="mt-3 max-w-xl text-sm text-white/90 sm:text-base">
-                {shop.shop_description}
+                {shop["shop_description"]}
               </p>
             ) : null}
             {whatsapp ? (
@@ -362,13 +362,13 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
   const [product, setProduct] = useState<OnlineProduct | null>(null);
   const [productLoading, setProductLoading] = useState(true);
   const [productError, setProductError] = useState<string | null>(null);
-  const { addItem } = useCart(shop?.id ?? "");
+  const { addItem } = useCart(shop?.["id"] ?? "");
 
   useEffect(() => {
     if (!shop) return;
     let active = true;
     setProductLoading(true);
-    void getProductById(productId, shop.id)
+    void getProductById(productId, shop["id"])
       .then((result) => {
         if (active) setProduct(result);
       })
@@ -394,7 +394,7 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
     );
 
   const selectedProduct = product;
-  const contactNumber = shop.shop_whatsapp?.replace(/\D/g, "");
+  const contactNumber = shop["shop_whatsapp"]?.replace(/\D/g, "");
   function addToCart() {
     addItem({
       product_id: selectedProduct.id,
@@ -488,7 +488,7 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
 export function PublicCartPage({ slug }: { slug: string }) {
   const { shop, loading, error } = useOnlineShop(slug);
   const navigate = useNavigate();
-  const cart = useCart(shop?.id ?? "");
+  const cart = useCart(shop?.["id"] ?? "");
   if (loading) return <PublicState message="Chargement du panier…" loading />;
   if (error || !shop) return <PublicState message={error ?? "Boutique introuvable."} />;
 
@@ -602,19 +602,19 @@ export function PublicCartPage({ slug }: { slug: string }) {
 function getPaymentOptions(shop: OnlineShop | null, delivery: boolean): OrderPaymentMethod[] {
   if (!shop) return [];
   return [
-    ...(shop.accepts_wave ? ["wave" as const] : []),
-    ...(shop.accepts_orange_money ? ["orange_money" as const] : []),
-    ...(shop.accepts_mtn ? ["mtn" as const] : []),
-    ...(shop.accepts_moov ? ["moov" as const] : []),
-    ...(!delivery && shop.accepts_cash_on_pickup ? ["cash_on_pickup" as const] : []),
-    ...(delivery && shop.accepts_cash_on_delivery ? ["cash_on_delivery" as const] : []),
+    ...(shop["accepts_wave"] ? ["wave" as const] : []),
+    ...(shop["accepts_orange_money"] ? ["orange_money" as const] : []),
+    ...(shop["accepts_mtn"] ? ["mtn" as const] : []),
+    ...(shop["accepts_moov"] ? ["moov" as const] : []),
+    ...(!delivery && shop["accepts_cash_on_pickup"] ? ["cash_on_pickup" as const] : []),
+    ...(delivery && shop["accepts_cash_on_delivery"] ? ["cash_on_delivery" as const] : []),
   ];
 }
 
 export function PublicCheckoutPage({ slug }: { slug: string }) {
   const { shop, loading, error } = useOnlineShop(slug);
   const navigate = useNavigate();
-  const cart = useCart(shop?.id ?? "");
+  const cart = useCart(shop?.["id"] ?? "");
   const [delivery, setDelivery] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<OrderPaymentMethod | "">("");
   const [submitting, setSubmitting] = useState(false);
@@ -643,7 +643,7 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
     setSubmitting(true);
     try {
       const order = await createPublicOrder({
-        shopId: shop.id,
+        shopId: shop["id"],
         clientName: String(formData.get("client_name") ?? ""),
         clientWhatsapp: String(formData.get("client_whatsapp") ?? ""),
         clientAddress: delivery ? String(formData.get("client_address") ?? "") : null,
@@ -667,7 +667,7 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
     }
   }
 
-  const total = cart.total + (delivery ? shop.delivery_fee : 0);
+  const total = cart.total + (delivery ? shop["delivery_fee"] : 0);
   return (
     <ShopFrame shop={shop}>
       <main className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:grid-cols-[1fr_340px] sm:px-6">
@@ -717,7 +717,7 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
                 />{" "}
                 Retrait en boutique
               </label>
-              {shop.delivery_available ? (
+              {shop["delivery_available"] ? (
                 <label className="flex items-center gap-3 rounded-lg border p-4">
                   <input
                     type="radio"
@@ -725,7 +725,7 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
                     checked={delivery}
                     onChange={() => setDelivery(true)}
                   />{" "}
-                  Livraison · {money(shop.delivery_fee)}
+                  Livraison · {money(shop["delivery_fee"])}
                 </label>
               ) : null}
             </fieldset>
@@ -794,7 +794,7 @@ export function PublicCheckoutPage({ slug }: { slug: string }) {
             </div>
             <div className="flex justify-between">
               <span>Livraison</span>
-              <span>{money(delivery ? shop.delivery_fee : 0)}</span>
+              <span>{money(delivery ? shop["delivery_fee"] : 0)}</span>
             </div>
           </div>
           <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 font-bold">

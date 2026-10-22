@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 import {
   DEMO_SHOP_ID,
   DEMO_SHOP_SLUG,
@@ -8,11 +8,72 @@ import {
   isDemoMode,
 } from "@/services/demoService";
 
-type PublicShopRow = Database["public"]["Functions"]["get_public_shop_by_slug"]["Returns"][number];
+// TODO: régénérer les types Supabase après les migrations.
+export interface PublicShopRow {
+  id: string;
+  name: string;
+  shop_slug: string | null;
+  shop_logo_url: string | null;
+  shop_description: string | null;
+  shop_banner_url: string | null;
+  shop_phone: string | null;
+  shop_address: string | null;
+  shop_whatsapp: string | null;
+  accepts_wave: boolean;
+  accepts_orange_money: boolean;
+  accepts_mtn: boolean;
+  accepts_moov: boolean;
+  accepts_cash_on_pickup: boolean;
+  accepts_cash_on_delivery: boolean;
+  delivery_fee: number;
+  delivery_available: boolean;
+}
+
 export type OnlineShop = Omit<PublicShopRow, "shop_slug"> & { shop_slug: string };
-export type OnlineProduct = Database["public"]["Tables"]["products"]["Row"];
-export type OnlineOrder = Database["public"]["Tables"]["orders"]["Row"];
-export type OnlineOrderItem = Database["public"]["Tables"]["order_items"]["Row"];
+export interface OnlineProduct {
+  id: string;
+  shop_id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  stock: number;
+  image_urls: string[];
+  characteristics: Json;
+  is_available: boolean;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OnlineOrder {
+  id: string;
+  shop_id: string;
+  order_number: string;
+  tracking_token: string;
+  client_name: string;
+  client_whatsapp: string;
+  client_address: string | null;
+  client_notes: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  payment_method: string;
+  payment_status: string;
+  delivery_status: string;
+  created_at: string;
+}
+
+export interface OnlineOrderItem {
+  id: string;
+  order_id: string;
+  product_id: string | null;
+  product_name: string;
+  product_image_url: string | null;
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
 export type ProductCategory = "phone" | "computer" | "accessory" | "consumable" | "other";
 export type DeliveryStatus =
   "pending" | "confirmed" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled";
@@ -20,28 +81,25 @@ export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 export type OrderPaymentMethod =
   "wave" | "orange_money" | "mtn" | "moov" | "cash_on_delivery" | "cash_on_pickup";
 
-export type OnlineShopSettings = Partial<
-  Pick<
-    Database["public"]["Tables"]["shops"]["Update"],
-    | "name"
-    | "is_online_shop"
-    | "shop_slug"
-    | "shop_logo_url"
-    | "shop_description"
-    | "shop_banner_url"
-    | "shop_phone"
-    | "shop_address"
-    | "shop_whatsapp"
-    | "accepts_wave"
-    | "accepts_orange_money"
-    | "accepts_mtn"
-    | "accepts_moov"
-    | "accepts_cash_on_pickup"
-    | "accepts_cash_on_delivery"
-    | "delivery_fee"
-    | "delivery_available"
-  >
->;
+export interface OnlineShopSettings {
+  name?: string;
+  is_online_shop?: boolean;
+  shop_slug?: string | null;
+  shop_logo_url?: string | null;
+  shop_description?: string | null;
+  shop_banner_url?: string | null;
+  shop_phone?: string | null;
+  shop_address?: string | null;
+  shop_whatsapp?: string | null;
+  accepts_wave?: boolean;
+  accepts_orange_money?: boolean;
+  accepts_mtn?: boolean;
+  accepts_moov?: boolean;
+  accepts_cash_on_pickup?: boolean;
+  accepts_cash_on_delivery?: boolean;
+  delivery_fee?: number;
+  delivery_available?: boolean;
+}
 
 export interface PublicOrderResult {
   id: string;
@@ -112,9 +170,9 @@ export async function getShopBySlug(slug: string): Promise<OnlineShop | null> {
       delivery_fee: 0,
     };
   }
-  const { data, error } = await supabase.rpc("get_public_shop_by_slug", {
+  const { data, error } = await (supabase.rpc("get_public_shop_by_slug" as any, {
     p_slug: slug.trim().toLowerCase(),
-  });
+  }) as any);
   if (error) throw error;
   const shop = data?.[0];
   if (!shop || typeof shop.shop_slug !== "string") return null;
@@ -128,7 +186,10 @@ export async function getPublicProducts(
   if (isDemoMode() && shopId === DEMO_SHOP_ID) {
     return getDemoProducts(filters).filter((product) => product.is_available);
   }
-  let query = supabase.from("products").select("*").eq("shop_id", shopId).eq("is_available", true);
+  let query = (supabase.from("products" as any) as any)
+    .select("*")
+    .eq("shop_id", shopId)
+    .eq("is_available", true);
   if (filters.category) query = query.eq("category", filters.category);
   if (filters.search?.trim()) query = query.ilike("name", `%${filters.search.trim()}%`);
   const { data, error } = await query
@@ -140,8 +201,8 @@ export async function getPublicProducts(
 
 export async function getProductById(id: string, shopId: string): Promise<OnlineProduct | null> {
   if (isDemoMode() && shopId === DEMO_SHOP_ID) return getDemoProductById(id);
-  const { data, error } = await supabase
-    .from("products")
+  const { data, error } = await (supabase
+    .from("products" as any) as any)
     .select("*")
     .eq("id", id)
     .eq("shop_id", shopId)
@@ -164,7 +225,7 @@ export async function createPublicOrder(input: {
   if (isDemoMode()) {
     throw new Error("Les commandes ne sont pas disponibles en mode démo.");
   }
-  const { data, error } = await supabase.rpc("create_public_order", {
+  const { data, error } = await (supabase.rpc("create_public_order" as any, {
     p_shop_id: input.shopId,
     p_client_name: input.clientName,
     p_client_whatsapp: input.clientWhatsapp,
@@ -173,7 +234,7 @@ export async function createPublicOrder(input: {
     p_payment_method: input.paymentMethod,
     p_delivery: input.delivery,
     p_items: input.items as unknown as Json,
-  });
+  }) as any);
   if (error) throw error;
   if (
     typeof data !== "object" ||
@@ -200,10 +261,10 @@ export async function getPublicOrder(
   trackingToken: string,
 ): Promise<PublicOrderDetail | null> {
   if (isDemoMode()) return null;
-  const { data, error } = await supabase.rpc("get_public_order", {
+  const { data, error } = await (supabase.rpc("get_public_order" as any, {
     p_order_id: orderId,
     p_tracking_token: trackingToken,
-  });
+  }) as any);
   if (error) throw error;
   if (!data || typeof data !== "object" || Array.isArray(data)) return null;
   return data as unknown as PublicOrderDetail;
@@ -244,8 +305,8 @@ export async function uploadShopAsset(shopId: string, file: File): Promise<strin
 }
 
 export async function listShopProducts(shopId: string): Promise<OnlineProduct[]> {
-  const { data, error } = await supabase
-    .from("products")
+  const { data, error } = await (supabase
+    .from("products" as any) as any)
     .select("*")
     .eq("shop_id", shopId)
     .order("created_at", { ascending: false });
@@ -259,15 +320,15 @@ export async function saveShopProduct(
   productId?: string,
 ): Promise<OnlineProduct> {
   const result = productId
-    ? await supabase
-        .from("products")
+    ? await (supabase
+      .from("products" as any) as any)
         .update(input)
         .eq("id", productId)
         .eq("shop_id", shopId)
         .select()
         .single()
-    : await supabase
-        .from("products")
+    : await (supabase
+      .from("products" as any) as any)
         .insert({ ...input, shop_id: shopId })
         .select()
         .single();
@@ -276,8 +337,8 @@ export async function saveShopProduct(
 }
 
 export async function deleteShopProduct(shopId: string, productId: string): Promise<void> {
-  const { error } = await supabase
-    .from("products")
+  const { error } = await (supabase
+    .from("products" as any) as any)
     .delete()
     .eq("id", productId)
     .eq("shop_id", shopId);
@@ -287,8 +348,8 @@ export async function deleteShopProduct(shopId: string, productId: string): Prom
 export async function listShopOrders(
   shopId: string,
 ): Promise<Array<OnlineOrder & { order_items: OnlineOrderItem[] }>> {
-  const { data, error } = await supabase
-    .from("orders")
+  const { data, error } = await (supabase
+    .from("orders" as any) as any)
     .select("*, order_items(*)")
     .eq("shop_id", shopId)
     .order("created_at", { ascending: false });
@@ -300,8 +361,8 @@ export async function getShopOrder(
   shopId: string,
   orderId: string,
 ): Promise<(OnlineOrder & { order_items: OnlineOrderItem[] }) | null> {
-  const { data, error } = await supabase
-    .from("orders")
+  const { data, error } = await (supabase
+    .from("orders" as any) as any)
     .select("*, order_items(*)")
     .eq("shop_id", shopId)
     .eq("id", orderId)
