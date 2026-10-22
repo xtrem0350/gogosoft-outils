@@ -4,15 +4,15 @@ const STORAGE_KEY = "gogosoft.theme";
 export type ThemeMode = "dark" | "light";
 
 /** Gère le mode sombre / clair et le persiste dans le navigateur. */
-export function useTheme() {
-  const [theme, setThemeState] = useState<ThemeMode>("dark");
+export function useTheme(defaultTheme: ThemeMode = "dark") {
+  const [theme, setThemeState] = useState<ThemeMode>(defaultTheme);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
-    const initial: ThemeMode = stored ?? "dark";
+    const initial: ThemeMode = stored ?? defaultTheme;
     setThemeState(initial);
     document.documentElement.classList.toggle("dark", initial === "dark");
-  }, []);
+  }, [defaultTheme]);
 
   const setTheme = useCallback((next: ThemeMode) => {
     setThemeState(next);

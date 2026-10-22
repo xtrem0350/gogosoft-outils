@@ -76,7 +76,7 @@ function getNavigationGroups(
   ];
 
   if (role === "technicien") {
-    if (hasKey("phone_repair")) {
+    if (hasModule("reparation-telephone")) {
       groups.push({ label: "TÉLÉPHONE", icon: Smartphone, items: [
         { label: "Mes fiches", to: "/phone/atelier", icon: Smartphone },
         { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
@@ -84,7 +84,7 @@ function getNavigationGroups(
         { label: "Carnet", to: "/phone/carnet", icon: History },
       ] });
     }
-    if (hasModule("reparation-pc") || hasKey("computer_repair")) {
+    if (hasModule("reparation-pc")) {
       groups.push({ label: "ORDINATEUR", icon: Laptop, items: [
         { label: "Mes fiches", to: "/computer/atelier", icon: Laptop },
         { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
@@ -100,15 +100,23 @@ function getNavigationGroups(
   }
 
   if (role === "caissier") {
-    return [
+    const cashierGroups: NavigationGroup[] = [
       groups[0]!,
       { label: "CAISSE", icon: Wallet, items: [{ label: "Caisse", to: "/caisse", icon: Wallet }] },
-      { label: "VENTES", icon: ShoppingCart, items: [{ label: "Ventes", to: "/sales", icon: ShoppingCart }] },
       { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
+    if (hasModule("vente-telephone") || hasModule("vente-pc")) {
+      cashierGroups.splice(2, 0, {
+        label: "VENTES",
+        icon: ShoppingCart,
+        items: [{ label: "Ventes", to: "/sales", icon: ShoppingCart }],
+      });
+    }
+    return cashierGroups;
   }
 
-  if (hasKey("phone_repair")) {
+  if (hasModule("reparation-telephone")) {
     groups.push({
       label: "TÉLÉPHONE",
       icon: Smartphone,
@@ -122,7 +130,7 @@ function getNavigationGroups(
     });
   }
 
-  if (hasModule("reparation-pc") || hasKey("computer_repair")) {
+  if (hasModule("reparation-pc")) {
     const computerLabel =
       vocabulary.device === "pc" && vocabulary.category === "reparation"
         ? vocabulary.product
@@ -139,11 +147,11 @@ function getNavigationGroups(
     });
   }
 
-  for (const [moduleId, code, label, activityType] of [
-    ["vente-telephone", "phone_sale", "VENTE MOBILE", "phone"],
-    ["vente-pc", "computer_sale", "VENTE PC", "computer"],
+  for (const [moduleId, label, activityType] of [
+    ["vente-telephone", "VENTE MOBILE", "phone"],
+    ["vente-pc", "VENTE PC", "computer"],
   ] as const) {
-    if (!hasModule(moduleId) && !hasKey(code)) continue;
+    if (!hasModule(moduleId)) continue;
     const SaleIcon = activityType === "computer" ? Laptop : ShoppingCart;
     groups.push({
       label,
@@ -216,11 +224,13 @@ function getNavigationGroups(
     });
   }
 
-  groups.push({
+  if (role === "owner") {
+    groups.push({
       label: "MON COMPTE",
       icon: Settings,
       items: isDemo
         ? [
+            { label: "Équipe", to: "/equipe", icon: UserCog },
             { label: "Forfait", to: "/abonnement", icon: Settings },
             { label: "Paramètres", to: "/parametres", icon: Settings },
           ]
@@ -236,6 +246,7 @@ function getNavigationGroups(
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
     });
+  }
 
   if (!isDemo && (hasKey("shop_phone") || hasKey("shop_computer"))) {
     groups.push({

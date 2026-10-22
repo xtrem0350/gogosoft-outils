@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { isDemoMode } from "@/services/demoService";
 import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole = "owner" | "technicien" | "caissier" | "super_admin" | null;
@@ -38,9 +39,14 @@ export function useUserRole(): UserRoleInfo {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewMode);
   const isSuperAdminAccount = profile?.is_super_admin === true;
+  const isDemo = isDemoMode();
 
   useEffect(() => {
     let active = true;
+    if (isDemo) {
+      setLoading(false);
+      return () => { active = false; };
+    }
     if (authLoading || shopLoading) return () => { active = false; };
     if (!user) {
       setShopRole(null);
@@ -78,7 +84,7 @@ export function useUserRole(): UserRoleInfo {
       );
 
     return () => { active = false; };
-  }, [authLoading, shopId, shopLoading, user]);
+  }, [authLoading, isDemo, shopId, shopLoading, user]);
 
   useEffect(() => {
     if (!isSuperAdminAccount && viewMode !== "shop") {
@@ -91,6 +97,20 @@ export function useUserRole(): UserRoleInfo {
     if (typeof window !== "undefined") window.sessionStorage.setItem("gogosoft.viewMode", mode);
     setViewModeState(mode);
   }, []);
+
+  if (isDemo) {
+    return {
+      role: "owner",
+      isOwner: true,
+      isTechnicien: false,
+      isCaissier: false,
+      isSuperAdmin: false,
+      isSuperAdminAccount: false,
+      viewMode: "shop",
+      setViewMode: () => {},
+      loading: false,
+    };
+  }
 
   const role: UserRole = isSuperAdminAccount && viewMode === "admin" ? "super_admin" : shopRole;
   return {

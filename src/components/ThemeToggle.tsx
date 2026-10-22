@@ -1,11 +1,11 @@
 import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useTheme } from "@/hooks/useTheme";
+import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 
 /** Bouton de bascule du thème persistant. */
-export function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+export function ThemeToggle({ defaultTheme }: { defaultTheme?: ThemeMode }) {
+  const { theme, toggleTheme } = useTheme(defaultTheme);
   return (
     <Button
       variant="ghost"
