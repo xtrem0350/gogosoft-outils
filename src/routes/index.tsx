@@ -191,213 +191,184 @@ function HomePage() {
   if (loading || user || isDemoMode()) return null;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950">
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
-        }}
-      />
-      <div className="absolute inset-0 bg-black/60" />
-
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
-        <div className="card-3d w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 !bg-white/10 shadow-2xl shadow-3d backdrop-blur-md">
-          <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <section className="flex min-h-[280px] flex-col justify-center bg-slate-900/70 p-8 text-white lg:min-h-[640px] lg:p-10">
-              <div className="flex flex-col items-center justify-center gap-5 text-center">
-                <div className="size-32 overflow-hidden rounded-full border-2 border-slate-300 dark:border-slate-600">
-                  <img
-                    loading="lazy"
-                    decoding="async"
-                    src={profileLogo}
-                    alt="GogoSoft logo"
-                    className="size-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-white">Atelier numérique</h2>
-                  <p className="mx-auto mt-2 max-w-sm text-sm text-slate-300">
-                    Tous vos outils, au même endroit. Centralisez vos réparations, vos clients, vos
-                    diagnostics et l’activité de votre équipe.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            <section className="bg-slate-950/60 p-7 sm:p-8 lg:p-10">
-              <div className="mx-auto max-w-xl">
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-blue-300">Bienvenue</p>
-                  <h1 className="mt-2 text-3xl font-bold text-white">GogoSoft Tools Manager</h1>
-                  <p className="mt-2 text-sm text-slate-300">Connectez-vous pour gérer votre atelier.</p>
-                </div>
-
-                <div className="max-h-[min(72vh,48rem)] overflow-y-auto pr-1">
-                  <section aria-label="Choix des modules" className="space-y-3">
-                    <div className="mb-3">
-                      <h2 className="text-lg font-bold text-white">1. Choisissez vos modules</h2>
-                      <p className="text-sm text-slate-300">Sélectionnez au moins un module pour continuer</p>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {WELCOME_MODULES.map(({ id, title, description, icon: Icon, tone }) => {
-                        const isSelected = selectedModules.includes(id);
-                        return (
-                          <button
-                            key={id}
-                            type="button"
-                            onClick={() => toggleModule(id)}
-                            aria-pressed={isSelected}
-                            className={`card-3d relative flex min-h-[120px] w-full flex-col justify-between rounded-xl border p-4 text-left transition-all duration-300 hover:shadow-3d-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
-                              isSelected
-                                ? "scale-[1.01] ring-2 ring-orange-500"
-                                : "border-slate-200"
-                            }`}
-                          >
-                            {isSelected ? (
-                              <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm">
-                                <Check className="size-3.5" />
-                              </span>
-                            ) : null}
-                            <div
-                              className={`mb-4 flex size-11 items-center justify-center rounded-xl ${
-                                tone === "orange" ? "bg-orange-100 text-orange-600" : "bg-green-100 text-green-600"
-                              }`}
-                            >
-                              <Icon className="size-5" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-900">{title}</p>
-                              <p className="mt-1 text-sm text-slate-500">{description}</p>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  <section aria-label="Offre mensuelle" className="mt-7 space-y-3">
-                    <div>
-                      <h2 className="text-lg font-bold text-white">2. Votre offre mensuelle</h2>
-                      <p className="text-sm text-slate-300">Tarifs revus à la baisse · Sans engagement</p>
-                    </div>
-
-                    <div className="grid gap-3 md:grid-cols-3">
-                      {WELCOME_PRICING.map((plan) => {
-                        const isSelected = selectedPlanId === plan.id;
-                        return (
-                        <label
-                          key={plan.id}
-                          className={`card-3d relative block cursor-pointer rounded-xl p-4 text-left transition-all focus-within:ring-2 focus-within:ring-orange-500 ${
-                            isSelected
-                              ? "scale-[1.02] bg-orange-50 ring-2 ring-orange-500"
-                              : plan.featured
-                                ? "ring-1 ring-slate-300 hover:shadow-3d-hover"
-                                : "hover:shadow-3d-hover"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="welcome-plan"
-                            value={plan.id}
-                            checked={isSelected}
-                            onChange={() => setSelectedPlanId(plan.id)}
-                            className="peer sr-only"
-                          />
-                          {isSelected ? (
-                            <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-green-600 text-white shadow-sm">
-                              <Check className="size-4" />
-                            </span>
-                          ) : null}
-                            {plan.featured ? (
-                              <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-orange-600">
-                                Recommandé
-                              </div>
-                            ) : null}
-                            <h3 className="text-xl font-bold text-slate-900">{plan.title}</h3>
-                            <p className="mt-1 text-sm text-slate-500">{plan.subtitle}</p>
-                            <div className="mt-5 flex items-end gap-1 text-slate-900">
-                              <span className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")}</span>
-                              <span className="pb-1 text-xs font-medium uppercase text-slate-500">FCFA</span>
-                            </div>
-                            <p className="mt-1 text-xs text-slate-500">/mois</p>
-                            <ul className="mt-5 space-y-2">
-                              {plan.features.map((feature) => (
-                                <li key={`${plan.id}-${feature}`} className="flex items-center gap-2 text-sm text-slate-600">
-                                  <span className="flex size-4 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                    <Check className="size-3" />
-                                  </span>
-                                  {feature}
-                                </li>
-                              ))}
-                            </ul>
-                        </label>
-                        );
-                      })}
-                    </div>
-
-                    <p className="text-center text-xs text-slate-400">
-                      🌐 Domaine .com : 10 000 FCFA/an · SSL gratuit · 📱 Wave, OM, MTN, Moov
-                    </p>
-                  </section>
-
-                  <section aria-label="Actions principales" className="mt-7 space-y-3">
-                    {!canDemo ? (
-                      <p className="text-sm font-medium text-amber-300">
-                        ⚠️ Sélectionnez au moins un module pour lancer la démo.
-                      </p>
-                    ) : null}
-                    {canDemo && !canSignup ? (
-                      <p className="text-sm font-medium text-amber-300">
-                        💡 Pour l&apos;essai gratuit 7 jours avec compte, sélectionnez aussi une offre.
-                      </p>
-                    ) : null}
-
-                    <div className="flex flex-col gap-3 sm:flex-row">
-                      <Button
-                        type="button"
-                        size="lg"
-                        disabled={!canDemo}
-                        className="flex-1 bg-ivoirien bg-ivoirien-hover shadow-3d disabled:cursor-not-allowed disabled:opacity-50"
-                        onClick={() => void handleStartDemo()}
-                      >
-                        <Gift className="size-4" />
-                        Essai démo · 1 jour
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant="outline"
-                        disabled={!canSignup}
-                        className="flex-1 border-slate-300 text-slate-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        onClick={() => void handleGoAuth("signup")}
-                      >
-                        Créer un compte · 7 jours gratuits
-                      </Button>
-
-                      <Button
-                        type="button"
-                        size="lg"
-                        variant="ghost"
-                        className="flex-1 text-white hover:bg-white/10 hover:text-white"
-                        onClick={() => void handleGoAuth("login")}
-                      >
-                        <Lock className="size-4" />
-                        Se connecter
-                      </Button>
-                    </div>
-
-                    <p className="text-center text-xs text-slate-400">
-                      Démo locale sans compte · Essai de sept jours après création du compte
-                    </p>
-                  </section>
-                </div>
-              </div>
-            </section>
+    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50 text-slate-900">
+      <header className="h-16 border-b border-slate-200/80 bg-white/90">
+        <div className="mx-auto flex h-full max-w-5xl items-center justify-between gap-3 px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <img src={profileLogo} alt="" className="size-10 rounded-full object-cover" />
+            <span className="truncate text-lg font-bold">GogoSoft</span>
+          </div>
+          <span className="hidden text-sm font-medium text-slate-600 md:block">
+            🇨🇮 Solution ivoirienne
+          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="text-slate-700"
+              onClick={() => void handleGoAuth("login")}
+            >
+              Se connecter
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canSignup}
+              onClick={() => void handleGoAuth("signup")}
+            >
+              Créer un compte
+            </Button>
           </div>
         </div>
+      </header>
+
+      <div className="mx-auto max-w-5xl space-y-3 px-4 pb-3">
+        <section className="py-3 text-center">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
+            Gérez votre atelier comme un pro
+          </h1>
+          <p className="mt-1 text-sm text-slate-700 md:text-base">
+            Une seule app pour tout gérer
+          </p>
+        </section>
+
+        <section aria-label="Choix des modules" className="space-y-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className="text-lg font-semibold">Choisissez vos domaines d&apos;activité</h2>
+            {!canDemo ? (
+              <p className="text-xs text-slate-600">Sélectionnez au moins un module</p>
+            ) : null}
+          </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
+            {WELCOME_MODULES.map(({ id, title, icon: Icon, tone }) => {
+              const isSelected = selectedModules.includes(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => toggleModule(id)}
+                  aria-pressed={isSelected}
+                  className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                    isSelected
+                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                      : "border-slate-200 bg-white hover:border-orange-300"
+                  }`}
+                >
+                  <span
+                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
+                      tone === "orange" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
+                    }`}
+                  >
+                    <Icon className="size-5" />
+                  </span>
+                  <span className="pr-5 text-sm font-medium leading-tight text-slate-800">
+                    {title}
+                  </span>
+                  {isSelected ? (
+                    <Check className="absolute right-2 top-2 size-4 text-orange-600" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-label="Offre mensuelle" className="space-y-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <h2 className="text-lg font-semibold">Choisissez votre offre</h2>
+            <p className="text-xs text-slate-600">Tarifs mensuels · Sans engagement</p>
+          </div>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+            {WELCOME_PRICING.map((plan) => {
+              const isSelected = selectedPlanId === plan.id;
+              return (
+                <label
+                  key={plan.id}
+                  className={`card-3d relative flex h-[180px] cursor-pointer flex-col rounded-xl border p-3 text-left transition-colors focus-within:ring-2 focus-within:ring-orange-500 ${
+                    isSelected
+                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                      : "border-slate-200 bg-white hover:border-orange-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="welcome-plan"
+                    value={plan.id}
+                    checked={isSelected}
+                    onChange={() => setSelectedPlanId(plan.id)}
+                    className="sr-only"
+                  />
+                  {plan.featured ? (
+                    <span className="absolute right-3 top-3 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-800">
+                      Recommandé
+                    </span>
+                  ) : null}
+                  {isSelected ? (
+                    <Check className="absolute right-3 top-10 size-4 text-orange-600" />
+                  ) : null}
+                  <h3 className="text-sm font-bold text-slate-900">{plan.title}</h3>
+                  <p className="mt-0.5 text-xs text-slate-600">{plan.subtitle}</p>
+                  <div className="mt-2 flex items-baseline gap-1 text-slate-900">
+                    <span className="text-xl font-bold">{plan.price.toLocaleString("fr-FR")}</span>
+                    <span className="text-xs font-medium">FCFA/mois</span>
+                  </div>
+                  <ul className="mt-2 space-y-1">
+                    {plan.features.slice(0, 3).map((feature) => (
+                      <li key={`${plan.id}-${feature}`} className="flex items-center gap-1.5 text-xs text-slate-700">
+                        <Check className="size-3 shrink-0 text-green-700" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </label>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-label="Actions principales" className="space-y-2 pt-1">
+          <div className="flex flex-col gap-2 md:flex-row">
+            <Button
+              type="button"
+              disabled={!canDemo}
+              className="min-h-10 flex-1 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => void handleStartDemo()}
+            >
+              <Gift className="size-4" />
+              Essai démo · 1 jour
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canSignup}
+              className="min-h-10 flex-1 border-slate-300 text-slate-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => void handleGoAuth("signup")}
+            >
+              Créer un compte · 7 jours gratuits
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="min-h-10 flex-1 text-slate-700 hover:bg-slate-100"
+              onClick={() => void handleGoAuth("login")}
+            >
+              <Lock className="size-4" />
+              Se connecter
+            </Button>
+          </div>
+          {!canDemo || (canDemo && !canSignup) ? (
+            <p className="text-center text-xs text-slate-600">
+              {!canDemo
+                ? "Sélectionnez au moins un module pour lancer la démo."
+                : "Sélectionnez une offre pour créer votre compte avec 7 jours gratuits."}
+            </p>
+          ) : null}
+        </section>
+
+        <footer className="pb-1 text-center text-xs text-slate-500">
+          © 2026 GogoSoft
+        </footer>
       </div>
     </main>
   );

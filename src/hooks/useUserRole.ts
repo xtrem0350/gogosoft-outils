@@ -60,20 +60,22 @@ export function useUserRole(): UserRoleInfo {
       .eq("user_id", user.id)
       .eq("shop_id", shopId)
       .maybeSingle()
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (error) {
+      .then(
+        ({ data, error }) => {
+          if (!active) return;
+          if (error) {
+            setShopRole(null);
+          } else {
+            setShopRole(normalizeRole(data?.role ?? null));
+          }
+          setLoading(false);
+        },
+        () => {
+          if (!active) return;
           setShopRole(null);
-        } else {
-          setShopRole(normalizeRole(data?.role ?? null));
-        }
-      })
-      .catch(() => {
-        if (active) setShopRole(null);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
+          setLoading(false);
+        },
+      );
 
     return () => { active = false; };
   }, [authLoading, shopId, shopLoading, user]);

@@ -1442,6 +1442,7 @@ export function ActivityDetailsPage({
   const [otherCost, setOtherCost] = useState("");
   const [pickupDate, setPickupDate] = useState(defaultPickupDate);
   const [technician, setTechnician] = useState<MemberOption | null>(null);
+  const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
   const [memberRefreshKey, setMemberRefreshKey] = useState(0);
   const [tools, setTools] = useState("");

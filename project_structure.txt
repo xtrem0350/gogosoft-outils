@@ -27,6 +27,7 @@ Structure du projet (avec glob)
 │   └── 📄 config.toml
 ├── 📁 src/
 │   ├── 📁 types/
+│   │   ├── 📄 staff.ts
 │   │   ├── 📄 sectors.ts
 │   │   ├── 📄 modules.ts
 │   │   └── 📄 database.ts
@@ -35,8 +36,10 @@ Structure du projet (avec glob)
 │   ├── 📁 services/
 │   │   ├── 📄 workshopService.ts
 │   │   ├── 📄 toolService.ts
+│   │   ├── 📄 teamService.ts
 │   │   ├── 📄 subscriptionService.ts
 │   │   ├── 📄 storageService.ts
+│   │   ├── 📄 staffService.ts
 │   │   ├── 📄 shopService.ts
 │   │   ├── 📄 shopOnlineService.ts
 │   │   ├── 📄 salesService.ts
@@ -46,8 +49,10 @@ Structure du projet (avec glob)
 │   │   ├── 📄 historyService.ts
 │   │   ├── 📄 guideService.ts
 │   │   ├── 📄 deviceService.ts
+│   │   ├── 📄 deviceCatalogService.ts
 │   │   ├── 📄 demoService.ts
 │   │   ├── 📄 clientService.ts
+│   │   ├── 📄 cashService.ts
 │   │   ├── 📄 authService.ts
 │   │   └── 📄 adminService.ts
 │   ├── 📁 routes/
@@ -94,6 +99,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 README.md
 │   │   ├── 📄 profil.tsx
 │   │   ├── 📄 phone
+│   │   ├── 📄 personnel.tsx
 │   │   ├── 📄 parametres.tsx
 │   │   ├── 📄 parametres.emplacements.tsx
 │   │   ├── 📄 outils.index.tsx
@@ -111,6 +117,8 @@ Structure du projet (avec glob)
 │   │   ├── 📄 clients.index.tsx
 │   │   ├── 📄 clients.$id.tsx
 │   │   ├── 📄 categories.tsx
+│   │   ├── 📄 catalogue.tsx
+│   │   ├── 📄 caisse.tsx
 │   │   ├── 📄 boutiques.nouveau.tsx
 │   │   ├── 📄 boutiques.index.tsx
 │   │   ├── 📄 boutiques.$id.tsx
@@ -173,6 +181,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 supabase
 │   │   └── 📄 lovable
 │   ├── 📁 hooks/
+│   │   ├── 📄 useUserRole.ts
 │   │   ├── 📄 useTools.ts
 │   │   ├── 📄 useTheme.tsx
 │   │   ├── 📄 useSubscription.ts
@@ -253,12 +262,15 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 DeviceSelect.tsx
 │   │   │   └── 📄 ClientSelect.tsx
 │   │   ├── 📄 WorkshopTimeline.tsx
+│   │   ├── 📄 WorkshopTicketPreview.tsx
+│   │   ├── 📄 WorkshopPaymentModal.tsx
 │   │   ├── 📄 WhatsNewModal.tsx
 │   │   ├── 📄 UserMenu.tsx
 │   │   ├── 📄 ui
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 SubscriptionPaymentModal.tsx
 │   │   ├── 📄 SubscriptionGuard.tsx
 │   │   ├── 📄 SubscriptionCard.tsx
 │   │   ├── 📄 SubscriptionBadge.tsx
@@ -277,6 +289,9 @@ Structure du projet (avec glob)
 │   │   ├── 📄 SearchableSelect.tsx
 │   │   ├── 📄 SalesPages.tsx
 │   │   ├── 📄 RoutePage.tsx
+│   │   ├── 📄 RoleGuard.tsx
+│   │   ├── 📄 QuickCreateStaffDialog.tsx
+│   │   ├── 📄 QuickCreateMemberDialog.tsx
 │   │   ├── 📄 QuickCreateClientDialog.tsx
 │   │   ├── 📄 ProtectedRoute.tsx
 │   │   ├── 📄 PricingModal.tsx
@@ -299,11 +314,14 @@ Structure du projet (avec glob)
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx
+│   │   ├── 📄 CashClosureModal.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   ├── 📄 AnimatedLogo.tsx
 │   │   ├── 📄 AdminSidebar.tsx
 │   │   ├── 📄 AdminInfoPage.tsx
 │   │   ├── 📄 AddWorkshopEvent.tsx
+│   │   ├── 📄 AddPartDialog.tsx
+│   │   ├── 📄 AddDeviceModal.tsx
 │   │   └── 📄 ActivityWorkshopPages.tsx
 │   ├── 📁 assets/
 │   │   ├── 📁 images/
@@ -343,6 +361,7 @@ Structure du projet (avec glob)
 │   ├── 📄 point.md
 │   ├── 📄 missions.md
 │   ├── 📄 migrationtri.md
+│   ├── 📄 master-migration.sql
 │   └── 📄 domain-workflow.md
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json

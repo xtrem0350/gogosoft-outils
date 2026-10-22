@@ -160,7 +160,7 @@ function RootComponent() {
     const timer = window.setTimeout(() => {
       sessionStorage.setItem("gogosoft_splash_shown", "true");
       setShowSplash(false);
-    }, 2000);
+    }, 1500);
     return () => window.clearTimeout(timer);
   }, []);
 
