@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -8,7 +9,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notifyShopModulesChanged } from "@/hooks/useShopModules";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { enableShopModules } from "@/services/moduleService";
+import { supabase } from "@/integrations/supabase/client";
 import { addShopMember, createShop } from "@/services/shopService";
+import { updateTrialModules } from "@/services/subscriptionService";
+import { MODULE_IDS, shopCodesFromModuleIds, type ModuleId } from "@/types/modules";
+
+const SELECTED_MODULES_KEY = "gogosoft.welcome.selectedModules";
+const SELECTED_PLAN_KEY = "gogosoft.welcome.selectedPlan";
+
+function readSelectedModules(): ModuleId[] {
+  const raw = window.sessionStorage.getItem(SELECTED_MODULES_KEY);
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((value): value is ModuleId =>
+      MODULE_IDS.includes(value as ModuleId),
+    );
+  } catch {
+    return [];
+  }
+}
 
 export const Route = createFileRoute("/boutiques/nouveau")({
   component: NewShopPage,
@@ -24,6 +48,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 function NewShopPage() {
   const navigate = useNavigate();
+  const { shopId, loading: shopLoading, refresh: refreshShops } = useCurrentShop();
   const {
     register,
     handleSubmit,
@@ -33,23 +58,37 @@ function NewShopPage() {
     defaultValues: { name: "", address: "", phone: "" },
   });
 
+  useEffect(() => {
+    if (!shopLoading && shopId) void navigate({ to: "/dashboard" });
+  }, [navigate, shopId, shopLoading]);
+
   async function submit(values: FormValues) {
     try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      const userId = userData.user?.id;
+      if (!userId) throw new Error("Utilisateur non authentifié.");
+
+      const selectedModules = readSelectedModules();
+      const moduleCodes = shopCodesFromModuleIds(selectedModules);
       const shop = await createShop({
         name: values.name,
         address: values.address || null,
         phone: values.phone || null,
       });
 
-      const { data: userData } = await (
-        await import("@/integrations/supabase/client")
-      ).supabase.auth.getUser();
-      if (userData.user?.id) {
-        await addShopMember(shop.id, userData.user.id, "owner");
-      }
+      await addShopMember(shop.id, userId, "owner");
+      await enableShopModules(shop.id, moduleCodes);
+      notifyShopModulesChanged(shop.id);
+      await updateTrialModules(userId, moduleCodes);
 
-      toast.success("Atelier créé.");
-      await navigate({ to: "/boutiques" });
+      window.localStorage.setItem("gogosoft.currentShopId", shop.id);
+      await refreshShops(userId, true);
+      window.sessionStorage.removeItem(SELECTED_MODULES_KEY);
+      window.sessionStorage.removeItem(SELECTED_PLAN_KEY);
+
+      toast.success("Boutique créée ! Bienvenue sur GogoSoft.");
+      await navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer l'atelier.");
     }

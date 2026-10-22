@@ -84,6 +84,7 @@ function WorkshopDetailsPage() {
   const diagnosis = ticket.diagnosis as { tools?: string[]; process?: string[] } | null;
   const statusLabel: Record<WorkshopStatus, string> = {
     en_attente: "En attente",
+    diagnostique: "Diagnostiqué",
     en_cours: "En cours",
     termine: "Terminé",
     livre: "Livré",

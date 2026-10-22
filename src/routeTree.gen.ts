@@ -23,6 +23,7 @@ import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as NouveautesRouteImport } from './routes/nouveautes'
 import { Route as ParametresRouteImport } from './routes/parametres'
+import { Route as PersonnelRouteImport } from './routes/personnel'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
@@ -156,6 +157,11 @@ const NouveautesRoute = NouveautesRouteImport.update({
 const ParametresRoute = ParametresRouteImport.update({
   id: '/parametres',
   path: '/parametres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PersonnelRoute = PersonnelRouteImport.update({
+  id: '/personnel',
+  path: '/personnel',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfilRoute = ProfilRouteImport.update({
@@ -497,6 +503,7 @@ export interface FileRoutesByFullPath {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
+  '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
@@ -576,6 +583,7 @@ export interface FileRoutesByTo {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
+  '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
@@ -656,6 +664,7 @@ export interface FileRoutesById {
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
+  '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/statistiques': typeof StatistiquesRoute
@@ -738,6 +747,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
+    | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
@@ -817,6 +827,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
+    | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
@@ -896,6 +907,7 @@ export interface FileRouteTypes {
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
+    | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
     | '/statistiques'
@@ -977,6 +989,7 @@ export interface RootRouteChildren {
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   NouveautesRoute: typeof NouveautesRoute
   ParametresRoute: typeof ParametresRouteWithChildren
+  PersonnelRoute: typeof PersonnelRoute
   ProfilRoute: typeof ProfilRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   StatistiquesRoute: typeof StatistiquesRoute
@@ -1112,6 +1125,13 @@ declare module '@tanstack/react-router' {
       path: '/parametres'
       fullPath: '/parametres'
       preLoaderRoute: typeof ParametresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/personnel': {
+      id: '/personnel'
+      path: '/personnel'
+      fullPath: '/personnel'
+      preLoaderRoute: typeof PersonnelRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profil': {
@@ -1729,6 +1749,7 @@ const rootRouteChildren: RootRouteChildren = {
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,
   ParametresRoute: ParametresRouteWithChildren,
+  PersonnelRoute: PersonnelRoute,
   ProfilRoute: ProfilRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   StatistiquesRoute: StatistiquesRoute,

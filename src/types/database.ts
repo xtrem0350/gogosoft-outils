@@ -46,7 +46,7 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   role?: AppRole | null;
   is_super_admin?: boolean | null;
 };
-export type WorkshopStatus = "en_attente" | "en_cours" | "termine" | "livre";
+export type WorkshopStatus = "en_attente" | "diagnostique" | "en_cours" | "termine" | "livre";
 export type WorkshopTicket = {
   id: string;
   shop_id: string | null;
@@ -55,6 +55,7 @@ export type WorkshopTicket = {
   client_name: string | null;
   client_whatsapp: string | null;
   device_model: string | null;
+  device_brand?: string | null;
   device_processor: string | null;
   device_imei: string | null;
   device_sn: string | null;
@@ -63,8 +64,16 @@ export type WorkshopTicket = {
   status: WorkshopStatus;
   diagnosis: Record<string, unknown> | null;
   notes: string | null;
+  description?: string | null;
+  ticket_number?: string | null;
+  entry_fee_method?: string | null;
+  technicien_id?: string | null;
+  outils_utilises?: string[] | null;
+  pieces_consommees?: Array<{ name: string; qty: number; unit_price?: number }> | null;
   price_estimate: number | null;
   price_final: number | null;
+  price_final_paid?: boolean | null;
+  delivered_at?: string | null;
   notified_at: string | null;
   entry_fee: number | null;
   entry_fee_paid: boolean | null;

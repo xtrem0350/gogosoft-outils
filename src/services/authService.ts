@@ -1,3 +1,4 @@
+import defaultAvatarUrl from "@/assets/images/profile.png";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceInfo, hasDeviceUsedTrial, markTrialAsUsed } from "@/services/deviceService";
@@ -77,26 +78,61 @@ export async function signInWithIdentifier(identifier: string, password: string)
 /** Télécharge un avatar utilisateur dans le bucket public avatars. */
 export async function uploadAvatar(userId: string, file: File): Promise<string> {
   const bucket = "avatars";
-  const extension = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : ".jpg";
-  const path = `${userId}/avatar${Date.now()}${extension}`;
+  const extension = file.name.includes(".")
+    ? file.name.slice(file.name.lastIndexOf(".")).toLowerCase()
+    : "";
+  const mimeTypes: Record<string, { extension: string; contentType: string }> = {
+    "image/gif": { extension: "gif", contentType: "image/gif" },
+    "image/jpeg": { extension: "jpg", contentType: "image/jpeg" },
+    "image/jpg": { extension: "jpg", contentType: "image/jpeg" },
+    "image/png": { extension: "png", contentType: "image/png" },
+    "image/webp": { extension: "webp", contentType: "image/webp" },
+  };
+  const extensionMimeTypes: Record<string, string> = {
+    ".gif": "image/gif",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+  };
 
   try {
+    if (
+      extension === ".ico" ||
+      file.type.toLowerCase() === "image/x-icon" ||
+      file.type.toLowerCase() === "image/vnd.microsoft.icon"
+    ) {
+      throw new Error(
+        "Le format ICO n'est pas accepté. Convertissez l'image en PNG ou choisissez un fichier PNG.",
+      );
+    }
+
+    const mimeType = file.type.toLowerCase() || extensionMimeTypes[extension];
+    const imageType = mimeType ? mimeTypes[mimeType] : undefined;
+    if (!imageType) {
+      throw new Error("Type d'image non pris en charge. Utilisez PNG, JPG, JPEG, WebP ou GIF.");
+    }
+    const extensionMimeType = extensionMimeTypes[extension];
+    if (extensionMimeType && extensionMimeType !== imageType.contentType) {
+      throw new Error("L'extension du fichier ne correspond pas à son type MIME.");
+    }
+
+    const path = `${userId}/avatar.${imageType.extension}`;
+
     const { error } = await supabase.storage.from(bucket).upload(path, file, {
       cacheControl: "3600",
       upsert: true,
-      contentType: file.type || "image/jpeg",
+      contentType: imageType.contentType,
     });
-    if (error) {
-      console.error("[authService] uploadAvatar error:", error);
-      throw error;
-    }
+    if (error) throw error;
+
+    const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    return data.publicUrl;
   } catch (error) {
-    console.error("[authService] uploadAvatar exception:", error);
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`[authService] Échec de l'upload de l'avatar : ${detail}`);
     throw error;
   }
-
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
 }
 
 /** Inscription par e-mail / mot de passe. */
@@ -168,7 +204,11 @@ export async function signUp(
       avatarUrl = await uploadAvatar(userId, avatarFile);
       console.info("[authService] signUp:avatar-success", { userId });
     } catch (error) {
-      console.warn("[authService] Upload avatar échoué, on continue:", error);
+      avatarUrl = defaultAvatarUrl;
+      const detail = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `[authService] Upload avatar échoué, l'inscription continue avec l'avatar par défaut : ${detail}`,
+      );
     }
   }
 

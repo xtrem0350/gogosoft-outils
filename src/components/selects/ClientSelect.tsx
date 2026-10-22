@@ -8,15 +8,26 @@ import { useAsyncList } from "./useAsyncOptions";
 interface Props {
   shopId: string | null;
   value?: string | undefined;
+  refreshKey?: number;
   selectedClient?: ClientRecord | undefined;
   onSelect: (client: ClientRecord) => void;
   onCreateNew?: () => void;
 }
 
 /** Sélection d'un client existant de l'atelier. */
-export function ClientSelect({ shopId, value, selectedClient, onSelect, onCreateNew }: Props) {
+export function ClientSelect({
+  shopId,
+  value,
+  refreshKey = 0,
+  selectedClient,
+  onSelect,
+  onCreateNew,
+}: Props) {
   const navigate = useNavigate();
-  const { items, loading } = useAsyncList(shopId, () => getClientsByShop(shopId ?? ""));
+  const { items, loading } = useAsyncList(
+    shopId ? `${shopId}:${refreshKey}` : null,
+    () => getClientsByShop(shopId ?? ""),
+  );
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>({});
   const optionsItems = selectedClient
     ? [...items.filter((client) => client.id !== selectedClient.id), selectedClient]

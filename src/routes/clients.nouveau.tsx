@@ -51,7 +51,7 @@ function NewClientPage() {
         return;
       }
 
-      await createClient({
+      const client = await createClient({
         shop_id: shopId,
         full_name: values.full_name,
         whatsapp: values.whatsapp,
@@ -60,7 +60,7 @@ function NewClientPage() {
         notes: values.notes || null,
       });
 
-      toast.success("✅ Client ajouté.");
+      toast.success(`Client créé : ${client.full_name}`);
       await navigate({ to: "/clients" });
     } catch (error) {
       toast.error(

@@ -18,7 +18,7 @@ export function AnimatedLogo({ compact = false }: { compact?: boolean }) {
           <p className="truncate font-display text-sm font-semibold text-white">
             GogoSoft Technology & Solutions
           </p>
-          <p className="text-xs text-white/60">Organisation & outils</p>
+          <p className="text-xs text-white/60">Atelier · vente · vitrine</p>
         </div>
       )}
     </div>

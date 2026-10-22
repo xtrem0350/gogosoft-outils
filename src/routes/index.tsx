@@ -77,6 +77,7 @@ const WELCOME_MODULES: Array<{
 ];
 
 const STORAGE_KEY = "gogosoft.welcome.selectedModules";
+const PLAN_STORAGE_KEY = "gogosoft.welcome.selectedPlan";
 
 function readSelectedModules(): ModuleId[] {
   if (typeof window === "undefined") return [];
@@ -94,6 +95,12 @@ function readSelectedModules(): ModuleId[] {
   }
 }
 
+function readSelectedPlan(): string | null {
+  if (typeof window === "undefined") return null;
+  const savedPlan = window.sessionStorage.getItem(PLAN_STORAGE_KEY);
+  return WELCOME_PRICING.some((plan) => plan.id === savedPlan) ? savedPlan : null;
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -101,7 +108,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Choisissez vos modules (réparation, vente, vitrine) et essayez GogoSoft gratuitement pendant 1 jour.",
+          "Choisissez vos modules (réparation, vente, vitrine), démarrez une démo d'un jour ou un essai gratuit de sept jours.",
       },
       { property: "og:title", content: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
       {
@@ -120,12 +127,23 @@ function HomePage() {
   const { user, loading } = useAuth();
   const { setActiveModules } = useActiveModules();
   const [selectedModules, setSelectedModules] = useState<ModuleId[]>(readSelectedModules);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(readSelectedPlan);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedModules));
     }
   }, [selectedModules]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (selectedPlanId) {
+        window.sessionStorage.setItem(PLAN_STORAGE_KEY, selectedPlanId);
+      } else {
+        window.sessionStorage.removeItem(PLAN_STORAGE_KEY);
+      }
+    }
+  }, [selectedPlanId]);
 
   useEffect(() => {
     if (loading) return;
@@ -146,28 +164,31 @@ function HomePage() {
     );
   }
 
-  async function handleGoAuth() {
-    if (typeof window !== "undefined") {
+  async function handleGoAuth(mode: "login" | "signup") {
+    if (mode === "signup" && !canSignup) return;
+    if (mode === "signup" && typeof window !== "undefined") {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedModules));
+      if (selectedPlanId) window.sessionStorage.setItem(PLAN_STORAGE_KEY, selectedPlanId);
     }
-    await navigate({ to: "/auth" });
+    await navigate({ to: "/auth", search: { mode } });
   }
 
-  async function handleDemoStart() {
-    if (selectedModules.length === 0) {
-      toast.error("Sélectionnez au moins un module pour lancer l'essai.");
-      return;
-    }
+  async function handleStartDemo() {
+    if (!canDemo) return;
     setActiveModules(selectedModules);
     try {
       await startDemo(selectedDemoModuleIds(selectedModules));
       await navigate({ to: "/dashboard" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de démarrer l'essai.");
+      toast.error(error instanceof Error ? error.message : "Impossible de démarrer la démo.");
     }
   }
 
   const hasSelection = selectedModules.length > 0;
+  const canDemo = hasSelection;
+  const canSignup = hasSelection && selectedPlanId !== null;
+
+  if (loading || user || isDemoMode()) return null;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950">
@@ -264,35 +285,51 @@ function HomePage() {
 
                     <div className="grid gap-3 md:grid-cols-3">
                       {WELCOME_PRICING.map((plan) => (
-                        <div
+                        <label
                           key={plan.id}
-                          className={`card-3d rounded-xl p-4 ${
-                            plan.featured ? "ring-2 ring-orange-500" : ""
-                          }`}
+                          className="block cursor-pointer"
                         >
-                          {plan.featured ? (
-                            <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-orange-600">
-                              Recommandé
+                          <input
+                            type="radio"
+                            name="welcome-plan"
+                            value={plan.id}
+                            checked={selectedPlanId === plan.id}
+                            onChange={() => setSelectedPlanId(plan.id)}
+                            className="peer sr-only"
+                          />
+                          <div
+                            className={`card-3d w-full rounded-xl p-4 text-left transition-shadow peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 ${
+                              selectedPlanId === plan.id
+                                ? "ring-2 ring-orange-500"
+                                : plan.featured
+                                  ? "ring-1 ring-slate-300"
+                                  : ""
+                            }`}
+                          >
+                            {plan.featured ? (
+                              <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-orange-600">
+                                Recommandé
+                              </div>
+                            ) : null}
+                            <h3 className="text-xl font-bold text-slate-900">{plan.title}</h3>
+                            <p className="mt-1 text-sm text-slate-500">{plan.subtitle}</p>
+                            <div className="mt-5 flex items-end gap-1 text-slate-900">
+                              <span className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")}</span>
+                              <span className="pb-1 text-xs font-medium uppercase text-slate-500">FCFA</span>
                             </div>
-                          ) : null}
-                          <h3 className="text-xl font-bold text-slate-900">{plan.title}</h3>
-                          <p className="mt-1 text-sm text-slate-500">{plan.subtitle}</p>
-                          <div className="mt-5 flex items-end gap-1 text-slate-900">
-                            <span className="text-3xl font-bold">{plan.price.toLocaleString("fr-FR")}</span>
-                            <span className="pb-1 text-xs font-medium uppercase text-slate-500">FCFA</span>
+                            <p className="mt-1 text-xs text-slate-500">/mois</p>
+                            <ul className="mt-5 space-y-2">
+                              {plan.features.map((feature) => (
+                                <li key={`${plan.id}-${feature}`} className="flex items-center gap-2 text-sm text-slate-600">
+                                  <span className="flex size-4 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                    <Check className="size-3" />
+                                  </span>
+                                  {feature}
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                          <p className="mt-1 text-xs text-slate-500">/mois</p>
-                          <ul className="mt-5 space-y-2">
-                            {plan.features.map((feature) => (
-                              <li key={`${plan.id}-${feature}`} className="flex items-center gap-2 text-sm text-slate-600">
-                                <span className="flex size-4 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                  <Check className="size-3" />
-                                </span>
-                                {feature}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        </label>
                       ))}
                     </div>
 
@@ -302,9 +339,14 @@ function HomePage() {
                   </section>
 
                   <section aria-label="Actions principales" className="mt-7 space-y-3">
-                    {!hasSelection ? (
+                    {!canDemo ? (
                       <p className="text-sm font-medium text-amber-300">
-                        ⚠️ Sélectionnez au moins un module pour lancer l'essai
+                        ⚠️ Sélectionnez au moins un module pour lancer la démo.
+                      </p>
+                    ) : null}
+                    {canDemo && !canSignup ? (
+                      <p className="text-sm font-medium text-amber-300">
+                        💡 Pour l&apos;essai gratuit 7 jours avec compte, sélectionnez aussi une offre.
                       </p>
                     ) : null}
 
@@ -312,28 +354,39 @@ function HomePage() {
                       <Button
                         type="button"
                         size="lg"
-                        variant="outline"
-                        className="flex-1 border-slate-300 text-slate-700 hover:bg-orange-50"
-                        onClick={() => void handleGoAuth()}
+                        disabled={!canDemo}
+                        className="flex-1 bg-ivoirien bg-ivoirien-hover shadow-3d disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => void handleStartDemo()}
                       >
-                        <Lock className="size-4" />
-                        S&apos;authentifier
+                        <Gift className="size-4" />
+                        Essai démo · 1 jour
                       </Button>
 
                       <Button
                         type="button"
                         size="lg"
-                        disabled={!hasSelection}
-                        className="flex-1 bg-ivoirien bg-ivoirien-hover shadow-3d disabled:cursor-not-allowed disabled:opacity-50"
-                        onClick={() => void handleDemoStart()}
+                        variant="outline"
+                        disabled={!canSignup}
+                        className="flex-1 border-slate-300 text-slate-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={() => void handleGoAuth("signup")}
                       >
-                        <Gift className="size-4" />
-                        Essai Gratuit · 1 jour
+                        Créer un compte · 7 jours gratuits
+                      </Button>
+
+                      <Button
+                        type="button"
+                        size="lg"
+                        variant="ghost"
+                        className="flex-1 text-white hover:bg-white/10 hover:text-white"
+                        onClick={() => void handleGoAuth("login")}
+                      >
+                        <Lock className="size-4" />
+                        Se connecter
                       </Button>
                     </div>
 
                     <p className="text-center text-xs text-slate-400">
-                      1 journée gratuite pour vous familiariser · Sans carte bancaire · Sans engagement
+                      Démo locale sans compte · Essai de sept jours après création du compte
                     </p>
                   </section>
                 </div>
@@ -345,4 +398,3 @@ function HomePage() {
     </main>
   );
 }
-

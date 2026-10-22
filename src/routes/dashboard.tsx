@@ -17,7 +17,6 @@ import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
 import { IconBadge3D } from "@/components/IconBadge3D";
-import { PricingModal } from "@/components/PricingModal";
 import { StatsCard } from "@/components/StatsCard";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { Button } from "@/components/ui/button";
@@ -28,14 +27,8 @@ import { useShopModules } from "@/hooks/useShopModules";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { listSales, type Sale } from "@/services/salesService";
-import {
-  applyModuleSelection,
-  savePendingModuleSelection,
-  type ModulePurchaseSelection,
-} from "@/services/moduleService";
 import { getEvents, getTickets, type WorkshopEvent } from "@/services/workshopService";
 import type { WorkshopTicket } from "@/types/database";
-import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -76,11 +69,10 @@ function formatRelativeTime(value: string | null) {
 
 function DashboardPage() {
   const navigate = useNavigate();
-  const { profile, user, loading: authLoading } = useAuth();
-  const { shop, shopId, loading: shopLoading, refresh: refreshShop } = useCurrentShop();
-  const { modules, hasModule, loading: modulesLoading, refresh: refreshModules } = useShopModules();
+  const { profile, user } = useAuth();
+  const { shop, shopId, loading: shopLoading } = useCurrentShop();
+  const { modules, hasModule, loading: modulesLoading } = useShopModules();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
-  const [pricingOpen, setPricingOpen] = useState(false);
 
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<ClientRecord[]>([]);
@@ -101,12 +93,12 @@ function DashboardPage() {
     setError(null);
     try {
       const activityTypes = [
-        ...(hasModule("phone_repair") ? (["phone"] as const) : []),
-        ...(hasModule("computer_repair") ? (["computer"] as const) : []),
+        ...(hasModule("repair_phone") ? (["phone"] as const) : []),
+        ...(hasModule("repair_computer") ? (["computer"] as const) : []),
       ];
       const saleTypes = [
-        ...(hasModule("phone_sale") ? (["phone"] as const) : []),
-        ...(hasModule("computer_sale") ? (["computer"] as const) : []),
+        ...(hasModule("sale_phone") ? (["phone"] as const) : []),
+        ...(hasModule("sale_computer") ? (["computer"] as const) : []),
       ];
       const [ticketLists, clientList, saleLists] = await Promise.all([
         Promise.all(activityTypes.map((type) => getTickets(shopId, type))),
@@ -144,29 +136,6 @@ function DashboardPage() {
     void load();
   }, [load, shopLoading]);
 
-  const subscriptionExpired = Boolean(
-    subscription &&
-    (subscription.status === "expired" ||
-      (subscription.expires_at && new Date(subscription.expires_at).getTime() <= Date.now())),
-  );
-
-  useEffect(() => {
-    if (subLoading || !subscriptionExpired) return;
-    setPricingOpen(true);
-  }, [subLoading, subscriptionExpired]);
-
-  useEffect(() => {
-    if (authLoading || user || typeof window === "undefined") return;
-    if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
-
-    const timeout = window.setTimeout(() => {
-      setPricingOpen(true);
-      window.localStorage.setItem("gogosoft_pricing_shown", "true");
-    }, 2000);
-
-    return () => window.clearTimeout(timeout);
-  }, [authLoading, user]);
-
   const enCours = tickets.filter((ticket) => ticket.status === "en_cours").length;
   const showRenewalBanner = !subLoading && daysRemaining > 0 && daysRemaining <= 3;
   const busy = shopLoading || loading;
@@ -187,8 +156,10 @@ function DashboardPage() {
     sales
       .filter((sale) => sale.created_at.startsWith(currentMonth))
       .reduce((total, sale) => total + sale.total_price, 0);
-  const hasRepairModule = hasModule("phone_repair") || hasModule("computer_repair");
-  const hasSalesModule = hasModule("phone_sale") || hasModule("computer_sale");
+  const hasPhoneRepairModule = hasModule("repair_phone");
+  const hasComputerRepairModule = hasModule("repair_computer");
+  const hasRepairModule = hasPhoneRepairModule || hasComputerRepairModule;
+  const hasSalesModule = hasModule("sale_phone") || hasModule("sale_computer");
   const hasClientModule = hasRepairModule || hasSalesModule;
   const formatAmount = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -251,33 +222,8 @@ function DashboardPage() {
       : []),
   ];
 
-  async function handlePricingSelection(selection: ModulePurchaseSelection) {
-    if (!user) {
-      savePendingModuleSelection(selection);
-      setPricingOpen(false);
-      await navigate({ to: "/auth" });
-      return;
-    }
-    try {
-      const selectedShop = await applyModuleSelection(user.id, selection);
-      await refreshShop(user.id, true);
-      if (shopId === selectedShop.id) await refreshModules();
-      toast.success("Votre forfait a été activé !");
-      setPricingOpen(false);
-      await navigate({ to: "/dashboard" });
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Activation du forfait impossible.");
-    }
-  }
-
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      <PricingModal
-        open={pricingOpen}
-        onOpenChange={setPricingOpen}
-        isBlocking={subscriptionExpired}
-        onCreateAccount={(selection) => void handlePricingSelection(selection)}
-      />
       <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="min-w-0">
@@ -435,16 +381,16 @@ function DashboardPage() {
             )}
           </CardContent>
         </Card>
-        {hasRepairModule ? <Card className="card-3d rounded-2xl border-0">
+        {hasPhoneRepairModule ? <Card className="card-3d rounded-2xl border-0">
           <CardHeader className="flex-row items-center justify-between gap-3">
             <div>
-              <CardTitle>Réparations récentes</CardTitle>
+              <CardTitle>Réparations téléphone récentes</CardTitle>
               <p className="mt-1 text-sm text-muted-foreground">
-                Les 5 dernières fiches de l'atelier.
+                Les 5 dernières fiches téléphone.
               </p>
             </div>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/atelier">
+              <Link to="/phone/atelier">
                 Voir tout
                 <ArrowUpRight />
               </Link>
@@ -453,19 +399,66 @@ function DashboardPage() {
           <CardContent className="space-y-3">
             {busy ? (
               <p className="text-sm text-muted-foreground">Chargement…</p>
-            ) : tickets.length === 0 ? (
+            ) : tickets.filter((ticket) => ticket.activity_type === "phone").length === 0 ? (
               <EmptyState
                 icon={Wrench}
-                title="Aucune réparation"
-                description="Créez votre première fiche d'atelier pour suivre une réparation."
+                title="Aucune réparation téléphone"
+                description="Créez votre première fiche téléphone pour suivre une réparation."
                 actionLabel="Nouvelle fiche"
-                onAction={() => void navigate({ to: "/atelier/nouveau" })}
+                onAction={() => void navigate({ to: "/phone/atelier/nouveau" })}
               />
             ) : (
-              tickets.slice(0, 5).map((repair) => (
+              tickets.filter((ticket) => ticket.activity_type === "phone").slice(0, 5).map((repair) => (
                 <Link
                   key={repair.id}
-                  to="/atelier/$id"
+                  to="/phone/atelier/$id"
+                  params={{ id: repair.id }}
+                  className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50"
+                >
+                  <div>
+                    <p className="text-sm font-semibold">{repair.client_name}</p>
+                    <p className="text-xs text-muted-foreground">{repair.device_model}</p>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {STATUS_LABELS[repair.status] ?? repair.status}
+                  </span>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card> : null}
+
+        {hasComputerRepairModule ? <Card className="card-3d rounded-2xl border-0">
+          <CardHeader className="flex-row items-center justify-between gap-3">
+            <div>
+              <CardTitle>Réparations PC récentes</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les 5 dernières fiches ordinateur.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/computer/atelier">
+                Voir tout
+                <ArrowUpRight />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {busy ? (
+              <p className="text-sm text-muted-foreground">Chargement…</p>
+            ) : tickets.filter((ticket) => ticket.activity_type === "computer").length === 0 ? (
+              <EmptyState
+                icon={Laptop}
+                title="Aucune réparation PC"
+                description="Créez votre première fiche PC pour suivre une réparation."
+                actionLabel="Nouvelle fiche PC"
+                onAction={() => void navigate({ to: "/computer/atelier/nouveau" })}
+              />
+            ) : (
+              tickets.filter((ticket) => ticket.activity_type === "computer").slice(0, 5).map((repair) => (
+                <Link
+                  key={repair.id}
+                  to="/computer/atelier/$id"
                   params={{ id: repair.id }}
                   className="flex items-center justify-between rounded-lg border border-border/70 p-3 transition-colors hover:bg-muted/50"
                 >

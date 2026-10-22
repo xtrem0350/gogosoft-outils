@@ -4,6 +4,8 @@ import {
   ChevronDown,
   Laptop,
   Menu,
+  Monitor,
+  Package,
   Plus,
   Search,
   ShoppingCart,
@@ -44,8 +46,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
+import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { hasNewVersion } from "@/lib/changelog";
 import {
   endDemo,
@@ -72,6 +76,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, isSuperAdmin } = useAuth();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
+  const { activeModules } = useActiveModules();
+  const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
   useEffect(() => {
     let active = true;
@@ -146,6 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/sales/livraisons": "🚚 Livraisons",
     "/clients": "👥 Mes clients",
     "/clients/nouveau": "➕ Nouveau client",
+    "/personnel": "👥 Personnel",
     "/outils": "🛠️ Mes outils",
     "/categories": "Catégories",
     "/historique": "🕘 Historique",
@@ -174,6 +181,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/consumable/stock": "Consommables",
     "/sales": "Ventes",
     "/clients": "Clients",
+    "/personnel": "Personnel",
     "/boutiques": "Ateliers",
     "/outils": "Outils",
     "/categories": "Catégories",
@@ -188,6 +196,62 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/nouveautes": "Nouveautés",
   };
   const breadcrumbLabel = breadcrumbLabels[location.pathname] ?? pageTitles[location.pathname];
+  const createOptions = [
+    {
+      id: "reparation-telephone",
+      icon: Smartphone,
+      label:
+        sectorVocabulary.moduleId === "reparation-telephone"
+          ? `Nouvelle ${sectorVocabulary.order.toLowerCase()} téléphone`
+          : "Nouvelle fiche de réparation téléphone",
+      to: "/phone/atelier/nouveau" as const,
+    },
+    {
+      id: "reparation-pc",
+      icon: Laptop,
+      label:
+        sectorVocabulary.moduleId === "reparation-pc"
+          ? `Nouvelle ${sectorVocabulary.order.toLowerCase()} PC`
+          : "Nouvelle fiche de réparation PC",
+      to: "/computer/atelier/nouveau" as const,
+    },
+    {
+      id: "vente-telephone",
+      icon: ShoppingCart,
+      label:
+        sectorVocabulary.moduleId === "vente-telephone"
+          ? `Nouvelle ${sectorVocabulary.order.toLowerCase()} téléphone`
+          : "Nouvelle vente téléphone",
+      to: "/sales/nouveau" as const,
+    },
+    {
+      id: "vente-pc",
+      icon: ShoppingCart,
+      label:
+        sectorVocabulary.moduleId === "vente-pc"
+          ? `Nouvelle ${sectorVocabulary.order.toLowerCase()} PC`
+          : "Nouvelle vente PC",
+      to: "/sales/nouveau" as const,
+    },
+    {
+      id: "consommables",
+      icon: Package,
+      label: "Nouvel article consommable",
+      to: "/consumable/stock/nouveau" as const,
+    },
+    {
+      id: "vitrine-telephone",
+      icon: Monitor,
+      label: "Nouveau produit vitrine",
+      to: "/admin/boutique/produits/nouveau" as const,
+    },
+    {
+      id: "vitrine-pc",
+      icon: Monitor,
+      label: "Nouveau produit vitrine",
+      to: "/admin/boutique/produits/nouveau" as const,
+    },
+  ].filter((option) => activeModules.some((activeModule) => activeModule === option.id));
 
   const { showWarning, dismissWarning, timeRemaining, logoutNow } = useInactivityLogout({
     enabled: Boolean(user && !isAuthRoute),
@@ -364,19 +428,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
                       <Users /> Nouveau client
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => void navigate({ to: "/phone/atelier/nouveau" })}
-                    >
-                      <Smartphone /> Nouvelle fiche téléphone
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => void navigate({ to: "/computer/atelier/nouveau" })}
-                    >
-                      <Laptop /> Nouvelle fiche ordinateur
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => void navigate({ to: "/sales/nouveau" })}>
-                      <ShoppingCart /> Nouvelle vente
-                    </DropdownMenuItem>
+                    {createOptions.map(({ id, icon: Icon, label, to }) => (
+                      <DropdownMenuItem key={id} onSelect={() => void navigate({ to })}>
+                        <Icon /> {label}
+                      </DropdownMenuItem>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

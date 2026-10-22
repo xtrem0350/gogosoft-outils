@@ -3,6 +3,7 @@ import type { ClientRecord } from "@/services/clientService";
 import type { Sale } from "@/services/salesService";
 import type { OnlineProduct } from "@/services/shopOnlineService";
 import type { WorkshopEvent, WorkshopStatus } from "@/services/workshopService";
+import type { WorkshopPaymentRecord } from "@/services/workshopService";
 import type { WorkshopTicket } from "@/types/database";
 import type { ModuleId } from "@/types/modules";
 import { demoCodesFromModuleIds } from "@/types/modules";
@@ -10,6 +11,7 @@ import { demoCodesFromModuleIds } from "@/types/modules";
 export const DEMO_SESSION_KEY = "gogosoft.demo.session";
 export const DEMO_MODULES_KEY = "gogosoft.demo.modules";
 export const DEMO_SESSION_CHANGED_EVENT = "gogosoft:demo-session-changed";
+export const DEMO_STORAGE_LOCATIONS_KEY = "gogosoft.demo.storage_locations";
 const DEMO_EXPIRED_KEY = "gogosoft.demo.expired";
 export const DEMO_SHOP_ID = "gogosoft-demo-shop";
 export const DEMO_SHOP_SLUG = "demo-gogosoft";
@@ -24,6 +26,7 @@ export interface DemoSession {
   sales: Sale[];
   products: OnlineProduct[];
   events: WorkshopEvent[];
+  workshop_payments?: WorkshopPaymentRecord[];
 }
 
 function getStoredSession(): DemoSession | null {
@@ -65,6 +68,7 @@ function getStoredSession(): DemoSession | null {
 function clearExpiredSession(): void {
   window.sessionStorage.removeItem(DEMO_SESSION_KEY);
   window.sessionStorage.removeItem(DEMO_MODULES_KEY);
+  window.sessionStorage.removeItem(DEMO_STORAGE_LOCATIONS_KEY);
   window.sessionStorage.removeItem("gogosoft.demo.cart");
   window.sessionStorage.setItem(DEMO_EXPIRED_KEY, "true");
   window.setTimeout(() => window.dispatchEvent(new Event(DEMO_SESSION_CHANGED_EVENT)), 0);
@@ -119,7 +123,7 @@ const phoneSeeds = [
 
 const computerSeeds = [
   ["HP EliteBook 840", "Remplacement SSD", 45000, "en_cours"],
-  ["Dell Latitude 5420", "Batterie", 38000, "diagnostic"],
+  ["Dell Latitude 5420", "Batterie", 38000, "diagnostique"],
   ["Lenovo ThinkPad T14", "Clavier", 30000, "en_attente"],
   ["MacBook Air M1", "Nettoyage et maintenance", 55000, "termine"],
 ] as const;
@@ -145,6 +149,7 @@ function createSeedSession(selectedModules: string[]): DemoSession {
     selected.includes(code)
       ? seeds.map(([device_model, issue, price, status], index) => ({
           id: `demo-ticket-${activity}-${index + 1}`,
+          ticket_number: `F-DEMO-${activity.toUpperCase()}-${String(index + 1).padStart(3, "0")}`,
           shop_id: DEMO_SHOP_ID,
           client_id: clients[index % clients.length]?.id ?? null,
           client_name: clients[index % clients.length]?.full_name ?? null,
@@ -286,6 +291,18 @@ function createSeedSession(selectedModules: string[]): DemoSession {
     created_by: null,
     created_at: ticket.created_at,
   }));
+  const workshop_payments: WorkshopPaymentRecord[] = repairTickets
+    .filter((ticket) => ticket.entry_fee_paid)
+    .map((ticket, index) => ({
+      id: `demo-workshop-payment-${index + 1}`,
+      shop_id: DEMO_SHOP_ID,
+      ticket_id: ticket.id,
+      amount: ticket.entry_fee ?? 0,
+      method: "cash",
+      payment_type: "entry",
+      received_by: null,
+      created_at: ticket.created_at ?? new Date().toISOString(),
+    }));
 
   return {
     is_demo: true,
@@ -297,6 +314,7 @@ function createSeedSession(selectedModules: string[]): DemoSession {
     sales,
     products,
     events,
+    workshop_payments,
   };
 }
 
@@ -327,6 +345,7 @@ export function updateDemoSession(update: (session: DemoSession) => DemoSession)
 
 export async function startDemo(selectedModules: string[]): Promise<DemoSession> {
   if (selectedModules.length === 0) throw new Error("Sélectionnez au moins un module.");
+  window.sessionStorage.removeItem(DEMO_STORAGE_LOCATIONS_KEY);
   window.sessionStorage.removeItem("gogosoft.demo.cart");
   window.sessionStorage.removeItem(DEMO_EXPIRED_KEY);
   const session = createSeedSession(selectedModules);
@@ -338,6 +357,7 @@ export function endDemo(): void {
   if (typeof window === "undefined") return;
   window.sessionStorage.removeItem(DEMO_SESSION_KEY);
   window.sessionStorage.removeItem(DEMO_MODULES_KEY);
+  window.sessionStorage.removeItem(DEMO_STORAGE_LOCATIONS_KEY);
   window.sessionStorage.removeItem("gogosoft.demo.cart");
   window.dispatchEvent(new Event(DEMO_SESSION_CHANGED_EVENT));
 }

@@ -1,4 +1,4 @@
-import { Image, Smartphone } from "lucide-react";
+import { Image, Laptop, Smartphone } from "lucide-react";
 
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ interface DeviceCatalogPickerProps {
 const PHONE_MODEL =
   /iphone|galaxy|redmi|pixel|nokia|tecno|itel|infinix|oppo|vivo|huawei|honor|smartphone/i;
 const LAPTOP_MODEL =
-  /laptop|notebook|macbook|thinkpad|thinkbook|ideapad|pavilion|probook|elitebook|inspiron|latitude|vivobook|zenbook|aspire|swift|chromebook/i;
+  /laptop|notebook|macbook|thinkpad|thinkbook|ideapad|legion|pavilion|envy|probook|elitebook|inspiron|latitude|xps|precision|vivobook|zenbook|rog|aspire|swift|nitro|chromebook/i;
 
 function matchesCategory(guide: RepairGuide, category: DeviceCategory): boolean {
   const model = `${guide.brand} ${guide.device_model}`;
@@ -54,6 +54,8 @@ export function DeviceCatalogPicker({
               alt=""
               className="size-9 shrink-0 rounded-md object-cover"
             />
+          ) : category === "laptop" ? (
+            <Laptop className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
           ) : (
             <Smartphone className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
           ),

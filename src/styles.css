@@ -282,7 +282,7 @@
 
 /* Cartes 3D (fond blanc, pas de dégradé orange) */
 .card-3d {
-  background: #ffffff;
+  background: var(--card);
   border: 1px solid #f0ede5;
   border-radius: 12px;
   box-shadow:
@@ -292,7 +292,7 @@
 }
 
 .dark .card-3d {
-  background: #1e293b;
+  background: var(--card);
   border-color: #334155;
 }
 

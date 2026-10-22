@@ -40,7 +40,15 @@ export function SplashScreen() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          Solutions pour réparateurs de téléphones
+          La tech clé en main pour votre atelier et boutique.
+        </motion.p>
+        <motion.p
+          className="mt-2 text-xs text-slate-300"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.35 }}
+        >
+          Réparation téléphone &amp; PC · Vente · Vitrine en ligne · Gestion d&apos;atelier
         </motion.p>
 
         <div className="mt-8 w-full max-w-xs overflow-hidden rounded-full bg-white/10">

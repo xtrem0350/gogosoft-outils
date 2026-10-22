@@ -27,6 +27,7 @@ Structure du projet (avec glob)
 │   └── 📄 config.toml
 ├── 📁 src/
 │   ├── 📁 types/
+│   │   ├── 📄 sectors.ts
 │   │   ├── 📄 modules.ts
 │   │   └── 📄 database.ts
 │   ├── 📁 styles/
@@ -177,6 +178,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useSubscription.ts
 │   │   ├── 📄 useStats.ts
 │   │   ├── 📄 useShopModules.ts
+│   │   ├── 📄 useSectorVocabulary.ts
 │   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
 │   │   ├── 📄 useCart.ts
@@ -187,6 +189,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 CartContext.tsx
 │   │   └── 📄 ActiveModulesContext.tsx
 │   ├── 📁 constants/
+│   │   ├── 📄 sectors.ts
 │   │   └── 📄 pricing.ts
 │   ├── 📁 components/
 │   │   ├── 📁 ui/
@@ -327,6 +330,7 @@ Structure du projet (avec glob)
 │   ├── 📄 components
 │   └── 📄 assets
 ├── 📁 docs/
+│   ├── 📄 vocabulaire-secteurs.md
 │   ├── 📄 vitrine.md
 │   ├── 📄 versioning.md
 │   ├── 📄 rapport04.md
@@ -334,9 +338,11 @@ Structure du projet (avec glob)
 │   ├── 📄 rapport02.md
 │   ├── 📄 rapport01.md
 │   ├── 📄 rappord10.md
+│   ├── 📄 ptlovable01.md
 │   ├── 📄 prompt.md
 │   ├── 📄 point.md
 │   ├── 📄 missions.md
+│   ├── 📄 migrationtri.md
 │   └── 📄 domain-workflow.md
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json

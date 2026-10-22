@@ -30,7 +30,7 @@ export function ModuleRouteGuard({ children }: { children: ReactNode }) {
   const { isAnyActive, loading } = useActiveModules();
   const notifiedPath = useRef<string | null>(null);
   const required = requiredModules(location.pathname);
-  const allowed = !required || isAnyActive(required);
+  const allowed = location.pathname === "/boutiques/nouveau" || !required || isAnyActive(required);
 
   useEffect(() => {
     if (loading || allowed || notifiedPath.current === location.pathname) return;

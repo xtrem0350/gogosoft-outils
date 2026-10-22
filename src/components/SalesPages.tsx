@@ -28,7 +28,7 @@ import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
@@ -41,7 +41,7 @@ import {
   type SalePaymentMethod,
   uploadSalePhoto,
 } from "@/services/salesService";
-import type { ActivityType } from "@/services/workshopService";
+import { getTodayWorkshopPayments, type ActivityType, type WorkshopPaymentRecord } from "@/services/workshopService";
 
 export function SalesListPage({
   view = "all",
@@ -53,6 +53,11 @@ export function SalesListPage({
   const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [sales, setSales] = useState<Sale[]>([]);
+  const [workshopPayments, setWorkshopPayments] = useState<
+    Array<WorkshopPaymentRecord & { ticket_number: string | null; client_name: string | null }>
+  >([]);
+  const [workshopPaymentsLoading, setWorkshopPaymentsLoading] = useState(false);
+  const [workshopPaymentsError, setWorkshopPaymentsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busySaleId, setBusySaleId] = useState<string | null>(null);
@@ -67,6 +72,18 @@ export function SalesListPage({
       })
       .finally(() => setLoading(false));
   }, [activityType, shopId, shopLoading]);
+  useEffect(() => {
+    if (view !== "all" || shopLoading || !shopId) return;
+    setWorkshopPaymentsLoading(true);
+    void getTodayWorkshopPayments(shopId)
+      .then(setWorkshopPayments)
+      .catch((reason: unknown) => {
+        setWorkshopPaymentsError(
+          reason instanceof Error ? reason.message : "Impossible de charger les paiements atelier.",
+        );
+      })
+      .finally(() => setWorkshopPaymentsLoading(false));
+  }, [shopId, shopLoading, view]);
   const scopedSales = sales.filter((sale) =>
     view === "orders"
       ? sale.delivery_status !== "delivered"
@@ -169,6 +186,62 @@ export function SalesListPage({
         <SalesMetric icon={Package} label="Prêtes" value={readyCount} className={theme.metric} />
         <SalesMetric icon={Check} label="Remises" value={deliveredCount} className={theme.metric} />
       </div>
+
+      {view === "all" ? (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-3">
+            <CardTitle>Paiements atelier aujourd'hui</CardTitle>
+            <p className="text-lg font-bold text-green-700">
+              {new Intl.NumberFormat("fr-FR").format(
+                workshopPayments.reduce((total, payment) => total + payment.amount, 0),
+              )}{" "}
+              FCFA
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {workshopPaymentsError ? (
+              <p role="alert" className="text-sm text-destructive">{workshopPaymentsError}</p>
+            ) : null}
+            {workshopPaymentsLoading ? (
+              <p className="text-sm text-muted-foreground">Chargement des paiements atelier…</p>
+            ) : workshopPayments.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="border-b text-xs uppercase text-muted-foreground">
+                    <tr>
+                      {["N° fiche", "Client", "Montant", "Mode"].map((label) => (
+                        <th key={label} className="px-3 py-2">{label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {workshopPayments.map((payment) => (
+                      <tr key={payment.id} className="border-b last:border-0">
+                        <td className="px-3 py-2">{payment.ticket_number ?? payment.ticket_id}</td>
+                        <td className="px-3 py-2">{payment.client_name ?? "—"}</td>
+                        <td className="px-3 py-2 font-semibold">
+                          {new Intl.NumberFormat("fr-FR").format(payment.amount)} FCFA
+                        </td>
+                        <td className="px-3 py-2">
+                          {{
+                            cash: "Espèces",
+                            wave: "Wave",
+                            orange_money: "Orange Money",
+                            mtn: "MTN",
+                            moov: "Moov",
+                          }[payment.method] ?? payment.method}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : !workshopPaymentsError ? (
+              <p className="text-sm text-muted-foreground">Aucun paiement atelier aujourd'hui.</p>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {error ? (
         <div

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { supabase } from "@/integrations/supabase/client";
+import { DEMO_SHOP_ID, DEMO_STORAGE_LOCATIONS_KEY, isDemoMode } from "@/services/demoService";
 import type { Database } from "@/integrations/supabase/types";
 
 export type StorageLocationType = "carton" | "shelf" | "drawer" | "bag" | "other";
@@ -40,6 +41,60 @@ type StorageDatabase = Omit<Database, "public"> & {
 
 const storageClient = supabase as unknown as SupabaseClient<StorageDatabase>;
 
+function readDemoLocations(shopId: string): StorageLocation[] {
+  const raw = window.sessionStorage.getItem(DEMO_STORAGE_LOCATIONS_KEY);
+  if (!raw) return [];
+  try {
+    const locations: unknown = JSON.parse(raw);
+    if (!Array.isArray(locations)) throw new Error("Format de stockage démo invalide.");
+    if (
+      !locations.every(
+        (location) =>
+          typeof location === "object" &&
+          location !== null &&
+          "id" in location &&
+          typeof location.id === "string" &&
+          "shop_id" in location &&
+          typeof location.shop_id === "string" &&
+          "name" in location &&
+          typeof location.name === "string" &&
+          "location_type" in location &&
+          typeof location.location_type === "string" &&
+          ["carton", "shelf", "drawer", "bag", "other"].includes(location.location_type) &&
+          "description" in location &&
+          (typeof location.description === "string" || location.description === null) &&
+          "status" in location &&
+          typeof location.status === "string" &&
+          ["available", "occupied", "maintenance"].includes(location.status) &&
+          "current_ticket_id" in location &&
+          (typeof location.current_ticket_id === "string" || location.current_ticket_id === null) &&
+          "created_at" in location &&
+          typeof location.created_at === "string" &&
+          "updated_at" in location &&
+          (typeof location.updated_at === "string" || location.updated_at === null),
+      )
+    ) {
+      throw new Error("Emplacements démo invalides.");
+    }
+    return locations.filter(
+      (location): location is StorageLocation =>
+        location.shop_id === shopId,
+    );
+  } catch (error) {
+    console.error("[storageService] readDemoLocations:", error);
+    return [];
+  }
+}
+
+function saveDemoLocations(locations: StorageLocation[]): void {
+  try {
+    window.sessionStorage.setItem(DEMO_STORAGE_LOCATIONS_KEY, JSON.stringify(locations));
+  } catch (error) {
+    console.error("[storageService] saveDemoLocations:", error);
+    throw new Error("Impossible d'enregistrer cet emplacement en mode démo.");
+  }
+}
+
 async function hasSession(functionName: string): Promise<boolean> {
   try {
     const { data, error } = await supabase.auth.getSession();
@@ -55,6 +110,7 @@ async function hasSession(functionName: string): Promise<boolean> {
 }
 
 export async function getLocationsByShop(shopId: string): Promise<StorageLocation[]> {
+  if (isDemoMode()) return readDemoLocations(shopId);
   if (!(await hasSession("getLocationsByShop"))) return [];
   try {
     const { data, error } = await storageClient
@@ -71,6 +127,9 @@ export async function getLocationsByShop(shopId: string): Promise<StorageLocatio
 }
 
 export async function getAvailableLocations(shopId: string): Promise<StorageLocation[]> {
+  if (isDemoMode()) {
+    return readDemoLocations(shopId).filter((location) => location.status === "available");
+  }
   if (!(await hasSession("getAvailableLocations"))) return [];
   try {
     const { data, error } = await storageClient
@@ -104,6 +163,9 @@ export async function getLocationById(id: string): Promise<StorageLocation | nul
 }
 
 export async function getLocationByTicketId(ticketId: string): Promise<StorageLocation | null> {
+  if (isDemoMode()) {
+    return readDemoLocations(DEMO_SHOP_ID).find((location) => location.current_ticket_id === ticketId) ?? null;
+  }
   if (!(await hasSession("getLocationByTicketId"))) return null;
   try {
     const { data, error } = await storageClient
@@ -121,8 +183,26 @@ export async function getLocationByTicketId(ticketId: string): Promise<StorageLo
 
 export async function createLocation(
   data: CreateStorageLocationData,
-): Promise<StorageLocation | null> {
-  if (!(await hasSession("createLocation"))) return null;
+): Promise<StorageLocation> {
+  if (!(await hasSession("createLocation"))) {
+    if (isDemoMode()) {
+      const now = new Date().toISOString();
+      const location: StorageLocation = {
+        id: crypto.randomUUID(),
+        shop_id: data.shop_id,
+        name: data.name,
+        location_type: data.location_type,
+        description: data.description?.trim() || null,
+        status: "available",
+        current_ticket_id: null,
+        created_at: now,
+        updated_at: now,
+      };
+      saveDemoLocations([...readDemoLocations(data.shop_id), location]);
+      return location;
+    }
+    throw new Error("Connectez-vous pour créer un emplacement.");
+  }
   try {
     const { data: location, error } = await storageClient
       .from("storage_locations")
@@ -133,7 +213,9 @@ export async function createLocation(
     return location;
   } catch (error) {
     console.error("[storageService] createLocation:", error);
-    return null;
+    throw new Error(
+      error instanceof Error ? error.message : "Impossible d'enregistrer cet emplacement.",
+    );
   }
 }
 
@@ -207,6 +289,19 @@ export async function assignTicketToLocation(
 }
 
 export async function freeLocation(locationId: string): Promise<StorageLocation | null> {
+  if (isDemoMode()) {
+    const locations = readDemoLocations(DEMO_SHOP_ID);
+    const location = locations.find((entry) => entry.id === locationId);
+    if (!location) return null;
+    const freed = {
+      ...location,
+      status: "available" as const,
+      current_ticket_id: null,
+      updated_at: new Date().toISOString(),
+    };
+    saveDemoLocations(locations.map((entry) => (entry.id === locationId ? freed : entry)));
+    return freed;
+  }
   if (!(await hasSession("freeLocation"))) return null;
   try {
     const { data, error } = await storageClient

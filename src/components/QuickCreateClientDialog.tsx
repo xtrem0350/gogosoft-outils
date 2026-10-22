@@ -74,7 +74,7 @@ export function QuickCreateClientDialog({
       }
       onCreated(client);
       onOpenChange(false);
-      toast.success("Client créé.");
+      toast.success(`Client créé : ${client.full_name}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer le client.");
     } finally {

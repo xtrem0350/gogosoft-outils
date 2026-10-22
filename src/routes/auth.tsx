@@ -5,10 +5,10 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import authLogo from "@/assets/images/leprofile.png";
-import { PricingModal } from "@/components/PricingModal";
 import { PasswordInput } from "@/components/PasswordInput";
 import { PhoneInput } from "@/components/PhoneInput";
 import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
+import { SubscriptionPaymentModal } from "@/components/SubscriptionPaymentModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,13 +24,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { supabase } from "@/integrations/supabase/client";
+import { WELCOME_PRICING } from "@/constants/pricing";
+import { getUserShops } from "@/services/shopService";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
 import {
   applyModuleSelection,
   clearPendingModuleSelection,
   getPendingModuleSelection,
-  savePendingModuleSelection,
-  type ModulePurchaseSelection,
 } from "@/services/moduleService";
 
 const pseudoSchema = z
@@ -39,11 +39,20 @@ const pseudoSchema = z
   .min(3, "Le pseudo doit contenir au moins 3 caractères.")
   .regex(/^[A-Za-z0-9_]+$/, "Le pseudo ne peut contenir que des lettres, chiffres et underscore.");
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  validateSearch: z.object({
+    mode: z.enum(["login", "signup"]).optional(),
+    redirect: z.string().optional(),
+  }),
+  component: AuthPage,
+});
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const { mode } = Route.useSearch();
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(() =>
+    mode === "signup" ? "signup" : "signin",
+  );
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -54,7 +63,8 @@ function AuthPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
-  const [pricingModalOpen, setPricingModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentPlanId, setPaymentPlanId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -127,7 +137,13 @@ function AuthPage() {
         window.localStorage.removeItem("gogosoft.rememberedIdentifier");
       }
       console.info("[auth] sign-in:success");
-      await navigate({ to: "/dashboard" });
+      const shops = await getUserShops();
+      if (shops.length === 0) {
+        toast.info("Créez votre boutique pour continuer.");
+        await navigate({ to: "/boutiques/nouveau" });
+      } else {
+        await navigate({ to: "/dashboard" });
+      }
     } catch (error) {
       console.error("[auth] sign-in:exception", error);
       toast.error(error instanceof Error ? error.message : "Connexion impossible.");
@@ -162,29 +178,46 @@ function AuthPage() {
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
-      const pricingAlreadyShown = window.localStorage.getItem("gogosoft_pricing_shown");
-      if (pricingAlreadyShown) {
-        setActiveTab("signin");
-        await navigate({ to: "/boutiques/nouveau" });
+      const selectedModules = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
+      const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
+      const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);
+      if (!selectedModules || !plan) {
+        toast.error("Sélectionnez vos modules et une offre avant de créer votre compte.");
         return;
       }
-
-      window.localStorage.setItem("gogosoft_pricing_shown", "true");
-      setPricingModalOpen(true);
-      toast.success("Compte créé ! Choisissez votre forfait pour commencer.");
-      setActiveTab("signin");
-      setPassword("");
-      setEmail("");
-      setFullName("");
-      setPseudo("");
-      setPhone("");
-      setPhoneCountryCode("+225");
-      setAvatarFile(null);
+      setPaymentPlanId(plan.id);
+      setPaymentModalOpen(true);
+      toast.success("Compte créé. Choisissez votre mode de paiement ou commencez l'essai.");
     } catch (error) {
       console.error("[auth] sign-up:exception", error);
       toast.error(error instanceof Error ? error.message : "Inscription impossible.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handlePaymentSuccess(method: string, amount: number, paid: boolean) {
+    try {
+      if (paid) {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        const userId = userData.user?.id;
+        if (!userId || !paymentPlanId) {
+          throw new Error("Session utilisateur ou offre introuvable.");
+        }
+        const { error } = await supabase.from("payments").insert({
+          user_id: userId,
+          amount,
+          method,
+          status: "success",
+          plan: paymentPlanId,
+        });
+        if (error) throw error;
+      }
+      setPaymentModalOpen(false);
+      await navigate({ to: "/boutiques/nouveau" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer le paiement.");
     }
   }
 
@@ -226,13 +259,6 @@ function AuthPage() {
     }
 
     await submitSignUp();
-  }
-
-  async function handlePricingSelection(selection: ModulePurchaseSelection) {
-    setPricingModalOpen(false);
-    savePendingModuleSelection(selection);
-    setActiveTab("signin");
-    toast.success("Votre sélection a bien été enregistrée. Connectez-vous pour finaliser.");
   }
 
   return (
@@ -490,17 +516,6 @@ function AuthPage() {
           </div>
         </div>
       </div>
-      <PricingModal
-        open={pricingModalOpen}
-        onOpenChange={(nextOpen) => {
-          setPricingModalOpen(nextOpen);
-          if (!nextOpen) {
-            setActiveTab("signin");
-          }
-        }}
-        onCreateAccount={(selection) => void handlePricingSelection(selection)}
-      />
-
       <AlertDialog open={avatarDialogOpen} onOpenChange={setAvatarDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -520,6 +535,16 @@ function AuthPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {paymentPlanId ? (
+        <SubscriptionPaymentModal
+          open={paymentModalOpen}
+          onClose={() => setPaymentModalOpen(false)}
+          planId={paymentPlanId}
+          planLabel={WELCOME_PRICING.find((plan) => plan.id === paymentPlanId)?.title ?? paymentPlanId}
+          amountFcfa={WELCOME_PRICING.find((plan) => plan.id === paymentPlanId)?.price ?? 0}
+          onSuccess={handlePaymentSuccess}
+        />
+      ) : null}
     </main>
   );
 }

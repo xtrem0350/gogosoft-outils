@@ -37,7 +37,9 @@ import { signOut } from "@/services/authService";
 import { DEMO_SHOP_SLUG, endDemo, isDemoMode } from "@/services/demoService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
+import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { MODULES, type ModuleId } from "@/types/modules";
+import type { SectorVocabulary } from "@/types/sectors";
 
 type NavigationItem = {
   label: string;
@@ -55,9 +57,12 @@ function getNavigationGroups(
   activeModules: ModuleId[],
   isDemo: boolean,
   shopSlug: string | null,
+  hasShop: boolean,
+  vocabulary: SectorVocabulary,
 ): NavigationGroup[] {
   const activeSidebarKeys = new Set(activeModules.flatMap((id) => MODULES[id].sidebarKeys));
   const hasKey = (key: string) => activeSidebarKeys.has(key);
+  const hasModule = (id: ModuleId) => activeModules.includes(id);
   const groups: NavigationGroup[] = [
     {
       label: "ACCUEIL",
@@ -80,29 +85,34 @@ function getNavigationGroups(
     });
   }
 
-  if (hasKey("computer_repair")) {
+  if (hasModule("reparation-pc") || hasKey("computer_repair")) {
+    const computerLabel =
+      vocabulary.device === "pc" && vocabulary.category === "reparation"
+        ? vocabulary.product
+        : "Ordinateur";
     groups.push({
-      label: "ORDINATEUR",
+      label: computerLabel.toLocaleUpperCase(),
       icon: Laptop,
       items: [
-        { label: "Fiches", to: "/computer/atelier", icon: Laptop },
-        { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+        { label: `Fiches ${computerLabel.toLocaleLowerCase()}`, to: "/computer/atelier", icon: Laptop },
+        { label: `Nouvelle fiche ${computerLabel.toLocaleLowerCase()}`, to: "/computer/atelier/nouveau", icon: PlusCircle },
         { label: "Carnet d'expérience", to: "/computer/carnet", icon: History },
         { label: "Historique", to: "/computer/historique", icon: History },
       ],
     });
   }
 
-  for (const [code, label, activityType] of [
-    ["phone_sale", "VENTE MOBILE", "phone"],
-    ["computer_sale", "VENTE PC", "computer"],
+  for (const [moduleId, code, label, activityType] of [
+    ["vente-telephone", "phone_sale", "VENTE MOBILE", "phone"],
+    ["vente-pc", "computer_sale", "VENTE PC", "computer"],
   ] as const) {
-    if (!hasKey(code)) continue;
+    if (!hasModule(moduleId) && !hasKey(code)) continue;
+    const SaleIcon = activityType === "computer" ? Laptop : ShoppingCart;
     groups.push({
       label,
-      icon: ShoppingCart,
+      icon: SaleIcon,
       items: [
-        { label: "Mes ventes", to: "/sales", icon: ShoppingCart, search: { activityType } },
+        { label: "Mes ventes", to: "/sales", icon: SaleIcon, search: { activityType } },
         { label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle },
         { label: "Commandes", to: "/sales/commandes", icon: Package },
       ],
@@ -131,7 +141,7 @@ function getNavigationGroups(
       search: { category: "phone" },
     });
   }
-  if (hasKey("shop_computer")) {
+  if (hasModule("vitrine-pc") || hasKey("shop_computer")) {
     storefrontItems.push({
       label: "Vitrine PC",
       to: `/shop/${publicShopSlug}`,
@@ -143,16 +153,20 @@ function getNavigationGroups(
     groups.push({ label: "VITRINES", icon: Store, items: storefrontItems });
   }
 
-  if (activeModules.some((id) =>
-    ["reparation-telephone", "reparation-pc", "vente-telephone", "vente-pc"].includes(id),
-  )) {
+  groups.push({
+    label: "CLIENTS",
+    icon: Users,
+    items: [
+      { label: "Clients", to: "/clients", icon: Users },
+      { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
+    ],
+  });
+
+  if (hasShop) {
     groups.push({
-      label: "CLIENTS",
+      label: "PERSONNEL",
       icon: Users,
-      items: [
-        { label: "Liste", to: "/clients", icon: Users },
-        { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
-      ],
+      items: [{ label: "Personnel", to: "/personnel", icon: Users }],
     });
   }
 
@@ -201,7 +215,14 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const [collapsed, setCollapsed] = useState(false);
   const { activeModules, loading: modulesLoading, isDemo: demo } = useActiveModules();
   const { shop } = useCurrentShop();
-  const navigationGroups = getNavigationGroups(activeModules, demo, shop?.shop_slug ?? null);
+  const vocabulary = useSectorVocabulary();
+  const navigationGroups = getNavigationGroups(
+    activeModules,
+    demo,
+    shop?.shop_slug ?? null,
+    Boolean(shop?.id),
+    vocabulary,
+  );
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some(
       (item) =>
@@ -277,7 +298,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             <CollapsibleContent className="space-y-1 pt-1">
               {filteredItems.map(({ label: itemLabel, to, icon: Icon, search: itemSearch }) => (
                 <Link
-                  key={`${to}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
+                  key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
                   to={to}
                   search={itemSearch ?? {}}
                   onClick={() => setOpen(false)}

@@ -104,6 +104,28 @@ export async function startTrial(userId: string): Promise<SubscriptionSummary> {
   return normalizeSubscription(data as Record<string, unknown>);
 }
 
+/** Met à jour l'essai créé à l'inscription avec les modules choisis et sept jours d'accès. */
+export async function updateTrialModules(userId: string, moduleCodes: string[]): Promise<void> {
+  if (isDemoMode()) throw new Error("Un essai local ne crée pas d'abonnement Supabase.");
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const uniqueCodes = [...new Set(moduleCodes)];
+  const storefrontCodes = uniqueCodes.filter((code) => code.startsWith("shop_"));
+  const appCodes = uniqueCodes.filter((code) => !code.startsWith("shop_"));
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      plan: "trial",
+      status: "active",
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      selected_modules: appCodes,
+      storefront_modules: storefrontCodes,
+      price_fcfa: 0,
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw error;
+}
+
 /** Met à niveau le plan de l'utilisateur. */
 export async function upgradePlan(
   userId: string,

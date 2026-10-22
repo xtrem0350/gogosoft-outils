@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Mail, UserCog, UserMinus, UserPlus } from "lucide-react";
+import { Mail, UserCog, UserMinus, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
+import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,7 +24,14 @@ export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
 function EquipePage() {
   const [members, setMembers] = useState<
-    Array<{ id: string; user_id: string; role: string; created_at?: string | null }>
+    Array<{
+      id: string;
+      user_id: string | null;
+      role: string;
+      full_name?: string | null;
+      email?: string | null;
+      created_at?: string | null;
+    }>
   >([]);
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -39,7 +47,14 @@ function EquipePage() {
     void getShopMembers(shopId)
       .then((data) =>
         setMembers(
-          data as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>,
+          data as Array<{
+            id: string;
+            user_id: string | null;
+            role: string;
+            full_name?: string | null;
+            email?: string | null;
+            created_at?: string | null;
+          }>,
         ),
       )
       .catch(() => setMembers([]))
@@ -69,7 +84,14 @@ function EquipePage() {
       setEmail("");
       const next = await getShopMembers(shopId);
       setMembers(
-        next as Array<{ id: string; user_id: string; role: string; created_at?: string | null }>,
+        next as Array<{
+          id: string;
+          user_id: string | null;
+          role: string;
+          full_name?: string | null;
+          email?: string | null;
+          created_at?: string | null;
+        }>,
       );
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invitation impossible.");
@@ -100,30 +122,37 @@ function EquipePage() {
             </CardContent>
           </Card>
         ) : members.length === 0 ? (
-          <Card className="md:col-span-2 xl:col-span-3">
-            <CardContent className="p-6 text-sm text-muted-foreground">
-              Aucun membre dans cet atelier.
-            </CardContent>
-          </Card>
+          <div className="md:col-span-2 xl:col-span-3">
+            <EmptyState
+              icon={Users}
+              title="Aucun membre dans l'équipe"
+              description="Invitez un membre pour lui donner accès à cet atelier."
+              actionLabel="Inviter un membre"
+              onAction={() => setOpen(true)}
+            />
+          </div>
         ) : (
-          members.map((member) => (
-            <Card key={member.id}>
-              <CardContent className="flex items-center justify-between gap-4 p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {member.user_id.slice(0, 2).toUpperCase()}
+          members.map((member) => {
+            const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
+            return (
+              <Card key={member.id}>
+                <CardContent className="flex items-center justify-between gap-4 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                      {displayName.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-medium">{displayName}</p>
+                      <p className="text-xs text-muted-foreground">{member.role || "Inconnu"}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium">{member.user_id.slice(0, 8)}…</p>
-                    <p className="text-xs text-muted-foreground">{member.role}</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon" aria-label="Retirer" title="Retirer">
-                  <UserMinus className="size-4" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))
+                  <Button variant="ghost" size="icon" aria-label="Retirer" title="Retirer">
+                    <UserMinus className="size-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
 

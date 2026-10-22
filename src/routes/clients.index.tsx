@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Search, Users } from "lucide-react";
 
 import { ClientCard } from "@/components/ClientCard";
+import { EmptyState } from "@/components/EmptyState";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,16 +75,13 @@ function ClientsPage() {
           </CardContent>
         </Card>
       ) : clients.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            Aucun client pour cette boutique.
-            <div className="mt-4">
-              <Button onClick={() => void navigate({ to: "/clients/nouveau" })}>
-                Créer un client
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Users}
+          title="Aucun client pour l'instant"
+          description="Ajoutez votre premier client pour le retrouver dans cette liste."
+          actionLabel="Créer le premier client"
+          onAction={() => void navigate({ to: "/clients/nouveau" })}
+        />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {clients.map((client) => (
