@@ -284,28 +284,32 @@ function HomePage() {
                     </div>
 
                     <div className="grid gap-3 md:grid-cols-3">
-                      {WELCOME_PRICING.map((plan) => (
+                      {WELCOME_PRICING.map((plan) => {
+                        const isSelected = selectedPlanId === plan.id;
+                        return (
                         <label
                           key={plan.id}
-                          className="block cursor-pointer"
+                          className={`card-3d relative block cursor-pointer rounded-xl p-4 text-left transition-all focus-within:ring-2 focus-within:ring-orange-500 ${
+                            isSelected
+                              ? "scale-[1.02] bg-orange-50 ring-2 ring-orange-500"
+                              : plan.featured
+                                ? "ring-1 ring-slate-300 hover:shadow-3d-hover"
+                                : "hover:shadow-3d-hover"
+                          }`}
                         >
                           <input
                             type="radio"
                             name="welcome-plan"
                             value={plan.id}
-                            checked={selectedPlanId === plan.id}
+                            checked={isSelected}
                             onChange={() => setSelectedPlanId(plan.id)}
                             className="peer sr-only"
                           />
-                          <div
-                            className={`card-3d w-full rounded-xl p-4 text-left transition-shadow peer-focus-visible:ring-2 peer-focus-visible:ring-orange-500 ${
-                              selectedPlanId === plan.id
-                                ? "ring-2 ring-orange-500"
-                                : plan.featured
-                                  ? "ring-1 ring-slate-300"
-                                  : ""
-                            }`}
-                          >
+                          {isSelected ? (
+                            <span className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-full bg-green-600 text-white shadow-sm">
+                              <Check className="size-4" />
+                            </span>
+                          ) : null}
                             {plan.featured ? (
                               <div className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-orange-600">
                                 Recommandé
@@ -328,9 +332,9 @@ function HomePage() {
                                 </li>
                               ))}
                             </ul>
-                          </div>
                         </label>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <p className="text-center text-xs text-slate-400">
