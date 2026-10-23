@@ -28,6 +28,7 @@ import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PersonnelRouteImport } from './routes/personnel'
 import { Route as ProfilRouteImport } from './routes/profil'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
+import { Route as RejoindreRouteImport } from './routes/rejoindre'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as AdminAnnoncesRouteImport } from './routes/admin.annonces'
@@ -184,6 +185,11 @@ const ProfilRoute = ProfilRouteImport.update({
 const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
   id: '/reinitialiser-mot-de-passe',
   path: '/reinitialiser-mot-de-passe',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RejoindreRoute = RejoindreRouteImport.update({
+  id: '/rejoindre',
+  path: '/rejoindre',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StatistiquesRoute = StatistiquesRouteImport.update({
@@ -520,6 +526,7 @@ export interface FileRoutesByFullPath {
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
   '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
@@ -602,6 +609,7 @@ export interface FileRoutesByTo {
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
   '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
@@ -685,6 +693,7 @@ export interface FileRoutesById {
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
+  '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
   '/admin/annonces': typeof AdminAnnoncesRoute
   '/admin/boutique': typeof AdminBoutiqueRouteWithChildren
@@ -770,6 +779,7 @@ export interface FileRouteTypes {
     | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
+    | '/rejoindre'
     | '/statistiques'
     | '/admin/annonces'
     | '/admin/boutique'
@@ -852,6 +862,7 @@ export interface FileRouteTypes {
     | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
+    | '/rejoindre'
     | '/statistiques'
     | '/admin/annonces'
     | '/admin/boutique'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/personnel'
     | '/profil'
     | '/reinitialiser-mot-de-passe'
+    | '/rejoindre'
     | '/statistiques'
     | '/admin/annonces'
     | '/admin/boutique'
@@ -1018,6 +1030,7 @@ export interface RootRouteChildren {
   PersonnelRoute: typeof PersonnelRoute
   ProfilRoute: typeof ProfilRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
+  RejoindreRoute: typeof RejoindreRoute
   StatistiquesRoute: typeof StatistiquesRoute
   AtelierIdRoute: typeof AtelierIdRoute
   AtelierNouveauRoute: typeof AtelierNouveauRoute
@@ -1186,6 +1199,13 @@ declare module '@tanstack/react-router' {
       path: '/reinitialiser-mot-de-passe'
       fullPath: '/reinitialiser-mot-de-passe'
       preLoaderRoute: typeof ReinitialiserMotDePasseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rejoindre': {
+      id: '/rejoindre'
+      path: '/rejoindre'
+      fullPath: '/rejoindre'
+      preLoaderRoute: typeof RejoindreRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/statistiques': {
@@ -1794,6 +1814,7 @@ const rootRouteChildren: RootRouteChildren = {
   PersonnelRoute: PersonnelRoute,
   ProfilRoute: ProfilRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
+  RejoindreRoute: RejoindreRoute,
   StatistiquesRoute: StatistiquesRoute,
   AtelierIdRoute: AtelierIdRoute,
   AtelierNouveauRoute: AtelierNouveauRoute,

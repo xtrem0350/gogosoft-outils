@@ -67,7 +67,7 @@ export async function uploadTeamAvatar(shopId: string, userId: string, file: Fil
 export async function updateMemberRole(
   shopId: string,
   userId: string,
-  role: "owner" | "technicien",
+  role: "owner" | "technicien" | "caissier",
 ): Promise<void> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { error } = await (supabase.from("shop_members" as any) as any)
