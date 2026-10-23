@@ -21,8 +21,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
-import { deactivateStaff, getStaffByShop, updateStaff, type StaffMember } from "@/services/staffService";
-import { STAFF_ROLE_LABELS, type StaffRole } from "@/types/staff";
+import { deactivateStaff, getStaffByShop, updateStaff } from "@/services/staffService";
+import { STAFF_ROLE_LABELS, type StaffMember, type StaffRole } from "@/types/staff";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/personnel")({ component: PersonnelRoute });

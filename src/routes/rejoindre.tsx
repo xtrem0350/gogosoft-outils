@@ -111,7 +111,7 @@ function JoinInvitationPage() {
         whatsapp,
         ncni,
         lieu_habitation: lieuHabitation,
-        avatar_url: avatarUrl,
+        ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
       });
       if (!result.success) throw new Error("L'invitation n'a pas pu être acceptée.");
       window.localStorage.setItem("gogosoft.currentShopId", result.shop_id);
