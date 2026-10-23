@@ -307,7 +307,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             }}
             onCreateAccount={(selection) => {
               savePendingModuleSelection(selection);
-              void navigate({ to: "/auth" });
+              void navigate({ to: "/auth", search: { mode: "signup" } });
             }}
           />
         </>

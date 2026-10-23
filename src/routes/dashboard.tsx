@@ -28,7 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useUserRole } from "@/hooks/useUserRole";
-import { useShopModules } from "@/hooks/useShopModules";
+import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getCashSummary } from "@/services/cashService";
 import { getAllTenants, getExpiringSubscriptions, getGlobalStats, getRecentSignups, type AdminStats, type AdminTenant, type AdminSubscription } from "@/services/adminService";
@@ -88,7 +88,7 @@ function OwnerDashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const { shop, shopId, loading: shopLoading } = useCurrentShop();
-  const { modules, hasModule, loading: modulesLoading } = useShopModules();
+  const { activeModules: modules, isModuleActive: hasModule, loading: modulesLoading } = useActiveModules();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
 
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
@@ -110,12 +110,12 @@ function OwnerDashboard() {
     setError(null);
     try {
       const activityTypes = [
-        ...(hasModule("repair_phone") ? (["phone"] as const) : []),
-        ...(hasModule("repair_computer") ? (["computer"] as const) : []),
+        ...(hasModule("reparation-telephone") ? (["phone"] as const) : []),
+        ...(hasModule("reparation-pc") ? (["computer"] as const) : []),
       ];
       const saleTypes = [
-        ...(hasModule("sale_phone") ? (["phone"] as const) : []),
-        ...(hasModule("sale_computer") ? (["computer"] as const) : []),
+        ...(hasModule("vente-telephone") ? (["phone"] as const) : []),
+        ...(hasModule("vente-pc") ? (["computer"] as const) : []),
       ];
       const [ticketLists, clientList, saleLists] = await Promise.all([
         Promise.all(activityTypes.map((type) => getTickets(shopId, type))),
@@ -172,10 +172,10 @@ function OwnerDashboard() {
     sales
       .filter((sale) => sale.payment_status === "paid" && new Date(sale.created_at).toDateString() === new Date().toDateString())
       .reduce((total, sale) => total + sale.total_price, 0);
-  const hasPhoneRepairModule = hasModule("repair_phone");
-  const hasComputerRepairModule = hasModule("repair_computer");
+  const hasPhoneRepairModule = hasModule("reparation-telephone");
+  const hasComputerRepairModule = hasModule("reparation-pc");
   const hasRepairModule = hasPhoneRepairModule || hasComputerRepairModule;
-  const hasSalesModule = hasModule("sale_phone") || hasModule("sale_computer");
+  const hasSalesModule = hasModule("vente-telephone") || hasModule("vente-pc");
   const hasClientModule = hasRepairModule || hasSalesModule;
   const formatAmount = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -183,7 +183,7 @@ function OwnerDashboard() {
     maximumFractionDigits: 0,
   });
   const quickActions = [
-    ...(hasModule("repair_phone")
+    ...(hasModule("reparation-telephone")
       ? [
           {
             to: "/phone/atelier/nouveau",
@@ -194,7 +194,7 @@ function OwnerDashboard() {
           },
         ]
       : []),
-    ...(hasModule("repair_computer")
+    ...(hasModule("reparation-pc")
       ? [
           {
             to: "/computer/atelier/nouveau",
@@ -205,7 +205,7 @@ function OwnerDashboard() {
           },
         ]
       : []),
-    ...(hasModule("sale_phone") || hasModule("sale_computer")
+    ...(hasModule("vente-telephone") || hasModule("vente-pc")
       ? [
           {
             to: "/sales/nouveau",
@@ -223,7 +223,7 @@ function OwnerDashboard() {
       description: "Suivre les encaissements du jour",
       color: "orange" as const,
     },
-    ...(hasModule("consumable")
+    ...(hasModule("consommables")
       ? [
           {
             to: "/consumable/stock/nouveau",

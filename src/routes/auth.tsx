@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
 import { WELCOME_PRICING } from "@/constants/pricing";
 import { getUserShops } from "@/services/shopService";
@@ -49,6 +50,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { refresh: refreshShops } = useCurrentShop();
   const { mode } = Route.useSearch();
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(() =>
     mode === "signup" ? "signup" : "signin",
@@ -191,6 +193,37 @@ function AuthPage() {
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
+      const pendingSelection = getPendingModuleSelection();
+      if (pendingSelection) {
+        const userId = result.data.user?.id;
+        if (!userId) throw new Error("Utilisateur créé mais identifiant introuvable.");
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session?.user.id !== userId) {
+          toast.success(
+            "Compte créé. Confirmez votre adresse e-mail puis connectez-vous pour activer vos modules.",
+          );
+          return;
+        }
+
+        try {
+          const shop = await applyModuleSelection(userId, pendingSelection);
+          window.localStorage.setItem("gogosoft.currentShopId", shop.id);
+          await refreshShops(userId, true);
+          clearPendingModuleSelection();
+          toast.success("Compte créé et modules activés !");
+          await navigate({ to: "/dashboard" });
+        } catch (error) {
+          console.error("[auth] sign-up:module-selection-error", error);
+          toast.error(
+            error instanceof Error
+              ? `Compte créé, mais activation des modules impossible : ${error.message}`
+              : "Compte créé, mais activation des modules impossible.",
+          );
+        }
+        return;
+      }
+
       const selectedModules = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
       const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
       const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);

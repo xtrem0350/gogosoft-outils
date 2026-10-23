@@ -150,10 +150,17 @@ export async function enableShopModules(shopId: string, moduleCodes: string[]): 
   const uniqueCodes = [...new Set(moduleCodes)];
   if (!shopId || uniqueCodes.length === 0) return;
   const rows = uniqueCodes.map((module_code) => ({ shop_id: shopId, module_code }));
-  const { error } = await supabase
-    .from("shop_modules")
-    .upsert(rows, { onConflict: "shop_id,module_code" });
-  if (error) throw error;
+  try {
+    for (const row of rows) {
+      const { error } = await supabase
+        .from("shop_modules")
+        .upsert(row, { onConflict: "shop_id,module_code" });
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error("[enableShopModules] FULL ERROR:", JSON.stringify(error, null, 2), error);
+    throw error;
+  }
 }
 
 /** Désactive un module pour une boutique. */

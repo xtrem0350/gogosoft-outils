@@ -29,7 +29,8 @@ export const MODULES: Record<ModuleId, ModuleDefinition> = {
     routes: ["/phone/atelier", "/phone/carnet", "/phone/historique", "/atelier/plan"],
     sidebarKeys: ["phone_repair"],
     icon: "Smartphone",
-    shopModuleCodes: ["repair_phone"],
+    shopModuleCodes: ["phone_repair"],
+    demoCode: "repair_phone",
   },
   "reparation-pc": {
     id: "reparation-pc",
@@ -39,7 +40,8 @@ export const MODULES: Record<ModuleId, ModuleDefinition> = {
     routes: ["/computer/atelier", "/computer/carnet", "/computer/historique"],
     sidebarKeys: ["computer_repair"],
     icon: "Laptop",
-    shopModuleCodes: ["repair_computer"],
+    shopModuleCodes: ["computer_repair"],
+    demoCode: "repair_computer",
   },
   "vente-telephone": {
     id: "vente-telephone",
@@ -49,7 +51,8 @@ export const MODULES: Record<ModuleId, ModuleDefinition> = {
     routes: ["/sales"],
     sidebarKeys: ["phone_sale"],
     icon: "ShoppingCart",
-    shopModuleCodes: ["sale_phone"],
+    shopModuleCodes: ["phone_sale"],
+    demoCode: "sale_phone",
   },
   "vente-pc": {
     id: "vente-pc",
@@ -59,7 +62,8 @@ export const MODULES: Record<ModuleId, ModuleDefinition> = {
     routes: ["/sales"],
     sidebarKeys: ["computer_sale"],
     icon: "ShoppingCart",
-    shopModuleCodes: ["sale_computer"],
+    shopModuleCodes: ["computer_sale"],
+    demoCode: "sale_computer",
   },
   consommables: {
     id: "consommables",
@@ -118,5 +122,5 @@ export function shopCodesFromModuleIds(ids: ModuleId[]): string[] {
 }
 
 export function demoCodesFromModuleIds(ids: ModuleId[]): string[] {
-  return [...new Set(ids.flatMap((id) => [...MODULES[id].shopModuleCodes, MODULES[id].demoCode ?? ""]))].filter(Boolean);
+  return [...new Set(ids.map((id) => MODULES[id].demoCode ?? MODULES[id].shopModuleCodes[0] ?? ""))].filter(Boolean);
 }

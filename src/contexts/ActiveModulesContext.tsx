@@ -5,7 +5,13 @@ import { useShopModules } from "@/hooks/useShopModules";
 import { disableShopModule, enableShopModules, getShopModules } from "@/services/moduleService";
 import { isDemoMode, updateDemoModules } from "@/services/demoService";
 import { notifyShopModulesChanged } from "@/hooks/useShopModules";
-import { MODULES, moduleIdsFromShopCodes, shopCodesFromModuleIds, type ModuleId } from "@/types/modules";
+import {
+  demoCodesFromModuleIds,
+  MODULES,
+  moduleIdsFromShopCodes,
+  shopCodesFromModuleIds,
+  type ModuleId,
+} from "@/types/modules";
 
 interface ActiveModulesValue {
   activeModules: ModuleId[];
@@ -39,12 +45,12 @@ export function ActiveModulesProvider({ children }: { children: ReactNode }) {
       isDemo: demo,
       loading,
       setActiveModules: (ids) => {
-        const codes = shopCodesFromModuleIds(ids);
         if (demo) {
-          updateDemoModules(codes);
+          updateDemoModules(demoCodesFromModuleIds(ids));
           return;
         }
         if (!shopId) return;
+        const codes = shopCodesFromModuleIds(ids);
         void (async () => {
           const current = await getShopModules(shopId);
           const next = new Set(codes);
