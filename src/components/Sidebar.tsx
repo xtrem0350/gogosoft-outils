@@ -100,17 +100,14 @@ function getNavigationGroups(
   if (role === "caissier") {
     const cashierGroups: NavigationGroup[] = [
       groups[0]!,
-      { label: "CAISSE", icon: Wallet, items: [{ label: "Caisse", to: "/caisse", icon: Wallet }] },
+      {
+        label: "CAISSE",
+        icon: Wallet,
+        items: [{ label: "Encaissements", to: "/caisse", icon: Wallet }],
+      },
       { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
       { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
-    if (hasModule("vente-telephone") || hasModule("vente-pc")) {
-      cashierGroups.splice(2, 0, {
-        label: "VENTES",
-        icon: ShoppingCart,
-        items: [{ label: "Ventes", to: "/sales", icon: ShoppingCart }],
-      });
-    }
     return cashierGroups;
   }
 

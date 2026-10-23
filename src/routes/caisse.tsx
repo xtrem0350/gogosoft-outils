@@ -1,20 +1,34 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Banknote, CalendarDays, Wallet } from "lucide-react";
+import { Banknote, CalendarDays, Plus, Printer, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosureModal } from "@/components/CashClosureModal";
+import { CashReceiptModal, type CashReceipt } from "@/components/CashReceiptModal";
 import { PageHero } from "@/components/PageHero";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRole } from "@/hooks/useUserRole";
+import { isDemoMode } from "@/services/demoService";
+import { listSales, markAsPaid, type SalePaymentMethod } from "@/services/salesService";
 import { getTeamMembers } from "@/services/teamService";
 import {
+  createCashExit,
+  getCashExits,
   getCashClosures,
   getCashSummary,
   type CashClosure,
+  type CashExit,
   type CashPeriod,
   type CashSummary,
 } from "@/services/cashService";
@@ -30,6 +44,13 @@ const METHOD_LABELS: Record<string, string> = {
   mtn: "MTN Money",
   moov: "Moov Money",
 };
+const CASHIER_METHODS: Array<{ value: SalePaymentMethod; label: string }> = [
+  { value: "cash", label: "Espèces" },
+  { value: "wave", label: "Wave" },
+  { value: "orange_money", label: "Orange Money" },
+  { value: "mtn", label: "MTN" },
+  { value: "moov", label: "Moov" },
+];
 
 function localDateValue(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -75,14 +96,27 @@ function periodLabel(period: CashPeriod): string {
 
 function CashPage() {
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { isOwner, isCaissier } = useUserRole();
+  const demo = isDemoMode();
   const [preset, setPreset] = useState<PeriodPreset>("today");
   const [customStart, setCustomStart] = useState(() => localDateValue(new Date()));
   const [customEnd, setCustomEnd] = useState(() => localDateValue(new Date()));
   const [summary, setSummary] = useState<CashSummary | null>(null);
   const [closures, setClosures] = useState<CashClosure[]>([]);
+  const [exits, setExits] = useState<CashExit[]>([]);
+  const [pendingSales, setPendingSales] = useState<
+    Array<{ id: string; product_name: string; client_name: string | null; total_price: number; created_at: string }>
+  >([]);
+  const [paymentMethodsBySale, setPaymentMethodsBySale] = useState<Record<string, SalePaymentMethod>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [closureOpen, setClosureOpen] = useState(false);
+  const [exitOpen, setExitOpen] = useState(false);
+  const [exitType, setExitType] = useState<"parts" | "expense">("expense");
+  const [exitAmount, setExitAmount] = useState("");
+  const [exitDescription, setExitDescription] = useState("");
+  const [savingExit, setSavingExit] = useState(false);
+  const [receipt, setReceipt] = useState<CashReceipt | null>(null);
   const [expandedClosureId, setExpandedClosureId] = useState<string | null>(null);
   const period = useMemo(
     () => buildPeriod(preset, customStart, customEnd),
@@ -98,13 +132,21 @@ function CashPage() {
     }
     setLoading(true);
     try {
-      const [nextSummary, nextClosures, members] = await Promise.all([
+      const [nextSummary, nextClosures, members, nextExits, sales] = await Promise.all([
         getCashSummary(shopId, period),
         getCashClosures(shopId),
         getTeamMembers(shopId),
+        getCashExits(shopId, period),
+        listSales(shopId),
       ]);
       setSummary(nextSummary);
       setClosures(nextClosures);
+      setExits(nextExits);
+      setPendingSales(
+        demo
+          ? []
+          : sales.filter((sale) => sale.payment_status === "awaiting_payment"),
+      );
       setMemberAvatars(Object.fromEntries(
         members.filter((member) => member.avatar_url).map((member) => [member.user_id, member.avatar_url as string]),
       ));
@@ -113,13 +155,57 @@ function CashPage() {
     } finally {
       setLoading(false);
     }
-  }, [period, shopId]);
+  }, [demo, period, shopId]);
 
   useEffect(() => {
     if (!shopLoading) void load();
   }, [load, shopLoading]);
 
   const paymentMethods = Object.keys(METHOD_LABELS);
+  const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
+  const balance = (summary?.totalGeneral ?? 0) - totalExits;
+  const canManageCash = isOwner || isCaissier;
+
+  async function saveExit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!shopId) {
+      toast.error("Aucun atelier actif.");
+      return;
+    }
+    const amount = Number(exitAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      toast.error("Saisissez un montant supérieur à zéro.");
+      return;
+    }
+    setSavingExit(true);
+    try {
+      await createCashExit(shopId, {
+        type: exitType,
+        amount,
+        description: exitDescription,
+      });
+      setExitAmount("");
+      setExitDescription("");
+      setExitOpen(false);
+      toast.success("Sortie de caisse enregistrée.");
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer la sortie.");
+    } finally {
+      setSavingExit(false);
+    }
+  }
+
+  async function collectSale(saleId: string) {
+    const method = paymentMethodsBySale[saleId] ?? "cash";
+    try {
+      await markAsPaid(saleId, method);
+      toast.success("Paiement de la vente encaissé.");
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'encaisser cette vente.");
+    }
+  }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -179,43 +265,203 @@ function CashPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatsCard
-          title="Total atelier"
-          value={loading ? "…" : formatMoney(summary?.totalWorkshop ?? 0)}
-          icon={Banknote}
-          color="warning"
-        />
-        <StatsCard
-          title="Total ventes"
-          value={loading ? "…" : formatMoney(summary?.totalSales ?? 0)}
-          icon={Wallet}
-          color="success"
-        />
-        <Card className="card-3d rounded-2xl border-0 bg-ivoirien text-white shadow-3d">
-          <CardContent className="flex min-h-[104px] items-center gap-4 p-6">
-            <Wallet className="size-8 shrink-0" />
-            <div className="min-w-0">
-              <p className="text-xs font-bold uppercase">Total général</p>
-              <p className="mt-2 truncate text-3xl font-extrabold">
-                {loading ? "…" : formatMoney(summary?.totalGeneral ?? 0)}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {demo ? (
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatsCard
+            title="Total atelier"
+            value={loading ? "…" : formatMoney(summary?.totalWorkshop ?? 0)}
+            icon={Banknote}
+            color="warning"
+          />
+          <StatsCard
+            title="Total ventes"
+            value={loading ? "…" : formatMoney(summary?.totalSales ?? 0)}
+            icon={Wallet}
+            color="success"
+          />
+          <Card className="card-3d rounded-2xl border-0 bg-ivoirien text-white shadow-3d">
+            <CardContent className="flex min-h-[104px] items-center gap-4 p-6">
+              <Wallet className="size-8 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase">Total général</p>
+                <p className="mt-2 truncate text-3xl font-extrabold">
+                  {loading ? "…" : formatMoney(summary?.totalGeneral ?? 0)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-3">
+          <StatsCard
+            title="Total entrées"
+            value={loading ? "…" : formatMoney(summary?.totalGeneral ?? 0)}
+            icon={Banknote}
+            color="success"
+          />
+          <StatsCard
+            title="Total sorties"
+            value={loading ? "…" : formatMoney(totalExits)}
+            icon={Wallet}
+            color="warning"
+          />
+          <Card className="card-3d rounded-2xl border-0 bg-ivoirien text-white shadow-3d">
+            <CardContent className="flex min-h-[104px] items-center gap-4 p-6">
+              <Wallet className="size-8 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold uppercase">Solde de la période</p>
+                <p className="mt-2 truncate text-3xl font-extrabold">
+                  {loading ? "…" : formatMoney(balance)}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Card className="card-3d rounded-xl">
         <CardHeader><CardTitle>Détail par mode de paiement</CardTitle></CardHeader>
         <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {paymentMethods.map((method) => (
-            <div key={method} className="flex justify-between gap-3 rounded-lg border bg-white p-3">
-              <span>{METHOD_LABELS[method]}</span>
-              <span className="font-bold">{formatMoney(summary?.breakdown[method] ?? 0)}</span>
+            <div
+              key={method}
+              className="flex justify-between gap-3 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800"
+            >
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{METHOD_LABELS[method]}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{formatMoney(summary?.breakdown[method] ?? 0)}</span>
             </div>
           ))}
         </CardContent>
       </Card>
+
+      {!demo ? <Card className="card-3d rounded-xl">
+        <CardHeader>
+          <CardTitle>Entrées en caisse</CardTitle>
+          <p className="text-sm text-muted-foreground">Paiements de réparation et ventes encaissées.</p>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <h3 className="font-semibold">Paiements réparation</h3>
+            {summary?.workshopPayments.length ? summary.workshopPayments.map((payment) => (
+              <div key={payment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">
+                    {payment.payment_type === "final" ? "Solde réparation" : "Acompte réparation"} · {payment.ticket_number ?? "Ticket"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {payment.client_name ?? "Client —"} · {payment.device_model ?? "Appareil —"} · {METHOD_LABELS[payment.method] ?? payment.method}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-bold">{formatMoney(payment.amount)}</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setReceipt({
+                      reference: payment.ticket_number ?? payment.id,
+                      clientName: payment.client_name ?? "",
+                      device: payment.device_model ?? "",
+                      amount: payment.amount,
+                      date: payment.created_at,
+                    })}
+                  >
+                    <Printer className="size-4" /> Émettre reçu
+                  </Button>
+                </div>
+              </div>
+            )) : <p className="text-sm text-muted-foreground">Aucun paiement réparation sur cette période.</p>}
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-semibold">Paiements vente</h3>
+            {summary?.sales.length ? summary.sales.map((sale) => (
+              <div key={sale.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+                <div>
+                  <p className="font-medium">{sale.product_name}</p>
+                  <p className="text-sm text-muted-foreground">{sale.client_name ?? "Client —"} · Vente encaissée</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-bold">{formatMoney(sale.total_price)}</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setReceipt({
+                      reference: sale.id,
+                      clientName: sale.client_name ?? "",
+                      device: sale.product_name,
+                      amount: sale.total_price,
+                      date: sale.created_at,
+                    })}
+                  >
+                    <Printer className="size-4" /> Émettre reçu
+                  </Button>
+                </div>
+              </div>
+            )) : <p className="text-sm text-muted-foreground">Aucune vente encaissée sur cette période.</p>}
+          </div>
+
+          <div className="space-y-2 border-t pt-4">
+            <h3 className="font-semibold">Paiements vente en attente</h3>
+            {pendingSales.length ? pendingSales.map((sale) => (
+              <div key={sale.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-orange-200 bg-orange-50/60 p-3 dark:border-orange-900 dark:bg-orange-950/20">
+                <div>
+                  <p className="font-medium">{sale.product_name}</p>
+                  <p className="text-sm text-muted-foreground">{sale.client_name ?? "Client —"} · {formatDate(sale.created_at)}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-bold">{formatMoney(sale.total_price)}</span>
+                  <select
+                    aria-label={`Mode de paiement pour ${sale.product_name}`}
+                    value={paymentMethodsBySale[sale.id] ?? "cash"}
+                    onChange={(event) => setPaymentMethodsBySale((current) => ({
+                      ...current,
+                      [sale.id]: event.target.value as SalePaymentMethod,
+                    }))}
+                    className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+                  >
+                    {CASHIER_METHODS.map((method) => <option key={method.value} value={method.value}>{method.label}</option>)}
+                  </select>
+                  <Button type="button" size="sm" onClick={() => void collectSale(sale.id)}>Encaisser</Button>
+                </div>
+              </div>
+            )) : <p className="text-sm text-muted-foreground">Aucun paiement vente en attente.</p>}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Les devis validés ne sont pas enregistrés comme des encaissements distincts ; ils apparaissent ici dès qu&apos;un paiement est saisi.
+          </p>
+        </CardContent>
+      </Card> : null}
+
+      {!demo ? <Card className="card-3d rounded-xl">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle>Sorties de caisse</CardTitle>
+            <p className="text-sm text-muted-foreground">Pièces et dépenses diverses de la période.</p>
+          </div>
+          {canManageCash && !demo ? (
+            <Button type="button" onClick={() => setExitOpen(true)}>
+              <Plus className="size-4" /> Ajouter une sortie
+            </Button>
+          ) : null}
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {exits.length ? exits.map((exit) => (
+            <div key={exit.id} className="flex flex-wrap justify-between gap-3 rounded-lg border p-3">
+              <div>
+                <p className="font-medium">{exit.type === "parts" ? "Paiement pièces" : "Dépense diverse"}</p>
+                <p className="text-sm text-muted-foreground">{exit.description || "Sans description"} · {formatDate(exit.created_at)}</p>
+              </div>
+              <span className="font-bold text-destructive">− {formatMoney(exit.amount)}</span>
+            </div>
+          )) : (
+            <p className="text-sm text-muted-foreground">
+              {demo ? "Les sorties de caisse ne sont pas gérées dans le mode démo." : "Aucune sortie de caisse sur cette période."}
+            </p>
+          )}
+        </CardContent>
+      </Card> : null}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="card-3d min-w-0 rounded-xl">
@@ -269,7 +515,7 @@ function CashPage() {
       <div className="flex justify-end">
         <Button
           type="button"
-          disabled={loading || !summary || summary.totalGeneral === 0 || !shopId}
+          disabled={loading || !summary || (summary.totalGeneral === 0 && totalExits === 0) || !shopId}
           onClick={() => setClosureOpen(true)}
           className="bg-ivoirien bg-ivoirien-hover shadow-3d"
         >
@@ -290,12 +536,19 @@ function CashPage() {
               >
                 <span>
                   <span className="block font-semibold">{formatDate(closure.created_at)}</span>
-                  <span className="text-sm text-muted-foreground">{periodLabel({ start: new Date(closure.period_start), end: new Date(closure.period_end) })}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {closure.period_start && closure.period_end
+                      ? periodLabel({ start: new Date(closure.period_start), end: new Date(closure.period_end) })
+                      : formatDate(closure.closure_date ?? closure.created_at)}
+                  </span>
                 </span>
-                <span className="font-bold text-orange-800">{formatMoney(closure.total_general)}</span>
+                <span className="font-bold text-orange-800">{formatMoney(closure.balance ?? closure.total_general)}</span>
               </button>
               {expandedClosureId === closure.id ? (
                 <div className="mt-3 grid gap-2 border-t pt-3 text-sm sm:grid-cols-2">
+                  <p>Entrées : <strong>{formatMoney(closure.total_entries ?? closure.total_general)}</strong></p>
+                  <p>Sorties : <strong>{formatMoney(closure.total_exits ?? 0)}</strong></p>
+                  <p>Solde : <strong>{formatMoney(closure.balance ?? closure.total_general)}</strong></p>
                   <p>Atelier : <strong>{formatMoney(closure.total_workshop)}</strong></p>
                   <p>Ventes : <strong>{formatMoney(closure.total_sales)}</strong></p>
                   {Object.entries(closure.breakdown).map(([method, amount]) => (
@@ -316,9 +569,43 @@ function CashPage() {
           onClose={() => setClosureOpen(false)}
           summary={summary}
           period={period}
+          exitsTotal={totalExits}
           onSuccess={() => void load()}
         />
       ) : null}
+      <CashReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
+      <Dialog open={exitOpen} onOpenChange={(open) => !savingExit && setExitOpen(open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter une sortie de caisse</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(event) => void saveExit(event)} className="grid gap-4">
+            <label className="grid gap-2 text-sm font-medium">
+              Type
+              <select
+                value={exitType}
+                onChange={(event) => setExitType(event.target.value as "parts" | "expense")}
+                className="h-10 rounded-md border border-input bg-background px-3"
+              >
+                <option value="parts">Pièces</option>
+                <option value="expense">Dépense diverse</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Montant
+              <Input type="number" min="1" step="1" value={exitAmount} onChange={(event) => setExitAmount(event.target.value)} required />
+            </label>
+            <label className="grid gap-2 text-sm font-medium">
+              Description
+              <Input value={exitDescription} onChange={(event) => setExitDescription(event.target.value)} maxLength={240} placeholder="Commande fournisseur, électricité, internet…" />
+            </label>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setExitOpen(false)} disabled={savingExit}>Annuler</Button>
+              <Button type="submit" disabled={savingExit}>{savingExit ? "Enregistrement…" : "Enregistrer"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

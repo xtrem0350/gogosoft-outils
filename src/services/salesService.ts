@@ -3,7 +3,7 @@ import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { ActivityType } from "@/services/workshopService";
 import { DEMO_SHOP_ID, getDemoSales, isDemoMode, updateDemoSession } from "@/services/demoService";
 
-export type SalePaymentStatus = "pending" | "paid" | "refunded";
+export type SalePaymentStatus = "pending" | "awaiting_payment" | "paid" | "refunded";
 export type SaleDeliveryStatus = "pending" | "ready" | "delivered";
 export type SalePaymentMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";
 

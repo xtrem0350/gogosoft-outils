@@ -32,15 +32,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import type { ClientRecord } from "@/services/clientService";
 import {
   createSale,
   listSales,
   markAsDelivered,
+  updateSale,
   type Sale,
-  type SalePaymentMethod,
-  uploadSalePhoto,
 } from "@/services/salesService";
+import { getPublicProducts, type OnlineProduct } from "@/services/shopOnlineService";
 import { getTodayWorkshopPayments, type ActivityType, type WorkshopPaymentRecord } from "@/services/workshopService";
 
 export function SalesListPage({
@@ -52,6 +53,8 @@ export function SalesListPage({
 }) {
   const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { isOwner, isVendeur } = useUserRole();
+  const canCreateSales = isOwner || isVendeur;
   const [sales, setSales] = useState<Sale[]>([]);
   const [workshopPayments, setWorkshopPayments] = useState<
     Array<WorkshopPaymentRecord & { ticket_number: string | null; client_name: string | null }>
@@ -73,7 +76,7 @@ export function SalesListPage({
       .finally(() => setLoading(false));
   }, [activityType, shopId, shopLoading]);
   useEffect(() => {
-    if (view !== "all" || shopLoading || !shopId) return;
+    if (view !== "all" || !isOwner || shopLoading || !shopId) return;
     setWorkshopPaymentsLoading(true);
     void getTodayWorkshopPayments(shopId)
       .then(setWorkshopPayments)
@@ -83,7 +86,7 @@ export function SalesListPage({
         );
       })
       .finally(() => setWorkshopPaymentsLoading(false));
-  }, [shopId, shopLoading, view]);
+  }, [isOwner, shopId, shopLoading, view]);
   const scopedSales = sales.filter((sale) =>
     view === "orders"
       ? sale.delivery_status !== "delivered"
@@ -164,7 +167,7 @@ export function SalesListPage({
         icon={HeadingIcon}
         iconColor="orange"
         action={
-          view === "all" ? (
+          view === "all" && canCreateSales ? (
             <Button
               onClick={() => void navigate({ to: "/sales/nouveau" })}
               className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
@@ -187,7 +190,7 @@ export function SalesListPage({
         <SalesMetric icon={Check} label="Remises" value={deliveredCount} className={theme.metric} />
       </div>
 
-      {view === "all" ? (
+      {view === "all" && isOwner ? (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-3">
             <CardTitle>Paiements atelier aujourd'hui</CardTitle>
@@ -407,65 +410,147 @@ export function NewSalePage() {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
   const { activeModules } = useActiveModules();
+  const { isVendeur, isOwner } = useUserRole();
   const allowedSalesTypes = [
     ...(activeModules.includes("vente-telephone") ? (["phone"] as const) : []),
     ...(activeModules.includes("vente-pc") ? (["computer"] as const) : []),
   ];
   const [activityType, setActivityType] = useState<ActivityType>("phone");
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [products, setProducts] = useState<OnlineProduct[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<OnlineProduct | null>(null);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [quantity, setQuantity] = useState("1");
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
   const [createClientOpen, setCreateClientOpen] = useState(false);
+  const [savedSale, setSavedSale] = useState<Sale | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [sendingToCashier, setSendingToCashier] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!shopId) {
+      setProducts([]);
+      setSelectedProduct(null);
+      return;
+    }
+    setProductsLoading(true);
+    void getPublicProducts(shopId)
+      .then((availableProducts) => {
+        if (active) setProducts(availableProducts);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast.error(error instanceof Error ? error.message : "Impossible de charger le catalogue.");
+        }
+      })
+      .finally(() => {
+        if (active) setProductsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
+
   useEffect(() => {
     if (allowedSalesTypes.length > 0 && !allowedSalesTypes.includes(activityType as "phone" | "computer")) {
       const firstAllowed = allowedSalesTypes[0];
       if (firstAllowed) setActivityType(firstAllowed);
     }
   }, [activityType, allowedSalesTypes.join(",")]);
+
+  const selectableProducts = products.filter((product) =>
+    product.is_available &&
+    product.stock > 0 &&
+    (product.category === activityType || product.category === "accessory" || product.category === "other"),
+  );
+
+  useEffect(() => {
+    if (selectedProduct && !selectableProducts.some((product) => product.id === selectedProduct.id)) {
+      setSelectedProduct(null);
+    }
+  }, [activityType, products, selectedProduct]);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!isOwner && !isVendeur) {
+      toast.error("Seul un vendeur peut enregistrer une vente.");
+      return;
+    }
     if (!shopId) {
       toast.error("⚠️ Sélectionnez un atelier.");
+      return;
+    }
+    if (!selectedProduct) {
+      toast.error("Sélectionnez un produit du catalogue.");
       return;
     }
     if (!selectedClient) {
       toast.error("Sélectionnez un client avant d'enregistrer la vente.");
       return;
     }
-    const form = new FormData(event.currentTarget);
-    const quantity = Number(form.get("quantity"));
-    const unitPrice = Number(form.get("unit_price"));
-    const paymentMethod = String(form.get("payment_method")) as SalePaymentMethod;
+    const saleQuantity = Number(quantity);
+    if (!Number.isInteger(saleQuantity) || saleQuantity < 1 || saleQuantity > selectedProduct.stock) {
+      toast.error(`La quantité doit être comprise entre 1 et ${selectedProduct.stock}.`);
+      return;
+    }
+    setSaving(true);
     try {
-      const photoUrl = photoFile ? await uploadSalePhoto(shopId, photoFile) : null;
-      await createSale({
+      const sale = await createSale({
         shop_id: shopId,
         activity_type: activityType,
-        product_name: String(form.get("product_name")),
-        product_description: String(form.get("product_description") ?? "") || null,
-        product_photo_url: photoUrl,
-        characteristics: null,
-        quantity,
-        unit_price: unitPrice,
-        total_price: quantity * unitPrice,
+        product_name: selectedProduct.name,
+        product_description: selectedProduct.description,
+        product_photo_url: selectedProduct.image_urls[0] ?? null,
+        characteristics: typeof selectedProduct.characteristics === "object" && selectedProduct.characteristics !== null && !Array.isArray(selectedProduct.characteristics)
+          ? selectedProduct.characteristics as Record<string, unknown>
+          : null,
+        quantity: saleQuantity,
+        unit_price: selectedProduct.price,
+        total_price: saleQuantity * selectedProduct.price,
         payment_status: "pending",
-        payment_method: paymentMethod || null,
+        payment_method: null,
         delivery_status: "pending",
         client_id: selectedClient.id,
         client_name: selectedClient.full_name,
         client_whatsapp: selectedClient.whatsapp,
         notes: null,
       });
+      setSavedSale(sale);
       toast.success("✅ Vente enregistrée.");
-      await navigate({ to: "/sales" });
     } catch (error) {
       toast.error(`❌ ${error instanceof Error ? error.message : "Création impossible."}`);
+    } finally {
+      setSaving(false);
     }
   }
+
+  async function sendToCashier() {
+    if (!savedSale) return;
+    setSendingToCashier(true);
+    try {
+      await updateSale(savedSale.id, { payment_status: "awaiting_payment" });
+      toast.success("Vente transmise à la caisse pour encaissement.");
+      await navigate({ to: "/sales" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de transmettre la vente.");
+    } finally {
+      setSendingToCashier(false);
+    }
+  }
+
+  if (!isOwner && !isVendeur) {
+    return (
+      <section className="mx-auto max-w-3xl rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+        Cette page est réservée au propriétaire et aux vendeurs.
+      </section>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <PageHero
         title="Nouvelle vente"
-        subtitle="Enregistrez une vente et suivez son paiement et sa livraison."
+        subtitle="Choisissez un produit du catalogue et transmettez le paiement à la caisse."
         icon={ShoppingCart}
         iconColor="orange"
         breadcrumb={[
@@ -494,27 +579,26 @@ export function NewSalePage() {
                 {allowedSalesTypes.includes("computer") ? <option value="computer">Ordinateur</option> : null}
               </select>
             </label>
-            <Input
-              name="product_name"
-              placeholder="Nom du produit"
-              required
-              className="h-12 rounded-xl"
-            />
-            <Input
-              name="product_description"
-              placeholder="Description"
-              className="h-12 rounded-xl"
-            />
             <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Photo du produit
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) => setPhotoFile(event.target.files?.[0] ?? null)}
-                className="rounded-xl border-2 border-slate-200 p-3 text-sm"
-              />
-              {photoFile ? <span className="text-xs text-slate-500">{photoFile.name}</span> : null}
+              Produit du catalogue
+              <select
+                value={selectedProduct?.id ?? ""}
+                onChange={(event) => setSelectedProduct(selectableProducts.find((product) => product.id === event.target.value) ?? null)}
+                disabled={productsLoading}
+                required
+                className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
+              >
+                <option value="">{productsLoading ? "Chargement du catalogue…" : "Sélectionner un produit"}</option>
+                {selectableProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} · {product.price.toLocaleString("fr-FR")} FCFA · Stock {product.stock}
+                  </option>
+                ))}
+              </select>
             </label>
+            {!productsLoading && selectableProducts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucun produit disponible dans le catalogue pour cette activité.</p>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -531,35 +615,21 @@ export function NewSalePage() {
                 name="quantity"
                 type="number"
                 min="1"
-                defaultValue="1"
+                max={selectedProduct?.stock}
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
                 placeholder="Quantité"
                 required
                 className="h-12 rounded-xl"
+                disabled={!selectedProduct}
               />
-              <Input
-                name="unit_price"
-                type="number"
-                min="0"
-                placeholder="Prix unitaire (FCFA)"
-                required
-                className="h-12 rounded-xl"
-              />
+              <div className="flex h-12 items-center rounded-xl border-2 bg-muted/30 px-3 font-semibold">
+                {selectedProduct
+                  ? `${(Number(quantity || 0) * selectedProduct.price).toLocaleString("fr-FR")} FCFA`
+                  : "Total à calculer"}
+              </div>
             </div>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Mode de paiement
-              <select
-                name="payment_method"
-                defaultValue=""
-                className="h-12 rounded-xl border-2 bg-background px-3 focus:border-orange-500"
-              >
-                <option value="">Non payé</option>
-                <option value="cash">Espèces</option>
-                <option value="wave">Wave</option>
-                <option value="orange_money">Orange Money</option>
-                <option value="mtn">MTN</option>
-                <option value="moov">Moov</option>
-              </select>
-            </label>
+            <p className="text-sm text-muted-foreground">Le paiement sera effectué par le caissier.</p>
           </CardContent>
         </Card>
 
@@ -584,12 +654,24 @@ export function NewSalePage() {
             ) : null}
           </CardContent>
         </Card>
-        <Button
-          type="submit"
-          className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end"
-        >
-          Enregistrer la vente
-        </Button>
+        {!savedSale ? (
+          <Button
+            type="submit"
+            disabled={saving || productsLoading || !selectedProduct || !selectedClient}
+            className="sticky bottom-4 z-10 h-12 w-full rounded-xl bg-ivoirien px-8 font-semibold shadow-3d active:scale-95 sm:justify-self-end"
+          >
+            {saving ? "Enregistrement…" : "Enregistrer la vente"}
+          </Button>
+        ) : (
+          <div className="sticky bottom-4 z-10 flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-lg sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm">
+              Vente enregistrée · {savedSale.total_price.toLocaleString("fr-FR")} FCFA · En attente de transmission
+            </p>
+            <Button type="button" disabled={sendingToCashier} onClick={() => void sendToCashier()}>
+              {sendingToCashier ? "Transmission…" : "Envoyer au caissier"}
+            </Button>
+          </div>
+        )}
       </form>
       <QuickCreateClientDialog
         open={createClientOpen}

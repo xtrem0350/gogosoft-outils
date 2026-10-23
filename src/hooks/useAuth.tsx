@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      if (event === "TOKEN_REFRESHED") return;
       if (event !== "INITIAL_SESSION") void queryClient.invalidateQueries();
       void loadDetails(nextSession?.user.id).finally(() => {
         if (active) setLoading(false);

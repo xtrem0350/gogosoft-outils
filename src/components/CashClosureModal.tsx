@@ -18,6 +18,7 @@ interface CashClosureModalProps {
   onClose: () => void;
   summary: CashSummary;
   period: CashPeriod;
+  exitsTotal?: number;
   onSuccess: () => void;
 }
 
@@ -38,6 +39,7 @@ export function CashClosureModal({
   onClose,
   summary,
   period,
+  exitsTotal = 0,
   onSuccess,
 }: CashClosureModalProps) {
   const { shopId } = useCurrentShop();
@@ -51,7 +53,7 @@ export function CashClosureModal({
     }
     setSaving(true);
     try {
-      await closeCashPeriod(shopId, period, notes);
+      await closeCashPeriod(shopId, period, notes, exitsTotal);
       toast.success("Clôture de caisse enregistrée.");
       setNotes("");
       onSuccess();
@@ -73,7 +75,20 @@ export function CashClosureModal({
           <p className="text-sm text-muted-foreground">
             {period.start.toLocaleString("fr-FR")} – {period.end.toLocaleString("fr-FR")}
           </p>
-          <p className="text-2xl font-bold text-slate-900">{formatMoney(summary.totalGeneral)}</p>
+          <div className="space-y-2 border-t pt-3 text-sm">
+            <div className="flex justify-between gap-4">
+              <span>Entrées</span>
+              <span className="font-semibold">{formatMoney(summary.totalGeneral)}</span>
+            </div>
+            <div className="flex justify-between gap-4">
+              <span>Sorties</span>
+              <span className="font-semibold">{formatMoney(exitsTotal)}</span>
+            </div>
+            <div className="flex justify-between gap-4 border-t pt-3 text-base">
+              <span className="font-bold">Solde</span>
+              <span className="font-bold">{formatMoney(summary.totalGeneral - exitsTotal)}</span>
+            </div>
+          </div>
           <div className="space-y-2 border-t pt-3 text-sm">
             {Object.entries(summary.breakdown).map(([method, amount]) => (
               <div key={method} className="flex justify-between gap-4">

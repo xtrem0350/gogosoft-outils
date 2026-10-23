@@ -65,16 +65,21 @@ import headerLogo from "@/assets/images/leprofile.png";
 
 function requiredRoles(pathname: string): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
-  if (pathname.startsWith("/caisse") || pathname.startsWith("/sales")) return ["owner", "caissier"];
+  if (pathname.startsWith("/caisse")) return ["owner", "caissier"];
+  if (pathname.startsWith("/sales")) return ["owner", "vendeur"];
   if (pathname.startsWith("/equipe") || pathname.startsWith("/parametres") || pathname.startsWith("/abonnement")) {
     return ["owner"];
   }
+  if (
+    pathname === "/phone/atelier/nouveau" ||
+    pathname === "/computer/atelier/nouveau"
+  ) return ["owner", "technicien", "receptionniste"];
   if (pathname.startsWith("/phone/atelier") || pathname.startsWith("/phone/historique") || pathname.startsWith("/phone/carnet") || pathname.startsWith("/computer/atelier") || pathname.startsWith("/computer/historique") || pathname.startsWith("/computer/carnet")) {
     return ["owner", "technicien"];
   }
-  if (pathname.startsWith("/clients") || pathname.startsWith("/catalogue")) {
-    return ["owner", "technicien", "caissier"];
-  }
+  if (pathname.startsWith("/consumable/stock")) return ["owner", "magasinier"];
+  if (pathname.startsWith("/clients")) return ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
+  if (pathname.startsWith("/catalogue")) return ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
   return null;
 }
 
@@ -92,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   });
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
-  const { isSuperAdmin, loading: roleLoading } = useUserRole();
+  const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
@@ -269,7 +274,17 @@ export function AppShell({ children }: { children: ReactNode }) {
       label: "Nouveau produit vitrine",
       to: "/admin/boutique/produits/nouveau" as const,
     },
-  ].filter((option) => activeModules.some((activeModule) => activeModule === option.id));
+  ].filter((option) => {
+    const moduleIsActive = activeModules.some((activeModule) => activeModule === option.id);
+    if (!moduleIsActive) return false;
+    if (option.id.startsWith("reparation-telephone") || option.id.startsWith("reparation-pc")) {
+      return role === "owner" || role === "technicien" || role === "receptionniste";
+    }
+    if (option.id.startsWith("vente-")) return role === "owner" || role === "vendeur";
+    if (option.id === "consommables") return role === "owner" || role === "magasinier";
+    return role === "owner";
+  });
+  const canCreateClientFromHeader = role === "owner" || role === "receptionniste";
 
   const { showWarning, dismissWarning, timeRemaining, logoutNow } = useInactivityLogout({
     enabled: Boolean(user && !isAuthRoute),
@@ -432,7 +447,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            {!isSuperAdmin ? (
+            {!isSuperAdmin && (canCreateClientFromHeader || createOptions.length > 0) ? (
               <div className="hidden sm:block">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -447,9 +462,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
-                      <Users /> Nouveau client
-                    </DropdownMenuItem>
+                    {canCreateClientFromHeader ? (
+                      <DropdownMenuItem onSelect={() => setQuickCreateClientOpen(true)}>
+                        <Users /> Nouveau client
+                      </DropdownMenuItem>
+                    ) : null}
                     {createOptions.map(({ id, icon: Icon, label, to }) => (
                       <DropdownMenuItem key={id} onSelect={() => void navigate({ to })}>
                         <Icon /> {label}

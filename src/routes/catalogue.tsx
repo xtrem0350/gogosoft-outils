@@ -10,6 +10,7 @@ import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
   getDeviceCatalog,
   deleteDeviceFromCatalog,
@@ -29,6 +30,7 @@ const FILTERS: Array<{ value: DeviceFilter; label: string }> = [
   { value: "tablet", label: "Tablettes" },
 ];
 export function DeviceCatalogPage() {
+  const { isOwner } = useUserRole();
   const { categories, hasPhones, hasComputers, hasTablets } = useAvailableCategories();
   const [devices, setDevices] = useState<DeviceCatalogItem[]>([]);
   const [filterCategory, setFilterCategory] = useState<DeviceFilter>("all");
@@ -101,11 +103,11 @@ export function DeviceCatalogPage() {
         subtitle={`${devices.length} appareil${devices.length === 1 ? "" : "s"} · Modèles disponibles pour vos fiches de réparation.`}
         icon={BookOpen}
         iconColor="orange"
-        action={(
+        action={isOwner ? (
           <Button type="button" onClick={() => openAdd()} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
             <Plus className="mr-2 size-4" /> Ajouter un appareil
           </Button>
-        )}
+        ) : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-3">
@@ -143,42 +145,44 @@ export function DeviceCatalogPage() {
           </CardContent>
         </Card>
       ) : null}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
         {devices.map((device) => (
-          <Card key={device.id} className="card-3d group relative overflow-hidden rounded-xl border-0 shadow-3d">
-            <CardContent className="space-y-2 p-3">
-              <div className="group/image relative mb-2 aspect-square w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+          <Card key={device.id} className="card-3d relative overflow-hidden rounded-xl border-0 p-2 shadow-3d">
+            <CardContent className="space-y-2 p-0">
+              <div className="relative mb-2 aspect-square w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
                 {device.image_url ? (
-                  <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="h-full w-full rounded-lg object-cover" loading="lazy" />
+                  <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="h-full w-full object-cover" loading="lazy" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
                     <span className="text-2xl font-bold text-slate-500">{device.brand.slice(0, 1).toUpperCase()}</span>
                   </div>
                 )}
-                <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover/image:opacity-100 sm:group-focus-within/image:opacity-100">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 bg-white/90 shadow-sm hover:bg-white"
-                    aria-label={`Modifier ${device.brand} ${device.model}`}
-                    title="Éditer"
-                    onClick={() => setEditingDevice(device)}
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 bg-white/90 text-red-600 shadow-sm hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950"
-                    aria-label={`Supprimer ${device.brand} ${device.model}`}
-                    title="Supprimer"
-                    onClick={() => void handleDelete(device)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
+                {isOwner ? (
+                  <div className="absolute right-1 top-1 z-10 flex gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 rounded-full bg-white/90 p-1 shadow-sm hover:bg-orange-100 dark:bg-slate-800/90"
+                      aria-label={`Modifier ${device.brand} ${device.model}`}
+                      title="Éditer"
+                      onClick={() => setEditingDevice(device)}
+                    >
+                      <Pencil className="size-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 rounded-full bg-white/90 p-1 text-red-500 shadow-sm hover:bg-red-100 hover:text-red-600 dark:bg-slate-800/90 dark:hover:bg-red-950"
+                      aria-label={`Supprimer ${device.brand} ${device.model}`}
+                      title="Supprimer"
+                      onClick={() => void handleDelete(device)}
+                    >
+                      <Trash2 className="size-3 text-red-500" />
+                    </Button>
+                  </div>
+                ) : null}
               </div>
               <div className="flex min-w-0 items-center gap-1.5">
                 {device.category === "laptop" || device.category === "desktop"
@@ -189,9 +193,11 @@ export function DeviceCatalogPage() {
               <p className="truncate text-xs text-slate-600 dark:text-slate-300">{device.model}</p>
               {device.os ? <p className="truncate text-xs text-muted-foreground">{device.os}</p> : null}
               {device.release_year ? <p className="text-xs text-muted-foreground">{device.release_year}</p> : null}
-              <Button type="button" variant="outline" size="sm" className="h-7 w-full px-2 text-xs" onClick={() => openAdd(device.category)}>
-                <Plus className="size-3" /> Ajouter similaire
-              </Button>
+              {isOwner ? (
+                <Button type="button" variant="outline" size="sm" className="h-7 w-full px-2 text-xs" onClick={() => openAdd(device.category)}>
+                  <Plus className="size-3" /> Ajouter similaire
+                </Button>
+              ) : null}
             </CardContent>
           </Card>
         ))}

@@ -23,6 +23,9 @@ export interface CashSummary {
     amount: number;
     method: string;
     ticket_number: string | null;
+    client_name: string | null;
+    device_model: string | null;
+    payment_type: "entry" | "final";
     created_at: string;
     received_by?: string | null;
   }>;
@@ -31,6 +34,7 @@ export interface CashSummary {
     total_price: number;
     payment_method: string | null;
     product_name: string;
+    client_name: string | null;
     created_at: string;
   }>;
 }
@@ -47,6 +51,20 @@ export interface CashClosure {
   closed_by: string | null;
   notes: string | null;
   created_at: string;
+  total_entries?: number;
+  total_exits?: number;
+  balance?: number;
+  closure_date?: string;
+}
+
+export interface CashExit {
+  id: string;
+  shop_id: string;
+  type: "parts" | "expense";
+  amount: number;
+  description: string | null;
+  created_by: string | null;
+  created_at: string;
 }
 
 type WorkshopPaymentRow = {
@@ -55,6 +73,7 @@ type WorkshopPaymentRow = {
   method: string;
   ticket_id: string;
   received_by: string | null;
+  payment_type: "entry" | "final";
   created_at: string;
 };
 
@@ -102,6 +121,9 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
         amount: payment.amount,
         method: payment.method,
         ticket_number: tickets.find((ticket) => ticket.id === payment.ticket_id)?.ticket_number ?? null,
+        client_name: tickets.find((ticket) => ticket.id === payment.ticket_id)?.client_name ?? null,
+        device_model: tickets.find((ticket) => ticket.id === payment.ticket_id)?.device_model ?? null,
+        payment_type: payment.payment_type,
         created_at: payment.created_at,
         received_by: payment.received_by,
       }));
@@ -115,6 +137,7 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
         total_price: sale.total_price,
         payment_method: sale.payment_method,
         product_name: sale.product_name,
+        client_name: sale.client_name,
         created_at: sale.created_at,
       }));
     return summarize(workshopPayments, sales);
@@ -127,13 +150,13 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
   const [{ data: paymentRows, error: paymentError }, { data: salesRows, error: salesError }] =
     await Promise.all([
       (supabase.from("workshop_payments" as any) as any)
-        .select("id, amount, method, ticket_id, received_by, created_at")
+        .select("id, amount, method, ticket_id, received_by, payment_type, created_at")
         .eq("shop_id", validShopId)
         .gte("created_at", start)
         .lte("created_at", end),
       supabase
         .from("sales")
-        .select("id, total_price, payment_method, product_name, created_at")
+        .select("id, total_price, payment_method, product_name, client_name, created_at")
         .eq("shop_id", validShopId)
         .eq("payment_status", "paid")
         .gte("created_at", start)
@@ -146,22 +169,29 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
   const ticketIds = [...new Set(payments.map((payment) => payment.ticket_id))];
   const { data: ticketRows, error: ticketError } = ticketIds.length
     ? await (supabase.from("workshop_tickets" as any) as any)
-        .select("id, ticket_number")
+        .select("id, ticket_number, client_name, device_model")
         .eq("shop_id", validShopId)
         .in("id", ticketIds)
     : { data: [], error: null };
   if (ticketError) throw ticketError;
   const ticketNumbers = new Map(
-    ((ticketRows ?? []) as Array<{ id: string; ticket_number: string | null }>).map((ticket) => [
-      ticket.id,
-      ticket.ticket_number,
-    ]),
+    (
+      (ticketRows ?? []) as Array<{
+        id: string;
+        ticket_number: string | null;
+        client_name: string | null;
+        device_model: string | null;
+      }>
+    ).map((ticket) => [ticket.id, ticket]),
   );
   const workshopPayments = payments.map((payment) => ({
     id: payment.id,
     amount: payment.amount,
     method: payment.method,
-    ticket_number: ticketNumbers.get(payment.ticket_id) ?? null,
+    ticket_number: ticketNumbers.get(payment.ticket_id)?.ticket_number ?? null,
+    client_name: ticketNumbers.get(payment.ticket_id)?.client_name ?? null,
+    device_model: ticketNumbers.get(payment.ticket_id)?.device_model ?? null,
+    payment_type: payment.payment_type,
     created_at: payment.created_at,
     received_by: payment.received_by,
   }));
@@ -173,6 +203,7 @@ export async function closeCashPeriod(
   shopId: string,
   period: CashPeriod,
   notes?: string,
+  totalExits = 0,
 ): Promise<void> {
   const summary = await getCashSummary(shopId, period);
   if (isDemoMode()) {
@@ -204,11 +235,56 @@ export async function closeCashPeriod(
     total_workshop: summary.totalWorkshop,
     total_sales: summary.totalSales,
     total_general: summary.totalGeneral,
+    total_entries: summary.totalGeneral,
+    total_exits: totalExits,
+    balance: summary.totalGeneral - totalExits,
+    closure_date: period.end.toISOString().slice(0, 10),
     breakdown: summary.breakdown,
     closed_by: auth.user?.id ?? null,
     notes: notes?.trim() || null,
   });
   if (error) throw error;
+}
+
+export async function getCashExits(
+  shopId: string,
+  period: CashPeriod,
+): Promise<CashExit[]> {
+  if (isDemoMode()) return [];
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data, error } = await (supabase.from("cash_exits" as any) as any)
+    .select("*")
+    .eq("shop_id", requireShopId(shopId))
+    .gte("created_at", period.start.toISOString())
+    .lte("created_at", period.end.toISOString())
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as CashExit[];
+}
+
+export async function createCashExit(
+  shopId: string,
+  input: Pick<CashExit, "type" | "amount" | "description">,
+): Promise<CashExit> {
+  if (isDemoMode()) throw new Error("Les sorties de caisse ne sont pas disponibles en mode démo.");
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("Le montant doit être supérieur à zéro.");
+  }
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  const { data, error } = await (supabase.from("cash_exits" as any) as any)
+    .insert({
+      shop_id: requireShopId(shopId),
+      type: input.type,
+      amount: Math.round(input.amount),
+      description: input.description?.trim() || null,
+      created_by: auth.user?.id ?? null,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as CashExit;
 }
 
 export async function getCashClosures(shopId: string): Promise<CashClosure[]> {
