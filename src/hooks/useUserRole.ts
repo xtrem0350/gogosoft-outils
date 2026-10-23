@@ -5,7 +5,15 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
 import { supabase } from "@/integrations/supabase/client";
 
-export type UserRole = "owner" | "technicien" | "caissier" | "super_admin" | null;
+export type UserRole =
+  | "owner"
+  | "technicien"
+  | "caissier"
+  | "magasinier"
+  | "receptionniste"
+  | "vendeur"
+  | "super_admin"
+  | null;
 export type ViewMode = "admin" | "shop";
 
 export interface UserRoleInfo {
@@ -13,6 +21,9 @@ export interface UserRoleInfo {
   isOwner: boolean;
   isTechnicien: boolean;
   isCaissier: boolean;
+  isMagasinier: boolean;
+  isReceptionniste: boolean;
+  isVendeur: boolean;
   isSuperAdmin: boolean;
   isSuperAdminAccount: boolean;
   viewMode: ViewMode;
@@ -26,7 +37,13 @@ function getInitialViewMode(): ViewMode {
 }
 
 function normalizeRole(role: string | null | undefined): UserRole {
-  if (role === "owner" || role === "caissier") return role;
+  if (
+    role === "owner" ||
+    role === "caissier" ||
+    role === "magasinier" ||
+    role === "receptionniste" ||
+    role === "vendeur"
+  ) return role;
   if (role === "technicien" || role === "technicien_pc") return "technicien";
   if (role === "manager" || role === "admin") return "owner";
   return null;
@@ -104,6 +121,9 @@ export function useUserRole(): UserRoleInfo {
       isOwner: true,
       isTechnicien: false,
       isCaissier: false,
+      isMagasinier: false,
+      isReceptionniste: false,
+      isVendeur: false,
       isSuperAdmin: false,
       isSuperAdminAccount: false,
       viewMode: "shop",
@@ -118,6 +138,9 @@ export function useUserRole(): UserRoleInfo {
     isOwner: role === "owner",
     isTechnicien: role === "technicien",
     isCaissier: role === "caissier",
+    isMagasinier: role === "magasinier",
+    isReceptionniste: role === "receptionniste",
+    isVendeur: role === "vendeur",
     isSuperAdmin: role === "super_admin",
     isSuperAdminAccount,
     viewMode,

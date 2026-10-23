@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
+import type { EmployeeRole } from "@/services/invitationsService";
 
 export interface TeamMember {
   id: string;
@@ -9,6 +10,7 @@ export interface TeamMember {
   avatar_url: string | null;
   full_name: string | null;
   email: string | null;
+  whatsapp: string | null;
 }
 
 export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
@@ -21,7 +23,7 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const userIds = [...new Set(rows.map((row) => String(row["user_id"] ?? "")).filter(Boolean))];
   const { data: profiles, error: profileError } = userIds.length
-    ? await supabase.from("profiles").select("id, full_name, email").in("id", userIds)
+    ? await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
     : { data: [], error: null };
   if (profileError) throw profileError;
   const profileById = new Map(
@@ -38,6 +40,7 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
       avatar_url: typeof row["avatar_url"] === "string" ? row["avatar_url"] : null,
       full_name: profile?.full_name ?? null,
       email: profile?.email ?? null,
+      whatsapp: profile?.phone ?? null,
     };
   });
 }
@@ -67,11 +70,20 @@ export async function uploadTeamAvatar(shopId: string, userId: string, file: Fil
 export async function updateMemberRole(
   shopId: string,
   userId: string,
-  role: "owner" | "technicien" | "caissier",
+  role: EmployeeRole | "owner",
 ): Promise<void> {
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { error } = await (supabase.from("shop_members" as any) as any)
     .update({ role })
+    .eq("shop_id", requireShopId(shopId))
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function removeTeamMember(shopId: string, userId: string): Promise<void> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { error } = await (supabase.from("shop_members" as any) as any)
+    .delete()
     .eq("shop_id", requireShopId(shopId))
     .eq("user_id", userId);
   if (error) throw error;

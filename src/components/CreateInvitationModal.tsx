@@ -13,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { createInvitation, type InvitationRole, type PendingInvitation } from "@/services/invitationsService";
 
@@ -21,10 +20,10 @@ interface CreateInvitationModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  shopId: string;
 }
 
-export function CreateInvitationModal({ open, onClose, onSuccess }: CreateInvitationModalProps) {
-  const { shopId } = useCurrentShop();
+export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: CreateInvitationModalProps) {
   const [fullName, setFullName] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [role, setRole] = useState<InvitationRole>("technicien");
@@ -74,8 +73,17 @@ export function CreateInvitationModal({ open, onClose, onSuccess }: CreateInvita
 
   function sendWhatsapp() {
     if (!invitation) return;
-    const message = `Bonjour ${invitation.full_name}, voici votre code d'invitation GogoSoft : ${invitation.code}\nAllez sur ${window.location.origin}/rejoindre et entrez ce code pour créer votre compte.`;
+    const message = `Bonjour ${invitation.full_name}, voici votre code d'invitation GogoSoft : ${invitation.code}\nAllez sur ${window.location.origin}/rejoindre, entrez ce code et créez votre compte.\nCode valable 24h.`;
     window.open(buildWhatsappLink(invitation.whatsapp, message), "_blank", "noopener,noreferrer");
+  }
+
+  async function copyJoinLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/rejoindre`);
+      toast.success("Lien copié.");
+    } catch {
+      toast.error("Impossible de copier le lien depuis ce navigateur.");
+    }
   }
 
   return (
@@ -91,12 +99,21 @@ export function CreateInvitationModal({ open, onClose, onSuccess }: CreateInvita
               <p className="rounded-xl bg-orange-50 py-4 text-4xl font-bold tracking-[0.2em] text-orange-800 dark:bg-orange-950 dark:text-orange-200">
                 {invitation.code}
               </p>
+              <p className="text-xs text-muted-foreground">Code valable 24h.</p>
               <div className="flex flex-wrap justify-center gap-2">
                 <Button type="button" variant="outline" onClick={() => void copyCode()}>
                   <Copy className="size-4" /> Copier le code
                 </Button>
                 <Button type="button" onClick={sendWhatsapp}>
                   <MessageCircle className="size-4" /> Envoyer par WhatsApp
+                </Button>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <a href={`${window.location.origin}/rejoindre`} className="break-all text-sm text-primary underline">
+                  {window.location.origin}/rejoindre
+                </a>
+                <Button type="button" variant="outline" onClick={() => void copyJoinLink()}>
+                  <Copy className="size-4" /> Copier le lien
                 </Button>
               </div>
             </div>
@@ -140,6 +157,9 @@ export function CreateInvitationModal({ open, onClose, onSuccess }: CreateInvita
                   <SelectContent>
                     <SelectItem value="technicien">Technicien</SelectItem>
                     <SelectItem value="caissier">Caissier</SelectItem>
+                    <SelectItem value="magasinier">Magasinier</SelectItem>
+                    <SelectItem value="receptionniste">Réceptionniste</SelectItem>
+                    <SelectItem value="vendeur">Vendeur</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

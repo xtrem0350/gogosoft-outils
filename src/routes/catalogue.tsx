@@ -143,40 +143,40 @@ export function DeviceCatalogPage() {
           </CardContent>
         </Card>
       ) : null}
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
         {devices.map((device) => (
           <Card key={device.id} className="card-3d group relative overflow-hidden rounded-xl border-0 shadow-3d">
             <CardContent className="space-y-2 p-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
-                  {device.image_url ? (
-                    <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="size-full object-cover" loading="lazy" />
-                  ) : (
-                    <span className="text-sm font-bold text-slate-500">{device.brand.slice(0, 1).toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="flex gap-1">
+              <div className="group/image relative mb-2 aspect-square w-full overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+                {device.image_url ? (
+                  <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="h-full w-full rounded-lg object-cover" loading="lazy" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <span className="text-2xl font-bold text-slate-500">{device.brand.slice(0, 1).toUpperCase()}</span>
+                  </div>
+                )}
+                <div className="absolute right-2 top-2 flex gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover/image:opacity-100 sm:group-focus-within/image:opacity-100">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-7"
+                    className="size-8 bg-white/90 shadow-sm hover:bg-white"
                     aria-label={`Modifier ${device.brand} ${device.model}`}
                     title="Éditer"
                     onClick={() => setEditingDevice(device)}
                   >
-                    <Pencil className="size-3" />
+                    <Pencil className="size-4" />
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="size-7 text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950"
+                    className="size-8 bg-white/90 text-red-600 shadow-sm hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950"
                     aria-label={`Supprimer ${device.brand} ${device.model}`}
                     title="Supprimer"
                     onClick={() => void handleDelete(device)}
                   >
-                    <Trash2 className="size-3" />
+                    <Trash2 className="size-4" />
                   </Button>
                 </div>
               </div>

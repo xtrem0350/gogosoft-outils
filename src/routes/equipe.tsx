@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Camera, Copy, Mail, MessageCircle, UserCog, UserPlus, Users, X } from "lucide-react";
+import { Camera, Copy, Mail, MessageCircle, Trash2, UserCog, UserPlus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
@@ -21,9 +21,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { addShopMember } from "@/services/shopService";
-import { getTeamMembers, updateMemberRole, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
+import { getTeamMembers, removeTeamMember, updateMemberRole, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
 import { supabase } from "@/integrations/supabase/client";
-import { cancelInvitation, getPendingInvitations, type PendingInvitation } from "@/services/invitationsService";
+import { cancelInvitation, getPendingInvitations, type EmployeeRole, type PendingInvitation } from "@/services/invitationsService";
 
 export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
@@ -126,7 +126,7 @@ function EquipePage() {
     setMembers(await getTeamMembers(shopId));
   }
 
-  async function changeRole(member: TeamMember, role: "owner" | "technicien" | "caissier") {
+  async function changeRole(member: TeamMember, role: EmployeeRole | "owner") {
     if (!shopId) return;
     try {
       await updateMemberRole(shopId, member.user_id, role);
@@ -145,6 +145,19 @@ function EquipePage() {
       await refreshMembers();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'envoyer la photo.");
+    }
+  }
+
+  async function removeMember(member: TeamMember) {
+    if (!shopId || member.role === "owner") return;
+    const displayName = member.full_name ?? member.email ?? "ce membre";
+    if (!window.confirm(`Retirer ${displayName} de l'équipe ?`)) return;
+    try {
+      await removeTeamMember(shopId, member.user_id);
+      toast.success("Membre retiré de l'équipe.");
+      await refreshMembers();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de retirer ce membre.");
     }
   }
 
@@ -182,7 +195,7 @@ function EquipePage() {
               title="Aucun membre dans l'équipe"
               description="Invitez un membre pour lui donner accès à cet atelier."
               actionLabel="Inviter un membre"
-              onAction={() => setOpen(true)}
+              onAction={() => setInvitationOpen(true)}
             />
           </div>
         ) : (
@@ -202,6 +215,7 @@ function EquipePage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{displayName}</p>
                       <p className="truncate text-sm text-muted-foreground">{member.email ?? "E-mail indisponible"}</p>
+                      <p className="truncate text-sm text-muted-foreground">WhatsApp : {member.whatsapp ?? "—"}</p>
                       <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
                         {member.role || "Inconnu"}
                       </span>
@@ -223,8 +237,8 @@ function EquipePage() {
                       />
                     </label>
                     <Select
-                      value={member.role === "owner" || member.role === "caissier" ? member.role : "technicien"}
-                      onValueChange={(role) => void changeRole(member, role as "owner" | "technicien" | "caissier")}
+                      value={member.role}
+                      onValueChange={(role) => void changeRole(member, role as EmployeeRole | "owner")}
                     >
                       <SelectTrigger className="h-9 w-36" aria-label={`Rôle de ${displayName}`}>
                         <SelectValue />
@@ -233,8 +247,23 @@ function EquipePage() {
                         <SelectItem value="owner">Propriétaire</SelectItem>
                         <SelectItem value="technicien">Technicien</SelectItem>
                         <SelectItem value="caissier">Caissier</SelectItem>
+                        <SelectItem value="magasinier">Magasinier</SelectItem>
+                        <SelectItem value="receptionniste">Réceptionniste</SelectItem>
+                        <SelectItem value="vendeur">Vendeur</SelectItem>
                       </SelectContent>
                     </Select>
+                    {member.role !== "owner" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        aria-label={`Retirer ${displayName} de l'équipe`}
+                        title="Retirer de l'équipe"
+                        onClick={() => void removeMember(member)}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    ) : null}
                   </div>
                 </CardContent>
               </Card>
@@ -259,6 +288,9 @@ function EquipePage() {
                   <p className="font-semibold">{invitation.full_name}</p>
                   <p className="text-sm text-muted-foreground">{invitation.whatsapp}</p>
                   <p className="mt-1 text-xs capitalize text-muted-foreground">{invitation.role}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Expire le {new Date(invitation.expires_at).toLocaleString("fr-FR")}
+                  </p>
                   <p className="mt-2 font-mono text-2xl font-bold tracking-[0.2em] text-orange-700">
                     {invitation.code}
                   </p>
@@ -290,6 +322,7 @@ function EquipePage() {
         open={invitationOpen}
         onClose={() => setInvitationOpen(false)}
         onSuccess={() => void refreshInvitations()}
+        shopId={shopId ?? ""}
       />
 
       <Dialog open={open} onOpenChange={setOpen}>

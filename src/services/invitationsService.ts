@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type InvitationRole = "technicien" | "caissier";
+export type EmployeeRole = "technicien" | "caissier" | "magasinier" | "receptionniste" | "vendeur";
+export type InvitationRole = EmployeeRole;
 
 export interface PendingInvitation {
   id: string;
@@ -8,7 +9,7 @@ export interface PendingInvitation {
   shop_name?: string;
   full_name: string;
   whatsapp: string;
-  role: InvitationRole;
+  role: EmployeeRole;
   code: string;
   used: boolean;
   used_at: string | null;
@@ -26,7 +27,7 @@ export async function createInvitation(input: {
   shop_id: string;
   full_name: string;
   whatsapp: string;
-  role: InvitationRole;
+  role: EmployeeRole;
 }): Promise<PendingInvitation> {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
@@ -72,6 +73,9 @@ export async function acceptInvitation(input: {
   full_name: string;
   email: string;
   whatsapp: string;
+  ncni?: string;
+  lieu_habitation?: string;
+  avatar_url?: string;
 }): Promise<{ success: boolean; shop_id: string; role: string }> {
   const { data, error } = await supabase.rpc("accept_invitation" as any, {
     p_code: input.code.toUpperCase().trim(),
@@ -79,6 +83,9 @@ export async function acceptInvitation(input: {
     p_full_name: input.full_name.trim(),
     p_email: input.email.trim(),
     p_whatsapp: input.whatsapp.trim(),
+    p_ncni: input.ncni?.trim() || null,
+    p_lieu_habitation: input.lieu_habitation?.trim() || null,
+    p_avatar_url: input.avatar_url || null,
   } as any);
   if (error) throw error;
   return data as { success: boolean; shop_id: string; role: string };

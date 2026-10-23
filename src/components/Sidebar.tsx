@@ -114,6 +114,62 @@ function getNavigationGroups(
     return cashierGroups;
   }
 
+  if (role === "magasinier") {
+    return [
+      groups[0]!,
+      ...(hasModule("consommables")
+        ? [{ label: "STOCK", icon: Package, items: [{ label: "Stock", to: "/consumable/stock", icon: Package }] }]
+        : []),
+      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
+    ];
+  }
+
+  if (role === "receptionniste") {
+    const receptionItems: NavigationItem[] = [
+      ...(hasModule("reparation-telephone")
+        ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
+        : []),
+      ...(hasModule("reparation-pc")
+        ? [{ label: "Réception ordinateur", to: "/computer/atelier/nouveau", icon: Laptop }]
+        : []),
+    ];
+    return [
+      groups[0]!,
+      ...(receptionItems.length ? [{ label: "RÉCEPTION", icon: UserRound, items: receptionItems }] : []),
+      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
+    ];
+  }
+
+  if (role === "vendeur") {
+    const salesItems: NavigationItem[] = [
+      ...(hasModule("vente-telephone")
+        ? [{ label: "Ventes téléphone", to: "/sales", icon: Smartphone, search: { activityType: "phone" as const } }]
+        : []),
+      ...(hasModule("vente-pc")
+        ? [{ label: "Ventes ordinateur", to: "/sales", icon: Laptop, search: { activityType: "computer" as const } }]
+        : []),
+      ...(hasModule("vente-telephone") || hasModule("vente-pc")
+        ? [{ label: "Nouvelle vente", to: "/sales/nouveau", icon: PlusCircle }]
+        : []),
+    ];
+    return [
+      groups[0]!,
+      ...(salesItems.length ? [{ label: "VENTES", icon: ShoppingCart, items: salesItems }] : []),
+      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
+      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
+    ];
+  }
+
+  if (isDemo && hasShop) {
+    groups.push({
+      label: "PERSONNEL",
+      icon: Users,
+      items: [{ label: "Personnel", to: "/personnel", icon: Users }],
+    });
+  }
+
   if (hasModule("reparation-telephone")) {
     groups.push({
       label: "TÉLÉPHONE",
@@ -213,14 +269,6 @@ function getNavigationGroups(
       { label: "Catalogue", to: "/catalogue", icon: BookOpen },
     ],
   });
-
-  if (hasShop) {
-    groups.push({
-      label: "PERSONNEL",
-      icon: Users,
-      items: [{ label: "Personnel", to: "/personnel", icon: Users }],
-    });
-  }
 
   if (role === "owner") {
     groups.push({

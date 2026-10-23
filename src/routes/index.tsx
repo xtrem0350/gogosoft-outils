@@ -191,184 +191,206 @@ function HomePage() {
   if (loading || user || isDemoMode()) return null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-green-50 text-slate-900">
-      <header className="h-16 border-b border-slate-200/80 bg-white/90">
-        <div className="mx-auto flex h-full max-w-5xl items-center justify-between gap-3 px-4">
-          <div className="flex min-w-0 items-center gap-2">
-            <img src={profileLogo} alt="" className="size-10 rounded-full object-cover" />
-            <span className="truncate text-lg font-bold">GogoSoft</span>
-          </div>
-          <span className="hidden text-sm font-medium text-slate-600 md:block">
-            🇨🇮 Solution ivoirienne
-          </span>
-          <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              className="text-slate-700"
-              onClick={() => void handleGoAuth("login")}
-            >
-              Se connecter
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!canSignup}
-              onClick={() => void handleGoAuth("signup")}
-            >
-              Créer un compte
-            </Button>
-          </div>
+    <main className="relative isolate min-h-screen overflow-hidden bg-slate-950 text-slate-900">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
+        }}
+      />
+      <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
+
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center justify-center px-3 py-4 sm:px-6 lg:px-8">
+        <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md lg:h-[min(820px,calc(100vh-2rem))] lg:grid-cols-[0.8fr_1.55fr]">
+          <section className="flex flex-col justify-between gap-8 bg-slate-900/80 p-6 text-white sm:p-8 lg:min-h-0 lg:p-10">
+            <div>
+              <p className="text-sm font-medium text-blue-300">Bienvenue</p>
+              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+                Gérez votre atelier comme un pro
+              </h1>
+              <p className="mt-4 text-sm leading-6 text-slate-300">
+                Tous vos outils au même endroit. Centralisez vos réparations, vos clients, vos
+                ventes et l&apos;activité de votre équipe.
+              </p>
+            </div>
+
+            <section aria-label="Actions d'authentification" className="space-y-3">
+              <p className="text-sm font-semibold text-white">Démarrez dès maintenant</p>
+              <Button
+                type="button"
+                disabled={!canSignup}
+                className="min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => void handleGoAuth("signup")}
+              >
+                Créer un compte · 7 jours gratuits
+                <Check className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                disabled={!canDemo}
+                className="min-h-11 w-full bg-green-700 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={() => void handleStartDemo()}
+              >
+                <Gift className="size-4" />
+                Essayer le mode démo · 1 jour
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-11 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                onClick={() => void handleGoAuth("login")}
+              >
+                <Lock className="size-4" />
+                Se connecter
+              </Button>
+              <p className="pt-1 text-center text-xs text-slate-400">
+                La connexion est directe, sans choix de forfait ni paiement.
+              </p>
+              {!canDemo || !canSignup ? (
+                <p className="text-center text-xs text-slate-300">
+                  {!canDemo
+                    ? "Sélectionnez au moins un module pour démarrer."
+                    : "Sélectionnez une offre pour créer votre compte avec 7 jours gratuits."}
+                </p>
+              ) : null}
+            </section>
+
+            <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
+          </section>
+
+          <section className="space-y-6 overflow-y-auto bg-white/95 p-5 sm:p-7 lg:min-h-0 lg:p-8">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-orange-700">Configurez votre espace</p>
+                <p className="mt-1 text-sm text-slate-600">
+                  {selectedModules.length
+                    ? `${selectedModules.length} module${selectedModules.length > 1 ? "s" : ""} sélectionné${selectedModules.length > 1 ? "s" : ""}`
+                    : "Choisissez vos activités et votre offre"}
+                </p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <img
+                  src={profileLogo}
+                  alt="GogoSoft"
+                  className="size-11 rounded-full object-cover"
+                />
+                <span className="hidden text-lg font-bold text-slate-900 sm:inline">GogoSoft</span>
+              </div>
+            </div>
+
+            <section aria-label="Choix des modules" className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <h2 className="text-lg font-semibold">Vos domaines d&apos;activité</h2>
+                {!canDemo ? (
+                  <p className="text-xs text-slate-600">Sélectionnez au moins un module</p>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {WELCOME_MODULES.map(({ id, title, description, icon: Icon, tone }) => {
+                  const isSelected = selectedModules.includes(id);
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => toggleModule(id)}
+                      aria-pressed={isSelected}
+                      className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                        isSelected
+                          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                          : "border-slate-200 bg-white hover:border-orange-300"
+                      }`}
+                    >
+                      <span
+                        className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
+                          tone === "orange"
+                            ? "bg-orange-100 text-orange-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        <Icon className="size-5" />
+                      </span>
+                      <span className="min-w-0 pr-4">
+                        <span className="block text-sm font-medium leading-tight text-slate-800">
+                          {title}
+                        </span>
+                        <span className="mt-1 block text-xs leading-tight text-slate-500">
+                          {description}
+                        </span>
+                      </span>
+                      {isSelected ? (
+                        <Check className="absolute right-2 top-2 size-4 text-orange-600" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section aria-label="Offres mensuelles" className="space-y-3">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <h2 className="text-lg font-semibold">Choisissez votre offre</h2>
+                <p className="text-xs text-slate-600">Tarifs mensuels · Sans engagement</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {WELCOME_PRICING.map((plan) => {
+                  const isSelected = selectedPlanId === plan.id;
+                  return (
+                    <label
+                      key={plan.id}
+                      className={`card-3d relative flex min-h-[176px] cursor-pointer flex-col rounded-xl border p-3 text-left transition-colors focus-within:ring-2 focus-within:ring-orange-500 ${
+                        isSelected
+                          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                          : "border-slate-200 bg-white hover:border-orange-300"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="welcome-plan"
+                        value={plan.id}
+                        checked={isSelected}
+                        onChange={() => setSelectedPlanId(plan.id)}
+                        className="sr-only"
+                      />
+                      {plan.featured ? (
+                        <span className="absolute right-3 top-3 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-800">
+                          Recommandé
+                        </span>
+                      ) : null}
+                      {isSelected ? (
+                        <Check className="absolute right-3 top-10 size-4 text-orange-600" />
+                      ) : null}
+                      <h3 className="text-sm font-bold text-slate-900">{plan.title}</h3>
+                      <p className="mt-0.5 text-xs text-slate-600">{plan.subtitle}</p>
+                      <div className="mt-2 flex items-baseline gap-1 text-slate-900">
+                        <span className="text-xl font-bold">
+                          {plan.price.toLocaleString("fr-FR")}
+                        </span>
+                        <span className="text-xs font-medium">FCFA/mois</span>
+                      </div>
+                      <ul className="mt-2 space-y-1">
+                        {plan.features.slice(0, 3).map((feature) => (
+                          <li
+                            key={`${plan.id}-${feature}`}
+                            className="flex items-center gap-1.5 text-xs text-slate-700"
+                          >
+                            <Check className="size-3 shrink-0 text-green-700" />
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-center text-xs text-slate-500">
+                L&apos;essai de 7 jours est gratuit ; aucun paiement n&apos;est demandé pour le
+                démarrer.
+              </p>
+            </section>
+          </section>
         </div>
-      </header>
-
-      <div className="mx-auto max-w-5xl space-y-3 px-4 pb-3">
-        <section className="py-3 text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
-            Gérez votre atelier comme un pro
-          </h1>
-          <p className="mt-1 text-sm text-slate-700 md:text-base">
-            Une seule app pour tout gérer
-          </p>
-        </section>
-
-        <section aria-label="Choix des modules" className="space-y-2">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className="text-lg font-semibold">Choisissez vos domaines d&apos;activité</h2>
-            {!canDemo ? (
-              <p className="text-xs text-slate-600">Sélectionnez au moins un module</p>
-            ) : null}
-          </div>
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-            {WELCOME_MODULES.map(({ id, title, icon: Icon, tone }) => {
-              const isSelected = selectedModules.includes(id);
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => toggleModule(id)}
-                  aria-pressed={isSelected}
-                  className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
-                    isSelected
-                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-white hover:border-orange-300"
-                  }`}
-                >
-                  <span
-                    className={`flex size-8 shrink-0 items-center justify-center rounded-lg ${
-                      tone === "orange" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    <Icon className="size-5" />
-                  </span>
-                  <span className="pr-5 text-sm font-medium leading-tight text-slate-800">
-                    {title}
-                  </span>
-                  {isSelected ? (
-                    <Check className="absolute right-2 top-2 size-4 text-orange-600" />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section aria-label="Offre mensuelle" className="space-y-2">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-            <h2 className="text-lg font-semibold">Choisissez votre offre</h2>
-            <p className="text-xs text-slate-600">Tarifs mensuels · Sans engagement</p>
-          </div>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
-            {WELCOME_PRICING.map((plan) => {
-              const isSelected = selectedPlanId === plan.id;
-              return (
-                <label
-                  key={plan.id}
-                  className={`card-3d relative flex h-[180px] cursor-pointer flex-col rounded-xl border p-3 text-left transition-colors focus-within:ring-2 focus-within:ring-orange-500 ${
-                    isSelected
-                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-white hover:border-orange-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="welcome-plan"
-                    value={plan.id}
-                    checked={isSelected}
-                    onChange={() => setSelectedPlanId(plan.id)}
-                    className="sr-only"
-                  />
-                  {plan.featured ? (
-                    <span className="absolute right-3 top-3 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-800">
-                      Recommandé
-                    </span>
-                  ) : null}
-                  {isSelected ? (
-                    <Check className="absolute right-3 top-10 size-4 text-orange-600" />
-                  ) : null}
-                  <h3 className="text-sm font-bold text-slate-900">{plan.title}</h3>
-                  <p className="mt-0.5 text-xs text-slate-600">{plan.subtitle}</p>
-                  <div className="mt-2 flex items-baseline gap-1 text-slate-900">
-                    <span className="text-xl font-bold">{plan.price.toLocaleString("fr-FR")}</span>
-                    <span className="text-xs font-medium">FCFA/mois</span>
-                  </div>
-                  <ul className="mt-2 space-y-1">
-                    {plan.features.slice(0, 3).map((feature) => (
-                      <li key={`${plan.id}-${feature}`} className="flex items-center gap-1.5 text-xs text-slate-700">
-                        <Check className="size-3 shrink-0 text-green-700" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </label>
-              );
-            })}
-          </div>
-        </section>
-
-        <section aria-label="Actions principales" className="space-y-2 pt-1">
-          <div className="flex flex-col gap-2 md:flex-row">
-            <Button
-              type="button"
-              disabled={!canDemo}
-              className="min-h-10 flex-1 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => void handleStartDemo()}
-            >
-              <Gift className="size-4" />
-              Essai démo · 1 jour
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!canSignup}
-              className="min-h-10 flex-1 border-slate-300 text-slate-700 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-50"
-              onClick={() => void handleGoAuth("signup")}
-            >
-              Créer un compte · 7 jours gratuits
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="min-h-10 flex-1 text-slate-700 hover:bg-slate-100"
-              onClick={() => void handleGoAuth("login")}
-            >
-              <Lock className="size-4" />
-              Se connecter
-            </Button>
-          </div>
-          {!canDemo || (canDemo && !canSignup) ? (
-            <p className="text-center text-xs text-slate-600">
-              {!canDemo
-                ? "Sélectionnez au moins un module pour lancer la démo."
-                : "Sélectionnez une offre pour créer votre compte avec 7 jours gratuits."}
-            </p>
-          ) : null}
-        </section>
-
-        <footer className="pb-1 text-center text-xs text-slate-500">
-          © 2026 GogoSoft
-        </footer>
       </div>
     </main>
   );

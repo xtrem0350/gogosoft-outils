@@ -3,11 +3,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { CheckCircle2, KeyRound, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
+import authLogo from "@/assets/images/leprofile.png";
 import { PasswordInput } from "@/components/PasswordInput";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { acceptInvitation, getInvitationByCode, type PendingInvitation } from "@/services/invitationsService";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/rejoindre")({ component: JoinInvitationPa
 
 function JoinInvitationPage() {
   const navigate = useNavigate();
+  const { refresh: refreshShops } = useCurrentShop();
   const [code, setCode] = useState("");
   const [invitation, setInvitation] = useState<PendingInvitation | null>(null);
   const [fullName, setFullName] = useState("");
@@ -22,6 +24,9 @@ function JoinInvitationPage() {
   const [whatsapp, setWhatsapp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [ncni, setNcni] = useState("");
+  const [lieuHabitation, setLieuHabitation] = useState("");
+  const [avatar, setAvatar] = useState<File | null>(null);
   const [checking, setChecking] = useState(false);
   const [creating, setCreating] = useState(false);
 
@@ -61,6 +66,7 @@ function JoinInvitationPage() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       let userId = sessionData.session?.user.id;
+      let accountEmail = sessionData.session?.user.email ?? email.trim();
 
       if (!userId) {
         const { data, error } = await supabase.auth.signUp({
@@ -76,20 +82,40 @@ function JoinInvitationPage() {
         if (error) throw error;
         userId = data.user?.id;
         if (!userId) throw new Error("Supabase n'a pas retourné l'utilisateur créé.");
+        accountEmail = data.user?.email ?? email.trim();
         if (!data.session) {
           toast.info("Vérifiez votre adresse e-mail, connectez-vous, puis réutilisez ce code pour rejoindre l'atelier.");
           return;
         }
       }
 
+      let avatarUrl: string | undefined;
+      if (avatar) {
+        if (!avatar.type.startsWith("image/") || avatar.size > 5 * 1024 * 1024) {
+          throw new Error("Choisissez une image de 5 Mo maximum.");
+        }
+        const extension = avatar.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const path = `${invitation.shop_id}/${userId}-${Date.now()}.${extension}`;
+        const { error: uploadError } = await supabase.storage
+          .from("team-avatars")
+          .upload(path, avatar, { contentType: avatar.type, cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+        avatarUrl = supabase.storage.from("team-avatars").getPublicUrl(path).data.publicUrl;
+      }
+
       const result = await acceptInvitation({
         code: invitation.code,
         user_id: userId,
         full_name: fullName,
-        email,
+        email: accountEmail,
         whatsapp,
+        ncni,
+        lieu_habitation: lieuHabitation,
+        avatar_url: avatarUrl,
       });
       if (!result.success) throw new Error("L'invitation n'a pas pu être acceptée.");
+      window.localStorage.setItem("gogosoft.currentShopId", result.shop_id);
+      await refreshShops(userId, true);
       toast.success("Bienvenue ! Votre compte est créé.");
       await navigate({ to: "/dashboard" });
     } catch (error) {
@@ -100,20 +126,32 @@ function JoinInvitationPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-10 dark:from-slate-950 dark:via-slate-900 dark:to-green-950">
-      <Card className="card-3d w-full max-w-lg border-0 shadow-3d">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex size-14 items-center justify-center rounded-2xl bg-ivoirien text-white">
-            {invitation ? <UserRound className="size-7" /> : <KeyRound className="size-7" />}
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
+      <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border bg-background shadow-2xl md:min-h-[620px] md:grid-cols-[0.8fr_1.2fr]">
+        <aside className="flex flex-col items-center justify-center gap-5 bg-slate-900 p-8 text-center text-white md:items-start md:text-left">
+          <img src={authLogo} alt="GogoSoft" className="size-16 rounded-full object-cover" />
+          <div>
+            <p className="text-sm font-semibold uppercase text-orange-300">GogoSoft Tools Manager</p>
+            <h1 className="mt-2 text-3xl font-bold">Rejoindre votre équipe</h1>
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-200">
+              Utilisez le code transmis par votre responsable pour rejoindre son atelier.
+            </p>
           </div>
-          <CardTitle className="text-2xl">Rejoindre un atelier</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {invitation
-              ? `Invitation de ${invitation.shop_name ?? "votre atelier"} · ${invitation.role}`
-              : "Saisissez le code communiqué par le propriétaire de l'atelier."}
-          </p>
-        </CardHeader>
-        <CardContent>
+          <div className="flex size-12 items-center justify-center rounded-xl bg-white/10">
+            {invitation ? <UserRound className="size-6" /> : <KeyRound className="size-6" />}
+          </div>
+        </aside>
+        <section className="flex items-center justify-center p-5 sm:p-8">
+          <div className="w-full max-w-lg space-y-6">
+            <header>
+              <p className="text-sm font-semibold text-primary">{invitation ? "Étape 2 sur 2" : "Étape 1 sur 2"}</p>
+              <h2 className="mt-1 text-2xl font-bold">{invitation ? "Créer votre compte" : "Vérifier le code"}</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {invitation
+                  ? `Invitation de ${invitation.shop_name ?? "votre atelier"} · ${invitation.role}`
+                  : "Saisissez le code à 6 caractères communiqué par votre responsable."}
+              </p>
+            </header>
           {!invitation ? (
             <form onSubmit={(event) => void verifyCode(event)} className="grid gap-4">
               <div className="grid gap-2">
@@ -141,9 +179,10 @@ function JoinInvitationPage() {
                 <CheckCircle2 className="size-4 shrink-0" />
                 <span>Invitation vérifiée pour le rôle {invitation.role}.</span>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="join-full-name">Nom complet</Label>
-                <Input id="join-full-name" value={fullName} onChange={(event) => setFullName(event.target.value)} required maxLength={120} autoComplete="name" />
+              <div className="grid gap-2 rounded-lg border bg-muted/30 p-4 text-sm">
+                <p><span className="font-medium">Nom :</span> {invitation.full_name}</p>
+                <p><span className="font-medium">Rôle :</span> {invitation.role}</p>
+                <p><span className="font-medium">WhatsApp :</span> {invitation.whatsapp}</p>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="join-email">E-mail</Label>
@@ -153,16 +192,26 @@ function JoinInvitationPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="join-whatsapp">WhatsApp</Label>
-                <Input id="join-whatsapp" type="tel" value={whatsapp} onChange={(event) => setWhatsapp(event.target.value)} required maxLength={30} autoComplete="tel" />
-              </div>
-              <div className="grid gap-2">
                 <Label htmlFor="join-password">Mot de passe</Label>
                 <PasswordInput id="join-password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} autoComplete="new-password" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="join-confirm-password">Confirmer le mot de passe</Label>
                 <PasswordInput id="join-confirm-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} autoComplete="new-password" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="join-ncni">NCNI (facultatif)</Label>
+                  <Input id="join-ncni" value={ncni} onChange={(event) => setNcni(event.target.value)} maxLength={40} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="join-home">Lieu d&apos;habitation (facultatif)</Label>
+                  <Input id="join-home" value={lieuHabitation} onChange={(event) => setLieuHabitation(event.target.value)} maxLength={160} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="join-avatar">Photo de profil (facultatif)</Label>
+                <Input id="join-avatar" type="file" accept="image/*" onChange={(event) => setAvatar(event.target.files?.[0] ?? null)} />
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setInvitation(null)} disabled={creating}>
@@ -174,8 +223,9 @@ function JoinInvitationPage() {
               </div>
             </form>
           )}
-        </CardContent>
-      </Card>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
