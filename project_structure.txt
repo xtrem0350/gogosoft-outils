@@ -191,6 +191,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
 │   │   ├── 📄 useCart.ts
+│   │   ├── 📄 useAvailableCategories.ts
 │   │   ├── 📄 useAuth.tsx
 │   │   └── 📄 use-mobile.tsx
 │   ├── 📁 contexts/
@@ -261,6 +262,10 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 MemberSelect.tsx
 │   │   │   ├── 📄 DeviceSelect.tsx
 │   │   │   └── 📄 ClientSelect.tsx
+│   │   ├── 📁 dashboards/
+│   │   │   ├── 📄 TechnicianDashboard.tsx
+│   │   │   ├── 📄 PlatformDashboard.tsx
+│   │   │   └── 📄 CashierDashboard.tsx
 │   │   ├── 📄 WorkshopTimeline.tsx
 │   │   ├── 📄 WorkshopTicketPreview.tsx
 │   │   ├── 📄 WorkshopPaymentModal.tsx
@@ -311,6 +316,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
 │   │   ├── 📄 DemoBanner.tsx
+│   │   ├── 📄 dashboards
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
 │   │   ├── 📄 CategoryBadge.tsx

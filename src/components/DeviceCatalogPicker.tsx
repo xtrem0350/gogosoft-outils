@@ -61,7 +61,7 @@ export function DeviceCatalogPicker({
   }, [load]);
 
   function selectDevice(device: DeviceCatalogItem) {
-    const processor = device.characteristics["processor"];
+    const processor = device.specs["processor"];
     onSelect({
       brand: device.brand,
       model: device.model,

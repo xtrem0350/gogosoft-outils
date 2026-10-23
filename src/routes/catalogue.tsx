@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, Laptop, Plus, Search, Smartphone } from "lucide-react";
+import { BookOpen, Laptop, Pencil, Plus, Search, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { AddDeviceModal } from "@/components/AddDeviceModal";
+import { EditDeviceModal } from "@/components/EditDeviceModal";
 import { useAvailableCategories } from "@/hooks/useAvailableCategories";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   getDeviceCatalog,
+  deleteDeviceFromCatalog,
   searchDevices,
   type DeviceCatalogItem,
   type DeviceCatalogCategory,
@@ -34,6 +36,7 @@ export function DeviceCatalogPage() {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [defaultCategoryOverride, setDefaultCategoryOverride] = useState<DeviceCatalogCategory>();
+  const [editingDevice, setEditingDevice] = useState<DeviceCatalogItem | null>(null);
   const visibleFilters = FILTERS.filter(({ value }) =>
     value === "all" ||
     (value === "smartphone" && hasPhones) ||
@@ -75,6 +78,17 @@ export function DeviceCatalogPage() {
   function openAdd(category?: DeviceCatalogCategory) {
     setDefaultCategoryOverride(category);
     setShowAddModal(true);
+  }
+
+  async function handleDelete(device: DeviceCatalogItem) {
+    if (!window.confirm(`Supprimer ${device.brand} ${device.model} du catalogue ?`)) return;
+    try {
+      await deleteDeviceFromCatalog(device.id);
+      toast.success("Appareil supprimé.");
+      void loadDevices();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de supprimer l'appareil.");
+    }
   }
 
   const defaultCategory = defaultCategoryOverride ?? (
@@ -129,39 +143,54 @@ export function DeviceCatalogPage() {
           </CardContent>
         </Card>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:grid-cols-6">
         {devices.map((device) => (
-          <Card key={device.id} className="card-3d overflow-hidden rounded-xl border-0 shadow-3d">
-            <div className="aspect-[16/9] bg-slate-100">
-              {device.image_url ? (
-                <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="size-full object-cover" loading="lazy" />
-              ) : (
-                <div className="grid size-full place-items-center bg-gradient-to-br from-orange-50 via-white to-green-50 text-orange-800">
-                  <span className="flex size-16 items-center justify-center rounded-full bg-white text-2xl font-bold shadow-sm">
-                    {device.brand.slice(0, 1).toUpperCase()}
-                  </span>
+          <Card key={device.id} className="card-3d group relative overflow-hidden rounded-xl border-0 shadow-3d">
+            <CardContent className="space-y-2 p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+                  {device.image_url ? (
+                    <img src={device.image_url} alt={`${device.brand} ${device.model}`} className="size-full object-cover" loading="lazy" />
+                  ) : (
+                    <span className="text-sm font-bold text-slate-500">{device.brand.slice(0, 1).toUpperCase()}</span>
+                  )}
                 </div>
-              )}
-            </div>
-            <CardContent className="space-y-3 p-4">
-              <div className="flex items-start gap-3">
-                {device.category === "laptop" || device.category === "desktop"
-                  ? <Laptop className="mt-1 size-4 shrink-0 text-orange-700" />
-                  : <Smartphone className="mt-1 size-4 shrink-0 text-orange-700" />}
-                <div className="min-w-0">
-                  <p className="font-bold">{device.brand}</p>
-                  <p className="truncate text-sm text-slate-700">{device.model}</p>
-                  {device.os ? <p className="mt-1 text-xs text-muted-foreground">{device.os}</p> : null}
-                  {device.release_year ? <p className="text-xs text-muted-foreground">{device.release_year}</p> : null}
-                  {Object.keys(device.specs).length > 0 ? (
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {Object.entries(device.specs).slice(0, 2).map(([key, value]) => `${key}: ${String(value)}`).join(" · ")}
-                    </p>
-                  ) : null}
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-7"
+                    aria-label={`Modifier ${device.brand} ${device.model}`}
+                    title="Éditer"
+                    onClick={() => setEditingDevice(device)}
+                  >
+                    <Pencil className="size-3" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-red-600 hover:bg-red-100 hover:text-red-700 dark:hover:bg-red-950"
+                    aria-label={`Supprimer ${device.brand} ${device.model}`}
+                    title="Supprimer"
+                    onClick={() => void handleDelete(device)}
+                  >
+                    <Trash2 className="size-3" />
+                  </Button>
                 </div>
               </div>
-              <Button type="button" variant="outline" className="w-full" onClick={() => openAdd(device.category)}>
-                <Plus className="size-4" /> Ajouter un appareil similaire
+              <div className="flex min-w-0 items-center gap-1.5">
+                {device.category === "laptop" || device.category === "desktop"
+                  ? <Laptop className="size-3.5 shrink-0 text-orange-700" />
+                  : <Smartphone className="size-3.5 shrink-0 text-orange-700" />}
+                <p className="truncate text-sm font-medium">{device.brand}</p>
+              </div>
+              <p className="truncate text-xs text-slate-600 dark:text-slate-300">{device.model}</p>
+              {device.os ? <p className="truncate text-xs text-muted-foreground">{device.os}</p> : null}
+              {device.release_year ? <p className="text-xs text-muted-foreground">{device.release_year}</p> : null}
+              <Button type="button" variant="outline" size="sm" className="h-7 w-full px-2 text-xs" onClick={() => openAdd(device.category)}>
+                <Plus className="size-3" /> Ajouter similaire
               </Button>
             </CardContent>
           </Card>
@@ -174,7 +203,7 @@ export function DeviceCatalogPage() {
           setShowAddModal(false);
           setDefaultCategoryOverride(undefined);
         }}
-        defaultCategory={defaultCategory}
+        {...(defaultCategory ? { defaultCategory } : {})}
         allowedCategories={categories}
         onSuccess={() => {
           setShowAddModal(false);
@@ -182,6 +211,17 @@ export function DeviceCatalogPage() {
           void loadDevices();
         }}
       />
+      {editingDevice ? (
+        <EditDeviceModal
+          device={editingDevice}
+          open={Boolean(editingDevice)}
+          onClose={() => setEditingDevice(null)}
+          onSuccess={() => {
+            setEditingDevice(null);
+            void loadDevices();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

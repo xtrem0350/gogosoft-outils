@@ -41,7 +41,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
-import { MODULES, type ModuleId } from "@/types/modules";
+import type { ModuleId } from "@/types/modules";
 import type { SectorVocabulary } from "@/types/sectors";
 
 type NavigationItem = {
@@ -64,8 +64,6 @@ function getNavigationGroups(
   vocabulary: SectorVocabulary,
   role: UserRole,
 ): NavigationGroup[] {
-  const activeSidebarKeys = new Set(activeModules.flatMap((id) => MODULES[id].sidebarKeys));
-  const hasKey = (key: string) => activeSidebarKeys.has(key);
   const hasModule = (id: ModuleId) => activeModules.includes(id);
   const groups: NavigationGroup[] = [
     {
@@ -164,7 +162,7 @@ function getNavigationGroups(
     });
   }
 
-  if (hasKey("consumable")) {
+  if (hasModule("consommables")) {
     groups.push({
       label: "CONSOMMABLES",
       icon: Package,
@@ -178,7 +176,7 @@ function getNavigationGroups(
 
   const storefrontItems: NavigationItem[] = [];
   const publicShopSlug = shopSlug ?? DEMO_SHOP_SLUG;
-  if (hasKey("shop_phone")) {
+  if (hasModule("vitrine-telephone")) {
     storefrontItems.push({
       label: "Vitrine Téléphone",
       to: `/shop/${publicShopSlug}`,
@@ -186,7 +184,7 @@ function getNavigationGroups(
       search: { category: "phone" },
     });
   }
-  if (hasModule("vitrine-pc") || hasKey("shop_computer")) {
+  if (hasModule("vitrine-pc")) {
     storefrontItems.push({
       label: "Vitrine PC",
       to: `/shop/${publicShopSlug}`,
@@ -248,7 +246,7 @@ function getNavigationGroups(
     });
   }
 
-  if (!isDemo && (hasKey("shop_phone") || hasKey("shop_computer"))) {
+  if (!isDemo && (hasModule("vitrine-telephone") || hasModule("vitrine-pc"))) {
     groups.push({
       label: "MA BOUTIQUE",
       icon: Store,

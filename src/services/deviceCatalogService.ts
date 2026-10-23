@@ -66,6 +66,26 @@ export async function addDeviceToCatalog(input: AddDeviceCatalogInput): Promise<
   return normalizeDevice(data as DeviceCatalogItem);
 }
 
+export async function updateDeviceInCatalog(
+  id: string,
+  updates: Partial<Omit<DeviceCatalogItem, "id" | "created_at">>,
+): Promise<DeviceCatalogItem> {
+  const { data, error } = await (supabase.from("device_catalog" as any) as any)
+    .update(updates)
+    .eq("id", id)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as DeviceCatalogItem;
+}
+
+export async function deleteDeviceFromCatalog(id: string): Promise<void> {
+  const { error } = await (supabase.from("device_catalog" as any) as any)
+    .delete()
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function searchDevices(
   query: string,
   categories?: DeviceCatalogCategory[],
