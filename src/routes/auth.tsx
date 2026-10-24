@@ -324,7 +324,7 @@ function AuthPage() {
                       type="button"
                       aria-label="Choisir une photo de profil"
                       onClick={() => document.getElementById("avatar-upload")?.click()}
-                      className="group relative flex size-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-slate-300 bg-slate-100 text-slate-400 transition-transform duration-200 hover:scale-105 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-500"
+                      className="group relative flex size-32 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-green-800 bg-green-800 text-white transition-transform duration-200 hover:scale-105 hover:bg-green-700 hover:border-slate-400 dark:border-slate-600 dark:bg-green-800 dark:text-white"
                     >
                       {avatarPreview ? (
                         <>

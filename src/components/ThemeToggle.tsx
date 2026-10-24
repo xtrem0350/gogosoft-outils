@@ -10,7 +10,7 @@ export function ThemeToggle({ defaultTheme }: { defaultTheme?: ThemeMode }) {
     <Button
       variant="ghost"
       size="icon"
-      className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50"
+      className="hidden size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50 md:inline-flex"
       onClick={toggleTheme}
       aria-label="Changer de thème"
     >

@@ -5,19 +5,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 disabled:bg-gray-400 disabled:text-black disabled:opacity-100 disabled:shadow-none",
   {
     variants: {
       variant: {
-        default: "bg-ivoirien bg-ivoirien-hover text-white shadow-3d",
-        destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        default: "bg-green-800 text-white hover:bg-green-700 shadow-sm",
+        destructive: "bg-red-700 text-white hover:bg-red-600",
         outline:
-          "border border-slate-300 bg-transparent text-slate-900 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800",
-        secondary:
-          "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700",
+          "border-2 border-green-800 bg-transparent text-green-800 hover:bg-green-800 hover:text-white dark:border-green-600 dark:text-green-400 dark:hover:bg-green-700 dark:hover:text-white",
+        secondary: "bg-green-800 text-white hover:bg-green-700",
         ghost:
-          "bg-transparent text-slate-900 hover:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800",
-        link: "text-slate-900 underline-offset-4 hover:underline dark:text-slate-100",
+          "bg-green-800/10 text-green-800 hover:bg-green-800 hover:text-white dark:bg-green-800/20 dark:text-green-400 dark:hover:bg-green-700 dark:hover:text-white",
+        link: "text-green-800 underline-offset-4 hover:underline dark:text-green-400",
       },
       size: {
         default: "h-9 px-4 py-2",

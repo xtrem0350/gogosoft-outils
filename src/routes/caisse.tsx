@@ -532,17 +532,17 @@ function CashPage() {
                 type="button"
                 onClick={() => setExpandedClosureId((current) => current === closure.id ? null : closure.id)}
                 aria-expanded={expandedClosureId === closure.id}
-                className="flex w-full flex-wrap items-center justify-between gap-3 text-left"
+                className="flex w-full flex-wrap items-center justify-between gap-3 bg-green-800 text-left text-white hover:bg-green-700"
               >
                 <span>
                   <span className="block font-semibold">{formatDate(closure.created_at)}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-white/80">
                     {closure.period_start && closure.period_end
                       ? periodLabel({ start: new Date(closure.period_start), end: new Date(closure.period_end) })
                       : formatDate(closure.closure_date ?? closure.created_at)}
                   </span>
                 </span>
-                <span className="font-bold text-orange-800">{formatMoney(closure.balance ?? closure.total_general)}</span>
+                <span className="font-bold text-white">{formatMoney(closure.balance ?? closure.total_general)}</span>
               </button>
               {expandedClosureId === closure.id ? (
                 <div className="mt-3 grid gap-2 border-t pt-3 text-sm sm:grid-cols-2">

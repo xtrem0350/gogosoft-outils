@@ -296,10 +296,10 @@ function HomePage() {
                       type="button"
                       onClick={() => toggleModule(id)}
                       aria-pressed={isSelected}
-                      className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                      className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border bg-green-800 p-3 text-left text-white transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                         isSelected
-                          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                          : "border-slate-200 bg-white hover:border-orange-300"
+                          ? "border-orange-300 ring-2 ring-orange-500"
+                          : "border-green-800 hover:border-orange-300"
                       }`}
                     >
                       <span
@@ -312,10 +312,10 @@ function HomePage() {
                         <Icon className="size-5" />
                       </span>
                       <span className="min-w-0 pr-4">
-                        <span className="block text-sm font-medium leading-tight text-slate-800">
+                        <span className="block text-sm font-medium leading-tight text-white">
                           {title}
                         </span>
-                        <span className="mt-1 block text-xs leading-tight text-slate-500">
+                        <span className="mt-1 block text-xs leading-tight text-white/80">
                           {description}
                         </span>
                       </span>
