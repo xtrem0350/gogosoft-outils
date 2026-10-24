@@ -17,13 +17,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { addShopMember } from "@/services/shopService";
-import { getTeamMembers, removeTeamMember, updateMemberRole, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
+import { getTeamMembers, removeTeamMember, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
 import { supabase } from "@/integrations/supabase/client";
-import { cancelInvitation, getPendingInvitations, type EmployeeRole, type PendingInvitation } from "@/services/invitationsService";
+import { cancelInvitation, getPendingInvitations, type PendingInvitation } from "@/services/invitationsService";
 
 export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
@@ -126,17 +125,6 @@ function EquipePage() {
     setMembers(await getTeamMembers(shopId));
   }
 
-  async function changeRole(member: TeamMember, role: EmployeeRole | "owner") {
-    if (!shopId) return;
-    try {
-      await updateMemberRole(shopId, member.user_id, role);
-      toast.success("Rôle mis à jour.");
-      await refreshMembers();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de modifier le rôle.");
-    }
-  }
-
   async function changeAvatar(member: TeamMember, file: File | undefined) {
     if (!shopId || !file) return;
     try {
@@ -199,76 +187,62 @@ function EquipePage() {
             />
           </div>
         ) : (
-          members.map((member) => {
-            const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
-            return (
-              <Card key={member.id}>
-                <CardContent className="space-y-4 p-4">
-                  <div className="flex items-center gap-3">
-                    {member.avatar_url ? (
-                      <img src={member.avatar_url} alt={`Photo de ${displayName}`} className="size-16 shrink-0 rounded-full object-cover" />
-                    ) : (
-                      <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-orange-100 text-lg font-semibold text-orange-800">
-                        {(displayName.trim().slice(0, 1) || "?").toUpperCase()}
+          [...members]
+            .sort((first, second) => Number(second.role === "owner") - Number(first.role === "owner"))
+            .map((member) => {
+              const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
+              return (
+                <Card key={member.id}>
+                  <CardContent className="space-y-4 p-4">
+                    <div className="flex items-center gap-3">
+                      {member.avatar_url ? (
+                        <img src={member.avatar_url} alt={`Photo de ${displayName}`} className="size-16 shrink-0 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-orange-100 text-lg font-semibold text-orange-800">
+                          {(displayName.trim().slice(0, 1) || "?").toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{displayName}</p>
+                        <p className="truncate text-sm text-muted-foreground">{member.email ?? "E-mail indisponible"}</p>
+                        <p className="truncate text-sm text-muted-foreground">WhatsApp : {member.whatsapp ?? "—"}</p>
+                        <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
+                          {member.role || "Inconnu"}
+                        </span>
                       </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate font-medium">{displayName}</p>
-                      <p className="truncate text-sm text-muted-foreground">{member.email ?? "E-mail indisponible"}</p>
-                      <p className="truncate text-sm text-muted-foreground">WhatsApp : {member.whatsapp ?? "—"}</p>
-                      <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
-                        {member.role || "Inconnu"}
-                      </span>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 hover:text-orange-700">
-                      <Camera className="size-4" /> Changer la photo
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="sr-only"
-                        aria-label={`Changer la photo de ${displayName}`}
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          event.target.value = "";
-                          void changeAvatar(member, file);
-                        }}
-                      />
-                    </label>
-                    <Select
-                      value={member.role}
-                      onValueChange={(role) => void changeRole(member, role as EmployeeRole | "owner")}
-                    >
-                      <SelectTrigger className="h-9 w-36" aria-label={`Rôle de ${displayName}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="owner">Propriétaire</SelectItem>
-                        <SelectItem value="technicien">Technicien</SelectItem>
-                        <SelectItem value="caissier">Caissier</SelectItem>
-                        <SelectItem value="magasinier">Magasinier</SelectItem>
-                        <SelectItem value="receptionniste">Réceptionniste</SelectItem>
-                        <SelectItem value="vendeur">Vendeur</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {member.role !== "owner" ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        aria-label={`Retirer ${displayName} de l'équipe`}
-                        title="Retirer de l'équipe"
-                        onClick={() => void removeMember(member)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 hover:text-orange-700">
+                        <Camera className="size-4" /> Changer la photo
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          className="sr-only"
+                          aria-label={`Changer la photo de ${displayName}`}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            void changeAvatar(member, file);
+                          }}
+                        />
+                      </label>
+                      {member.role !== "owner" ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          aria-label={`Retirer ${displayName} de l'équipe`}
+                          title="Retirer de l'équipe"
+                          onClick={() => void removeMember(member)}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      ) : null}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
         )}
       </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Camera, KeyRound, Mail, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Camera, KeyRound, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -400,6 +400,13 @@ function AuthPage() {
             <section className="bg-slate-950/60 p-7 sm:p-10 lg:p-12">
               <div className="mx-auto max-w-md">
                 <div className="mb-8">
+                  <Link
+                    to="/"
+                    className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-orange-300 transition-colors hover:text-orange-200"
+                  >
+                    <ArrowLeft className="size-4" />
+                    Retour à l’accueil
+                  </Link>
                   <p className="text-sm font-medium text-blue-300">Bienvenue</p>
                   <h2 className="mt-2 text-3xl font-bold text-white">GogoSoft Tools Manager</h2>
                   <p className="mt-2 text-sm text-slate-300">

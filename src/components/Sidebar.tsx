@@ -73,6 +73,19 @@ function getNavigationGroups(
     },
   ];
 
+  if (role === null) {
+    groups.push({
+      label: "ACCÈS PAR DÉFAUT",
+      icon: Home,
+      items: [
+        { label: "Caisse", to: "/caisse", icon: Wallet },
+        { label: "Réception", to: "/phone/atelier/nouveau", icon: UserRound },
+        { label: "Magasin", to: "/consumable/stock", icon: Package },
+        { label: "Ventes", to: "/sales", icon: ShoppingCart },
+      ],
+    });
+  }
+
   if (role === "technicien") {
     if (hasModule("reparation-telephone")) {
       groups.push({ label: "TÉLÉPHONE", icon: Smartphone, items: [
