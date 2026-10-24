@@ -8,7 +8,7 @@ import authLogo from "@/assets/images/leprofile.png";
 import { PasswordInput } from "@/components/PasswordInput";
 import { PhoneInput } from "@/components/PhoneInput";
 import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
-import { SubscriptionPaymentModal } from "@/components/SubscriptionPaymentModal";
+import { CheckoutModal, type CheckoutSubmission } from "@/components/CheckoutModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,13 +27,9 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
 import { WELCOME_PRICING, type PricingPlan } from "@/constants/pricing";
 import { isWelcomeDomainId, type WelcomeDomainId } from "@/constants/welcomeDomains";
-import { getUserShops } from "@/services/shopService";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
-import {
-  applyModuleSelection,
-  clearPendingModuleSelection,
-  getPendingModuleSelection,
-} from "@/services/moduleService";
+import { createShop, getUserShops } from "@/services/shopService";
+import { completeSubscriptionCheckout } from "@/services/checkoutService";
 
 const pseudoSchema = z
   .string()
@@ -129,12 +125,6 @@ function AuthPage() {
           window.localStorage.removeItem(key);
         }
       }
-      const pendingSelection = getPendingModuleSelection();
-      if (pendingSelection && sessionData.session?.user.id) {
-        await applyModuleSelection(sessionData.session.user.id, pendingSelection);
-        clearPendingModuleSelection();
-        toast.success("Votre forfait a été activé !");
-      }
       if (rememberMe) {
         window.localStorage.setItem("gogosoft.rememberedIdentifier", identifier.trim());
       } else {
@@ -145,9 +135,11 @@ function AuthPage() {
       if (signedInUserId) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("is_super_admin")
+          .select("is_super_admin, full_name, email")
           .eq("id", signedInUserId)
           .maybeSingle();
+        setFullName(profile?.full_name ?? "");
+        setEmail(profile?.email ?? "");
         if (profile?.is_super_admin === true) {
           const viewMode = window.sessionStorage.getItem("gogosoft.viewMode");
           await navigate({ to: viewMode === "shop" ? "/dashboard" : "/admin" });
@@ -156,8 +148,27 @@ function AuthPage() {
       }
       const shops = await getUserShops();
       if (shops.length === 0) {
-        toast.info("Créez votre boutique pour continuer.");
-        await navigate({ to: "/boutiques/nouveau" });
+        const savedDomains = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
+        const savedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
+        const plan = WELCOME_PRICING.find((entry) => entry.id === savedPlan);
+        let parsedDomains: unknown;
+        try {
+          parsedDomains = JSON.parse(savedDomains ?? "null");
+        } catch {
+          parsedDomains = null;
+        }
+        const domainIds = Array.isArray(parsedDomains)
+          ? parsedDomains.filter(isWelcomeDomainId)
+          : [];
+        if (plan && domainIds.length > 0) {
+          setPaymentDomainIds(domainIds);
+          setPaymentPlan(plan);
+          setPaymentModalOpen(true);
+          toast.info("Finalisez le paiement pour activer vos domaines.");
+        } else {
+          toast.info("Choisissez vos domaines et votre offre pour continuer.");
+          await navigate({ to: "/" });
+        }
       } else {
         await navigate({ to: "/dashboard" });
       }
@@ -195,37 +206,6 @@ function AuthPage() {
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
-      const pendingSelection = getPendingModuleSelection();
-      if (pendingSelection) {
-        const userId = result.data.user?.id;
-        if (!userId) throw new Error("Utilisateur créé mais identifiant introuvable.");
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session?.user.id !== userId) {
-          toast.success(
-            "Compte créé. Confirmez votre adresse e-mail puis connectez-vous pour activer vos domaines.",
-          );
-          return;
-        }
-
-        try {
-          const shop = await applyModuleSelection(userId, pendingSelection);
-          window.localStorage.setItem("gogosoft.currentShopId", shop.id);
-          await refreshShops(userId, true);
-          clearPendingModuleSelection();
-          toast.success("Compte créé et domaines activés !");
-          await navigate({ to: "/dashboard" });
-        } catch (error) {
-          console.error("[auth] sign-up:module-selection-error", error);
-          toast.error(
-            error instanceof Error
-              ? `Compte créé, mais activation des domaines impossible : ${error.message}`
-              : "Compte créé, mais activation des domaines impossible.",
-          );
-        }
-        return;
-      }
-
       const selectedModules = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
       const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
       const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);
@@ -246,7 +226,7 @@ function AuthPage() {
       setPaymentDomainIds(domainIds);
       setPaymentPlan(plan);
       setPaymentModalOpen(true);
-      toast.success("Compte créé. Choisissez votre mode de paiement ou commencez l'essai.");
+      toast.success("Compte créé. Finalisez le paiement pour activer vos domaines.");
     } catch (error) {
       console.error("[auth] sign-up:exception", error);
       toast.error(error instanceof Error ? error.message : "Inscription impossible.");
@@ -255,29 +235,31 @@ function AuthPage() {
     }
   }
 
-  async function handlePaymentSuccess(method: string, amount: number, paid: boolean) {
-    try {
-      if (paid) {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        const userId = userData.user?.id;
-        if (!userId || !paymentPlan) {
-          throw new Error("Session utilisateur ou offre introuvable.");
-        }
-        const { error } = await supabase.from("payments").insert({
-          user_id: userId,
-          amount,
-          method,
-          status: "success",
-          plan: paymentPlan.id,
-        });
-        if (error) throw error;
-      }
-      setPaymentModalOpen(false);
-      await navigate({ to: "/boutiques/nouveau" });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer le paiement.");
-    }
+  async function handleCheckoutPayment(submission: CheckoutSubmission) {
+    if (!paymentPlan) throw new Error("Offre introuvable.");
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    const user = userData.user;
+    if (!user) throw new Error("Utilisateur non authentifié.");
+
+    const shops = await getUserShops();
+    const shop =
+      shops[0] ??
+      (await createShop({
+        name: fullName.trim() || `Atelier ${user.email?.split("@")[0] ?? "GogoSoft"}`,
+      }));
+
+    const invoice = await completeSubscriptionCheckout({
+      shopId: shop.id,
+      planId: paymentPlan.id,
+      planPrice: paymentPlan.price,
+      domainIds: paymentDomainIds,
+      submission,
+    });
+
+    window.localStorage.setItem("gogosoft.currentShopId", shop.id);
+    await refreshShops(user.id, true);
+    return invoice;
   }
 
   async function handleSignUp(event?: React.FormEvent) {
@@ -602,12 +584,19 @@ function AuthPage() {
         </AlertDialogContent>
       </AlertDialog>
       {paymentPlan ? (
-        <SubscriptionPaymentModal
+        <CheckoutModal
           open={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
           plan={paymentPlan}
           selectedDomainIds={paymentDomainIds}
-          onSuccess={handlePaymentSuccess}
+          domainRequired
+          clientName={fullName}
+          clientEmail={email}
+          onPay={handleCheckoutPayment}
+          onComplete={() => {
+            setPaymentModalOpen(false);
+            void navigate({ to: "/dashboard" });
+          }}
         />
       ) : null}
     </main>
