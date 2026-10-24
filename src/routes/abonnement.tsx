@@ -79,7 +79,7 @@ function AbonnementPage() {
     const fallbackPlan =
       subscription?.storefront_modules.length && !subscription.selected_modules.length
         ? WELCOME_PRICING.find((plan) => plan.id === "shop_1")
-        : subscription?.selected_modules.length > 1
+        : (subscription?.selected_modules.length ?? 0) > 1
           ? WELCOME_PRICING.find((plan) => plan.id === "app_3")
           : WELCOME_PRICING.find((plan) => plan.id === "app_1");
     const fallback = fallbackPlan ?? WELCOME_PRICING[0]!;
