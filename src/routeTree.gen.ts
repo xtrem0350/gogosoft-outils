@@ -22,11 +22,13 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
+import { Route as MagasinRouteImport } from './routes/magasin'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as NouveautesRouteImport } from './routes/nouveautes'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PersonnelRouteImport } from './routes/personnel'
 import { Route as ProfilRouteImport } from './routes/profil'
+import { Route as ReceptionRouteImport } from './routes/reception'
 import { Route as ReinitialiserMotDePasseRouteImport } from './routes/reinitialiser-mot-de-passe'
 import { Route as RejoindreRouteImport } from './routes/rejoindre'
 import { Route as StatistiquesRouteImport } from './routes/statistiques'
@@ -157,6 +159,11 @@ const HistoriqueRoute = HistoriqueRouteImport.update({
   path: '/historique',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MagasinRoute = MagasinRouteImport.update({
+  id: '/magasin',
+  path: '/magasin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
   id: '/mot-de-passe-oublie',
   path: '/mot-de-passe-oublie',
@@ -180,6 +187,11 @@ const PersonnelRoute = PersonnelRouteImport.update({
 const ProfilRoute = ProfilRouteImport.update({
   id: '/profil',
   path: '/profil',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReceptionRoute = ReceptionRouteImport.update({
+  id: '/reception',
+  path: '/reception',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReinitialiserMotDePasseRoute = ReinitialiserMotDePasseRouteImport.update({
@@ -520,11 +532,13 @@ export interface FileRoutesByFullPath {
   '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
+  '/reception': typeof ReceptionRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
@@ -603,11 +617,13 @@ export interface FileRoutesByTo {
   '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
+  '/reception': typeof ReceptionRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
@@ -687,11 +703,13 @@ export interface FileRoutesById {
   '/demo': typeof DemoRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
+  '/reception': typeof ReceptionRoute
   '/reinitialiser-mot-de-passe': typeof ReinitialiserMotDePasseRoute
   '/rejoindre': typeof RejoindreRoute
   '/statistiques': typeof StatistiquesRoute
@@ -773,11 +791,13 @@ export interface FileRouteTypes {
     | '/demo'
     | '/equipe'
     | '/historique'
+    | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
     | '/personnel'
     | '/profil'
+    | '/reception'
     | '/reinitialiser-mot-de-passe'
     | '/rejoindre'
     | '/statistiques'
@@ -856,11 +876,13 @@ export interface FileRouteTypes {
     | '/demo'
     | '/equipe'
     | '/historique'
+    | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
     | '/personnel'
     | '/profil'
+    | '/reception'
     | '/reinitialiser-mot-de-passe'
     | '/rejoindre'
     | '/statistiques'
@@ -939,11 +961,13 @@ export interface FileRouteTypes {
     | '/demo'
     | '/equipe'
     | '/historique'
+    | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
     | '/parametres'
     | '/personnel'
     | '/profil'
+    | '/reception'
     | '/reinitialiser-mot-de-passe'
     | '/rejoindre'
     | '/statistiques'
@@ -1024,11 +1048,13 @@ export interface RootRouteChildren {
   DemoRoute: typeof DemoRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
+  MagasinRoute: typeof MagasinRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   NouveautesRoute: typeof NouveautesRoute
   ParametresRoute: typeof ParametresRouteWithChildren
   PersonnelRoute: typeof PersonnelRoute
   ProfilRoute: typeof ProfilRoute
+  ReceptionRoute: typeof ReceptionRoute
   ReinitialiserMotDePasseRoute: typeof ReinitialiserMotDePasseRoute
   RejoindreRoute: typeof RejoindreRoute
   StatistiquesRoute: typeof StatistiquesRoute
@@ -1159,6 +1185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HistoriqueRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/magasin': {
+      id: '/magasin'
+      path: '/magasin'
+      fullPath: '/magasin'
+      preLoaderRoute: typeof MagasinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mot-de-passe-oublie': {
       id: '/mot-de-passe-oublie'
       path: '/mot-de-passe-oublie'
@@ -1192,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/profil'
       fullPath: '/profil'
       preLoaderRoute: typeof ProfilRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reception': {
+      id: '/reception'
+      path: '/reception'
+      fullPath: '/reception'
+      preLoaderRoute: typeof ReceptionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reinitialiser-mot-de-passe': {
@@ -1808,11 +1848,13 @@ const rootRouteChildren: RootRouteChildren = {
   DemoRoute: DemoRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
+  MagasinRoute: MagasinRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,
   ParametresRoute: ParametresRouteWithChildren,
   PersonnelRoute: PersonnelRoute,
   ProfilRoute: ProfilRoute,
+  ReceptionRoute: ReceptionRoute,
   ReinitialiserMotDePasseRoute: ReinitialiserMotDePasseRoute,
   RejoindreRoute: RejoindreRoute,
   StatistiquesRoute: StatistiquesRoute,
