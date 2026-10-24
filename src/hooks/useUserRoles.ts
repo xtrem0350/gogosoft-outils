@@ -111,7 +111,10 @@ export function useUserRoles(): UseUserRolesResult {
       return;
     }
     if (!roles.includes(activeRole)) {
-      setActiveRoleState(roles[0]);
+      const firstRole = roles[0];
+      if (firstRole) {
+        setActiveRoleState(firstRole);
+      }
     }
   }, [activeRole, roles]);
 

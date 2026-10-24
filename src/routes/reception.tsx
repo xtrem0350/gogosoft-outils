@@ -67,7 +67,7 @@ function ReceptionPage() {
       client_whatsapp: clientPhone.trim() || "",
       device_brand: deviceBrand.trim() || "Autre",
       device_model: deviceModel.trim() || "Modèle inconnu",
-      device_imei: deviceImei.trim() || undefined,
+      ...(deviceImei.trim() ? { device_imei: deviceImei.trim() } : {}),
       issues: ["ecran_casse"],
       description: `Panne: ${issue}`,
       entry_fee: entryFee,
