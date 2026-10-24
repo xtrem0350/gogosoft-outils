@@ -209,20 +209,20 @@ export function CheckoutModal({
             {invoice ? (
               cashConfirmation ? (
                 <div className="space-y-3">
-                  <Button type="button" variant="outline" onClick={() => {
+                  <Button type="button" onClick={() => {
                     toast.success("Abonnement activé !");
                     onComplete();
-                  }} className="min-h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  }} className="min-h-12 w-full">
                     Continuer vers Dashboard
                     <ChevronRight className="size-4" />
                   </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Button type="button" onClick={printInvoice} className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover">
+                  <Button type="button" onClick={printInvoice} className="min-h-12 w-full">
                     Télécharger PDF / Imprimer
                   </Button>
-                  <Button type="button" variant="outline" onClick={onComplete} className="min-h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <Button type="button" onClick={onComplete} className="min-h-12 w-full">
                     Continuer
                     <ChevronRight className="size-4" />
                   </Button>
@@ -234,8 +234,7 @@ export function CheckoutModal({
                 {step === 1 ? (
                   <Button
                     type="button"
-                    variant="outline"
-                    className="min-h-11 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                    className="min-h-11 w-full"
                     onClick={onClose}
                     disabled={checking || processing}
                   >
@@ -243,14 +242,14 @@ export function CheckoutModal({
                   </Button>
                 ) : null}
                 {step === 2 && domainRequired ? (
-                  <Button type="button" variant="outline" onClick={() => setStep(1)} className="min-h-11 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <Button type="button" onClick={() => setStep(1)} className="min-h-11 w-full">
                     <ChevronLeft className="size-4" />
                     Modifier les domaines
                   </Button>
                 ) : null}
                 {step === 3 ? (
                   <div className="space-y-3">
-                    <Button type="button" onClick={() => void submitPayment()} disabled={processing} className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover shadow-3d">
+                    <Button type="button" onClick={() => void submitPayment()} disabled={processing} className="min-h-12 w-full">
                       {processing ? (
                         <>
                           <LoaderCircle className="size-4 animate-spin" />
@@ -263,7 +262,7 @@ export function CheckoutModal({
                         </>
                       )}
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => setStep(2)} disabled={processing} className="min-h-11 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                    <Button type="button" onClick={() => setStep(2)} disabled={processing} className="min-h-11 w-full">
                       <ChevronLeft className="size-4" />
                       Retour au récapitulatif
                     </Button>
@@ -291,7 +290,7 @@ export function CheckoutModal({
                       toast.success("Abonnement activé !");
                       onComplete();
                     }}
-                    className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover"
+                    className="min-h-12 w-full"
                   >
                     Continuer vers Dashboard
                     <ChevronRight className="size-4" />
@@ -350,7 +349,7 @@ export function CheckoutModal({
                     </div>
                   </dl>
                 </div>
-                <Button type="button" variant="outline" onClick={printInvoice} className="print:hidden">
+                <Button type="button" onClick={printInvoice} className="print:hidden">
                   Télécharger PDF / Imprimer
                 </Button>
               </div>
@@ -377,7 +376,7 @@ export function CheckoutModal({
                             required={required}
                             pattern="[a-z0-9-]+\\.ci"
                             disabled={checking || processing}
-                            className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
+                            className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
                           />
                         </label>
                       ))}
@@ -397,7 +396,7 @@ export function CheckoutModal({
                         type="button"
                         onClick={() => setStep(2)}
                         disabled={!assignedDomain || checking || processing}
-                        className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover"
+                        className="min-h-12 w-full"
                       >
                         Continuer
                         <ChevronRight className="size-4" />
@@ -453,7 +452,7 @@ export function CheckoutModal({
                         <span>{totalAmount.toLocaleString("fr-FR")} FCFA</span>
                       </div>
                     </div>
-                    <Button type="button" onClick={() => setStep(3)} className="mt-6 min-h-12 w-full bg-ivoirien bg-ivoirien-hover">
+                    <Button type="button" onClick={() => setStep(3)} className="mt-6 min-h-12 w-full">
                       Choisir le paiement
                       <ChevronRight className="size-4" />
                     </Button>

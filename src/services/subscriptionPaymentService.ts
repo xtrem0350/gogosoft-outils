@@ -11,6 +11,7 @@ export interface CheckoutData {
   paymentMethod: string;
   domainPrice?: number;
   bonusDays?: number;
+  simulatePayment?: boolean;
 }
 
 export interface SubscriptionPaymentInvoice {
@@ -70,7 +71,9 @@ export async function createSubscriptionPayment(
       bonus_days: data.bonusDays ?? BONUS_DAYS,
       total_amount: totalAmount,
       payment_method: data.paymentMethod,
-      payment_status: "pending",
+      payment_status: data.simulatePayment ? "paid" : "pending",
+      payment_reference: data.simulatePayment ? "simulated_cash" : null,
+      paid_at: data.simulatePayment ? new Date().toISOString() : null,
     })
     .select()
     .single();

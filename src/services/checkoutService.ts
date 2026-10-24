@@ -40,9 +40,14 @@ export async function completeSubscriptionCheckout({
     subscriptionMonths: submission.subscriptionMonths,
     paymentMethod: submission.paymentMethod,
     domainPrice: submission.domainPrice,
+    simulatePayment: submission.paymentMethod === "cash",
   });
-  await new Promise((resolve) => window.setTimeout(resolve, 2000));
-  await confirmPayment(payment.id, `simulated_${payment.id}`);
+  console.info("[Checkout] createSubscriptionPayment result:", { id: payment.id });
+  if (submission.paymentMethod !== "cash") {
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    console.info("[Checkout] confirmPayment with id:", payment.id);
+    await confirmPayment(payment.id, `simulated_${payment.id}`);
+  }
 
   if (submission.domainPrice > 0) {
     const domainRequest = await createDomainRequest(shopId, submission.choices);
