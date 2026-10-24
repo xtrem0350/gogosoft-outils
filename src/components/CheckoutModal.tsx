@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Banknote, Check, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
+import { Banknote, Check, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
@@ -10,7 +10,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -52,11 +51,11 @@ const PAYMENT_METHODS: Array<{
   label: string;
   icon: typeof Waves;
 }> = [
+  { id: "cash", label: "Espèces", icon: Banknote },
   { id: "wave", label: "Wave", icon: Waves },
   { id: "orange_money", label: "Orange Money", icon: Smartphone },
   { id: "mtn_money", label: "MTN Money", icon: Smartphone },
   { id: "moov_money", label: "Moov Money", icon: Smartphone },
-  { id: "cash", label: "Espèces", icon: Banknote },
 ];
 
 const EMPTY_CHOICES: DomainChoice = { choice_1: "", choice_2: "", choice_3: "" };
@@ -79,10 +78,11 @@ export function CheckoutModal({
   const [choices, setChoices] = useState<DomainChoice>(EMPTY_CHOICES);
   const [assignedDomain, setAssignedDomain] = useState(initialDomain);
   const [months, setMonths] = useState<1 | 3>(initialMonths);
-  const [method, setMethod] = useState<PaymentMethod>("wave");
+  const [method, setMethod] = useState<PaymentMethod>("cash");
   const [checking, setChecking] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
+  const [cashConfirmation, setCashConfirmation] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -90,10 +90,11 @@ export function CheckoutModal({
     setChoices(EMPTY_CHOICES);
     setAssignedDomain(initialDomain);
     setMonths(initialMonths);
-    setMethod("wave");
+    setMethod("cash");
     setChecking(false);
     setProcessing(false);
     setInvoice(null);
+    setCashConfirmation(false);
   }, [domainRequired, initialDomain, initialMonths, open]);
 
   const totalAmount = plan.price * months + domainPrice;
@@ -137,8 +138,30 @@ export function CheckoutModal({
       setStep(1);
       return;
     }
+
+    if (method === "cash") {
+      setProcessing(true);
+      try {
+        const createdInvoice = await onPay({
+          domainName: assignedDomain,
+          choices,
+          subscriptionMonths: months,
+          paymentMethod: "cash",
+          domainPrice,
+        });
+        setInvoice(createdInvoice);
+        setCashConfirmation(true);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Le paiement n'a pas pu être confirmé.");
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
     setProcessing(true);
     try {
+      await new Promise((resolve) => window.setTimeout(resolve, 2000));
       const createdInvoice = await onPay({
         domainName: assignedDomain,
         choices,
@@ -184,15 +207,27 @@ export function CheckoutModal({
             </div>
 
             {invoice ? (
-              <div className="space-y-3">
-                <Button type="button" onClick={printInvoice} className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover">
-                  Télécharger PDF / Imprimer
-                </Button>
-                <Button type="button" variant="outline" onClick={onComplete} className="min-h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
-                  Continuer
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
+              cashConfirmation ? (
+                <div className="space-y-3">
+                  <Button type="button" variant="outline" onClick={() => {
+                    toast.success("Abonnement activé !");
+                    onComplete();
+                  }} className="min-h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                    Continuer vers Dashboard
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Button type="button" onClick={printInvoice} className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover">
+                    Télécharger PDF / Imprimer
+                  </Button>
+                  <Button type="button" variant="outline" onClick={onComplete} className="min-h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                    Continuer
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              )
             ) : (
               <div className="space-y-3">
                 <p className="text-sm font-semibold">Étape {step} sur 3</p>
@@ -240,7 +275,30 @@ export function CheckoutModal({
           </aside>
 
           <section className="min-h-0 overflow-y-auto bg-white p-5 sm:p-7 lg:p-9">
-            {invoice ? (
+            {cashConfirmation && invoice ? (
+              <div className="flex h-full min-h-[420px] items-center justify-center text-center">
+                <div className="max-w-xl space-y-5">
+                  <CheckCircle2 className="mx-auto size-20 text-green-600" />
+                  <div className="space-y-2">
+                    <h3 className="text-3xl font-bold text-slate-900">Merci d&apos;avoir participé au paiement simulé</h3>
+                    <p className="text-lg text-slate-600">
+                      Votre abonnement sera activé sous peu. Facture : {invoice.invoice_number}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      toast.success("Abonnement activé !");
+                      onComplete();
+                    }}
+                    className="min-h-12 w-full bg-ivoirien bg-ivoirien-hover"
+                  >
+                    Continuer vers Dashboard
+                    <ChevronRight className="size-4" />
+                  </Button>
+                </div>
+              </div>
+            ) : invoice ? (
               <div className="invoice-print space-y-5">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-bold text-slate-900">

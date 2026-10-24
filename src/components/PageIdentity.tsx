@@ -22,6 +22,8 @@ const pageIcons: Array<[string, LucideIcon]> = [
   ["/salles/commandes", ShoppingCart],
   ["/phone", Smartphone],
   ["/computer", Laptop],
+  ["/reception", User],
+  ["/magasin", Package],
   ["/consumable", Package],
   ["/sales", ShoppingCart],
   ["/salles", ShoppingCart],

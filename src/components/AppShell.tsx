@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   Smartphone,
   Sparkles,
+  UserCog,
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -48,6 +49,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
@@ -66,6 +68,8 @@ import headerLogo from "@/assets/images/leprofile.png";
 function requiredRoles(pathname: string): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
   if (pathname.startsWith("/caisse")) return ["owner", "caissier"];
+  if (pathname === "/reception" || pathname.startsWith("/reception")) return ["owner", "receptionniste"];
+  if (pathname === "/magasin" || pathname.startsWith("/magasin")) return ["owner", "magasinier"];
   if (pathname.startsWith("/sales")) return ["owner", "vendeur"];
   if (pathname.startsWith("/equipe") || pathname.startsWith("/parametres") || pathname.startsWith("/abonnement")) {
     return ["owner"];
@@ -98,6 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
+  const { roles: userRoles, activeRole, setActiveRole } = useUserRoles();
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
@@ -152,6 +157,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isExemptRoute =
     isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
   const loading = authLoading || roleLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
+  const roleLabelMap: Record<string, string> = {
+    owner: "Chef d'atelier",
+    technicien: "Technicien",
+    caissier: "Caissier",
+    magasinier: "Magasinier",
+    receptionniste: "Réceptionniste",
+    vendeur: "Vendeur",
+  };
+  const roleRouteMap: Record<string, string> = {
+    owner: "/dashboard",
+    technicien: "/dashboard",
+    caissier: "/caisse",
+    magasinier: "/magasin",
+    receptionniste: "/reception",
+    vendeur: "/sales",
+  };
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
@@ -173,6 +194,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/sales/commandes": "📦 Commandes",
     "/salles/commandes": "📦 Commandes",
     "/sales/livraisons": "🚚 Livraisons",
+    "/reception": "📥 Réception",
+    "/magasin": "📦 Magasin",
     "/clients": "👥 Mes clients",
     "/clients/nouveau": "➕ Nouveau client",
     "/personnel": "👥 Personnel",
@@ -202,6 +225,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/phone/atelier": "Téléphone",
     "/computer/atelier": "Ordinateur",
     "/consumable/stock": "Consommables",
+    "/reception": "Réception",
+    "/magasin": "Magasin",
     "/sales": "Ventes",
     "/clients": "Clients",
     "/personnel": "Personnel",
@@ -447,6 +472,36 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
+            {!isSuperAdmin && userRoles.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="hidden h-10 items-center gap-2 rounded-full border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-900 shadow-sm sm:flex"
+                  >
+                    <UserCog className="size-4" />
+                    <span>{roleLabelMap[activeRole] ?? activeRole}</span>
+                    <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52">
+                  {userRoles.map((roleName) => (
+                    <DropdownMenuItem
+                      key={roleName}
+                      onSelect={() => {
+                        setActiveRole(roleName);
+                        void navigate({ to: roleRouteMap[roleName] ?? "/dashboard" });
+                      }}
+                      className={roleName === activeRole ? "bg-orange-50 text-orange-700" : undefined}
+                    >
+                      <span className="flex-1">{roleLabelMap[roleName] ?? roleName}</span>
+                      {roleName === activeRole ? <span className="size-2 rounded-full bg-orange-500" /> : null}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
             {!isSuperAdmin && (canCreateClientFromHeader || createOptions.length > 0) ? (
               <div className="hidden sm:block">
                 <DropdownMenu>
@@ -476,7 +531,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenu>
               </div>
             ) : null}
-              {!isSuperAdmin ? <ShopSelector /> : null}
+            {!isSuperAdmin ? <ShopSelector /> : null}
             <ThemeToggle />
             <UserMenu />
           </div>

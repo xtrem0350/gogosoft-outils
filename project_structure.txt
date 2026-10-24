@@ -3,6 +3,7 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20261023160000_team_invitations.sql
 │   │   ├── 📄 20261007000000_vitrine_pricing.sql
 │   │   ├── 📄 20261006090000_admin_platform.sql
 │   │   ├── 📄 20261006000000_backfill_shop_modules.sql
@@ -38,6 +39,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 toolService.ts
 │   │   ├── 📄 teamService.ts
 │   │   ├── 📄 subscriptionService.ts
+│   │   ├── 📄 subscriptionPaymentService.ts
 │   │   ├── 📄 storageService.ts
 │   │   ├── 📄 staffService.ts
 │   │   ├── 📄 shopService.ts
@@ -46,12 +48,15 @@ Structure du projet (avec glob)
 │   │   ├── 📄 paymentService.ts
 │   │   ├── 📄 moduleService.ts
 │   │   ├── 📄 launchService.ts
+│   │   ├── 📄 invitationsService.ts
 │   │   ├── 📄 historyService.ts
 │   │   ├── 📄 guideService.ts
+│   │   ├── 📄 domainService.ts
 │   │   ├── 📄 deviceService.ts
 │   │   ├── 📄 deviceCatalogService.ts
 │   │   ├── 📄 demoService.ts
 │   │   ├── 📄 clientService.ts
+│   │   ├── 📄 checkoutService.ts
 │   │   ├── 📄 cashService.ts
 │   │   ├── 📄 authService.ts
 │   │   └── 📄 adminService.ts
@@ -95,6 +100,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 shop.$slug.commande.tsx
 │   │   ├── 📄 salles
 │   │   ├── 📄 sales
+│   │   ├── 📄 rejoindre.tsx
 │   │   ├── 📄 reinitialiser-mot-de-passe.tsx
 │   │   ├── 📄 README.md
 │   │   ├── 📄 profil.tsx
@@ -199,6 +205,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 CartContext.tsx
 │   │   └── 📄 ActiveModulesContext.tsx
 │   ├── 📁 constants/
+│   │   ├── 📄 welcomeDomains.ts
 │   │   ├── 📄 sectors.ts
 │   │   └── 📄 pricing.ts
 │   ├── 📁 components/
@@ -275,7 +282,6 @@ Structure du projet (avec glob)
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
-│   │   ├── 📄 SubscriptionPaymentModal.tsx
 │   │   ├── 📄 SubscriptionGuard.tsx
 │   │   ├── 📄 SubscriptionCard.tsx
 │   │   ├── 📄 SubscriptionBadge.tsx
@@ -313,13 +319,17 @@ Structure du projet (avec glob)
 │   │   ├── 📄 IconBadge3D.tsx
 │   │   ├── 📄 HelpButton.tsx
 │   │   ├── 📄 EmptyState.tsx
+│   │   ├── 📄 EditDeviceModal.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
 │   │   ├── 📄 DemoBanner.tsx
 │   │   ├── 📄 dashboards
+│   │   ├── 📄 CreateInvitationModal.tsx
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
+│   │   ├── 📄 CheckoutModal.tsx
 │   │   ├── 📄 CategoryBadge.tsx
+│   │   ├── 📄 CashReceiptModal.tsx
 │   │   ├── 📄 CashClosureModal.tsx
 │   │   ├── 📄 AppShell.tsx
 │   │   ├── 📄 AnimatedLogo.tsx

@@ -11,6 +11,8 @@ function requiredModules(pathname: string): ModuleId[] | null {
     .filter((module) => module.routes.some(matches))
     .map((module) => module.id);
   if (matches("/sales")) return ["vente-telephone", "vente-pc"];
+  if (matches("/reception")) return ["reparation-telephone", "reparation-pc"];
+  if (matches("/magasin")) return ["consommables"];
   if (matches("/atelier")) return ["reparation-telephone"];
   if (matches("/clients")) {
     return [

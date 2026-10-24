@@ -33,6 +33,12 @@ import { AnimatedLogo } from "@/components/AnimatedLogo";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { signOut } from "@/services/authService";
@@ -40,6 +46,7 @@ import { DEMO_SHOP_SLUG, endDemo, isDemoMode } from "@/services/demoService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import type { ModuleId } from "@/types/modules";
 import type { SectorVocabulary } from "@/types/sectors";
@@ -79,8 +86,8 @@ function getNavigationGroups(
       icon: Home,
       items: [
         { label: "Caisse", to: "/caisse", icon: Wallet },
-        { label: "Réception", to: "/phone/atelier/nouveau", icon: UserRound },
-        { label: "Magasin", to: "/consumable/stock", icon: Package },
+        { label: "Réception", to: "/reception", icon: UserRound },
+        { label: "Magasin", to: "/magasin", icon: Package },
         { label: "Ventes", to: "/sales", icon: ShoppingCart },
       ],
     });
@@ -127,9 +134,16 @@ function getNavigationGroups(
   if (role === "magasinier") {
     return [
       groups[0]!,
-      ...(hasModule("consommables")
-        ? [{ label: "STOCK", icon: Package, items: [{ label: "Stock", to: "/consumable/stock", icon: Package }] }]
-        : []),
+      {
+        label: "STOCK",
+        icon: Package,
+        items: [
+          { label: "Magasin", to: "/magasin", icon: Package },
+          ...(hasModule("consommables")
+            ? [{ label: "Stock consommables", to: "/consumable/stock", icon: Package }]
+            : []),
+        ],
+      },
       { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
       { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
@@ -137,6 +151,7 @@ function getNavigationGroups(
 
   if (role === "receptionniste") {
     const receptionItems: NavigationItem[] = [
+      { label: "Accueil réception", to: "/reception", icon: UserRound },
       ...(hasModule("reparation-telephone")
         ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
         : []),
@@ -329,6 +344,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const { activeModules, loading: modulesLoading, isDemo: demo } = useActiveModules();
   const { shop } = useCurrentShop();
   const { role, isSuperAdminAccount, viewMode, setViewMode } = useUserRole();
+  const { roles, activeRole, setActiveRole } = useUserRoles();
   const vocabulary = useSectorVocabulary();
   const navigationGroups = getNavigationGroups(
     activeModules,
@@ -475,6 +491,57 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
       {viewMode === "admin" ? <Store className="size-4" /> : <Settings className="size-4" />}
       {!collapsed ? (viewMode === "admin" ? "Voir mon atelier" : "Mode admin") : null}
     </Button>
+  ) : roles.length > 1 ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
+        >
+          <UserCog className="size-4" />
+          {!collapsed ? (
+            <>
+              <span className="truncate">{activeRole}</span>
+              <ChevronDown className="ml-auto size-4" />
+            </>
+          ) : null}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-52">
+        {roles.map((item) => {
+          const labelMap: Record<string, string> = {
+            owner: "Chef d'atelier",
+            technicien: "Technicien",
+            caissier: "Caissier",
+            magasinier: "Magasinier",
+            receptionniste: "Réceptionniste",
+            vendeur: "Vendeur",
+          };
+          const routeMap: Record<string, string> = {
+            owner: "/dashboard",
+            technicien: "/dashboard",
+            caissier: "/caisse",
+            magasinier: "/magasin",
+            receptionniste: "/reception",
+            vendeur: "/sales",
+          };
+          return (
+            <DropdownMenuItem
+              key={item}
+              onSelect={() => {
+                setActiveRole(item);
+                void navigate({ to: routeMap[item] ?? "/dashboard" });
+              }}
+              className={cn(item === activeRole && "bg-orange-50 text-orange-700")}
+            >
+              <span className="flex-1">{labelMap[item] ?? item}</span>
+              {item === activeRole ? <span className="size-2 rounded-full bg-orange-500" /> : null}
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
   ) : null;
 
   return (
