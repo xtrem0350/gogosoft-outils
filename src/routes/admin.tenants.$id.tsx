@@ -51,13 +51,13 @@ function TenantDetailsPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Ateliers et modules</CardTitle>
+              <CardTitle>Ateliers et domaines</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               {tenant.shopDetails.map((shop) => (
                 <p key={shop.id}>{shop.name}</p>
               ))}
-              <p>{tenant.modules.join(", ") || "Aucun module enregistré sur l'abonnement."}</p>
+              <p>{tenant.modules.join(", ") || "Aucun domaine enregistré sur l'abonnement."}</p>
             </CardContent>
           </Card>
         </div>

@@ -298,7 +298,7 @@ function getNavigationGroups(
         { label: "Aide", to: "/aide", icon: CircleHelp },
         { label: "Profil", to: "/profil", icon: User },
         { label: "Forfait", to: "/abonnement", icon: Settings },
-        { label: "Mes modules", to: "/parametres", icon: Package },
+        { label: "Mes domaines", to: "/parametres", icon: Package },
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
     });
@@ -514,7 +514,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Rechercher un module..."
+              placeholder="Rechercher un domaine..."
               aria-label="Rechercher dans le menu"
               className="h-9 border-sidebar-border bg-sidebar-accent pl-3 text-sidebar-foreground placeholder:text-sidebar-foreground/50"
             />
@@ -541,7 +541,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Rechercher un module..."
+                placeholder="Rechercher un domaine..."
                 aria-label="Rechercher dans le menu"
                 className="h-9 border-sidebar-border bg-sidebar-accent text-sidebar-foreground placeholder:text-sidebar-foreground/50"
               />

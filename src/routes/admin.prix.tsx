@@ -86,7 +86,7 @@ function PricingPage() {
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block space-y-1 text-sm">
-                  Modules min.
+                  Domaines min.
                   <Input
                     type="number"
                     min="1"
@@ -97,7 +97,7 @@ function PricingPage() {
                   />
                 </label>
                 <label className="block space-y-1 text-sm">
-                  Modules max.
+                  Domaines max.
                   <Input
                     type="number"
                     min={plan.min_modules}

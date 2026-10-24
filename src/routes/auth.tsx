@@ -201,7 +201,7 @@ function AuthPage() {
         const { data: sessionData } = await supabase.auth.getSession();
         if (sessionData.session?.user.id !== userId) {
           toast.success(
-            "Compte créé. Confirmez votre adresse e-mail puis connectez-vous pour activer vos modules.",
+            "Compte créé. Confirmez votre adresse e-mail puis connectez-vous pour activer vos domaines.",
           );
           return;
         }
@@ -211,14 +211,14 @@ function AuthPage() {
           window.localStorage.setItem("gogosoft.currentShopId", shop.id);
           await refreshShops(userId, true);
           clearPendingModuleSelection();
-          toast.success("Compte créé et modules activés !");
+          toast.success("Compte créé et domaines activés !");
           await navigate({ to: "/dashboard" });
         } catch (error) {
           console.error("[auth] sign-up:module-selection-error", error);
           toast.error(
             error instanceof Error
-              ? `Compte créé, mais activation des modules impossible : ${error.message}`
-              : "Compte créé, mais activation des modules impossible.",
+              ? `Compte créé, mais activation des domaines impossible : ${error.message}`
+              : "Compte créé, mais activation des domaines impossible.",
           );
         }
         return;
@@ -228,7 +228,7 @@ function AuthPage() {
       const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
       const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);
       if (!selectedModules || !plan) {
-        toast.error("Sélectionnez vos modules et une offre avant de créer votre compte.");
+        toast.error("Sélectionnez vos domaines et une offre avant de créer votre compte.");
         return;
       }
       setPaymentPlanId(plan.id);

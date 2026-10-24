@@ -11,7 +11,7 @@ function SalesPage() {
   return (
     <>
       <SalesListPage {...(activityType ? { activityType } : {})} />
-      <p className="mt-8 text-center text-sm text-muted-foreground">Module en construction</p>
+      <p className="mt-8 text-center text-sm text-muted-foreground">Cette page est en construction.</p>
     </>
   );
 }

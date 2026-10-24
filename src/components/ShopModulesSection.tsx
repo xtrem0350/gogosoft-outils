@@ -1,4 +1,4 @@
-/** Section « Mes modules » : modules activés de l'atelier et forfait calculé. */
+/** Section « Mes domaines » : domaines activés de l'atelier et forfait calculé. */
 import {
   Laptop,
   Monitor,
@@ -85,7 +85,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       setPlans(pricing);
       setEnabled(active);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Impossible de charger les modules.");
+      setError(reason instanceof Error ? reason.message : "Impossible de charger les domaines.");
     } finally {
       setLoading(false);
     }
@@ -104,7 +104,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       notifyShopModulesChanged(shopId);
       await syncSubscriptionModules(next);
       setAddOpen(false);
-      toast.success("Module ajouté.");
+      toast.success("Domaine ajouté.");
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Ajout impossible.");
     }
@@ -118,7 +118,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       setEnabled(next);
       notifyShopModulesChanged(shopId);
       await syncSubscriptionModules(next);
-      toast.success("Module désactivé.");
+      toast.success("Domaine désactivé.");
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Désactivation impossible.");
     }
@@ -127,7 +127,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
   if (!shopId) {
     return <p className="text-sm text-muted-foreground">Sélectionnez un atelier.</p>;
   }
-  if (loading) return <p className="text-sm text-muted-foreground">Chargement des modules...</p>;
+  if (loading) return <p className="text-sm text-muted-foreground">Chargement des domaines...</p>;
   if (error) {
     return (
       <div className="space-y-3">
@@ -153,8 +153,8 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div>
-          <CardTitle>Mes modules</CardTitle>
-          <p className="mt-1 text-sm text-muted-foreground">Gérez les modules que vous utilisez.</p>
+          <CardTitle>Mes domaines</CardTitle>
+          <p className="mt-1 text-sm text-muted-foreground">Gérez les domaines que vous utilisez.</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Tarifs actuels :{" "}
             {pricing.monthlyPrice > 0 ? (
@@ -169,7 +169,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
         </div>
         <Button onClick={() => setAddOpen(true)} disabled={available.length === 0}>
           <Plus className="size-4" />
-          Ajouter un module
+          Ajouter un domaine
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -177,7 +177,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
           Les changements prendront effet au prochain cycle de facturation.
         </div>
         {active.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucun module activé.</p>
+          <p className="text-sm text-muted-foreground">Aucun domaine activé.</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {active.map((m) => (
@@ -198,7 +198,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Désactiver « {m.label} » ?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Les pages de ce module disparaîtront du menu. Vos données sont conservées.
+                        Les pages de ce domaine disparaîtront du menu. Vos données sont conservées.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -217,7 +217,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ajouter un module</DialogTitle>
+            <DialogTitle>Ajouter un domaine</DialogTitle>
             <DialogDescription>
               Choisissez une activité à ajouter à votre atelier.
             </DialogDescription>

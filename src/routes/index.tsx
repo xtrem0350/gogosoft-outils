@@ -108,7 +108,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Choisissez vos modules (réparation, vente, vitrine), démarrez une démo d'un jour ou un essai gratuit de sept jours.",
+          "Choisissez vos domaines (réparation, vente, vitrine), démarrez une démo d'un jour ou un essai gratuit de sept jours.",
       },
       { property: "og:title", content: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
       {
@@ -251,7 +251,7 @@ function HomePage() {
               {!canDemo || !canSignup ? (
                 <p className="text-center text-xs text-slate-300">
                   {!canDemo
-                    ? "Sélectionnez au moins un module pour démarrer."
+                    ? "Sélectionnez au moins un domaine pour démarrer."
                     : "Sélectionnez une offre pour créer votre compte avec 7 jours gratuits."}
                 </p>
               ) : null}
@@ -266,7 +266,7 @@ function HomePage() {
                 <p className="text-sm font-medium text-orange-700">Configurez votre espace</p>
                 <p className="mt-1 text-sm text-slate-600">
                   {selectedModules.length
-                    ? `${selectedModules.length} module${selectedModules.length > 1 ? "s" : ""} sélectionné${selectedModules.length > 1 ? "s" : ""}`
+                    ? `${selectedModules.length} domaine${selectedModules.length > 1 ? "s" : ""} sélectionné${selectedModules.length > 1 ? "s" : ""}`
                     : "Choisissez vos activités et votre offre"}
                 </p>
               </div>
@@ -280,11 +280,11 @@ function HomePage() {
               </div>
             </div>
 
-            <section aria-label="Choix des modules" className="space-y-3">
+            <section aria-label="Choix des domaines" className="space-y-3">
               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                 <h2 className="text-lg font-semibold">Vos domaines d&apos;activité</h2>
                 {!canDemo ? (
-                  <p className="text-xs text-slate-600">Sélectionnez au moins un module</p>
+                  <p className="text-xs text-slate-600">Sélectionnez au moins un domaine</p>
                 ) : null}
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">

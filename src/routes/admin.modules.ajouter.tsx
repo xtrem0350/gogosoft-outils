@@ -46,10 +46,10 @@ function AddModulePage() {
     setSaving(true);
     try {
       await addModuleToTenant(shopId, moduleCode, type, duration, motif.trim());
-      toast.success("Module ajouté et action consignée.");
+      toast.success("Domaine ajouté et action consignée.");
       setMotif("");
     } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Impossible d'ajouter le module.");
+      toast.error(reason instanceof Error ? reason.message : "Impossible d'ajouter le domaine.");
     } finally {
       setSaving(false);
     }
@@ -58,8 +58,8 @@ function AddModulePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHero
-        title="Ajouter un module à un abonné"
-        subtitle="Attribuez un module à un atelier et consignez le motif"
+        title="Ajouter un domaine à un abonné"
+        subtitle="Attribuez un domaine à un atelier et consignez le motif"
         icon={PackagePlus}
       />
       <Card>
@@ -85,7 +85,7 @@ function AddModulePage() {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="module-code">Module</Label>
+              <Label htmlFor="module-code">Domaine</Label>
               <select
                 id="module-code"
                 required
@@ -93,7 +93,7 @@ function AddModulePage() {
                 onChange={(event) => setModuleCode(event.target.value)}
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm"
               >
-                <option value="">Sélectionner un module</option>
+                <option value="">Sélectionner un domaine</option>
                 {modules.map((module) => (
                   <option key={module.code} value={module.code}>
                     {module.label}
@@ -137,7 +137,7 @@ function AddModulePage() {
               />
             </div>
             <Button type="submit" disabled={saving}>
-              {saving ? "Enregistrement…" : "Ajouter le module"}
+              {saving ? "Enregistrement…" : "Ajouter le domaine"}
             </Button>
           </form>
         </CardContent>

@@ -25,7 +25,7 @@ function NewModulePage() {
         label: String(form.get("label")).trim(),
         description: String(form.get("description")).trim(),
       });
-      toast.success("Module créé.");
+      toast.success("Domaine créé.");
       await navigate({ to: "/admin/modules" as any });
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Création impossible.");
@@ -36,7 +36,7 @@ function NewModulePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHero
-        title="Créer un nouveau module"
+        title="Créer un nouveau domaine"
         subtitle="Ajoutez une fonctionnalité au catalogue de la plateforme"
         icon={PackagePlus}
       />
@@ -55,7 +55,7 @@ function NewModulePage() {
               <Label htmlFor="module-description">Description</Label>
               <Input id="module-description" name="description" />
             </div>
-            <Button disabled={saving}>{saving ? "Création…" : "Créer le module"}</Button>
+            <Button disabled={saving}>{saving ? "Création…" : "Créer le domaine"}</Button>
           </form>
         </CardContent>
       </Card>

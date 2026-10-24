@@ -89,7 +89,7 @@ export function UserMenu() {
               <Users className="size-4" /> Abonnés
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void navigate({ to: "/admin/modules" as any })}>
-              <Package className="size-4" /> Modules
+              <Package className="size-4" /> Domaines
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void navigate({ to: "/admin/paiements" as any })}>
               <CreditCard className="size-4" /> Paiements
@@ -101,7 +101,7 @@ export function UserMenu() {
               <User className="size-4" /> Mon profil
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
-              <Package className="size-4" /> Mes modules
+              <Package className="size-4" /> Mes domaines
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void navigate({ to: "/abonnement" as any })}>
               <CreditCard className="size-4" /> Mon forfait

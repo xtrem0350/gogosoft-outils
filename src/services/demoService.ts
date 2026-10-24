@@ -371,7 +371,7 @@ export function addDemoCashClosure(closure: DemoCashClosure): void {
 }
 
 export async function startDemo(selectedModules: string[]): Promise<DemoSession> {
-  if (selectedModules.length === 0) throw new Error("Sélectionnez au moins un module.");
+  if (selectedModules.length === 0) throw new Error("Sélectionnez au moins un domaine.");
   window.sessionStorage.removeItem(DEMO_STORAGE_LOCATIONS_KEY);
   window.sessionStorage.removeItem("gogosoft.demo.cart");
   window.sessionStorage.removeItem(DEMO_EXPIRED_KEY);

@@ -12,18 +12,18 @@ export const DOMAIN_ANNUAL_PRICE_FCFA = 10000;
 export const WELCOME_PRICING: readonly PricingPlan[] = [
   {
     id: "essentiel",
-    title: "1 module",
+    title: "1 domaine",
     price: 15000,
-    subtitle: "1 module / mois",
-    features: ["1 module au choix", "Multi-appareils", "Support WhatsApp"],
+    subtitle: "1 domaine / mois",
+    features: ["1 domaine au choix", "Multi-appareils", "Support WhatsApp"],
   },
   {
     id: "pro",
-    title: "3 modules",
+    title: "3 domaines",
     price: 35000,
-    subtitle: "3 modules / mois",
+    subtitle: "3 domaines / mois",
     featured: true,
-    features: ["3 modules au choix", "Support prioritaire", "Multi-appareils"],
+    features: ["3 domaines au choix", "Support prioritaire", "Multi-appareils"],
   },
   {
     id: "vitrine",

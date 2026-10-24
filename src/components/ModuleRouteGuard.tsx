@@ -35,7 +35,7 @@ export function ModuleRouteGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading || allowed || notifiedPath.current === location.pathname) return;
     notifiedPath.current = location.pathname;
-    toast.info("Ce module n'est pas activé dans votre offre.");
+    toast.info("Ce domaine n'est pas activé dans votre offre.");
     void navigate({ to: "/dashboard" });
   }, [allowed, loading, location.pathname, navigate]);
 

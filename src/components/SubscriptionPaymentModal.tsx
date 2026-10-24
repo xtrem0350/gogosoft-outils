@@ -107,8 +107,8 @@ export function SubscriptionPaymentModal({
             <span className="font-semibold">{planLabel} <span className="text-xs text-muted-foreground">({planId})</span></span>
           </div>
           <div>
-            <p className="text-muted-foreground">Modules sélectionnés</p>
-            <p className="mt-1 font-medium">{moduleLabels.length ? moduleLabels.join(", ") : "Aucun module"}</p>
+            <p className="text-muted-foreground">Domaines sélectionnés</p>
+            <p className="mt-1 font-medium">{moduleLabels.length ? moduleLabels.join(", ") : "Aucun domaine"}</p>
           </div>
           <div className="flex justify-between gap-4 border-t pt-3">
             <span className="text-muted-foreground">Montant</span>

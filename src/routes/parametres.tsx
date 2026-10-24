@@ -136,7 +136,7 @@ function ParametresPage() {
         <TabsList className="grid w-full md:grid-cols-5">
           <TabsTrigger value="profil">Profil</TabsTrigger>
           <TabsTrigger value="boutique">Atelier</TabsTrigger>
-          <TabsTrigger value="modules">Mes modules</TabsTrigger>
+          <TabsTrigger value="modules">Mes domaines</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
           <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>

@@ -259,7 +259,7 @@ export async function updatePricing(
     (minModules !== undefined && (!Number.isInteger(minModules) || minModules < 1)) ||
     (maxModules !== undefined && (!Number.isInteger(maxModules) || maxModules < (minModules ?? 1)))
   ) {
-    throw new Error("La plage de modules est invalide.");
+    throw new Error("La plage de domaines est invalide.");
   }
   const { error } = await pricingTable("license_pricing")
     .update({
@@ -386,7 +386,7 @@ export async function applyModuleSelection(
   const [shops, availableModules] = await Promise.all([getUserShops(), getAvailableModules()]);
   const availableCodes = new Set(availableModules.map((module) => module.code));
   if (selectedCodes.some((code) => !availableCodes.has(code))) {
-    throw new Error("La sélection contient un module indisponible.");
+    throw new Error("La sélection contient un domaine indisponible.");
   }
 
   const userShop = shops[0];

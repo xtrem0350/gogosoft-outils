@@ -52,13 +52,13 @@ const groups: AdminGroup[] = [
     ],
   },
   {
-    label: "GESTION MODULES",
+    label: "GESTION DES DOMAINES",
     icon: Package,
     items: [
-      { label: "Modules disponibles", to: "/admin/modules", icon: Package },
-      { label: "Ajouter un module à un abonné", to: "/admin/modules/ajouter", icon: Package },
-      { label: "Modules gratuits", to: "/admin/modules?type=free", icon: Package },
-      { label: "Nouveaux modules", to: "/admin/modules/nouveau", icon: Package },
+      { label: "Domaines disponibles", to: "/admin/modules", icon: Package },
+      { label: "Ajouter un domaine à un abonné", to: "/admin/modules/ajouter", icon: Package },
+      { label: "Domaines gratuits", to: "/admin/modules?type=free", icon: Package },
+      { label: "Nouveaux domaines", to: "/admin/modules/nouveau", icon: Package },
     ],
   },
   {

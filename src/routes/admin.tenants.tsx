@@ -51,7 +51,7 @@ function AdminTenantsPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHero
         title="Tous les abonnés"
-        subtitle="Comptes, ateliers, forfaits et modules de la plateforme"
+        subtitle="Comptes, ateliers, forfaits et domaines de la plateforme"
         icon={Users}
       />
       {error ? (
@@ -69,7 +69,7 @@ function AdminTenantsPage() {
                   "Email",
                   "Atelier(s)",
                   "Forfait",
-                  "Modules",
+                  "Domaines",
                   "Expiration",
                   "Statut",
                   "Actions",
@@ -112,7 +112,7 @@ function AdminTenantsPage() {
                         variant="outline"
                         onClick={() => void navigate({ to: "/admin/modules/ajouter" as any })}
                       >
-                        Modules
+                        Domaines
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => void revoke(tenant)}>
                         Révoquer

@@ -265,7 +265,7 @@ const faqs = [
   },
   {
     question: "Puis-je vendre des accessoires ?",
-    answer: "Oui, le module Ventes permet de suivre les ventes d'accessoires, appareils et pièces.",
+    answer: "Oui, le domaine Ventes permet de suivre les ventes d'accessoires, appareils et pièces.",
   },
   {
     question: "Comment ajouter une photo à un client ?",
@@ -279,7 +279,7 @@ const faqs = [
   {
     question: "Comment imprimer une facture ?",
     answer:
-      "Depuis la fiche ou le module de vente, utilisez l'option PDF ou la génération de document disponible.",
+      "Depuis la fiche ou le domaine de vente, utilisez l'option PDF ou la génération de document disponible.",
   },
   {
     question: "Puis-je restaurer une fiche supprimée ?",
@@ -570,7 +570,7 @@ function AidePage() {
                     {section.id === "consommables" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
                         <p>
-                          Le module stock permet d’ajouter des pièces, batteries, écrans et câbles,
+                          Le domaine stock permet d’ajouter des pièces, batteries, écrans et câbles,
                           puis d’alerter à partir d’un seuil.
                         </p>
                         <div className="grid gap-3 md:grid-cols-3">
@@ -591,7 +591,7 @@ function AidePage() {
                     {section.id === "ventes" ? (
                       <div className="space-y-4 text-sm text-muted-foreground">
                         <p>
-                          Pour créer une vente, ouvrez le module Ventes, choisissez le type de
+                          Pour créer une vente, ouvrez le domaine Ventes, choisissez le type de
                           produit, définissez le prix, ajoutez une photo et validez avec le bon mode
                           de paiement.
                         </p>
@@ -739,7 +739,7 @@ function AidePage() {
                               Vérifiez votre connexion, votre atelier actif et votre abonnement.
                             </p>
                             <p>
-                              Préparez le nom du module, l’URL de la page et un message détaillé
+                              Préparez le nom du domaine, l’URL de la page et un message détaillé
                               pour une réponse rapide.
                             </p>
                           </CardContent>

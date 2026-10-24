@@ -17,7 +17,7 @@ export const RELEASE_NOTES: ReleaseNote[] = [
     highlights: [
       "🏠 Dashboard personnalisé avec vos statistiques en temps réel",
       "📱 Gestion multi-tâches : Téléphone, Ordinateur, Consommables",
-      "🛒 Nouveau module Ventes avec paiement Wave / Orange Money",
+      "🛒 Nouveau domaine Ventes avec paiement Wave / Orange Money",
       "👥 Fiches clients et réparations centralisées",
       "🔔 Notifications WhatsApp en un clic",
       "🎨 Nouveau thème Orange-Blanc-Vert aux couleurs de la Côte d'Ivoire",

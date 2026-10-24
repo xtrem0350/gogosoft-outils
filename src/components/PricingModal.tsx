@@ -202,7 +202,7 @@ export function PricingModal({
   }
 
   const stepTitles: Record<1 | 2 | 3, string> = {
-    1: "Étape 1/3 : vos modules",
+    1: "Étape 1/3 : vos domaines",
     2: "Étape 2/3 : votre abonnement",
     3: "Étape 3/3 : récapitulatif",
   };
@@ -212,7 +212,7 @@ export function PricingModal({
       <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden border-0 bg-transparent p-0 shadow-none [&>button]:hidden">
         <DialogTitle className="sr-only">{stepTitles[step]}</DialogTitle>
         <DialogDescription className="sr-only">
-          Choisissez vos modules, la durée de votre abonnement puis validez le récapitulatif.
+          Choisissez vos domaines, la durée de votre abonnement puis validez le récapitulatif.
         </DialogDescription>
 
         <div className="relative flex max-h-[90vh] min-h-[min(500px,90vh)] w-full flex-col overflow-hidden rounded-[28px] shadow-3d">
@@ -238,7 +238,7 @@ export function PricingModal({
               <div>
                 <h3 className="text-xl font-semibold">Bienvenue sur GogoSoft</h3>
                 <p className="mt-2 max-w-xs text-sm text-white/80">
-                  Choisissez uniquement les modules dont vous avez besoin. Payez pour ce que vous
+                  Choisissez uniquement les domaines dont vous avez besoin. Payez pour ce que vous
                   utilisez.
                 </p>
               </div>
@@ -260,7 +260,7 @@ export function PricingModal({
               </div>
 
               <p className="text-sm text-white/60">
-                Vous pourrez modifier vos modules à tout moment.
+                Vous pourrez modifier vos domaines à tout moment.
               </p>
             </aside>
 
@@ -268,7 +268,7 @@ export function PricingModal({
               <div className="mb-6 flex items-center gap-3">
                 <StepIndicator
                   number={1}
-                  label="Modules"
+                  label="Domaines"
                   active={step === 1}
                   completed={step > 1}
                 />

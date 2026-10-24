@@ -30,12 +30,12 @@ function AdminModulesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <PageHero
-        title="Modules disponibles"
+        title="Domaines disponibles"
         subtitle="Catalogue de fonctionnalités et adoption par les abonnés"
         icon={Package}
         action={
           <Button onClick={() => void navigate({ to: "/admin/modules/nouveau" as any })}>
-            <Plus /> Créer un module
+            <Plus /> Créer un domaine
           </Button>
         }
       />
@@ -66,7 +66,7 @@ function AdminModulesPage() {
           </Card>
         ))}
         {modules.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucun module pour ce filtre.</p>
+          <p className="text-sm text-muted-foreground">Aucun domaine pour ce filtre.</p>
         ) : null}
       </div>
     </div>

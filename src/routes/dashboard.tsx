@@ -347,13 +347,13 @@ function OwnerDashboard() {
       ) : null}
 
       {modulesLoading ? (
-        <p className="text-sm text-muted-foreground">Chargement des modules…</p>
+        <p className="text-sm text-muted-foreground">Chargement des domaines…</p>
       ) : modules.length === 0 ? (
         <EmptyState
           icon={Package}
-          title="Aucun module activé"
-          description="Choisissez les modules à découvrir pour afficher les outils de votre atelier."
-          actionLabel="Choisir mes modules"
+          title="Aucun domaine activé"
+          description="Choisissez les domaines à découvrir pour afficher les outils de votre atelier."
+          actionLabel="Choisir mes domaines"
           onAction={() => void navigate({ to: "/demo" })}
         />
       ) : (
@@ -409,7 +409,7 @@ function OwnerDashboard() {
           title="Ventes enregistrées"
           value={busy ? "…" : sales.length}
           icon={ShoppingCart}
-          trend="Selon les modules de vente actifs"
+          trend="Selon les domaines de vente actifs"
           color="success"
         /> : null}
         <StatsCard

@@ -125,7 +125,7 @@ function BienvenuePage() {
 
   async function handleDemoStart() {
     if (selectedModules.length === 0) {
-      toast.error("Sélectionnez au moins un module pour lancer l'essai.");
+      toast.error("Sélectionnez au moins un domaine pour lancer l'essai.");
       return;
     }
     setActiveModules(selectedModules);
@@ -191,10 +191,10 @@ function BienvenuePage() {
                 </div>
 
                 <div className="max-h-[min(72vh,48rem)] overflow-y-auto pr-1">
-                  <section aria-label="Choix des modules" className="space-y-3">
+                  <section aria-label="Choix des domaines" className="space-y-3">
                     <div className="mb-3">
-                      <h2 className="text-lg font-bold text-white">1. Choisissez vos modules</h2>
-                      <p className="text-sm text-slate-300">Sélectionnez au moins un module pour continuer</p>
+                      <h2 className="text-lg font-bold text-white">1. Choisissez vos domaines</h2>
+                      <p className="text-sm text-slate-300">Sélectionnez au moins un domaine pour continuer</p>
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
@@ -282,7 +282,7 @@ function BienvenuePage() {
                   <section aria-label="Actions principales" className="mt-7 space-y-3">
                     {!hasSelection ? (
                       <p className="text-sm font-medium text-amber-300">
-                        ⚠️ Sélectionnez au moins un module pour lancer l'essai
+                        ⚠️ Sélectionnez au moins un domaine pour lancer l'essai
                       </p>
                     ) : null}
 

@@ -2032,7 +2032,7 @@ export function ExperienceBookPage({
               ]
         }
       />
-      <p className="text-muted-foreground">Module en construction.</p>
+      <p className="text-muted-foreground">Cette page est en construction.</p>
     </section>
   );
 }
