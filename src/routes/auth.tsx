@@ -25,7 +25,8 @@ import {
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
-import { WELCOME_PRICING } from "@/constants/pricing";
+import { WELCOME_PRICING, type PricingPlan } from "@/constants/pricing";
+import { isWelcomeDomainId, type WelcomeDomainId } from "@/constants/welcomeDomains";
 import { getUserShops } from "@/services/shopService";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
 import {
@@ -66,7 +67,8 @@ function AuthPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDialogOpen, setAvatarDialogOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [paymentPlanId, setPaymentPlanId] = useState<string | null>(null);
+  const [paymentPlan, setPaymentPlan] = useState<PricingPlan | null>(null);
+  const [paymentDomainIds, setPaymentDomainIds] = useState<WelcomeDomainId[]>([]);
   const [busy, setBusy] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -227,11 +229,22 @@ function AuthPage() {
       const selectedModules = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
       const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
       const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);
-      if (!selectedModules || !plan) {
+      let parsedModules: unknown;
+      try {
+        parsedModules = JSON.parse(selectedModules ?? "null");
+      } catch {
+        toast.error("La sélection des domaines est illisible. Retournez à l’accueil et recommencez.");
+        return;
+      }
+      const domainIds = Array.isArray(parsedModules)
+        ? parsedModules.filter(isWelcomeDomainId)
+        : [];
+      if (domainIds.length === 0 || !plan) {
         toast.error("Sélectionnez vos domaines et une offre avant de créer votre compte.");
         return;
       }
-      setPaymentPlanId(plan.id);
+      setPaymentDomainIds(domainIds);
+      setPaymentPlan(plan);
       setPaymentModalOpen(true);
       toast.success("Compte créé. Choisissez votre mode de paiement ou commencez l'essai.");
     } catch (error) {
@@ -248,7 +261,7 @@ function AuthPage() {
         const { data: userData, error: userError } = await supabase.auth.getUser();
         if (userError) throw userError;
         const userId = userData.user?.id;
-        if (!userId || !paymentPlanId) {
+        if (!userId || !paymentPlan) {
           throw new Error("Session utilisateur ou offre introuvable.");
         }
         const { error } = await supabase.from("payments").insert({
@@ -256,7 +269,7 @@ function AuthPage() {
           amount,
           method,
           status: "success",
-          plan: paymentPlanId,
+          plan: paymentPlan.id,
         });
         if (error) throw error;
       }
@@ -588,13 +601,12 @@ function AuthPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {paymentPlanId ? (
+      {paymentPlan ? (
         <SubscriptionPaymentModal
           open={paymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
-          planId={paymentPlanId}
-          planLabel={WELCOME_PRICING.find((plan) => plan.id === paymentPlanId)?.title ?? paymentPlanId}
-          amountFcfa={WELCOME_PRICING.find((plan) => plan.id === paymentPlanId)?.price ?? 0}
+          plan={paymentPlan}
+          selectedDomainIds={paymentDomainIds}
           onSuccess={handlePaymentSuccess}
         />
       ) : null}
