@@ -389,3 +389,28 @@
 .page-transition {
   animation: pageEnter 0.25s ease-out both;
 }
+
+.btn-gradient-hover {
+  transition: all 0.3s ease;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@media (hover: hover) and (min-width: 768px) {
+  .btn-gradient-hover:not(:disabled):hover {
+    background: linear-gradient(90deg, #f97316, #ffffff, #16a34a);
+    background-size: 200% 100%;
+    animation: gradient 2s ease infinite;
+    color: #0f172a;
+  }
+}

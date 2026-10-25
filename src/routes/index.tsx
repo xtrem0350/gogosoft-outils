@@ -230,7 +230,7 @@ function HomePage() {
               <Button
                 type="button"
                 disabled={!canDemo}
-                className="min-h-11 w-full bg-green-700 text-white hover:bg-green-800 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => void handleStartDemo()}
               >
                 <Gift className="size-4" />
@@ -296,10 +296,10 @@ function HomePage() {
                       type="button"
                       onClick={() => toggleModule(id)}
                       aria-pressed={isSelected}
-                      className={`card-3d relative flex min-h-[76px] items-center gap-3 rounded-xl border bg-green-800 p-3 text-left text-white transition-colors hover:bg-green-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                      className={`relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left shadow-3d-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                         isSelected
-                          ? "border-orange-300 ring-2 ring-orange-500"
-                          : "border-green-800 hover:border-orange-300"
+                          ? "border-orange-300 bg-green-800 text-white ring-2 ring-orange-500"
+                          : "border-slate-200 bg-white text-slate-900 hover:border-orange-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
                       }`}
                     >
                       <span
@@ -312,10 +312,10 @@ function HomePage() {
                         <Icon className="size-5" />
                       </span>
                       <span className="min-w-0 pr-4">
-                        <span className="block text-sm font-medium leading-tight text-white">
+                        <span className={`block text-sm font-medium leading-tight ${isSelected ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
                           {title}
                         </span>
-                        <span className="mt-1 block text-xs leading-tight text-white/80">
+                        <span className={`mt-1 block text-xs leading-tight ${isSelected ? "text-white/80" : "text-slate-600 dark:text-slate-400"}`}>
                           {description}
                         </span>
                       </span>
