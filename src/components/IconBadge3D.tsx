@@ -19,7 +19,7 @@ export function IconBadge3D({
   const iconSizes = { md: "size-9", lg: "size-12", xl: "size-16" };
   const gradients = {
     orange: "bg-gradient-to-br from-orange-400 to-orange-600",
-    green: "bg-gradient-to-br from-green-400 to-green-600",
+    green: "bg-gradient-to-br from-green-800 to-green-900",
     blue: "bg-gradient-to-br from-blue-400 to-blue-600",
     red: "bg-gradient-to-br from-red-400 to-red-600",
     purple: "bg-gradient-to-br from-purple-400 to-purple-600",

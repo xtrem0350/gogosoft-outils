@@ -127,8 +127,8 @@ function EmployeeDashboard({ role }: { role: "magasinier" | "receptionniste" | "
                 <Icon className="size-5" />
               </span>
               <div className="min-w-0">
-                <p className="font-semibold">{label}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+                <p className="font-semibold text-slate-900 dark:text-slate-100">{label}</p>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</p>
               </div>
             </div>
           </Link>
@@ -390,10 +390,10 @@ function OwnerDashboard() {
                     className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
                   />
                   <div className="min-w-0">
-                    <p className="font-semibold leading-snug text-slate-900 group-hover:text-orange-700">
+                    <p className="font-semibold leading-snug text-slate-900 dark:text-slate-100 group-hover:text-orange-700">
                       {label}
                     </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-muted-foreground sm:text-sm">
+                    <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
                       {description}
                     </p>
                   </div>

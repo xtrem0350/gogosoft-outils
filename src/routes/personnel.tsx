@@ -131,7 +131,7 @@ function DemoPersonnelPage() {
   const roleColors: Record<StaffRole, string> = {
     owner: "bg-orange-500 text-white",
     manager: "bg-orange-400 text-white",
-    technicien: "bg-green-500 text-white",
+    technicien: "bg-green-800 text-white",
     technicien_pc: "bg-green-600 text-white",
     vendeur: "bg-blue-500 text-white",
     caissier: "bg-purple-500 text-white",

@@ -42,7 +42,7 @@ function ForgotPasswordPage() {
 
         {sent ? (
           <div className="space-y-5">
-            <p className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-200">
+            <p className="rounded-lg border border-emerald-800/60 bg-emerald-800/30 p-4 text-sm text-emerald-200">
               Vérifiez votre boîte de réception et suivez le lien reçu pour choisir un nouveau mot
               de passe.
             </p>

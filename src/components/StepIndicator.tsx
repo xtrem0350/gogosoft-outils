@@ -15,7 +15,7 @@ export function StepIndicator({ number, label, active, completed }: StepIndicato
       <div
         className={`flex size-9 items-center justify-center rounded-full border text-sm font-semibold transition-all duration-200 ${
           completed
-            ? "border-emerald-500 bg-emerald-500 text-white shadow-sm"
+            ? "border-emerald-800 bg-emerald-800 text-white shadow-sm"
             : active
               ? "border-orange-500 bg-ivoirien text-white shadow-sm"
               : "border-slate-200 bg-slate-100 text-slate-500"

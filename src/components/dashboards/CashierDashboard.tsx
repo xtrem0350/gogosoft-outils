@@ -106,7 +106,7 @@ export function CashierDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Ventes payées</CardTitle>
-            <ShoppingCart className="size-4 text-green-500" />
+            <ShoppingCart className="size-4 text-green-800" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{formatAmount(totalSales)}</div></CardContent>
         </Card>

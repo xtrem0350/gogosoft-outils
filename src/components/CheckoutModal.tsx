@@ -282,7 +282,7 @@ export function CheckoutModal({
             {step === 4 && paymentResult ? (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center py-8 text-center">
                 <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                  <CheckCircle2 className="size-12 text-green-600 dark:text-green-400" />
+                  <CheckCircle2 className="size-12 text-green-600 dark:text-green-300" />
                 </div>
                 <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
                   Merci d&apos;avoir participé au paiement simulé
@@ -299,7 +299,7 @@ export function CheckoutModal({
                   </div>
                   <div className="mt-2 flex justify-between text-sm">
                     <span className="text-slate-600 dark:text-slate-400">Total payé</span>
-                    <span className="font-bold text-green-600 dark:text-green-400">
+                    <span className="font-bold text-green-600 dark:text-green-300">
                       {paymentResult.total.toLocaleString("fr-FR")} FCFA
                     </span>
                   </div>

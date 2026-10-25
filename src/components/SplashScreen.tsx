@@ -59,7 +59,7 @@ export function SplashScreen() {
 
         <div className="mt-6 w-full max-w-xs overflow-hidden rounded-full bg-white/15">
           <motion.div
-            className="h-2 rounded-full bg-gradient-to-r from-orange-400 via-yellow-300 to-green-400"
+            className="h-2 rounded-full bg-gradient-to-r from-orange-400 via-yellow-300 to-green-800"
             initial={{ width: 0 }}
             animate={{ width: "70%" }}
             transition={{ duration: 1.2, ease: "easeInOut" }}

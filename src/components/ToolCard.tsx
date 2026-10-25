@@ -30,7 +30,7 @@ export function ToolCard({
 }: ToolCardProps) {
   const categoryStyles: Record<string, string> = {
     MTK: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-    Unisoc: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    Unisoc: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300",
     Apple: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
     Drivers: "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400",
     Autres: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",

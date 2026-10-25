@@ -394,7 +394,10 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   }
 
   const links = (
-    <nav className="space-y-1" aria-label="Navigation principale">
+    <nav
+      className="sidebar-scroll min-h-0 flex-1 space-y-1 overflow-y-auto overflow-x-hidden pr-2"
+      aria-label="Navigation principale"
+    >
       {navigationGroups.map(({ label, icon: GroupIcon, items }, groupIndex) => {
         const filteredItems = items.filter((item) =>
           `${label} ${item.label}`.toLowerCase().includes(search.trim().toLowerCase()),
@@ -587,9 +590,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             />
           </div>
         ) : null}
-        <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
-        </div>
+        {modulesLoading ? <Skeleton className="min-h-0 flex-1 w-full" /> : links}
         <div className="mt-4 shrink-0 border-t border-sidebar-border pt-4">{roleSwitchButton}{signOutButton}</div>
       </aside>
 
@@ -613,9 +614,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                 className="h-9 border-sidebar-border bg-sidebar-accent text-sidebar-foreground placeholder:text-sidebar-foreground/50"
               />
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-sidebar-border">
-              {modulesLoading ? <Skeleton className="h-full min-h-48 w-full" /> : links}
-            </div>
+            {modulesLoading ? <Skeleton className="min-h-0 flex-1 w-full" /> : links}
             <div className="mt-8 shrink-0 border-t border-sidebar-border pt-4">{roleSwitchButton}{signOutButton}</div>
           </SheetContent>
         </Sheet>

@@ -11,8 +11,8 @@ export function PasswordStrengthBar({ password }: PasswordStrengthBarProps) {
     red: "bg-red-500",
     orange: "bg-orange-500",
     yellow: "bg-yellow-500",
-    lime: "bg-lime-500",
-    green: "bg-green-500",
+    lime: "bg-emerald-800",
+    green: "bg-green-800",
   };
 
   const progress = password.trim() ? (strength.score / 4) * 100 : 0;

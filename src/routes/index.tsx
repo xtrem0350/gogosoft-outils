@@ -106,7 +106,7 @@ function ModuleCard({
         className={`flex size-9 items-center justify-center rounded-lg ${
           color === "orange"
             ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-            : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300"
         }`}
       >
         <Icon className="size-5" />

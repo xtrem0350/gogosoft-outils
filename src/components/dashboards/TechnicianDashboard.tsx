@@ -99,14 +99,14 @@ export function TechnicianDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">À traiter</CardTitle>
-            <Wrench className="size-4 text-blue-500" />
+            <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
           </CardHeader>
           <CardContent><div className="text-3xl font-bold">{pending}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Terminées</CardTitle>
-            <CheckCircle2 className="size-4 text-green-500" />
+            <CheckCircle2 className="size-4 text-green-800" />
           </CardHeader>
           <CardContent><div className="text-3xl font-bold">{done}</div></CardContent>
         </Card>

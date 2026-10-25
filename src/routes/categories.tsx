@@ -14,7 +14,7 @@ const categoryPresentation: Record<Categorie, { icon: typeof Cpu; color: string 
   MTK: { icon: Cpu, color: "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" },
   Unisoc: {
     icon: CircuitBoard,
-    color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400",
+    color: "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300",
   },
   Apple: {
     icon: Smartphone,

@@ -251,7 +251,7 @@ export function PricingModal({
                   "Domaine .com ou .ci en option",
                 ].map((item) => (
                   <div key={item} className="flex items-center gap-3 text-white/90">
-                    <span className="flex size-6 items-center justify-center rounded-full bg-emerald-500/20 text-sm text-emerald-300 ring-1 ring-emerald-400/50">
+                    <span className="flex size-6 items-center justify-center rounded-full bg-emerald-800/50 text-sm text-emerald-300 ring-1 ring-emerald-700/60">
                       ✓
                     </span>
                     <span className="text-sm font-medium">{item}</span>

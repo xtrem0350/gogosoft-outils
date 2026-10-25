@@ -213,7 +213,7 @@ function BienvenuePage() {
                             }`}
                           >
                             {isSelected ? (
-                              <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-green-500 text-white shadow-sm">
+                              <span className="absolute right-3 top-3 flex size-6 items-center justify-center rounded-full bg-green-800 text-white shadow-sm">
                                 <Check className="size-3.5" />
                               </span>
                             ) : null}

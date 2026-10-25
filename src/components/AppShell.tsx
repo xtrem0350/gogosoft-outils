@@ -509,7 +509,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     <Button
                       type="button"
                       disabled={!shopId}
-                      className="h-10 rounded-full bg-ivoirien px-4 font-semibold text-white shadow-3d transition-transform hover:bg-ivoirien-hover active:scale-95"
+                      className="h-10 rounded-full bg-gradient-to-r from-orange-600 via-orange-600 to-green-800 px-4 font-semibold text-white shadow-3d transition-transform hover:from-orange-700 hover:via-orange-700 hover:to-green-900 active:scale-95"
                     >
                       <Plus />
                       Nouveau

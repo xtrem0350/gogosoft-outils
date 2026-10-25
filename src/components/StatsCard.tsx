@@ -43,7 +43,7 @@ export function StatsCard({
           <Icon className="size-5" />
         </div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             {cardLabel}
           </p>
           <p className="mt-2 truncate font-display text-3xl font-bold text-slate-900 dark:text-white">

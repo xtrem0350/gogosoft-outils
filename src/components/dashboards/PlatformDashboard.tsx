@@ -117,14 +117,14 @@ export function PlatformDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">Utilisateurs</CardTitle>
-            <Users className="size-4 text-blue-500" />
+            <Users className="size-4 text-slate-600 dark:text-slate-400" />
           </CardHeader>
           <CardContent><div className="text-3xl font-bold">{totalUsers}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">MRR</CardTitle>
-            <CreditCard className="size-4 text-green-500" />
+            <CreditCard className="size-4 text-green-800" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{mrr.toLocaleString("fr-FR")} FCFA</div></CardContent>
         </Card>

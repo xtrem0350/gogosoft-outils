@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/services/demoService";
+import { isSimulationMode } from "@/services/simulationService";
 
 export type EmployeeRole = "technicien" | "caissier" | "magasinier" | "receptionniste" | "vendeur";
 export type InvitationRole = EmployeeRole;
@@ -30,8 +32,23 @@ export async function createInvitation(input: {
   role: EmployeeRole;
 }): Promise<PendingInvitation> {
   const shopId = input.shop_id;
+  if (isSimulationMode()) {
+    throw new Error(
+      "Les invitations ne sont pas disponibles dans un atelier simulé. Sélectionnez une boutique réelle pour inviter un employé.",
+    );
+  }
+  if (isDemoMode()) {
+    throw new Error(
+      "Les invitations ne sont pas disponibles en mode démo. Ouvrez une boutique réelle pour inviter un employé.",
+    );
+  }
   if (!shopId) {
     throw new Error("Boutique introuvable. Impossible de créer l'invitation.");
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shopId)) {
+    throw new Error(
+      "Identifiant de boutique invalide. Sélectionnez une boutique réelle pour créer l'invitation.",
+    );
   }
   if (!input.full_name?.trim()) {
     throw new Error("Le nom est requis.");
@@ -72,6 +89,11 @@ export async function createInvitation(input: {
 }
 
 export async function getPendingInvitations(shopId: string): Promise<PendingInvitation[]> {
+  if (isSimulationMode()) return [];
+  if (isDemoMode()) return [];
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shopId)) {
+    throw new Error("Identifiant de boutique invalide.");
+  }
   const { data, error } = await (supabase.from("pending_invitations" as any) as any)
     .select("*")
     .eq("shop_id", shopId)
