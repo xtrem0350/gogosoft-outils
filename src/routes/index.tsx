@@ -296,10 +296,10 @@ function HomePage() {
                       type="button"
                       onClick={() => toggleModule(id)}
                       aria-pressed={isSelected}
-                      className={`relative flex min-h-[76px] items-center gap-3 rounded-xl border p-3 text-left shadow-3d-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                      className={`relative flex min-h-[76px] items-center gap-3 rounded-xl border bg-white p-3 text-left shadow-3d-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:bg-slate-800 ${
                         isSelected
-                          ? "border-orange-300 bg-green-800 text-white ring-2 ring-orange-500"
-                          : "border-slate-200 bg-white text-slate-900 hover:border-orange-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                          ? "border-orange-400 ring-2 ring-orange-500"
+                          : "border-slate-200 hover:border-orange-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
                       }`}
                     >
                       <span
@@ -312,10 +312,10 @@ function HomePage() {
                         <Icon className="size-5" />
                       </span>
                       <span className="min-w-0 pr-4">
-                        <span className={`block text-sm font-medium leading-tight ${isSelected ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
+                        <span className="block text-sm font-semibold leading-tight !text-slate-900 dark:!text-slate-100">
                           {title}
                         </span>
-                        <span className={`mt-1 block text-xs leading-tight ${isSelected ? "text-white/80" : "text-slate-600 dark:text-slate-400"}`}>
+                        <span className="mt-1 block text-xs leading-tight !text-slate-500 dark:!text-slate-400">
                           {description}
                         </span>
                       </span>
