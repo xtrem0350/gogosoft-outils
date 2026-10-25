@@ -30,53 +30,53 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function parseSimulationShop(value: unknown): SimulationShop | null {
   if (!isRecord(value)) return null;
 
-  const modules = value.modules;
+  const modules = value["modules"];
   if (
-    typeof value.id !== "string" ||
-    typeof value.name !== "string" ||
+    typeof value["id"] !== "string" ||
+    typeof value["name"] !== "string" ||
     !Array.isArray(modules) ||
-    typeof value.domain !== "string" ||
-    typeof value.created_at !== "string"
+    typeof value["domain"] !== "string" ||
+    typeof value["created_at"] !== "string"
   ) {
     return null;
   }
 
   return {
-    id: value.id,
-    name: value.name,
-    owner_id: typeof value.owner_id === "string" ? value.owner_id : "sim-user",
+    id: value["id"],
+    name: value["name"],
+    owner_id: typeof value["owner_id"] === "string" ? value["owner_id"] : "sim-user",
     modules: modules.filter((module): module is string => typeof module === "string"),
-    domain: value.domain,
-    created_at: value.created_at,
+    domain: value["domain"],
+    created_at: value["created_at"],
   };
 }
 
 function parseSimulationPayment(value: unknown): SimulationPayment | null {
   if (!isRecord(value)) return null;
 
-  const modules = value.modules;
+  const modules = value["modules"];
   if (
-    typeof value.invoice_number !== "string" ||
-    typeof value.plan_id !== "string" ||
-    typeof value.plan_price !== "number" ||
+    typeof value["invoice_number"] !== "string" ||
+    typeof value["plan_id"] !== "string" ||
+    typeof value["plan_price"] !== "number" ||
     !Array.isArray(modules) ||
-    typeof value.domain_name !== "string" ||
-    typeof value.total_amount !== "number" ||
-    typeof value.payment_status !== "string" ||
-    typeof value.paid_at !== "string"
+    typeof value["domain_name"] !== "string" ||
+    typeof value["total_amount"] !== "number" ||
+    typeof value["payment_status"] !== "string" ||
+    typeof value["paid_at"] !== "string"
   ) {
     return null;
   }
 
   return {
-    invoice_number: value.invoice_number,
-    plan_id: value.plan_id,
-    plan_price: value.plan_price,
+    invoice_number: value["invoice_number"],
+    plan_id: value["plan_id"],
+    plan_price: value["plan_price"],
     modules: modules.filter((module): module is string => typeof module === "string"),
-    domain_name: value.domain_name,
-    total_amount: value.total_amount,
-    payment_status: value.payment_status,
-    paid_at: value.paid_at,
+    domain_name: value["domain_name"],
+    total_amount: value["total_amount"],
+    payment_status: value["payment_status"],
+    paid_at: value["paid_at"],
   };
 }
 

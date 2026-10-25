@@ -76,6 +76,52 @@ const WELCOME_MODULES: Array<{
   },
 ];
 
+function ModuleCard({
+  icon: Icon,
+  title,
+  description,
+  color,
+  isSelected,
+  onClick,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  color: "orange" | "green";
+  isSelected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isSelected}
+      className={`relative flex w-full flex-col items-start gap-2 rounded-xl border bg-white p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:bg-slate-800 ${
+        isSelected
+          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500 dark:bg-orange-950/30"
+          : "border-slate-200 hover:border-orange-300 hover:shadow-md dark:border-slate-700"
+      }`}
+    >
+      <span
+        className={`flex size-9 items-center justify-center rounded-lg ${
+          color === "orange"
+            ? "bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+            : "bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+        }`}
+      >
+        <Icon className="size-5" />
+      </span>
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
+      {isSelected ? (
+        <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
+          <Check className="size-3" />
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 const STORAGE_KEY = "gogosoft.welcome.selectedModules";
 const PLAN_STORAGE_KEY = "gogosoft.welcome.selectedPlan";
 
@@ -287,44 +333,18 @@ function HomePage() {
                   <p className="text-xs text-slate-600">Sélectionnez au moins un domaine</p>
                 ) : null}
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {WELCOME_MODULES.map(({ id, title, description, icon: Icon, tone }) => {
-                  const isSelected = selectedModules.includes(id);
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => toggleModule(id)}
-                      aria-pressed={isSelected}
-                      className={`relative flex min-h-[76px] items-center gap-3 rounded-xl border bg-white p-3 text-left shadow-3d-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:bg-slate-800 ${
-                        isSelected
-                          ? "border-orange-400 ring-2 ring-orange-500"
-                          : "border-slate-200 hover:border-orange-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700"
-                      }`}
-                    >
-                      <span
-                        className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${
-                          tone === "orange"
-                            ? "bg-orange-100 text-orange-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        <Icon className="size-5" />
-                      </span>
-                      <span className="min-w-0 pr-4">
-                        <span className="block text-sm font-semibold leading-tight !text-slate-900 dark:!text-slate-100">
-                          {title}
-                        </span>
-                        <span className="mt-1 block text-xs leading-tight !text-slate-500 dark:!text-slate-400">
-                          {description}
-                        </span>
-                      </span>
-                      {isSelected ? (
-                        <Check className="absolute right-2 top-2 size-4 text-orange-600" />
-                      ) : null}
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                {WELCOME_MODULES.map(({ id, title, description, icon, tone }) => (
+                  <ModuleCard
+                    key={id}
+                    icon={icon}
+                    title={title}
+                    description={description}
+                    color={tone}
+                    isSelected={selectedModules.includes(id)}
+                    onClick={() => toggleModule(id)}
+                  />
+                ))}
               </div>
             </section>
 

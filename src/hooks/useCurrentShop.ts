@@ -37,7 +37,7 @@ function useCurrentShopState() {
         ? {
             id: simulatedShop.id,
             name: simulatedShop.name,
-            owner_id: simulatedShop.owner_id,
+            owner_id: simulatedShop.owner_id ?? null,
             created_at: simulatedShop.created_at,
           }
         : null;
