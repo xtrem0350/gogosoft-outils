@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
+import { isSimulationMode } from "@/services/simulationService";
 import { supabase } from "@/integrations/supabase/client";
 
 export type UserRole =
@@ -57,9 +58,15 @@ export function useUserRole(): UserRoleInfo {
   const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewMode);
   const isSuperAdminAccount = profile?.is_super_admin === true;
   const isDemo = isDemoMode();
+  const isSimulation = isSimulationMode();
 
   useEffect(() => {
     let active = true;
+    if (isSimulation) {
+      setShopRole("owner");
+      setLoading(false);
+      return () => { active = false; };
+    }
     if (isDemo) {
       setLoading(false);
       return () => { active = false; };
@@ -101,7 +108,7 @@ export function useUserRole(): UserRoleInfo {
       );
 
     return () => { active = false; };
-  }, [authLoading, isDemo, shopId, shopLoading, user]);
+  }, [authLoading, isDemo, isSimulation, shopId, shopLoading, user]);
 
   useEffect(() => {
     if (!isSuperAdminAccount && viewMode !== "shop") {
@@ -116,6 +123,23 @@ export function useUserRole(): UserRoleInfo {
   }, []);
 
   if (isDemo) {
+    return {
+      role: "owner",
+      isOwner: true,
+      isTechnicien: false,
+      isCaissier: false,
+      isMagasinier: false,
+      isReceptionniste: false,
+      isVendeur: false,
+      isSuperAdmin: false,
+      isSuperAdminAccount: false,
+      viewMode: "shop",
+      setViewMode: () => {},
+      loading: false,
+    };
+  }
+
+  if (isSimulation) {
     return {
       role: "owner",
       isOwner: true,

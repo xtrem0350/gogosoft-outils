@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Banknote, Check, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { ArrowRight, Banknote, Check, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
@@ -13,15 +14,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  checkDomainAvailability,
-  findClosestAvailableDomain,
-  type DomainChoice,
-} from "@/services/domainService";
+import type { DomainChoice } from "@/services/domainService";
 import type { SubscriptionPaymentInvoice } from "@/services/subscriptionPaymentService";
+import {
+  notifySimulationChanged,
+  SIMULATION_ACTIVE_KEY,
+  SIMULATION_PAYMENT_KEY,
+  SIMULATION_SHOP_KEY,
+} from "@/services/simulationService";
 
 type PaymentMethod = "wave" | "orange_money" | "mtn_money" | "moov_money" | "cash";
-type CheckoutStep = 1 | 2 | 3;
+type CheckoutStep = 1 | 2 | 3 | 4;
 
 export interface CheckoutSubmission {
   domainName: string;
@@ -71,9 +74,8 @@ export function CheckoutModal({
   initialMonths = 1,
   clientName,
   clientEmail,
-  onPay,
-  onComplete,
 }: CheckoutModalProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState<CheckoutStep>(domainRequired ? 1 : 2);
   const [choices, setChoices] = useState<DomainChoice>(EMPTY_CHOICES);
   const [assignedDomain, setAssignedDomain] = useState(initialDomain);
@@ -83,6 +85,11 @@ export function CheckoutModal({
   const [processing, setProcessing] = useState(false);
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
   const [cashConfirmation, setCashConfirmation] = useState(false);
+  const [paymentResult, setPaymentResult] = useState<{
+    success: boolean;
+    invoiceNumber: string;
+    total: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -95,6 +102,7 @@ export function CheckoutModal({
     setProcessing(false);
     setInvoice(null);
     setCashConfirmation(false);
+    setPaymentResult(null);
   }, [domainRequired, initialDomain, initialMonths, open]);
 
   const totalAmount = plan.price * months + domainPrice;
@@ -115,16 +123,8 @@ export function CheckoutModal({
           throw new Error("Chaque domaine doit respecter le format nom.ci.");
         }
       }
-      let finalName = "";
-      for (const choice of submittedChoices) {
-        if (await checkDomainAvailability(choice)) {
-          finalName = choice;
-          break;
-        }
-      }
-      if (!finalName) finalName = await findClosestAvailableDomain(submittedChoices);
-      setAssignedDomain(finalName);
-      toast.success(`Domaine disponible : ${finalName}`);
+      setAssignedDomain(choices.choice_1);
+      toast.success(`Domaine simulé : ${choices.choice_1}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Vérification du domaine impossible.");
     } finally {
@@ -139,40 +139,44 @@ export function CheckoutModal({
       return;
     }
 
-    if (method === "cash") {
-      setProcessing(true);
-      try {
-        const createdInvoice = await onPay({
-          domainName: assignedDomain,
-          choices,
-          subscriptionMonths: months,
-          paymentMethod: "cash",
-          domainPrice,
-        });
-        setInvoice(createdInvoice);
-        setCashConfirmation(true);
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Le paiement n'a pas pu être confirmé.");
-      } finally {
-        setProcessing(false);
-      }
-      return;
-    }
-
     setProcessing(true);
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, 2000));
-      const createdInvoice = await onPay({
-        domainName: assignedDomain,
-        choices,
-        subscriptionMonths: months,
-        paymentMethod: method,
-        domainPrice,
-      });
-      setInvoice(createdInvoice);
-      toast.success(`Paiement confirmé ! Facture ${createdInvoice.invoice_number}`);
+      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`;
+      const paidAt = new Date().toISOString();
+      const simulationData = {
+        invoice_number: invoiceNumber,
+        plan_id: plan.id,
+        plan_price: plan.price,
+        modules: selectedDomainIds,
+        domain_name: assignedDomain,
+        domain_price: domainPrice,
+        subscription_months: months,
+        bonus_days: BONUS_DAYS,
+        total_amount: totalAmount,
+        payment_method: "cash",
+        payment_status: "paid",
+        paid_at: paidAt,
+        is_simulation: true,
+      };
+      const shopData = {
+        id: `sim-shop-${Date.now()}`,
+        name: `${clientName || "Mon"} Atelier`,
+        owner_id: "sim-user",
+        modules: selectedDomainIds,
+        domain: assignedDomain,
+        created_at: paidAt,
+      };
+
+      window.sessionStorage.setItem(SIMULATION_PAYMENT_KEY, JSON.stringify(simulationData));
+      window.sessionStorage.setItem(SIMULATION_SHOP_KEY, JSON.stringify(shopData));
+      window.sessionStorage.setItem(SIMULATION_ACTIVE_KEY, "true");
+      notifySimulationChanged();
+
+      setPaymentResult({ success: true, invoiceNumber, total: totalAmount });
+      setStep(4);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Le paiement n'a pas pu être confirmé.");
+      console.error("[Checkout] Simulation error:", error);
+      toast.error("Erreur de simulation");
     } finally {
       setProcessing(false);
     }
@@ -199,19 +203,20 @@ export function CheckoutModal({
           <aside className="flex min-h-0 flex-col justify-between gap-5 overflow-y-auto bg-slate-900 p-5 text-white sm:p-7 lg:p-9">
             <div>
               <img src={authLogo} alt="GogoSoft" className="mb-5 size-16 rounded-full border-2 border-white/20 object-cover" />
-              <p className="text-sm font-medium text-blue-300">Paiement sécurisé</p>
+              <p className="text-sm font-medium text-blue-300">Paiement simulé</p>
               <h2 className="mt-2 text-3xl font-bold">Finalisez votre abonnement</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
                 Votre espace et vos domaines seront activés après confirmation du paiement.
               </p>
             </div>
 
-            {invoice ? (
+            {paymentResult ? (
+              <p className="text-sm text-slate-300">Mode simulation activé.</p>
+            ) : invoice ? (
               cashConfirmation ? (
                 <div className="space-y-3">
                   <Button type="button" onClick={() => {
-                    toast.success("Abonnement activé !");
-                    onComplete();
+                    void navigate({ to: "/dashboard" });
                   }} className="min-h-12 w-full">
                     Continuer vers Dashboard
                     <ChevronRight className="size-4" />
@@ -222,7 +227,7 @@ export function CheckoutModal({
                   <Button type="button" onClick={printInvoice} className="min-h-12 w-full">
                     Télécharger PDF / Imprimer
                   </Button>
-                  <Button type="button" onClick={onComplete} className="min-h-12 w-full">
+                  <Button type="button" onClick={() => void navigate({ to: "/dashboard" })} className="min-h-12 w-full">
                     Continuer
                     <ChevronRight className="size-4" />
                   </Button>
@@ -274,7 +279,45 @@ export function CheckoutModal({
           </aside>
 
           <section className="min-h-0 overflow-y-auto bg-white p-5 sm:p-7 lg:p-9">
-            {cashConfirmation && invoice ? (
+            {step === 4 && paymentResult ? (
+              <div className="flex h-full min-h-[420px] flex-col items-center justify-center py-8 text-center">
+                <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                  <CheckCircle2 className="size-12 text-green-600 dark:text-green-400" />
+                </div>
+                <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  Merci d&apos;avoir participé au paiement simulé
+                </h2>
+                <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
+                  Votre abonnement sera activé sous peu.
+                </p>
+                <div className="mb-6 w-full rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Facture</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                      {paymentResult.invoiceNumber}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex justify-between text-sm">
+                    <span className="text-slate-600 dark:text-slate-400">Total payé</span>
+                    <span className="font-bold text-green-600 dark:text-green-400">
+                      {paymentResult.total.toLocaleString("fr-FR")} FCFA
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => void navigate({ to: "/dashboard" })}
+                  className="w-full bg-green-800 text-white hover:bg-green-700"
+                  size="lg"
+                >
+                  Continuer vers Dashboard
+                  <ArrowRight className="ml-2 size-4" />
+                </Button>
+                <p className="mt-4 text-xs text-slate-500 dark:text-slate-500">
+                  Mode simulation — Aucune donnée réelle n&apos;a été enregistrée
+                </p>
+              </div>
+            ) : cashConfirmation && invoice ? (
               <div className="flex h-full min-h-[420px] items-center justify-center text-center">
                 <div className="max-w-xl space-y-5">
                   <CheckCircle2 className="mx-auto size-20 text-green-600" />
@@ -286,10 +329,7 @@ export function CheckoutModal({
                   </div>
                   <Button
                     type="button"
-                    onClick={() => {
-                      toast.success("Abonnement activé !");
-                      onComplete();
-                    }}
+                    onClick={() => void navigate({ to: "/dashboard" })}
                     className="min-h-12 w-full"
                   >
                     Continuer vers Dashboard

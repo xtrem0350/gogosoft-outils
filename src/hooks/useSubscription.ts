@@ -6,14 +6,24 @@ import {
   isSubscriptionActive,
   type SubscriptionSummary,
 } from "@/services/subscriptionService";
+import {
+  isSimulationMode,
+  SIMULATION_CHANGED_EVENT,
+} from "@/services/simulationService";
 
 export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    if (isSimulationMode()) {
+      setSubscription(null);
+      setLoading(false);
+      return;
+    }
     try {
       const next = await getMySubscription();
+      if (isSimulationMode()) return;
       setSubscription(next);
     } catch {
       setSubscription(null);
@@ -23,6 +33,15 @@ export function useSubscription() {
   }, []);
 
   useEffect(() => {
+    const handleSimulationChanged = () => void refresh();
+    window.addEventListener(SIMULATION_CHANGED_EVENT, handleSimulationChanged);
+    if (isSimulationMode()) {
+      void refresh();
+      return () => {
+        window.removeEventListener(SIMULATION_CHANGED_EVENT, handleSimulationChanged);
+      };
+    }
+
     void refresh();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
@@ -32,6 +51,7 @@ export function useSubscription() {
     });
 
     return () => {
+      window.removeEventListener(SIMULATION_CHANGED_EVENT, handleSimulationChanged);
       authListener.subscription.unsubscribe();
     };
   }, [refresh]);

@@ -8,6 +8,12 @@ import {
   getDemoModuleCodes,
   isDemoMode,
 } from "@/services/demoService";
+import {
+  isSimulationMode,
+  readSimulationShop,
+  SIMULATION_CHANGED_EVENT,
+} from "@/services/simulationService";
+import { MODULE_IDS, shopCodesFromModuleIds } from "@/types/modules";
 
 const MODULES_CHANGED_EVENT = "gogosoft:shop-modules-changed";
 
@@ -22,6 +28,17 @@ export function useShopModules() {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
+    if (isSimulationMode()) {
+      const simulatedModules = readSimulationShop()?.modules ?? [];
+      const moduleIds = MODULE_IDS.filter((id) =>
+        id !== "consommables" &&
+        id !== "multi-ateliers" &&
+        simulatedModules.includes(id),
+      );
+      setModules(shopCodesFromModuleIds(moduleIds));
+      setLoading(false);
+      return;
+    }
     if (isDemoMode()) {
       setModules(getDemoModuleCodes());
       setLoading(false);
@@ -35,8 +52,11 @@ export function useShopModules() {
     }
     setLoading(true);
     try {
-      setModules(await getShopModules(shopId));
+      const nextModules = await getShopModules(shopId);
+      if (isSimulationMode()) return;
+      setModules(nextModules);
     } catch (error) {
+      if (isSimulationMode()) return;
       console.error("[useShopModules]", error);
       setModules([]);
     } finally {
@@ -54,7 +74,9 @@ export function useShopModules() {
 
   useEffect(() => {
     const handleDemoChanged = () => void refresh();
+    const handleSimulationChanged = () => void refresh();
     window.addEventListener(DEMO_SESSION_CHANGED_EVENT, handleDemoChanged);
+    window.addEventListener(SIMULATION_CHANGED_EVENT, handleSimulationChanged);
     const handleModulesChanged = (event: Event) => {
       const changedShopId = (event as CustomEvent<{ shopId: string }>).detail?.shopId;
       if (changedShopId === shopId) void refresh();
@@ -63,6 +85,7 @@ export function useShopModules() {
     return () => {
       window.removeEventListener(MODULES_CHANGED_EVENT, handleModulesChanged);
       window.removeEventListener(DEMO_SESSION_CHANGED_EVENT, handleDemoChanged);
+      window.removeEventListener(SIMULATION_CHANGED_EVENT, handleSimulationChanged);
     };
   }, [refresh, shopId]);
 

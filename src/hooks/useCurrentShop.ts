@@ -13,6 +13,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { getUserShops, type Shop } from "@/services/shopService";
 import { DEMO_SHOP_ID, DEMO_SHOP_SLUG, DEMO_SESSION_CHANGED_EVENT, readDemoSession } from "@/services/demoService";
+import {
+  isSimulationMode,
+  readSimulationShop,
+  SIMULATION_CHANGED_EVENT,
+} from "@/services/simulationService";
 
 const STORAGE_KEY = "gogosoft.currentShopId";
 type CurrentShopValue = ReturnType<typeof useCurrentShopState>;
@@ -26,6 +31,22 @@ function useCurrentShopState() {
   const loadedUserRef = useRef<string | null | undefined>(undefined);
 
   const refresh = useCallback(async (sessionUserId?: string, force = false) => {
+    if (isSimulationMode()) {
+      const simulatedShop = readSimulationShop();
+      const nextShop: Shop | null = simulatedShop
+        ? {
+            id: simulatedShop.id,
+            name: simulatedShop.name,
+            owner_id: simulatedShop.owner_id,
+            created_at: simulatedShop.created_at,
+          }
+        : null;
+      setShops(nextShop ? [nextShop] : []);
+      setShop(nextShop);
+      setLoading(false);
+      loadedUserRef.current = "simulation";
+      return;
+    }
     if (!force && loadedUserRef.current === (sessionUserId ?? null) && !loadingRef.current) return;
     if (loadingRef.current) return;
     loadingRef.current = true;
@@ -52,6 +73,7 @@ function useCurrentShopState() {
         return;
       }
       const nextShops = await getUserShops();
+      if (isSimulationMode()) return;
       setShops(nextShops);
 
       const stored = window.localStorage.getItem(STORAGE_KEY);
@@ -66,9 +88,11 @@ function useCurrentShopState() {
       }
       loadedUserRef.current = sessionUserId;
     } catch {
-      setShops([]);
-      setShop(null);
-      window.localStorage.removeItem(STORAGE_KEY);
+      if (!isSimulationMode()) {
+        setShops([]);
+        setShop(null);
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
     } finally {
       setLoading(false);
       loadingRef.current = false;
@@ -81,6 +105,16 @@ function useCurrentShopState() {
       if (!mounted) return;
       void refresh(userId);
     };
+
+    const onSimulationChanged = () => void refresh(undefined, true);
+    window.addEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
+    if (isSimulationMode()) {
+      void refresh(undefined, true);
+      return () => {
+        mounted = false;
+        window.removeEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
+      };
+    }
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_, session) => {
       syncSession(session?.user.id);
@@ -96,6 +130,7 @@ function useCurrentShopState() {
       mounted = false;
       authListener.subscription.unsubscribe();
       window.removeEventListener(DEMO_SESSION_CHANGED_EVENT, onDemoSessionChanged);
+      window.removeEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
     };
   }, [refresh]);
 

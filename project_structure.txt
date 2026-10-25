@@ -41,10 +41,13 @@ Structure du projet (avec glob)
 │   │   ├── 📄 subscriptionService.ts
 │   │   ├── 📄 subscriptionPaymentService.ts
 │   │   ├── 📄 storageService.ts
+│   │   ├── 📄 stockService.ts
 │   │   ├── 📄 staffService.ts
+│   │   ├── 📄 simulationService.ts
 │   │   ├── 📄 shopService.ts
 │   │   ├── 📄 shopOnlineService.ts
 │   │   ├── 📄 salesService.ts
+│   │   ├── 📄 roleService.ts
 │   │   ├── 📄 paymentService.ts
 │   │   ├── 📄 moduleService.ts
 │   │   ├── 📄 launchService.ts
@@ -102,6 +105,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 sales
 │   │   ├── 📄 rejoindre.tsx
 │   │   ├── 📄 reinitialiser-mot-de-passe.tsx
+│   │   ├── 📄 reception.tsx
 │   │   ├── 📄 README.md
 │   │   ├── 📄 profil.tsx
 │   │   ├── 📄 phone
@@ -112,6 +116,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 outils.$id.tsx
 │   │   ├── 📄 nouveautes.tsx
 │   │   ├── 📄 mot-de-passe-oublie.tsx
+│   │   ├── 📄 magasin.tsx
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
@@ -187,6 +192,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 supabase
 │   │   └── 📄 lovable
 │   ├── 📁 hooks/
+│   │   ├── 📄 useUserRoles.ts
 │   │   ├── 📄 useUserRole.ts
 │   │   ├── 📄 useTools.ts
 │   │   ├── 📄 useTheme.tsx

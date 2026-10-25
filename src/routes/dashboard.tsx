@@ -30,6 +30,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { isSimulationMode } from "@/services/simulationService";
 import { getCashSummary } from "@/services/cashService";
 import { getAllTenants, getExpiringSubscriptions, getGlobalStats, getRecentSignups, type AdminStats, type AdminTenant, type AdminSubscription } from "@/services/adminService";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
@@ -76,6 +77,7 @@ function formatRelativeTime(value: string | null) {
 
 function DashboardRouter() {
   const { role, loading } = useUserRole();
+  if (isSimulationMode()) return <OwnerDashboard />;
   if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement du rôle…</p>;
   if (role === "technicien") return <TechnicianDashboard />;
   if (role === "caissier") return <CashierDashboard />;
@@ -151,6 +153,15 @@ function OwnerDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (isSimulationMode()) {
+      setTickets([]);
+      setClients([]);
+      setSales([]);
+      setEvents([]);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     if (!shopId) {
       setTickets([]);
       setClients([]);
@@ -190,6 +201,10 @@ function OwnerDashboard() {
           .slice(0, 5),
       );
     } catch (reason) {
+      if (isSimulationMode()) {
+        setError(null);
+        return;
+      }
       setError(
         reason instanceof Error
           ? reason.message
@@ -319,6 +334,12 @@ function OwnerDashboard() {
           </div>
         </div>
       </div>
+
+      {isSimulationMode() ? (
+        <div className="mb-4 rounded-lg bg-orange-100 px-4 py-2 text-sm text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
+          🎬 Mode simulation — Données fictives pour démonstration
+        </div>
+      ) : null}
 
       {showRenewalBanner ? (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-900 shadow-sm">

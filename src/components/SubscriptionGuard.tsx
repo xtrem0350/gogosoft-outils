@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useSubscription } from "@/hooks/useSubscription";
 import { isDemoMode } from "@/services/demoService";
+import { isSimulationMode } from "@/services/simulationService";
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -15,13 +16,15 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const { isActive, loading } = useSubscription();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const demo = isDemoMode();
+  const simulation = isSimulationMode();
 
   useEffect(() => {
-    if (location.pathname !== "/dashboard" || shopLoading || shopId || demo) return;
+    if (simulation || location.pathname !== "/dashboard" || shopLoading || shopId || demo) return;
     toast.info("Créez votre boutique pour continuer.");
     void navigate({ to: "/boutiques/nouveau" });
-  }, [demo, location.pathname, navigate, shopId, shopLoading]);
+  }, [demo, location.pathname, navigate, shopId, shopLoading, simulation]);
 
+  if (simulation) return <>{children}</>;
   if (location.pathname === "/abonnement") {
     return <>{children}</>;
   }
