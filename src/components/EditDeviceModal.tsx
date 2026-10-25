@@ -143,6 +143,13 @@ export function EditDeviceModal({ device, open, onClose, onSuccess }: EditDevice
             URL de l&apos;image
             <Input type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
           </label>
+          {imageUrl.trim() ? (
+            <img
+              src={imageUrl.trim()}
+              alt="Aperçu de l'appareil"
+              className="size-24 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+            />
+          ) : null}
           <label className="grid gap-2 text-sm font-medium">
             Caractéristiques (JSON)
             <Textarea value={specsText} onChange={(event) => setSpecsText(event.target.value)} rows={5} />

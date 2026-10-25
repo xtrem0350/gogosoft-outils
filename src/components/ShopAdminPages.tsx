@@ -147,6 +147,7 @@ function ShopSettingsForm({ shop }: { shop: Shop }) {
   }));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState<string | null>(null);
+  const [assetPreviews, setAssetPreviews] = useState<Partial<Record<"shop_logo_url" | "shop_banner_url", string>>>({});
 
   function change<K extends keyof OnlineShopSettings>(key: K, value: OnlineShopSettings[K]) {
     setSettings((current) => ({ ...current, [key]: value }));
@@ -159,6 +160,8 @@ function ShopSettingsForm({ shop }: { shop: Shop }) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
+    const preview = URL.createObjectURL(file);
+    setAssetPreviews((current) => ({ ...current, [key]: preview }));
     setUploading(key);
     try {
       change(key, await uploadShopAsset(shop.id, file));
@@ -166,6 +169,13 @@ function ShopSettingsForm({ shop }: { shop: Shop }) {
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Upload impossible.");
     } finally {
+      URL.revokeObjectURL(preview);
+      setAssetPreviews((current) => {
+        if (current[key] !== preview) return current;
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
       setUploading(null);
     }
   }
@@ -309,9 +319,9 @@ function ShopSettingsForm({ shop }: { shop: Shop }) {
             ).map(([key, label]) => (
               <label key={key} className="grid gap-2 text-sm font-semibold">
                 {label}
-                {settings[key] ? (
+                {assetPreviews[key] || settings[key] ? (
                   <img
-                    src={String(settings[key])}
+                    src={assetPreviews[key] ?? String(settings[key])}
                     alt={`Aperçu ${label.toLowerCase()}`}
                     className="h-32 w-full rounded-md border object-cover"
                   />
@@ -600,6 +610,13 @@ function ProductEditor({ shop, productId }: { shop: Shop; productId?: string }) 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+
+  useEffect(() => {
+    const previews = photos.map((photo) => URL.createObjectURL(photo));
+    setPhotoPreviews(previews);
+    return () => previews.forEach((preview) => URL.revokeObjectURL(preview));
+  }, [photos]);
 
   useEffect(() => {
     if (!productId) return;
@@ -792,13 +809,22 @@ function ProductEditor({ shop, productId }: { shop: Shop; productId?: string }) 
                 </button>
               </div>
             ))}
-            {photos.map((photo) => (
-              <span
-                key={`${photo.name}-${photo.size}`}
-                className="rounded border px-2 py-1 text-xs"
-              >
-                {photo.name}
-              </span>
+            {photos.map((photo, index) => (
+              <div key={`${photo.name}-${photo.size}`} className="relative">
+                <img
+                  src={photoPreviews[index]}
+                  alt={`Aperçu ${photo.name}`}
+                  className="size-20 rounded-md border object-cover"
+                />
+                <button
+                  type="button"
+                  aria-label={`Retirer ${photo.name}`}
+                  onClick={() => setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index))}
+                  className="absolute -right-2 -top-2 grid size-6 place-items-center rounded-full bg-red-700 text-white"
+                >
+                  ×
+                </button>
+              </div>
             ))}
           </div>
         ) : null}

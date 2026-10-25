@@ -392,7 +392,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
       {isSuperAdmin ? <AdminSidebar /> : <Sidebar />}
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground shadow-lg sm:px-5 lg:px-8">
+        <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-sidebar px-4 text-sidebar-foreground shadow-lg dark:border-slate-700 sm:px-5 lg:px-8">
           <div className="flex min-w-0 items-center gap-3">
             <div className="lg:hidden">
               {isSuperAdmin ? (

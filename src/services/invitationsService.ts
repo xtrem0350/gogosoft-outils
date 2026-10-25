@@ -29,23 +29,46 @@ export async function createInvitation(input: {
   whatsapp: string;
   role: EmployeeRole;
 }): Promise<PendingInvitation> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError) throw authError;
-  if (!authData.user) throw new Error("Connectez-vous pour créer une invitation.");
+  const shopId = input.shop_id;
+  if (!shopId) {
+    throw new Error("Boutique introuvable. Impossible de créer l'invitation.");
+  }
+  if (!input.full_name?.trim()) {
+    throw new Error("Le nom est requis.");
+  }
+  if (!input.whatsapp?.trim()) {
+    throw new Error("Le numéro WhatsApp est requis.");
+  }
 
-  const { data, error } = await (supabase.from("pending_invitations" as any) as any)
-    .insert({
-      shop_id: input.shop_id,
-      full_name: input.full_name.trim(),
-      whatsapp: input.whatsapp.trim(),
-      role: input.role,
-      code: generateCode(),
-      created_by: authData.user.id,
-    })
-    .select("*")
-    .single();
-  if (error) throw error;
-  return data as PendingInvitation;
+  const { data: userData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  const userId = userData?.user?.id ?? null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const { data, error } = await (supabase.from("pending_invitations" as any) as any)
+      .insert({
+        shop_id: shopId,
+        full_name: input.full_name.trim(),
+        whatsapp: input.whatsapp.trim(),
+        role: input.role,
+        code: generateCode(),
+        created_by: userId,
+      })
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error("[invitations] createInvitation FULL ERROR:", JSON.stringify(error, null, 2));
+      if (error.code === "23505" && attempt < 2) continue;
+      throw error;
+    }
+    if (!data) {
+      throw new Error("L'invitation n'a pas pu être créée.");
+    }
+    return data as PendingInvitation;
+  }
+
+  throw new Error("Impossible de générer un code d'invitation unique.");
 }
 
 export async function getPendingInvitations(shopId: string): Promise<PendingInvitation[]> {

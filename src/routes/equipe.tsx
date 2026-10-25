@@ -34,6 +34,7 @@ function EquipePage() {
   const [loading, setLoading] = useState(true);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
+  const [avatarPreviews, setAvatarPreviews] = useState<Record<string, string>>({});
   const { shopId, loading: shopLoading } = useCurrentShop();
 
   useEffect(() => {
@@ -127,12 +128,22 @@ function EquipePage() {
 
   async function changeAvatar(member: TeamMember, file: File | undefined) {
     if (!shopId || !file) return;
+    const preview = URL.createObjectURL(file);
+    setAvatarPreviews((current) => ({ ...current, [member.user_id]: preview }));
     try {
       await uploadTeamAvatar(shopId, member.user_id, file);
       toast.success("Photo de profil mise à jour.");
       await refreshMembers();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'envoyer la photo.");
+    } finally {
+      URL.revokeObjectURL(preview);
+      setAvatarPreviews((current) => {
+        if (current[member.user_id] !== preview) return current;
+        const next = { ...current };
+        delete next[member.user_id];
+        return next;
+      });
     }
   }
 
@@ -191,12 +202,13 @@ function EquipePage() {
             .sort((first, second) => Number(second.role === "owner") - Number(first.role === "owner"))
             .map((member) => {
               const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
+              const avatarUrl = avatarPreviews[member.user_id] ?? member.avatar_url;
               return (
                 <Card key={member.id}>
                   <CardContent className="space-y-4 p-4">
                     <div className="flex items-center gap-3">
-                      {member.avatar_url ? (
-                        <img src={member.avatar_url} alt={`Photo de ${displayName}`} className="size-16 shrink-0 rounded-full object-cover" />
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt={`Photo de ${displayName}`} className="size-16 shrink-0 rounded-full object-cover" />
                       ) : (
                         <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-orange-100 text-lg font-semibold text-orange-800">
                           {(displayName.trim().slice(0, 1) || "?").toUpperCase()}

@@ -179,6 +179,17 @@ function ProfilPage() {
                   <Upload className="size-4" />
                   Photo
                 </Button>
+                {avatarFile ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAvatarFile(null)}
+                    className="mt-2"
+                  >
+                    Annuler la sélection
+                  </Button>
+                ) : null}
               </div>
             </CardContent>
           </Card>

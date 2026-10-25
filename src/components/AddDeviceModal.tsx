@@ -163,6 +163,13 @@ export function AddDeviceModal({
             URL de l&apos;image (optionnel)
             <Input type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
           </label>
+          {imageUrl.trim() ? (
+            <img
+              src={imageUrl.trim()}
+              alt="Aperçu de l'appareil"
+              className="size-24 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+            />
+          ) : null}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Annuler</Button>
             <Button type="submit" disabled={saving || !brand.trim() || !model.trim()} className="bg-ivoirien bg-ivoirien-hover shadow-3d">

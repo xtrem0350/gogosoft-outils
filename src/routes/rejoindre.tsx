@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { CheckCircle2, KeyRound, Mail, UserRound } from "lucide-react";
+import { Camera, CheckCircle2, KeyRound, Mail, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
@@ -27,8 +27,19 @@ function JoinInvitationPage() {
   const [ncni, setNcni] = useState("");
   const [lieuHabitation, setLieuHabitation] = useState("");
   const [avatar, setAvatar] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    if (!avatar) {
+      setAvatarPreview(null);
+      return;
+    }
+    const preview = URL.createObjectURL(avatar);
+    setAvatarPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [avatar]);
 
   async function verifyCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -211,7 +222,40 @@ function JoinInvitationPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="join-avatar">Photo de profil (facultatif)</Label>
-                <Input id="join-avatar" type="file" accept="image/*" onChange={(event) => setAvatar(event.target.files?.[0] ?? null)} />
+                <div className="flex flex-col items-center gap-3">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Aperçu de la photo de profil"
+                      className="size-24 rounded-full border-2 border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <div className="flex size-24 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                      <Camera className="size-8 text-slate-400" />
+                    </div>
+                  )}
+                  <Input
+                    id="join-avatar"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      setAvatar(event.target.files?.[0] ?? null);
+                      event.target.value = "";
+                    }}
+                  />
+                  <label
+                    htmlFor="join-avatar"
+                    className="cursor-pointer rounded-md bg-slate-100 px-3 py-1.5 text-sm hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600"
+                  >
+                    Choisir une photo
+                  </label>
+                  {avatar ? (
+                    <button type="button" onClick={() => setAvatar(null)} className="text-xs text-red-500 hover:underline">
+                      Supprimer
+                    </button>
+                  ) : null}
+                </div>
               </div>
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setInvitation(null)} disabled={creating}>

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import { PhoneInput } from "@/components/PhoneInput";
@@ -34,7 +35,18 @@ export function QuickCreateClientDialog({
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!photo) {
+      setPhotoPreview(null);
+      return;
+    }
+    const preview = URL.createObjectURL(photo);
+    setPhotoPreview(preview);
+    return () => URL.revokeObjectURL(preview);
+  }, [photo]);
 
   useEffect(() => {
     if (!open) return;
@@ -127,13 +139,34 @@ export function QuickCreateClientDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="quick-client-photo">Photo</Label>
+            {photoPreview ? (
+              <img
+                src={photoPreview}
+                alt="Aperçu de la photo du client"
+                className="size-24 rounded-full border-2 border-slate-200 object-cover"
+              />
+            ) : (
+              <div className="flex size-24 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                <Camera className="size-8 text-slate-400" />
+              </div>
+            )}
             <Input
               id="quick-client-photo"
               type="file"
               accept="image/*"
-              onChange={(event) => setPhoto(event.target.files?.[0] ?? null)}
+              onChange={(event) => {
+                setPhoto(event.target.files?.[0] ?? null);
+                event.target.value = "";
+              }}
             />
-            {photo ? <p className="text-xs text-muted-foreground">{photo.name}</p> : null}
+            {photo ? (
+              <div className="flex items-center gap-3">
+                <p className="text-xs text-muted-foreground">{photo.name}</p>
+                <button type="button" onClick={() => setPhoto(null)} className="text-xs text-red-500 hover:underline">
+                  Supprimer
+                </button>
+              </div>
+            ) : null}
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
