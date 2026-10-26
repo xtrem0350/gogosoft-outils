@@ -14,11 +14,11 @@ import { toast } from "sonner";
 
 import profileLogo from "@/assets/images/leprofile.png";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import {
   calculateModulePrice,
   calculateVitrinePrice,
-  INSTALLATION_NOTICE,
   PRICING_RULES,
   type PricingMode,
 } from "@/constants/pricing";
@@ -282,18 +282,25 @@ function HomePage() {
 
             <section aria-label="Actions d'authentification" className="space-y-3">
               <p className="text-sm font-semibold text-white">Démarrez dès maintenant</p>
-              <p className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs leading-5 text-green-900">
-                {INSTALLATION_NOTICE}
-              </p>
-              <Button
-                type="button"
-                disabled={!canSignup}
-                className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
-                onClick={() => void handleGoAuth("signup")}
-              >
-                Créer un compte · 7 jours gratuits
-                <Check className="size-4" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    disabled={!canSignup}
+                    className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
+                    onClick={() => void handleGoAuth("signup")}
+                  >
+                    Créer un compte · 7 jours gratuits
+                    <Check className="size-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-sm">
+                    7 jours offerts après paiement : configuration technique (API Mobile Money,
+                    domaine, accès). Votre abonnement démarre après cette période.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
               <Button
                 type="button"
                 disabled={!canDemo}

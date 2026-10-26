@@ -15,7 +15,7 @@ export const PRICING_RULES = {
   allInOne: {
     id: "all_in_one",
     title: "Tout-en-un",
-    price: 110000,
+    price: 99000,
     subtitle: "Toutes les activités : ventes, réparations et vitrines",
     features: ["Tous les modules illimités", "Vitrines incluses", "Support prioritaire"],
   },
