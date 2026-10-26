@@ -24,7 +24,7 @@ export const PRICING_RULES = {
   moduleTitle: "Modules d'activité",
   vitrineTitle: "Vitrines en ligne",
   vitrinePrices: {
-    single: 50000,
+    single: 25000,
     duo: 45000,
   },
   domainPrice: 10000,
