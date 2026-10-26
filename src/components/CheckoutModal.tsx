@@ -346,7 +346,7 @@ export function CheckoutModal({
                   </div>
                 ) : null}
               </div>
-            ) : null}
+            )}
             <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
           </aside>
 
