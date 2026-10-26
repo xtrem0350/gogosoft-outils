@@ -160,6 +160,14 @@ function readSelectedModules(): ModuleId[] {
   }
 }
 
+function readInitialPricingMode(): Exclude<PricingMode, null> {
+  const selectedModules = readSelectedModules();
+  if (selectedModules.length === 0 || selectedModules.length === WELCOME_MODULES.length) {
+    return "all_in_one";
+  }
+  return readPricingMode();
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -186,7 +194,8 @@ function HomePage() {
   const { user, loading } = useAuth();
   const { setActiveModules } = useActiveModules();
   const [selectedModules, setSelectedModules] = useState<ModuleId[]>(readSelectedModules);
-  const [pricingMode, setPricingMode] = useState<Exclude<PricingMode, null>>(readPricingMode);
+  const [pricingMode, setPricingMode] =
+    useState<Exclude<PricingMode, null>>(readInitialPricingMode);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -217,10 +226,26 @@ function HomePage() {
     const next = selectedModules.includes(id)
       ? selectedModules.filter((moduleId) => moduleId !== id)
       : [...selectedModules, id];
+    const activityCount = next.filter(
+      (moduleId) => moduleId.startsWith("reparation-") || moduleId.startsWith("vente-"),
+    ).length;
+    const vitrineCount = next.filter((moduleId) => moduleId.startsWith("vitrine-")).length;
     setSelectedModules(next);
-    setPricingMode(
-      next.length === 0 ? "all_in_one" : id.startsWith("vitrine-") ? "vitrines" : "modules",
-    );
+    const nextPricingMode =
+      next.length === 0 || next.length === WELCOME_MODULES.length
+        ? "all_in_one"
+        : id.startsWith("vitrine-")
+          ? vitrineCount > 0
+            ? "vitrines"
+            : activityCount > 0
+              ? "modules"
+              : "all_in_one"
+          : activityCount > 0
+            ? "modules"
+            : vitrineCount > 0
+              ? "vitrines"
+              : "all_in_one";
+    setPricingMode(nextPricingMode);
   }
 
   function chooseAllInOne() {
@@ -248,11 +273,18 @@ function HomePage() {
     }
   }
 
-  const moduleCount = selectedModules.filter((id) => !id.startsWith("vitrine-")).length;
-  const vitrineCount = selectedModules.filter((id) => id.startsWith("vitrine-")).length;
+  const activityModules = selectedModules.filter(
+    (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
+  );
+  const vitrines = selectedModules.filter((id) => id.startsWith("vitrine-"));
+  const moduleCount = activityModules.length;
+  const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
-  const areModulesActive = pricingMode === "modules" && moduleCount > 0;
-  const areVitrinesActive = pricingMode === "vitrines" && vitrineCount > 0;
+  const areModulesActive = moduleCount > 0 && pricingMode !== "all_in_one";
+  const areVitrinesActive = vitrineCount > 0 && pricingMode !== "all_in_one";
+  const totalPrice = isAllInOneActive
+    ? 99000
+    : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);
   const hasSelection = selectedModules.length > 0;
   const canDemo = hasSelection;
   const canSignup =
@@ -299,7 +331,7 @@ function HomePage() {
                       className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => void handleGoAuth("signup")}
                     >
-                      Créer un compte · 7 jours gratuits
+                      Créer un compte · 7 jours gratuits · {totalPrice.toLocaleString("fr-FR")} FCFA/mois
                       <Check className="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -428,7 +460,7 @@ function HomePage() {
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
                     areModulesActive
                       ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-slate-100 opacity-60"
+                      : "border-slate-200 bg-slate-100 opacity-50"
                   }`}
                 >
                   {areModulesActive ? (
@@ -459,7 +491,7 @@ function HomePage() {
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
                     areVitrinesActive
                       ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-slate-100 opacity-60"
+                      : "border-slate-200 bg-slate-100 opacity-50"
                   }`}
                 >
                   {areVitrinesActive ? (
@@ -482,6 +514,9 @@ function HomePage() {
               </div>
               <p className="text-center text-xs text-slate-500">
                 Nom de domaine obligatoire : 10 000 FCFA/an · Pack SMS en option : 15 000 FCFA.
+              </p>
+              <p className="text-center text-sm font-semibold text-orange-700">
+                Total mensuel : {totalPrice.toLocaleString("fr-FR")} FCFA
               </p>
             </section>
           </section>
