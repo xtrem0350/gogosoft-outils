@@ -25,8 +25,18 @@ import {
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
-import { WELCOME_PRICING, type PricingPlan } from "@/constants/pricing";
-import { isWelcomeDomainId, type WelcomeDomainId } from "@/constants/welcomeDomains";
+import {
+  calculateModulePrice,
+  calculateVitrinePrice,
+  PRICING_RULES,
+  WELCOME_PRICING,
+  type PricingPlan,
+} from "@/constants/pricing";
+import {
+  isWelcomeDomainId,
+  WELCOME_DOMAIN_IDS,
+  type WelcomeDomainId,
+} from "@/constants/welcomeDomains";
 import { checkPseudoExists, signInWithIdentifier, signUp } from "@/services/authService";
 import { createShop, getUserShops } from "@/services/shopService";
 import { completeSubscriptionCheckout } from "@/services/checkoutService";
@@ -36,6 +46,63 @@ const pseudoSchema = z
   .trim()
   .min(3, "Le pseudo doit contenir au moins 3 caractères.")
   .regex(/^[A-Za-z0-9_]+$/, "Le pseudo ne peut contenir que des lettres, chiffres et underscore.");
+
+const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
+const SELECTED_MODULES_STORAGE_KEY = "gogosoft.welcome.selectedModules";
+
+function readNewPricingSelection(): {
+  plan: PricingPlan;
+  domainIds: WelcomeDomainId[];
+} | null {
+  const savedMode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
+  if (savedMode !== "all_in_one" && savedMode !== "modules" && savedMode !== "vitrines") {
+    return null;
+  }
+
+  let parsedModules: unknown;
+  try {
+    parsedModules = JSON.parse(window.sessionStorage.getItem(SELECTED_MODULES_STORAGE_KEY) ?? "[]");
+  } catch (error) {
+    console.error("[auth] Impossible de lire la sélection tarifaire.", error);
+    window.sessionStorage.removeItem(SELECTED_MODULES_STORAGE_KEY);
+    parsedModules = [];
+  }
+  const domainIds = Array.isArray(parsedModules)
+    ? parsedModules.filter(isWelcomeDomainId)
+    : [];
+
+  if (savedMode === "all_in_one") {
+    return { plan: PRICING_RULES.allInOne, domainIds: [...WELCOME_DOMAIN_IDS] };
+  }
+
+  const moduleCount = domainIds.filter((id) => !id.startsWith("vitrine-")).length;
+  const vitrineCount = domainIds.filter((id) => id.startsWith("vitrine-")).length;
+  if (savedMode === "modules" && moduleCount > 0) {
+    return {
+      plan: {
+        id: "modules",
+        title: PRICING_RULES.moduleTitle,
+        price: calculateModulePrice(moduleCount),
+        subtitle: `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
+        features: [],
+      },
+      domainIds,
+    };
+  }
+  if (savedMode === "vitrines" && vitrineCount > 0) {
+    return {
+      plan: {
+        id: "vitrines",
+        title: PRICING_RULES.vitrineTitle,
+        price: calculateVitrinePrice(vitrineCount),
+        subtitle: `${vitrineCount} vitrine${vitrineCount === 1 ? "" : "s"} en ligne`,
+        features: [],
+      },
+      domainIds,
+    };
+  }
+  return null;
+}
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
@@ -148,6 +215,14 @@ function AuthPage() {
       }
       const shops = await getUserShops();
       if (shops.length === 0) {
+        const newPricingSelection = readNewPricingSelection();
+        if (newPricingSelection) {
+          setPaymentDomainIds(newPricingSelection.domainIds);
+          setPaymentPlan(newPricingSelection.plan);
+          setPaymentModalOpen(true);
+          toast.info("Finalisez le paiement pour activer vos domaines.");
+          return;
+        }
         const savedDomains = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
         const savedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
         const plan = WELCOME_PRICING.find((entry) => entry.id === savedPlan);
@@ -206,6 +281,14 @@ function AuthPage() {
         return;
       }
       console.info("[auth] sign-up:success", { userId: result.data.user?.id ?? null });
+      const newPricingSelection = readNewPricingSelection();
+      if (newPricingSelection) {
+        setPaymentDomainIds(newPricingSelection.domainIds);
+        setPaymentPlan(newPricingSelection.plan);
+        setPaymentModalOpen(true);
+        toast.success("Compte créé. Finalisez le paiement pour activer vos domaines.");
+        return;
+      }
       const selectedModules = window.sessionStorage.getItem("gogosoft.welcome.selectedModules");
       const selectedPlan = window.sessionStorage.getItem("gogosoft.welcome.selectedPlan");
       const plan = WELCOME_PRICING.find((entry) => entry.id === selectedPlan);

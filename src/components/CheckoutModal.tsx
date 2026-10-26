@@ -4,8 +4,21 @@ import { ArrowRight, Banknote, Check, CheckCircle2, ChevronLeft, ChevronRight, L
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
-import { BONUS_DAYS, DOMAIN_PRICE, type PricingPlan } from "@/constants/pricing";
-import { WELCOME_DOMAIN_LABELS, type WelcomeDomainId } from "@/constants/welcomeDomains";
+import {
+  BONUS_DAYS,
+  calculateModulePrice,
+  calculateVitrinePrice,
+  DOMAIN_PRICE,
+  INSTALLATION_NOTICE,
+  PRICING_RULES,
+  type PricingMode,
+  type PricingPlan,
+} from "@/constants/pricing";
+import {
+  isWelcomeDomainId,
+  WELCOME_DOMAIN_LABELS,
+  type WelcomeDomainId,
+} from "@/constants/welcomeDomains";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -62,6 +75,30 @@ const PAYMENT_METHODS: Array<{
 ];
 
 const EMPTY_CHOICES: DomainChoice = { choice_1: "", choice_2: "", choice_3: "" };
+const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
+const SELECTED_MODULES_STORAGE_KEY = "gogosoft.welcome.selectedModules";
+
+function readStoredPricingSelection(): {
+  mode: Exclude<PricingMode, null>;
+  modules: WelcomeDomainId[];
+} | null {
+  if (typeof window === "undefined") return null;
+  const mode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
+  if (mode !== "all_in_one" && mode !== "modules" && mode !== "vitrines") return null;
+
+  try {
+    const parsed: unknown = JSON.parse(
+      window.sessionStorage.getItem(SELECTED_MODULES_STORAGE_KEY) ?? "[]",
+    );
+    return {
+      mode,
+      modules: Array.isArray(parsed) ? parsed.filter(isWelcomeDomainId) : [],
+    };
+  } catch (error) {
+    console.error("[Checkout] Impossible de lire la sélection tarifaire.", error);
+    return null;
+  }
+}
 
 export function CheckoutModal({
   open,
@@ -85,6 +122,7 @@ export function CheckoutModal({
   const [processing, setProcessing] = useState(false);
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
   const [cashConfirmation, setCashConfirmation] = useState(false);
+  const [smsPackChecked, setSmsPackChecked] = useState(false);
   const [paymentResult, setPaymentResult] = useState<{
     success: boolean;
     invoiceNumber: string;
@@ -102,10 +140,37 @@ export function CheckoutModal({
     setProcessing(false);
     setInvoice(null);
     setCashConfirmation(false);
+    setSmsPackChecked(false);
     setPaymentResult(null);
   }, [domainRequired, initialDomain, initialMonths, open]);
 
-  const totalAmount = plan.price * months + domainPrice;
+  const storedPricing = readStoredPricingSelection();
+  const pricingMode = domainRequired ? storedPricing?.mode ?? null : null;
+  const moduleCount =
+    storedPricing?.modules.filter((id) => !id.startsWith("vitrine-")).length ?? 0;
+  const vitrineCount =
+    storedPricing?.modules.filter((id) => id.startsWith("vitrine-")).length ?? 0;
+  const planPrice =
+    pricingMode === "all_in_one"
+      ? PRICING_RULES.allInOne.price
+      : pricingMode === "modules"
+        ? calculateModulePrice(moduleCount)
+        : pricingMode === "vitrines"
+          ? calculateVitrinePrice(vitrineCount)
+          : plan.price;
+  const checkoutDomainPrice = pricingMode ? PRICING_RULES.domainPrice : domainPrice;
+  const checkoutPlanTitle =
+    pricingMode === "all_in_one"
+      ? PRICING_RULES.allInOne.title
+      : pricingMode === "modules"
+        ? PRICING_RULES.moduleTitle
+        : pricingMode === "vitrines"
+          ? PRICING_RULES.vitrineTitle
+          : plan.title;
+  const totalAmount = pricingMode
+    ? planPrice + checkoutDomainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0)
+    : plan.price * months + domainPrice;
+  const billedMonths = pricingMode ? 1 : months;
   const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method) ?? PAYMENT_METHODS[0]!;
 
   function updateChoice(key: keyof DomainChoice, value: string) {
@@ -145,12 +210,14 @@ export function CheckoutModal({
       const paidAt = new Date().toISOString();
       const simulationData = {
         invoice_number: invoiceNumber,
-        plan_id: plan.id,
-        plan_price: plan.price,
+        plan_id: pricingMode ?? plan.id,
+        plan_price: planPrice,
         modules: selectedDomainIds,
         domain_name: assignedDomain,
-        domain_price: domainPrice,
-        subscription_months: months,
+        domain_price: checkoutDomainPrice,
+        sms_pack: smsPackChecked,
+        sms_pack_price: smsPackChecked ? PRICING_RULES.smsPackPrice : 0,
+        subscription_months: billedMonths,
         bonus_days: BONUS_DAYS,
         total_amount: totalAmount,
         payment_method: "cash",
@@ -254,7 +321,12 @@ export function CheckoutModal({
                 ) : null}
                 {step === 3 ? (
                   <div className="space-y-3">
-                    <Button type="button" onClick={() => void submitPayment()} disabled={processing} className="min-h-12 w-full">
+                    <Button
+                      type="button"
+                      onClick={() => void submitPayment()}
+                      disabled={processing}
+                      className="min-h-12 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover"
+                    >
                       {processing ? (
                         <>
                           <LoaderCircle className="size-4 animate-spin" />
@@ -274,11 +346,16 @@ export function CheckoutModal({
                   </div>
                 ) : null}
               </div>
-            )}
+            ) : null}
             <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
           </aside>
 
           <section className="min-h-0 overflow-y-auto bg-white p-5 sm:p-7 lg:p-9">
+            {pricingMode && step !== 4 && !invoice ? (
+              <p className="mb-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm leading-6 text-green-900">
+                {INSTALLATION_NOTICE}
+              </p>
+            ) : null}
             {step === 4 && paymentResult ? (
               <div className="flex h-full min-h-[420px] flex-col items-center justify-center py-8 text-center">
                 <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
@@ -291,6 +368,9 @@ export function CheckoutModal({
                   Votre abonnement sera activé sous peu.
                 </p>
                 <div className="mb-6 w-full rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
+                  <p className="mb-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Facture {paymentResult.invoiceNumber}
+                  </p>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-600 dark:text-slate-400">Facture</span>
                     <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
@@ -352,7 +432,7 @@ export function CheckoutModal({
                   <p className="text-slate-600">{clientEmail}</p>
                   <dl className="mt-5 space-y-3">
                     <div className="flex justify-between gap-4 border-t pt-3">
-                      <dt>Plan : {plan.title}</dt>
+                      <dt>Plan : {checkoutPlanTitle}</dt>
                       <dd>{invoice.plan_price.toLocaleString("fr-FR")} FCFA × {invoice.subscription_months}</dd>
                     </div>
                     <div className="border-t pt-3">
@@ -453,8 +533,8 @@ export function CheckoutModal({
                     </DialogHeader>
                     <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm">
                       <div className="flex justify-between gap-4">
-                        <span>Plan : {plan.title}</span>
-                        <span>{plan.price.toLocaleString("fr-FR")} FCFA/mois</span>
+                        <span>Plan : {checkoutPlanTitle}</span>
+                        <span>{planPrice.toLocaleString("fr-FR")} FCFA/mois</span>
                       </div>
                       <div>
                         <p className="font-medium">Domaines sélectionnés</p>
@@ -462,15 +542,56 @@ export function CheckoutModal({
                           {selectedDomainIds.map((id) => <li key={id}>{WELCOME_DOMAIN_LABELS[id]}</li>)}
                         </ul>
                       </div>
-                      {domainPrice > 0 ? (
+                      {pricingMode ? (
+                        <div className="flex justify-between gap-4 border-t pt-3">
+                          <span>Nom de domaine obligatoire : {assignedDomain || "à configurer"}</span>
+                          <span>{checkoutDomainPrice.toLocaleString("fr-FR")} FCFA/an</span>
+                        </div>
+                      ) : domainPrice > 0 ? (
                         <div className="flex justify-between gap-4 border-t pt-3">
                           <span>Domaine : {assignedDomain}</span>
                           <span>{domainPrice.toLocaleString("fr-FR")} FCFA/an</span>
                         </div>
                       ) : null}
+                      {pricingMode === "modules" ? (
+                        <div className="border-t pt-3 text-slate-700">
+                          <p>
+                            {moduleCount} domaine{moduleCount === 1 ? "" : "s"} (
+                            {(moduleCount * PRICING_RULES.moduleUnitPrice).toLocaleString("fr-FR")} F)
+                            {moduleCount >= 2 ? (
+                              <>
+                                {" "}− réduction 10 % (−
+                                {(moduleCount * PRICING_RULES.moduleUnitPrice *
+                                  PRICING_RULES.moduleDiscountRate).toLocaleString("fr-FR")} F)
+                              </>
+                            ) : null}
+                            {" "} = {planPrice.toLocaleString("fr-FR")} F
+                          </p>
+                        </div>
+                      ) : null}
+                      {pricingMode ? (
+                        <label
+                          htmlFor="checkout-sms-pack"
+                          className="flex cursor-pointer items-start gap-3 border-t pt-3"
+                        >
+                          <input
+                            id="checkout-sms-pack"
+                            type="checkbox"
+                            checked={smsPackChecked}
+                            onChange={(event) => setSmsPackChecked(event.target.checked)}
+                            className="mt-0.5 size-4 accent-orange-600"
+                          />
+                          <span className="flex flex-1 justify-between gap-3">
+                            <span>{PRICING_RULES.smsPackLabel}</span>
+                            <span className="shrink-0">
+                              {PRICING_RULES.smsPackPrice.toLocaleString("fr-FR")} F
+                            </span>
+                          </span>
+                        </label>
+                      ) : null}
                       {plan.id === "domain-renewal" ? (
                         <p className="border-t pt-3">Durée du domaine : 1 an</p>
-                      ) : (
+                      ) : !pricingMode ? (
                         <div className="flex items-center justify-between gap-4 border-t pt-3">
                           <label htmlFor="subscription-months" className="font-medium">Durée</label>
                           <select
@@ -483,8 +604,8 @@ export function CheckoutModal({
                             <option value={3}>3 mois</option>
                           </select>
                         </div>
-                      )}
-                      {plan.id !== "domain-renewal" ? (
+                      ) : null}
+                      {!pricingMode && plan.id !== "domain-renewal" ? (
                         <p className="border-t pt-3">Bonus : +{BONUS_DAYS} jours offerts</p>
                       ) : null}
                       <div className="flex justify-between gap-4 border-t pt-4 text-lg font-bold">
@@ -533,7 +654,7 @@ export function CheckoutModal({
                         Paiement en espèces à l&apos;atelier.
                       </p>
                     ) : null}
-                    {plan.id !== "domain-renewal" ? (
+                    {!pricingMode && plan.id !== "domain-renewal" ? (
                       <p className="mt-5 text-sm text-slate-600">
                         Bonus inclus : {BONUS_DAYS} jours d&apos;abonnement offerts après le paiement.
                       </p>

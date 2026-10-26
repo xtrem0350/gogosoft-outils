@@ -15,7 +15,13 @@ import { toast } from "sonner";
 import profileLogo from "@/assets/images/leprofile.png";
 import { Button } from "@/components/ui/button";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
-import { WELCOME_PRICING } from "@/constants/pricing";
+import {
+  calculateModulePrice,
+  calculateVitrinePrice,
+  INSTALLATION_NOTICE,
+  PRICING_RULES,
+  type PricingMode,
+} from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
 import {
   consumeDemoExpiredNotice,
@@ -123,7 +129,15 @@ function ModuleCard({
 }
 
 const STORAGE_KEY = "gogosoft.welcome.selectedModules";
-const PLAN_STORAGE_KEY = "gogosoft.welcome.selectedPlan";
+const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
+
+function readPricingMode(): Exclude<PricingMode, null> {
+  if (typeof window === "undefined") return "all_in_one";
+  const savedMode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
+  return savedMode === "modules" || savedMode === "vitrines" || savedMode === "all_in_one"
+    ? savedMode
+    : "all_in_one";
+}
 
 function readSelectedModules(): ModuleId[] {
   if (typeof window === "undefined") return [];
@@ -139,12 +153,6 @@ function readSelectedModules(): ModuleId[] {
     window.sessionStorage.removeItem(STORAGE_KEY);
     return [];
   }
-}
-
-function readSelectedPlan(): string | null {
-  if (typeof window === "undefined") return null;
-  const savedPlan = window.sessionStorage.getItem(PLAN_STORAGE_KEY);
-  return WELCOME_PRICING.some((plan) => plan.id === savedPlan) ? savedPlan : null;
 }
 
 export const Route = createFileRoute("/")({
@@ -173,7 +181,7 @@ function HomePage() {
   const { user, loading } = useAuth();
   const { setActiveModules } = useActiveModules();
   const [selectedModules, setSelectedModules] = useState<ModuleId[]>(readSelectedModules);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(readSelectedPlan);
+  const [pricingMode, setPricingMode] = useState<Exclude<PricingMode, null>>(readPricingMode);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -183,13 +191,9 @@ function HomePage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (selectedPlanId) {
-        window.sessionStorage.setItem(PLAN_STORAGE_KEY, selectedPlanId);
-      } else {
-        window.sessionStorage.removeItem(PLAN_STORAGE_KEY);
-      }
+      window.sessionStorage.setItem(PRICING_MODE_STORAGE_KEY, pricingMode);
     }
-  }, [selectedPlanId]);
+  }, [pricingMode]);
 
   useEffect(() => {
     if (loading) return;
@@ -205,16 +209,25 @@ function HomePage() {
   }, [loading, navigate, user]);
 
   function toggleModule(id: ModuleId) {
-    setSelectedModules((current) =>
-      current.includes(id) ? current.filter((moduleId) => moduleId !== id) : [...current, id],
+    const next = selectedModules.includes(id)
+      ? selectedModules.filter((moduleId) => moduleId !== id)
+      : [...selectedModules, id];
+    setSelectedModules(next);
+    setPricingMode(
+      next.length === 0 ? "all_in_one" : id.startsWith("vitrine-") ? "vitrines" : "modules",
     );
+  }
+
+  function chooseAllInOne() {
+    setSelectedModules([]);
+    setPricingMode("all_in_one");
   }
 
   async function handleGoAuth(mode: "login" | "signup") {
     if (mode === "signup" && !canSignup) return;
     if (mode === "signup" && typeof window !== "undefined") {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedModules));
-      if (selectedPlanId) window.sessionStorage.setItem(PLAN_STORAGE_KEY, selectedPlanId);
+      window.sessionStorage.setItem(PRICING_MODE_STORAGE_KEY, pricingMode);
     }
     await navigate({ to: "/auth", search: { mode } });
   }
@@ -230,9 +243,14 @@ function HomePage() {
     }
   }
 
+  const moduleCount = selectedModules.filter((id) => !id.startsWith("vitrine-")).length;
+  const vitrineCount = selectedModules.filter((id) => id.startsWith("vitrine-")).length;
   const hasSelection = selectedModules.length > 0;
   const canDemo = hasSelection;
-  const canSignup = hasSelection && selectedPlanId !== null;
+  const canSignup =
+    pricingMode === "all_in_one" ||
+    (pricingMode === "modules" && moduleCount > 0) ||
+    (pricingMode === "vitrines" && vitrineCount > 0);
 
   if (loading || user || isDemoMode()) return null;
 
@@ -264,10 +282,13 @@ function HomePage() {
 
             <section aria-label="Actions d'authentification" className="space-y-3">
               <p className="text-sm font-semibold text-white">Démarrez dès maintenant</p>
+              <p className="rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-xs leading-5 text-green-900">
+                {INSTALLATION_NOTICE}
+              </p>
               <Button
                 type="button"
                 disabled={!canSignup}
-                className="min-h-11 w-full disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
                 onClick={() => void handleGoAuth("signup")}
               >
                 Créer un compte · 7 jours gratuits
@@ -298,7 +319,7 @@ function HomePage() {
                 <p className="text-center text-xs text-slate-300">
                   {!canDemo
                     ? "Sélectionnez au moins un domaine pour démarrer."
-                    : "Sélectionnez une offre pour créer votre compte avec 7 jours gratuits."}
+                    : "Sélectionnez une offre valide pour créer votre compte avec 7 jours gratuits."}
                 </p>
               ) : null}
             </section>
@@ -312,7 +333,7 @@ function HomePage() {
                 <p className="text-sm font-medium text-orange-700">Configurez votre espace</p>
                 <p className="mt-1 text-sm text-slate-600">
                   {selectedModules.length
-                    ? `${selectedModules.length} domaine${selectedModules.length > 1 ? "s" : ""} sélectionné${selectedModules.length > 1 ? "s" : ""}`
+                    ? `${selectedModules.length} sélection${selectedModules.length > 1 ? "s" : ""}`
                     : "Choisissez vos activités et votre offre"}
                 </p>
               </div>
@@ -354,59 +375,84 @@ function HomePage() {
                 <p className="text-xs text-slate-600">Tarifs mensuels · Sans engagement</p>
               </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {WELCOME_PRICING.map((plan) => {
-                  const isSelected = selectedPlanId === plan.id;
-                  return (
-                    <label
-                      key={plan.id}
-                      className={`card-3d relative flex min-h-[176px] cursor-pointer flex-col rounded-xl border p-3 text-left transition-colors focus-within:ring-2 focus-within:ring-orange-500 ${
-                        isSelected
-                          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                          : "border-slate-200 bg-white hover:border-orange-300"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="welcome-plan"
-                        value={plan.id}
-                        checked={isSelected}
-                        onChange={() => setSelectedPlanId(plan.id)}
-                        className="sr-only"
-                      />
-                      {plan.featured ? (
-                        <span className="absolute right-3 top-3 rounded-full bg-orange-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-800">
-                          Recommandé
-                        </span>
-                      ) : null}
-                      {isSelected ? (
-                        <Check className="absolute right-3 top-10 size-4 text-orange-600" />
-                      ) : null}
-                      <h3 className="text-sm font-bold text-slate-900">{plan.title}</h3>
-                      <p className="mt-0.5 text-xs text-slate-600">{plan.subtitle}</p>
-                      <div className="mt-2 flex items-baseline gap-1 text-slate-900">
-                        <span className="text-xl font-bold">
-                          {plan.price.toLocaleString("fr-FR")}
-                        </span>
-                        <span className="text-xs font-medium">FCFA/mois</span>
-                      </div>
-                      <ul className="mt-2 space-y-1">
-                        {plan.features.slice(0, 3).map((feature) => (
-                          <li
-                            key={`${plan.id}-${feature}`}
-                            className="flex items-center gap-1.5 text-xs text-slate-700"
-                          >
-                            <Check className="size-3 shrink-0 text-green-700" />
-                            <span>{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </label>
-                  );
-                })}
+                <button
+                  type="button"
+                  aria-pressed={pricingMode === "all_in_one"}
+                  onClick={chooseAllInOne}
+                  className={`card-3d shadow-3d relative flex min-h-[176px] flex-col rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
+                    pricingMode === "all_in_one"
+                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                      : "border-slate-200 bg-white opacity-60"
+                  }`}
+                >
+                  {pricingMode === "all_in_one" ? (
+                    <Check className="absolute right-3 top-3 size-4 text-orange-600" />
+                  ) : null}
+                  <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.allInOne.title}</h3>
+                  <p className="mt-1 text-xs text-slate-600">{PRICING_RULES.allInOne.subtitle}</p>
+                  <p className="mt-3 text-xl font-bold text-slate-900">
+                    {PRICING_RULES.allInOne.price.toLocaleString("fr-FR")}{" "}
+                    <span className="text-xs font-medium">FCFA/mois</span>
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {PRICING_RULES.allInOne.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-1.5 text-xs text-slate-700">
+                        <Check className="size-3 shrink-0 text-green-700" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </button>
+
+                <article
+                  aria-label="Modules d'activité"
+                  className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
+                    moduleCount > 0
+                      ? "border-green-300 bg-white"
+                      : "border-slate-200 bg-slate-100 opacity-60"
+                  }`}
+                >
+                  {moduleCount >= 2 ? (
+                    <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800">
+                      −10%
+                    </span>
+                  ) : null}
+                  <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.moduleTitle}</h3>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {moduleCount} domaine{moduleCount === 1 ? "" : "s"}
+                  </p>
+                  <p className="mt-3 text-xl font-bold text-slate-900">
+                    {calculateModulePrice(moduleCount).toLocaleString("fr-FR")}{" "}
+                    <span className="text-xs font-medium">FCFA/mois</span>
+                  </p>
+                  {moduleCount >= 2 ? (
+                    <p className="mt-1 text-xs text-green-800">Réduction de 10 % incluse</p>
+                  ) : null}
+                </article>
+
+                <article
+                  aria-label="Vitrines en ligne"
+                  className={`card-3d shadow-3d min-h-[176px] rounded-xl border p-4 transition-colors ${
+                    vitrineCount > 0
+                      ? "border-orange-300 bg-white"
+                      : "border-slate-200 bg-slate-100 opacity-60"
+                  }`}
+                >
+                  <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.vitrineTitle}</h3>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {vitrineCount} vitrine{vitrineCount === 1 ? "" : "s"}
+                  </p>
+                  <p className="mt-3 text-xl font-bold text-slate-900">
+                    {calculateVitrinePrice(vitrineCount).toLocaleString("fr-FR")}{" "}
+                    <span className="text-xs font-medium">FCFA/mois</span>
+                  </p>
+                  {vitrineCount === 2 ? (
+                    <p className="mt-1 text-xs text-green-800">Forfait duo</p>
+                  ) : null}
+                </article>
               </div>
               <p className="text-center text-xs text-slate-500">
-                L&apos;essai de 7 jours est gratuit ; aucun paiement n&apos;est demandé pour le
-                démarrer.
+                Nom de domaine obligatoire : 10 000 FCFA/an · Pack SMS en option : 15 000 FCFA.
               </p>
             </section>
           </section>
