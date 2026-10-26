@@ -14,7 +14,12 @@ import { toast } from "sonner";
 
 import profileLogo from "@/assets/images/leprofile.png";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import {
   calculateModulePrice,
@@ -282,25 +287,27 @@ function HomePage() {
 
             <section aria-label="Actions d'authentification" className="space-y-3">
               <p className="text-sm font-semibold text-white">Démarrez dès maintenant</p>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    disabled={!canSignup}
-                    className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
-                    onClick={() => void handleGoAuth("signup")}
-                  >
-                    Créer un compte · 7 jours gratuits
-                    <Check className="size-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p className="max-w-xs text-sm">
-                    7 jours offerts après paiement : configuration technique (API Mobile Money,
-                    domaine, accès). Votre abonnement démarre après cette période.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      disabled={!canSignup}
+                      className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => void handleGoAuth("signup")}
+                    >
+                      Créer un compte · 7 jours gratuits
+                      <Check className="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="max-w-xs text-sm">
+                      7 jours offerts après paiement : configuration technique (API Mobile Money,
+                      domaine, accès). Votre abonnement démarre après cette période.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               <Button
                 type="button"
                 disabled={!canDemo}
