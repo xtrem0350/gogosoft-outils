@@ -250,6 +250,9 @@ function HomePage() {
 
   const moduleCount = selectedModules.filter((id) => !id.startsWith("vitrine-")).length;
   const vitrineCount = selectedModules.filter((id) => id.startsWith("vitrine-")).length;
+  const isAllInOneActive = pricingMode === "all_in_one";
+  const areModulesActive = pricingMode === "modules" && moduleCount > 0;
+  const areVitrinesActive = pricingMode === "vitrines" && vitrineCount > 0;
   const hasSelection = selectedModules.length > 0;
   const canDemo = hasSelection;
   const canSignup =
@@ -391,16 +394,18 @@ function HomePage() {
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 <button
                   type="button"
-                  aria-pressed={pricingMode === "all_in_one"}
+                  aria-pressed={isAllInOneActive}
                   onClick={chooseAllInOne}
                   className={`card-3d shadow-3d relative flex min-h-[176px] flex-col rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
-                    pricingMode === "all_in_one"
+                    isAllInOneActive
                       ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-white opacity-60"
+                      : "border-slate-200 bg-slate-100 opacity-60"
                   }`}
                 >
-                  {pricingMode === "all_in_one" ? (
-                    <Check className="absolute right-3 top-3 size-4 text-orange-600" />
+                  {isAllInOneActive ? (
+                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
+                      <Check className="size-3" />
+                    </div>
                   ) : null}
                   <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.allInOne.title}</h3>
                   <p className="mt-1 text-xs text-slate-600">{PRICING_RULES.allInOne.subtitle}</p>
@@ -421,13 +426,18 @@ function HomePage() {
                 <article
                   aria-label="Modules d'activité"
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
-                    moduleCount > 0
-                      ? "border-green-300 bg-white"
+                    areModulesActive
+                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
                       : "border-slate-200 bg-slate-100 opacity-60"
                   }`}
                 >
+                  {areModulesActive ? (
+                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
+                      <Check className="size-3" />
+                    </div>
+                  ) : null}
                   {moduleCount >= 2 ? (
-                    <span className="absolute right-3 top-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800">
+                    <span className={`absolute right-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800 ${areModulesActive ? "top-9" : "top-3"}`}>
                       −10%
                     </span>
                   ) : null}
@@ -446,12 +456,17 @@ function HomePage() {
 
                 <article
                   aria-label="Vitrines en ligne"
-                  className={`card-3d shadow-3d min-h-[176px] rounded-xl border p-4 transition-colors ${
-                    vitrineCount > 0
-                      ? "border-orange-300 bg-white"
+                  className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
+                    areVitrinesActive
+                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
                       : "border-slate-200 bg-slate-100 opacity-60"
                   }`}
                 >
+                  {areVitrinesActive ? (
+                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
+                      <Check className="size-3" />
+                    </div>
+                  ) : null}
                   <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.vitrineTitle}</h3>
                   <p className="mt-1 text-xs text-slate-600">
                     {vitrineCount} vitrine{vitrineCount === 1 ? "" : "s"}
