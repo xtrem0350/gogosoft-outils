@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Banknote, Check, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
+import { ArrowRight, Banknote, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
@@ -74,7 +74,6 @@ const PAYMENT_METHODS: Array<{
   { id: "moov_money", label: "Moov Money", icon: Smartphone },
 ];
 
-const EMPTY_CHOICES: DomainChoice = { choice_1: "", choice_2: "", choice_3: "" };
 const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
 const SELECTED_MODULES_STORAGE_KEY = "gogosoft.welcome.selectedModules";
 
@@ -114,11 +113,9 @@ export function CheckoutModal({
 }: CheckoutModalProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<CheckoutStep>(domainRequired ? 1 : 2);
-  const [choices, setChoices] = useState<DomainChoice>(EMPTY_CHOICES);
   const [assignedDomain, setAssignedDomain] = useState(initialDomain);
   const [months, setMonths] = useState<1 | 3>(initialMonths);
   const [method, setMethod] = useState<PaymentMethod>("cash");
-  const [checking, setChecking] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
   const [cashConfirmation, setCashConfirmation] = useState(false);
@@ -132,11 +129,9 @@ export function CheckoutModal({
   useEffect(() => {
     if (!open) return;
     setStep(domainRequired ? 1 : 2);
-    setChoices(EMPTY_CHOICES);
     setAssignedDomain(initialDomain);
     setMonths(initialMonths);
     setMethod("cash");
-    setChecking(false);
     setProcessing(false);
     setInvoice(null);
     setCashConfirmation(false);
@@ -169,37 +164,13 @@ export function CheckoutModal({
           : plan.title;
   const totalAmount = pricingMode
     ? planPrice + checkoutDomainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0)
-    : plan.price * months + domainPrice;
+    : plan.price * months + domainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0);
   const billedMonths = pricingMode ? 1 : months;
   const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method) ?? PAYMENT_METHODS[0]!;
 
-  function updateChoice(key: keyof DomainChoice, value: string) {
-    setChoices((current) => ({ ...current, [key]: value.trim().toLowerCase() }));
-    setAssignedDomain("");
-  }
-
-  async function checkAvailability() {
-    setChecking(true);
-    try {
-      const submittedChoices = [choices.choice_1, choices.choice_2, choices.choice_3].filter(Boolean);
-      if (!choices.choice_1) throw new Error("Saisissez votre premier nom de domaine.");
-      for (const choice of submittedChoices) {
-        if (!/^[a-z0-9-]+\.ci$/.test(choice)) {
-          throw new Error("Chaque domaine doit respecter le format nom.ci.");
-        }
-      }
-      setAssignedDomain(choices.choice_1);
-      toast.success(`Domaine simulé : ${choices.choice_1}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Vérification du domaine impossible.");
-    } finally {
-      setChecking(false);
-    }
-  }
-
   async function submitPayment() {
-    if (domainRequired && (!assignedDomain || !choices.choice_1)) {
-      toast.error("Vérifiez la disponibilité du domaine avant de continuer.");
+    if (!assignedDomain.trim()) {
+      toast.error("Saisissez le nom de domaine.");
       setStep(1);
       return;
     }
@@ -237,6 +208,11 @@ export function CheckoutModal({
       window.sessionStorage.setItem(SIMULATION_PAYMENT_KEY, JSON.stringify(simulationData));
       window.sessionStorage.setItem(SIMULATION_SHOP_KEY, JSON.stringify(shopData));
       window.sessionStorage.setItem(SIMULATION_ACTIVE_KEY, "true");
+      window.sessionStorage.setItem("gogosoft.checkout.pricingMode", pricingMode ?? plan.id);
+      window.sessionStorage.setItem("gogosoft.checkout.selectedModules", JSON.stringify(storedPricing?.modules ?? selectedDomainIds));
+      window.sessionStorage.setItem("gogosoft.checkout.planPrice", String(planPrice));
+      window.sessionStorage.setItem("gogosoft.checkout.domainName", assignedDomain.trim());
+      window.sessionStorage.setItem("gogosoft.checkout.smsPack", String(smsPackChecked));
       notifySimulationChanged();
 
       setPaymentResult({ success: true, invoiceNumber, total: totalAmount });
@@ -308,7 +284,7 @@ export function CheckoutModal({
                     type="button"
                     className="min-h-11 w-full"
                     onClick={onClose}
-                    disabled={checking || processing}
+                    disabled={processing}
                   >
                     Annuler
                   </Button>
@@ -386,7 +362,7 @@ export function CheckoutModal({
                 </div>
                 <Button
                   type="button"
-                  onClick={() => void navigate({ to: "/dashboard" })}
+                  onClick={() => void navigate({ to: "/onboarding/shop" })}
                   className="w-full bg-green-800 text-white hover:bg-green-700"
                   size="lg"
                 >
@@ -478,47 +454,44 @@ export function CheckoutModal({
                 {step === 1 ? (
                   <>
                     <DialogHeader className="mb-6">
-                      <DialogTitle className="text-2xl font-bold text-slate-900">Choisissez votre domaine</DialogTitle>
-                      <DialogDescription>Un domaine .ci est obligatoire. Proposez jusqu&apos;à trois noms.</DialogDescription>
+                      <DialogTitle className="text-2xl font-bold text-slate-900">Finalisez votre abonnement</DialogTitle>
+                      <DialogDescription>Choisissez un nom de domaine, puis vérifiez le total.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      {([
-                        ["choice_1", "Domaine souhaité 1 (obligatoire)", true],
-                        ["choice_2", "Domaine souhaité 2 (optionnel)", false],
-                        ["choice_3", "Domaine souhaité 3 (optionnel)", false],
-                      ] as const).map(([key, label, required]) => (
-                        <label key={key} className="block space-y-2 text-sm font-medium text-slate-800">
-                          {label}
-                          <input
-                            value={choices[key]}
-                            onChange={(event) => updateChoice(key, event.target.value)}
-                            placeholder="monatelier.ci"
-                            required={required}
-                            pattern="[a-z0-9-]+\\.ci"
-                            disabled={checking || processing}
-                            className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
-                          />
-                        </label>
-                      ))}
+                      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm">
+                        <p className="font-semibold">Mode de pricing : {checkoutPlanTitle}</p>
+                        <p className="mt-2 font-medium">Modules et vitrines sélectionnés</p>
+                        <ul className="mt-1 list-inside list-disc text-slate-600">
+                          {(storedPricing?.modules ?? selectedDomainIds).map((id) => (
+                            <li key={id}>{WELCOME_DOMAIN_LABELS[id] ?? id}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-3 flex justify-between"><span>Plan</span><strong>{planPrice.toLocaleString("fr-FR")} FCFA</strong></p>
+                      </div>
+                      <label className="block space-y-2 text-sm font-medium text-slate-800">
+                        Nom de domaine
+                        <input value={assignedDomain} onChange={(event) => setAssignedDomain(event.target.value)} placeholder="monatelier.ci" required disabled={processing} className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-900 placeholder:text-slate-400 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200" />
+                      </label>
                       <p className="rounded-xl bg-orange-50 p-3 text-sm text-orange-900">
-                        Nom de domaine .ci obligatoire — {DOMAIN_PRICE.toLocaleString("fr-FR")} FCFA/an
+                        10 000 FCFA/an. Si indisponible, un nom proche sera proposé automatiquement.
                       </p>
-                      {assignedDomain ? (
-                        <p role="status" className="rounded-xl bg-green-50 p-3 text-sm font-semibold text-green-800">
-                          Domaine attribué : {assignedDomain}
-                        </p>
-                      ) : null}
-                      <Button type="button" onClick={() => void checkAvailability()} disabled={checking || processing} className="min-h-12 w-full">
-                        {checking ? <LoaderCircle className="size-4 animate-spin" /> : <Check className="size-4" />}
-                        Vérifier la disponibilité
-                      </Button>
+                      <label htmlFor="checkout-domain-sms-pack" className="flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-sm">
+                        <input id="checkout-domain-sms-pack" type="checkbox" checked={smsPackChecked} onChange={(event) => setSmsPackChecked(event.target.checked)} className="mt-0.5 size-4 accent-orange-600" />
+                        <span className="flex-1">Pack SMS illimités (MTN, Moov, Orange) + WhatsApp API — 15 000 FCFA</span>
+                      </label>
+                      <div className="space-y-3 rounded-2xl border border-green-200 bg-green-50 p-5 text-sm">
+                        <p className="flex justify-between"><span>Plan</span><strong>{planPrice.toLocaleString("fr-FR")} FCFA</strong></p>
+                        <p className="flex justify-between"><span>Domaine</span><strong>{checkoutDomainPrice.toLocaleString("fr-FR")} FCFA</strong></p>
+                        {smsPackChecked ? <p className="flex justify-between"><span>Pack SMS</span><strong>{PRICING_RULES.smsPackPrice.toLocaleString("fr-FR")} FCFA</strong></p> : null}
+                        <p className="flex justify-between border-t border-green-200 pt-3 text-lg font-bold"><span>TOTAL</span><span>{totalAmount.toLocaleString("fr-FR")} FCFA</span></p>
+                      </div>
                       <Button
                         type="button"
-                        onClick={() => setStep(2)}
-                        disabled={!assignedDomain || checking || processing}
-                        className="min-h-12 w-full"
+                        onClick={() => setStep(3)}
+                        disabled={!assignedDomain.trim() || processing}
+                        className="min-h-12 w-full bg-green-800 text-white hover:bg-green-700"
                       >
-                        Continuer
+                        Continuer vers le paiement
                         <ChevronRight className="size-4" />
                       </Button>
                     </div>

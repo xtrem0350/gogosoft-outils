@@ -33,9 +33,18 @@ export async function createInvitation(input: {
 }): Promise<PendingInvitation> {
   const shopId = input.shop_id;
   if (isSimulationMode()) {
-    throw new Error(
-      "Les invitations ne sont pas disponibles dans un atelier simulé. Sélectionnez une boutique réelle pour inviter un employé.",
-    );
+    return {
+      id: `sim-inv-${Date.now()}`,
+      shop_id: shopId || "sim-shop",
+      full_name: input.full_name,
+      whatsapp: input.whatsapp,
+      role: input.role,
+      code: generateCode(),
+      used: false,
+      used_at: null,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+    } as PendingInvitation;
   }
   if (isDemoMode()) {
     throw new Error(

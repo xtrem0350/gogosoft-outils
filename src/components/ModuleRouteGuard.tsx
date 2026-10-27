@@ -32,6 +32,7 @@ export function ModuleRouteGuard({ children }: { children: ReactNode }) {
   const { isAnyActive, loading } = useActiveModules();
   const notifiedPath = useRef<string | null>(null);
   const required = requiredModules(location.pathname);
+  const isSimulation = typeof window !== 'undefined' && sessionStorage.getItem("gogosoft.simulation.active") === "true";
   const allowed = location.pathname === "/boutiques/nouveau" || !required || isAnyActive(required);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export function ModuleRouteGuard({ children }: { children: ReactNode }) {
     void navigate({ to: "/dashboard" });
   }, [allowed, loading, location.pathname, navigate]);
 
+  if (isSimulation) return <>{children}</>; 
   if (loading || !allowed) return null;
   return <>{children}</>;
 }

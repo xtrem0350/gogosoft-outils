@@ -25,6 +25,7 @@ import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MagasinRouteImport } from './routes/magasin'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as NouveautesRouteImport } from './routes/nouveautes'
+import { Route as OnboardingShopRouteImport } from './routes/onboarding.shop'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PersonnelRouteImport } from './routes/personnel'
 import { Route as ProfilRouteImport } from './routes/profil'
@@ -172,6 +173,11 @@ const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
 const NouveautesRoute = NouveautesRouteImport.update({
   id: '/nouveautes',
   path: '/nouveautes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingShopRoute = OnboardingShopRouteImport.update({
+  id: '/onboarding/shop',
+  path: '/onboarding/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParametresRoute = ParametresRouteImport.update({
@@ -535,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -620,6 +627,7 @@ export interface FileRoutesByTo {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -706,6 +714,7 @@ export interface FileRoutesById {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -1851,6 +1860,7 @@ const rootRouteChildren: RootRouteChildren = {
   MagasinRoute: MagasinRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,
+  OnboardingShopRoute: OnboardingShopRoute,
   ParametresRoute: ParametresRouteWithChildren,
   PersonnelRoute: PersonnelRoute,
   ProfilRoute: ProfilRoute,

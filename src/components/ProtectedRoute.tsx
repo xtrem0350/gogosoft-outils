@@ -9,13 +9,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { user, loading } = useAuth();
   const demo = isDemoMode();
+  const isSimulation = typeof window !== 'undefined' && sessionStorage.getItem("gogosoft.simulation.active") === "true";
 
   useEffect(() => {
-    if (!loading && !user && !demo) {
+    if (!loading && !user && !demo && !isSimulation) {
       void navigate({ to: "/auth", search: { redirect: location.pathname } });
     }
-  }, [demo, loading, location.pathname, navigate, user]);
+  }, [demo, isSimulation, loading, location.pathname, navigate, user]);
 
+  if (isSimulation) return <>{children}</>; 
   if (loading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">

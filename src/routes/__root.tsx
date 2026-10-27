@@ -141,6 +141,7 @@ function RootComponent() {
     "/mot-de-passe-oublie",
     "/reinitialiser-mot-de-passe",
     "/rejoindre",
+    "/onboarding/shop",
     "/demo",
   ];
   const isStandalonePage = publicRoutes.includes(location.pathname);

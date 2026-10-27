@@ -11,12 +11,14 @@ interface RoleGuardProps {
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
   const navigate = useNavigate();
   const { role, loading } = useUserRole();
+  const isSimulation = typeof window !== 'undefined' && sessionStorage.getItem("gogosoft.simulation.active") === "true";
   const allowed = role !== null && allowedRoles.includes(role);
 
   useEffect(() => {
-    if (!loading && !allowed) void navigate({ to: "/dashboard" });
-  }, [allowed, loading, navigate]);
+    if (!loading && !allowed && !isSimulation) void navigate({ to: "/dashboard" });
+  }, [allowed, isSimulation, loading, navigate]);
 
+  if (isSimulation) return <>{children}</>; 
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
   if (!allowed) return null;
   return <>{children}</>;
