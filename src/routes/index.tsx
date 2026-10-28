@@ -234,12 +234,8 @@ function HomePage() {
     const nextPricingMode =
       next.length === 0 || next.length === WELCOME_MODULES.length
         ? "all_in_one"
-        : id.startsWith("vitrine-")
-          ? vitrineCount > 0
-            ? "vitrines"
-            : activityCount > 0
-              ? "modules"
-              : "all_in_one"
+        : activityCount > 0 && vitrineCount > 0
+          ? "modules"
           : activityCount > 0
             ? "modules"
             : vitrineCount > 0
@@ -280,17 +276,16 @@ function HomePage() {
   const moduleCount = activityModules.length;
   const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
-  const areModulesActive = moduleCount > 0 && pricingMode !== "all_in_one";
-  const areVitrinesActive = vitrineCount > 0 && pricingMode !== "all_in_one";
+  const areModulesActive = moduleCount > 0;
+  const areVitrinesActive = vitrineCount > 0;
   const totalPrice = isAllInOneActive
     ? 99000
     : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);
   const hasSelection = selectedModules.length > 0;
   const canDemo = hasSelection;
-  const canSignup =
-    pricingMode === "all_in_one" ||
-    (pricingMode === "modules" && moduleCount > 0) ||
-    (pricingMode === "vitrines" && vitrineCount > 0);
+  const canSignup = isAllInOneActive
+    ? hasSelection
+    : moduleCount > 0 || vitrineCount > 0;
 
   if (loading || user || isDemoMode()) return null;
 
@@ -337,8 +332,7 @@ function HomePage() {
                   </TooltipTrigger>
                   <TooltipContent>
                     <p className="max-w-xs text-sm">
-                      7 jours offerts après paiement : configuration technique (API Mobile Money,
-                      domaine, accès). Votre abonnement démarre après cette période.
+                      Votre compteur d'abonnement démarre officiellement à l'issue de la période des 7 jours gratuits de configuration et de paramétrage de votre compte.
                     </p>
                   </TooltipContent>
                 </Tooltip>

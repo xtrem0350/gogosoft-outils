@@ -83,11 +83,13 @@ function WorkshopDetailsPage() {
   if (!ticket) return <div className="p-6 text-muted-foreground">Chargement de la fiche...</div>;
   const diagnosis = ticket.diagnosis as { tools?: string[]; process?: string[] } | null;
   const statusLabel: Record<WorkshopStatus, string> = {
-    en_attente: "En attente",
-    diagnostique: "Diagnostiqué",
+    en_attente_caissier_entree: "Entrée en caisse",
+    en_attente_technicien: "En attente technicien",
     en_cours: "En cours",
-    termine: "Terminé",
+    en_attente_caissier_solde: "Solde en attente",
+    en_attente_receptionniste: "En attente réception",
     livre: "Livré",
+    annule: "Annulé",
   };
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -248,7 +250,7 @@ function WorkshopDetailsPage() {
         >
           Marquer en cours
         </Button>
-        <Button onClick={() => void changeStatus("termine")} disabled={ticket.status === "termine"}>
+        <Button onClick={() => void changeStatus("livre")} disabled={ticket.status === "livre"}>
           Marquer terminé
         </Button>
         <Button variant="destructive" onClick={() => void remove()}>

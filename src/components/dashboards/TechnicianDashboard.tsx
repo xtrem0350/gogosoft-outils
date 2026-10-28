@@ -63,9 +63,9 @@ export function TechnicianDashboard() {
 
   const inProgress = assigned.filter((ticket) => ticket.status === "en_cours").length;
   const pending = assigned.filter(
-    (ticket) => ticket.status === "en_attente" || ticket.status === "diagnostique",
+    (ticket) => ticket.status === "en_attente_technicien",
   ).length;
-  const done = assigned.filter((ticket) => ticket.status === "termine").length;
+  const done = assigned.filter((ticket) => ticket.status === "livre").length;
 
   return (
     <div className="space-y-6 p-4 md:p-6">

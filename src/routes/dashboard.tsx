@@ -58,10 +58,13 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 const STATUS_LABELS: Record<string, string> = {
-  en_attente: "⏳ En attente",
+  en_attente_caissier_entree: "⏳ Entrée en caisse",
+  en_attente_technicien: "🔧 En attente technicien",
   en_cours: "⚙️ En cours",
-  termine: "✅ Terminé",
-  livre: "📦 Livré",
+  en_attente_caissier_solde: "💰 Solde en attente",
+  en_attente_receptionniste: "📥 En attente réception",
+  livre: "✅ Livré",
+  annule: "❌ Annulé",
 };
 
 function formatRelativeTime(value: string | null) {

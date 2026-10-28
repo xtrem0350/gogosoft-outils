@@ -119,11 +119,8 @@ export function useUserRoles(): UseUserRolesResult {
   }, [activeRole, roles]);
 
   const isOwner = roles.includes("owner");
-  const effectiveRoles = isOwner
-    ? ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"]
-    : roles;
 
-  const hasRole = useCallback((role: string) => effectiveRoles.includes(role), [effectiveRoles]);
+  const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
 
   const isSuperAdmin =
     isSuperAdminAccount &&
@@ -132,7 +129,7 @@ export function useUserRoles(): UseUserRolesResult {
 
   const value = useMemo<UseUserRolesResult>(
     () => ({
-      roles: effectiveRoles,
+      roles,
       activeRole,
       setActiveRole,
       hasRole,
@@ -146,7 +143,7 @@ export function useUserRoles(): UseUserRolesResult {
       isSuperAdminAccount,
       loading: authLoading || shopLoading || loading,
     }),
-    [activeRole, authLoading, effectiveRoles, hasRole, isSuperAdmin, isSuperAdminAccount, loading, roles, setActiveRole, shopLoading],
+    [activeRole, authLoading, hasRole, isSuperAdmin, isSuperAdminAccount, loading, roles, setActiveRole, shopLoading],
   );
 
   return value;

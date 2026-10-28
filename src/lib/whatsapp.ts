@@ -26,10 +26,13 @@ export function buildStatusMessage(options: {
   shopName?: string | null;
 }): string {
   const labels: Record<string, string> = {
-    en_attente: "est enregistré et en attente de prise en charge",
+    en_attente_caissier_entree: "est enregistré et attend le passage en caisse",
+    en_attente_technicien: "est en attente de prise en charge technique",
     en_cours: "est en cours de réparation",
-    termine: "est réparé et prêt à être récupéré",
+    en_attente_caissier_solde: "attend le règlement du solde en caisse",
+    en_attente_receptionniste: "attend la réception",
     livre: "vous a été remis",
+    annule: "a été annulé",
   };
   const etat = labels[options.status] ?? "a été mis à jour";
   const atelier = options.shopName ? ` — ${options.shopName}` : "";

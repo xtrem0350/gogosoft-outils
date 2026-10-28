@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { enableShopModules } from "@/services/moduleService";
 import { createShop } from "@/services/shopService";
 import { shopCodesFromModuleIds, type ModuleId } from "@/types/modules";
+import logo from "@/assets/images/leprofile.png";
 
 export const Route = createFileRoute("/onboarding/shop")({
   component: ShopOnboardingPage,
@@ -65,10 +66,9 @@ function ShopOnboardingPage() {
       }, { onConflict: "user_id" });
       if (subscriptionError) throw subscriptionError;
 
-      const ownerRoles = ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
       const { error: rolesError } = await supabase
         .from("user_roles_by_shop" as never)
-        .insert(ownerRoles.map((role) => ({ shop_id: shop.id, user_id: user.id, role })));
+        .insert({ shop_id: shop.id, user_id: user.id, role: "owner" });
       if (rolesError) throw rolesError;
 
       Object.keys(sessionStorage).forEach((key) => {
@@ -87,25 +87,40 @@ function ShopOnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl items-center px-4 py-10">
-      <section className="w-full rounded-2xl border bg-card p-6 shadow-lg sm:p-8">
-        <h1 className="text-3xl font-bold">Créez votre boutique</h1>
-        <div className="mt-6 space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="shop-name">Nom *</Label>
-            <Input id="shop-name" value={name} onChange={(event) => setName(event.target.value)} required />
+    <main className="grid min-h-screen lg:grid-cols-[minmax(320px,42%)_1fr]">
+      <section className="relative hidden overflow-hidden bg-slate-900 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between">
+        <img src={logo} alt="GogoSoft" className="size-20 rounded-full bg-white p-2 shadow-xl ring-4 ring-orange-500/30" />
+        <div className="max-w-md">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-orange-400">GogoSoft Tools Manager</p>
+          <h1 className="font-display text-4xl font-bold leading-tight">Bienvenue dans votre nouvel espace.</h1>
+          <p className="mt-5 text-lg text-slate-300">Configurez votre boutique et commencez à piloter votre activité.</p>
+        </div>
+        <p className="text-sm text-slate-400">Orange, blanc et vert pour une gestion simple et efficace.</p>
+      </section>
+      <section className="flex min-h-screen items-center bg-white px-5 py-10 dark:bg-slate-800 sm:px-10">
+        <div className="mx-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900 sm:p-8">
+          <div className="mb-7 lg:hidden">
+            <img src={logo} alt="GogoSoft" className="mx-auto size-16 rounded-full bg-white p-2 shadow-lg ring-4 ring-orange-500/30" />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="shop-address">Adresse</Label>
-            <Input id="shop-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Créez votre boutique</h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Renseignez les informations essentielles de votre établissement.</p>
+          <div className="mt-6 space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="shop-name">Nom de la boutique *</Label>
+              <Input id="shop-name" value={name} onChange={(event) => setName(event.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shop-address">Adresse (optionnel)</Label>
+              <Input id="shop-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shop-phone">Téléphone (optionnel)</Label>
+              <Input id="shop-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+            </div>
+            <Button type="button" onClick={() => void createOnboardingShop()} disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
+              {submitting ? "Création en cours..." : "Créer ma boutique"}
+            </Button>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="shop-phone">Téléphone</Label>
-            <Input id="shop-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
-          </div>
-          <Button type="button" onClick={() => void createOnboardingShop()} disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-800 text-white hover:bg-green-700">
-            {submitting ? "Création en cours..." : "Créer ma boutique"}
-          </Button>
         </div>
       </section>
     </main>

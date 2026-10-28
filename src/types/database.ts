@@ -46,7 +46,7 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   role?: AppRole | null;
   is_super_admin?: boolean | null;
 };
-export type WorkshopStatus = "en_attente" | "diagnostique" | "en_cours" | "termine" | "livre";
+export type WorkshopStatus = "en_attente_caissier_entree" | "en_attente_technicien" | "en_cours" | "en_attente_caissier_solde" | "en_attente_receptionniste" | "livre" | "annule";
 export type WorkshopTicket = {
   id: string;
   shop_id: string | null;

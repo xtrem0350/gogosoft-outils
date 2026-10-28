@@ -35,19 +35,23 @@ export const Route = createFileRoute("/atelier/")({
 type Filter = "tous" | WorkshopStatus;
 
 const STATUS_LABEL: Record<WorkshopStatus, string> = {
-  en_attente: "En attente",
-  diagnostique: "Diagnostiqué",
+  en_attente_caissier_entree: "Entrée en caisse",
+  en_attente_technicien: "En attente technicien",
   en_cours: "En cours",
-  termine: "Terminé",
+  en_attente_caissier_solde: "Solde en attente",
+  en_attente_receptionniste: "En attente réception",
   livre: "Livré",
+  annule: "Annulé",
 };
 
 const STATUS_CLASS: Record<WorkshopStatus, string> = {
-  en_attente: "bg-muted text-muted-foreground",
-  diagnostique: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200",
+  en_attente_caissier_entree: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
+  en_attente_technicien: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200",
   en_cours: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  termine: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
-  livre: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+  en_attente_caissier_solde: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
+  en_attente_receptionniste: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200",
+  livre: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+  annule: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
 };
 
 /** Liste filtrable des fiches de l'atelier de la boutique courante. */
@@ -92,11 +96,13 @@ function WorkshopListPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<WorkshopStatus, number> = {
-      en_attente: 0,
-      diagnostique: 0,
+      en_attente_caissier_entree: 0,
+      en_attente_technicien: 0,
       en_cours: 0,
-      termine: 0,
+      en_attente_caissier_solde: 0,
+      en_attente_receptionniste: 0,
       livre: 0,
+      annule: 0,
     };
     for (const ticket of periodTickets) counts[ticket.status] += 1;
     return counts;
@@ -158,11 +164,13 @@ function WorkshopListPage() {
       <Tabs value={filter} onValueChange={(value) => setFilter(value as Filter)}>
         <TabsList>
           <TabsTrigger value="tous">Tout ({periodTickets.length})</TabsTrigger>
-          <TabsTrigger value="en_attente">En attente ({statusCounts.en_attente})</TabsTrigger>
-          <TabsTrigger value="diagnostique">Diagnostiqué ({statusCounts.diagnostique})</TabsTrigger>
+          <TabsTrigger value="en_attente_caissier_entree">Entrée caisse ({statusCounts.en_attente_caissier_entree})</TabsTrigger>
+          <TabsTrigger value="en_attente_technicien">Technicien ({statusCounts.en_attente_technicien})</TabsTrigger>
           <TabsTrigger value="en_cours">En cours ({statusCounts.en_cours})</TabsTrigger>
-          <TabsTrigger value="termine">Terminé ({statusCounts.termine})</TabsTrigger>
+          <TabsTrigger value="en_attente_caissier_solde">Solde caisse ({statusCounts.en_attente_caissier_solde})</TabsTrigger>
+          <TabsTrigger value="en_attente_receptionniste">Réception ({statusCounts.en_attente_receptionniste})</TabsTrigger>
           <TabsTrigger value="livre">Livré ({statusCounts.livre})</TabsTrigger>
+          <TabsTrigger value="annule">Annulé ({statusCounts.annule})</TabsTrigger>
         </TabsList>
       </Tabs>
 

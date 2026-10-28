@@ -84,19 +84,23 @@ const activityLabels: Record<ActivityType, { noun: string; title: string; create
 };
 
 const statusLabels: Record<WorkshopTicket["status"], string> = {
-  en_attente: "⏳ En attente",
-  diagnostique: "🔎 Diagnostiqué",
+  en_attente_caissier_entree: "⏳ Entrée en caisse",
+  en_attente_technicien: "🔧 En attente technicien",
   en_cours: "⚙️ En cours",
-  termine: "✅ Terminé",
+  en_attente_caissier_solde: "💰 Solde en attente",
+  en_attente_receptionniste: "📥 En attente réception",
   livre: "📦 Livré",
+  annule: "❌ Annulé",
 };
 
 const statusStyles: Record<WorkshopTicket["status"], string> = {
-  en_attente: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-  diagnostique: "bg-violet-100 text-violet-800 hover:bg-violet-100",
+  en_attente_caissier_entree: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+  en_attente_technicien: "bg-violet-100 text-violet-800 hover:bg-violet-100",
   en_cours: "bg-orange-100 text-orange-800 hover:bg-orange-100",
-  termine: "bg-green-100 text-green-800 hover:bg-green-100",
-  livre: "bg-green-600 text-white hover:bg-green-600",
+  en_attente_caissier_solde: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+  en_attente_receptionniste: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100",
+  livre: "bg-green-900 text-white hover:bg-green-800",
+  annule: "bg-red-100 text-red-800 hover:bg-red-100",
 };
 
 export function ActivityListPage({
@@ -179,11 +183,13 @@ export function ActivityListPage({
 
   const statusOptions: Array<[string, string]> = [
     ["tous", "Toutes"],
-    ["en_attente", "En attente"],
-    ["diagnostique", "Diagnostiqué"],
+    ["en_attente_caissier_entree", "Entrée en caisse"],
+    ["en_attente_technicien", "En attente technicien"],
     ["en_cours", "En cours"],
-    ["termine", "Terminé"],
+    ["en_attente_caissier_solde", "Solde en attente"],
+    ["en_attente_receptionniste", "En attente réception"],
     ["livre", "Livré"],
+    ["annule", "Annulé"],
   ];
 
   return (
@@ -1598,7 +1604,7 @@ export function ActivityDetailsPage({
     await recordUpdate(
       {
         price_estimate: estimateTotal,
-        status: "diagnostique",
+        status: "en_attente_technicien",
         notes: nextNotes,
         diagnostic_notes: diagnostic.trim(),
         notified_at: null,
@@ -1640,7 +1646,7 @@ export function ActivityDetailsPage({
   async function completeRepair() {
     await recordUpdate(
       {
-        status: "termine",
+        status: "livre",
         outils_utilises: tools.split(",").map((tool) => tool.trim()).filter(Boolean),
         pieces_consommees: pieces,
         ...(technician ? { technicien_id: technician.user_id } : {}),
@@ -1758,7 +1764,7 @@ export function ActivityDetailsPage({
         </CardContent>
       </Card>
 
-      {isRepair && (ticket.status === "en_attente" || ticket.status === "diagnostique") ? (
+      {isRepair && ticket.status === "en_attente_technicien" ? (
         <Card>
           <CardHeader><CardTitle>Diagnostic &amp; Devis</CardTitle></CardHeader>
           <CardContent className="space-y-4">
@@ -1799,8 +1805,7 @@ export function ActivityDetailsPage({
       ) : null}
 
       {isRepair &&
-      (ticket.status === "en_attente" ||
-        ticket.status === "diagnostique" ||
+      (ticket.status === "en_attente_technicien" ||
         ticket.status === "en_cours") ? (
         <Card>
           <CardHeader><CardTitle>Réparation</CardTitle></CardHeader>
@@ -1877,7 +1882,7 @@ export function ActivityDetailsPage({
         </Card>
       ) : null}
 
-      {ticket.status === "termine" ? (
+      {ticket.status === "livre" ? (
         <Card className="bg-card text-card-foreground">
           <CardHeader><CardTitle>Retrait &amp; Encaissement</CardTitle></CardHeader>
           <CardContent className="space-y-4 text-card-foreground">

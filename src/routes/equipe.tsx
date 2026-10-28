@@ -18,6 +18,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { addShopMember } from "@/services/shopService";
 import { getTeamMembers, removeTeamMember, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
@@ -35,7 +37,11 @@ function EquipePage() {
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [avatarPreviews, setAvatarPreviews] = useState<Record<string, string>>({});
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { user } = useAuth();
+  const { isOwner } = useUserRoles();
 
   useEffect(() => {
     if (!shopId) {
@@ -126,6 +132,34 @@ function EquipePage() {
     setMembers(await getTeamMembers(shopId));
   }
 
+  async function openMyRoles() {
+    if (!shopId || !user) return;
+    const { data, error } = await supabase
+      .from("user_roles_by_shop" as never)
+      .select("role")
+      .eq("shop_id", shopId)
+      .eq("user_id", user.id);
+    if (error) throw error;
+    setSelectedRoles((data ?? []).map((row: { role: string }) => row.role).filter((role) => role !== "owner"));
+    setRolesOpen(true);
+  }
+
+  async function saveMyRoles() {
+    if (!shopId || !user) return;
+    try {
+      await supabase.from("user_roles_by_shop" as never).delete().eq("shop_id", shopId).eq("user_id", user.id).neq("role", "owner");
+      if (selectedRoles.length > 0) {
+        const { error } = await supabase.from("user_roles_by_shop" as never).insert(selectedRoles.map((role) => ({ shop_id: shopId, user_id: user.id, role })));
+        if (error) throw error;
+      }
+      toast.success("Vos rôles ont été enregistrés.");
+      setRolesOpen(false);
+      window.location.reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer vos rôles.");
+    }
+  }
+
   async function changeAvatar(member: TeamMember, file: File | undefined) {
     if (!shopId || !file) return;
     const preview = URL.createObjectURL(file);
@@ -169,6 +203,11 @@ function EquipePage() {
         iconColor="green"
         action={
           <div className="flex flex-wrap gap-2">
+            {isOwner ? (
+              <Button variant="outline" onClick={() => void openMyRoles()}>
+                <UserCog className="size-4" /> Mes rôles
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={() => setOpen(true)}>
               <Mail className="size-4" /> Ajouter un compte existant
             </Button>
@@ -310,6 +349,34 @@ function EquipePage() {
         onSuccess={() => void refreshInvitations()}
         shopId={shopId ?? ""}
       />
+
+      <Dialog open={rolesOpen} onOpenChange={setRolesOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Mes rôles</DialogTitle></DialogHeader>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              ["technicien", "Technicien"],
+              ["caissier", "Caissier"],
+              ["magasinier", "Magasinier"],
+              ["receptionniste", "Réceptionniste"],
+              ["vendeur", "Vendeur"],
+            ].map(([value, label]) => (
+              <label key={value} className="flex items-center gap-3 rounded-lg border p-3">
+                <input
+                  type="checkbox"
+                  checked={selectedRoles.includes(value)}
+                  onChange={(event) => setSelectedRoles((current) => event.target.checked ? [...current, value] : current.filter((role) => role !== value))}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRolesOpen(false)}>Annuler</Button>
+            <Button onClick={() => void saveMyRoles()}>Enregistrer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

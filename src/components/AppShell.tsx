@@ -15,6 +15,7 @@ import {
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
@@ -53,6 +54,7 @@ import { useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
+import { usePendingItems } from "@/hooks/usePendingItems";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { hasNewVersion } from "@/lib/changelog";
 import {
@@ -103,10 +105,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
   const { roles: userRoles, activeRole, setActiveRole } = useUserRoles();
+  const pendingCount = usePendingItems(activeRole);
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
+  useEffect(() => {
+    if (pendingCount <= 0) return;
+    const interval = window.setInterval(() => {
+      toast.info(`Vous avez ${pendingCount} élément(s) en attente`, {
+        action: { label: "Voir", onClick: () => void navigate({ to: "/caisse" }) },
+        duration: 5000,
+      });
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, [navigate, pendingCount]);
   useEffect(() => {
     let active = true;
     if (!userId) {

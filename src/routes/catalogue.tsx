@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { DeviceCatalogPage } from "@/components/DeviceCatalogPage";
 import { useCallback, useEffect, useState } from "react";
 import { BookOpen, Laptop, Pencil, Plus, Search, Smartphone, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,7 +30,7 @@ const FILTERS: Array<{ value: DeviceFilter; label: string }> = [
   { value: "laptop", label: "Ordinateurs" },
   { value: "tablet", label: "Tablettes" },
 ];
-export function DeviceCatalogPage() {
+function LegacyDeviceCatalogPage() {
   const { isOwner } = useUserRole();
   const { categories, hasPhones, hasComputers, hasTablets } = useAvailableCategories();
   const [devices, setDevices] = useState<DeviceCatalogItem[]>([]);

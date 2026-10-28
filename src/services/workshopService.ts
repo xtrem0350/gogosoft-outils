@@ -471,7 +471,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       device_sn: data.device_sn ?? null,
       device_os_version: data.device_os_version ?? null,
       issues: data.issues,
-      status: "en_attente",
+      status: "en_attente_caissier_entree",
       diagnosis: data.diagnosis
         ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
         : null,
