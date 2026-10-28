@@ -25,7 +25,6 @@ import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MagasinRouteImport } from './routes/magasin'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as NouveautesRouteImport } from './routes/nouveautes'
-import { Route as OnboardingShopRouteImport } from './routes/onboarding.shop'
 import { Route as ParametresRouteImport } from './routes/parametres'
 import { Route as PersonnelRouteImport } from './routes/personnel'
 import { Route as ProfilRouteImport } from './routes/profil'
@@ -58,6 +57,7 @@ import { Route as ClientsNouveauRouteImport } from './routes/clients.nouveau'
 import { Route as ComputerCarnetRouteImport } from './routes/computer/carnet'
 import { Route as ComputerHistoriqueRouteImport } from './routes/computer/historique'
 import { Route as ConsumableHistoriqueRouteImport } from './routes/consumable/historique'
+import { Route as OnboardingShopRouteImport } from './routes/onboarding.shop'
 import { Route as OutilsIndexRouteImport } from './routes/outils.index'
 import { Route as OutilsIdRouteImport } from './routes/outils.$id'
 import { Route as ParametresEmplacementsRouteImport } from './routes/parametres.emplacements'
@@ -173,11 +173,6 @@ const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
 const NouveautesRoute = NouveautesRouteImport.update({
   id: '/nouveautes',
   path: '/nouveautes',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingShopRoute = OnboardingShopRouteImport.update({
-  id: '/onboarding/shop',
-  path: '/onboarding/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ParametresRoute = ParametresRouteImport.update({
@@ -338,6 +333,11 @@ const ComputerHistoriqueRoute = ComputerHistoriqueRouteImport.update({
 const ConsumableHistoriqueRoute = ConsumableHistoriqueRouteImport.update({
   id: '/consumable/historique',
   path: '/consumable/historique',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingShopRoute = OnboardingShopRouteImport.update({
+  id: '/onboarding/shop',
+  path: '/onboarding/shop',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OutilsIndexRoute = OutilsIndexRouteImport.update({
@@ -541,7 +541,6 @@ export interface FileRoutesByFullPath {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -570,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/computer/carnet': typeof ComputerCarnetRoute
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/outils/$id': typeof OutilsIdRoute
   '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
@@ -627,7 +627,6 @@ export interface FileRoutesByTo {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -655,6 +654,7 @@ export interface FileRoutesByTo {
   '/computer/carnet': typeof ComputerCarnetRoute
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/outils/$id': typeof OutilsIdRoute
   '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
@@ -714,7 +714,6 @@ export interface FileRoutesById {
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
-  '/onboarding/shop': typeof OnboardingShopRoute
   '/parametres': typeof ParametresRouteWithChildren
   '/personnel': typeof PersonnelRoute
   '/profil': typeof ProfilRoute
@@ -743,6 +742,7 @@ export interface FileRoutesById {
   '/computer/carnet': typeof ComputerCarnetRoute
   '/computer/historique': typeof ComputerHistoriqueRoute
   '/consumable/historique': typeof ConsumableHistoriqueRoute
+  '/onboarding/shop': typeof OnboardingShopRoute
   '/outils/$id': typeof OutilsIdRoute
   '/parametres/emplacements': typeof ParametresEmplacementsRoute
   '/phone/carnet': typeof PhoneCarnetRoute
@@ -831,6 +831,7 @@ export interface FileRouteTypes {
     | '/computer/carnet'
     | '/computer/historique'
     | '/consumable/historique'
+    | '/onboarding/shop'
     | '/outils/$id'
     | '/parametres/emplacements'
     | '/phone/carnet'
@@ -915,6 +916,7 @@ export interface FileRouteTypes {
     | '/computer/carnet'
     | '/computer/historique'
     | '/consumable/historique'
+    | '/onboarding/shop'
     | '/outils/$id'
     | '/parametres/emplacements'
     | '/phone/carnet'
@@ -1001,6 +1003,7 @@ export interface FileRouteTypes {
     | '/computer/carnet'
     | '/computer/historique'
     | '/consumable/historique'
+    | '/onboarding/shop'
     | '/outils/$id'
     | '/parametres/emplacements'
     | '/phone/carnet'
@@ -1077,6 +1080,7 @@ export interface RootRouteChildren {
   ComputerCarnetRoute: typeof ComputerCarnetRoute
   ComputerHistoriqueRoute: typeof ComputerHistoriqueRoute
   ConsumableHistoriqueRoute: typeof ConsumableHistoriqueRoute
+  OnboardingShopRoute: typeof OnboardingShopRoute
   OutilsIdRoute: typeof OutilsIdRoute
   PhoneCarnetRoute: typeof PhoneCarnetRoute
   PhoneHistoriqueRoute: typeof PhoneHistoriqueRoute
@@ -1437,6 +1441,13 @@ declare module '@tanstack/react-router' {
       path: '/consumable/historique'
       fullPath: '/consumable/historique'
       preLoaderRoute: typeof ConsumableHistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/shop': {
+      id: '/onboarding/shop'
+      path: '/onboarding/shop'
+      fullPath: '/onboarding/shop'
+      preLoaderRoute: typeof OnboardingShopRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/outils/': {
@@ -1860,7 +1871,6 @@ const rootRouteChildren: RootRouteChildren = {
   MagasinRoute: MagasinRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,
-  OnboardingShopRoute: OnboardingShopRoute,
   ParametresRoute: ParametresRouteWithChildren,
   PersonnelRoute: PersonnelRoute,
   ProfilRoute: ProfilRoute,
@@ -1878,6 +1888,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComputerCarnetRoute: ComputerCarnetRoute,
   ComputerHistoriqueRoute: ComputerHistoriqueRoute,
   ConsumableHistoriqueRoute: ConsumableHistoriqueRoute,
+  OnboardingShopRoute: OnboardingShopRoute,
   OutilsIdRoute: OutilsIdRoute,
   PhoneCarnetRoute: PhoneCarnetRoute,
   PhoneHistoriqueRoute: PhoneHistoriqueRoute,
