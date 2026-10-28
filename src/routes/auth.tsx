@@ -81,9 +81,13 @@ function readNewPricingSelection(): {
     return {
       plan: {
         id: "modules",
-        title: PRICING_RULES.moduleTitle,
-        price: calculateModulePrice(moduleCount),
-        subtitle: `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
+        title: vitrineCount > 0
+          ? `${PRICING_RULES.moduleTitle} + ${PRICING_RULES.vitrineTitle}`
+          : PRICING_RULES.moduleTitle,
+        price: calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount),
+        subtitle: vitrineCount > 0
+          ? `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité + ${vitrineCount} vitrine${vitrineCount === 1 ? "" : "s"}`
+          : `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
         features: [],
       },
       domainIds,

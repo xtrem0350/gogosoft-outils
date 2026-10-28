@@ -391,11 +391,13 @@ Structure du projet (avec glob)
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json
 ├── 📄 tsconfig.json
+├── 📄 tsc
 ├── 📄 supabase
 ├── 📄 src
 ├── 📄 README.md
 ├── 📄 package.json
 ├── 📄 package-lock.json
+├── 📄 npm
 ├── 📄 liste.mjs
 ├── 📄 eslint.config.js
 ├── 📄 docs

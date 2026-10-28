@@ -280,8 +280,8 @@ function HomePage() {
   const moduleCount = activityModules.length;
   const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
-  const areModulesActive = moduleCount > 0 && pricingMode === "modules";
-  const areVitrinesActive = vitrineCount > 0 && pricingMode === "vitrines";
+  const areModulesActive = moduleCount > 0 && !isAllInOneActive;
+  const areVitrinesActive = vitrineCount > 0 && !isAllInOneActive;
   const totalPrice = isAllInOneActive
     ? 99000
     : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);

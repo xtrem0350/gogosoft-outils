@@ -149,7 +149,7 @@ export function CheckoutModal({
     pricingMode === "all_in_one"
       ? PRICING_RULES.allInOne.price
       : pricingMode === "modules"
-        ? calculateModulePrice(moduleCount)
+        ? calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount)
         : pricingMode === "vitrines"
           ? calculateVitrinePrice(vitrineCount)
           : plan.price;
@@ -157,11 +157,13 @@ export function CheckoutModal({
   const checkoutPlanTitle =
     pricingMode === "all_in_one"
       ? PRICING_RULES.allInOne.title
-      : pricingMode === "modules"
-        ? PRICING_RULES.moduleTitle
-        : pricingMode === "vitrines"
-          ? PRICING_RULES.vitrineTitle
-          : plan.title;
+      : pricingMode === "modules" && vitrineCount > 0
+        ? `${PRICING_RULES.moduleTitle} + ${PRICING_RULES.vitrineTitle}`
+        : pricingMode === "modules"
+          ? PRICING_RULES.moduleTitle
+          : pricingMode === "vitrines"
+            ? PRICING_RULES.vitrineTitle
+            : plan.title;
   const totalAmount = pricingMode
     ? planPrice + checkoutDomainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0)
     : plan.price * months + domainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0);
