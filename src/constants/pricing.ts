@@ -36,7 +36,7 @@ export const PRICING_RULES = {
 export type PricingMode = "all_in_one" | "modules" | "vitrines" | null;
 
 export const INSTALLATION_NOTICE =
-  "Les 7 jours offerts après paiement servent à la configuration technique de votre espace (activation des API de paiement Mobile Money, paramétrage de votre nom de domaine, mise en place de vos accès). Votre compteur d'abonnement démarre officiellement à l'issue de cette période. Vous pouvez utiliser l'application normalement pendant ces 7 jours.";
+  "Les 7 jours offerts en plus de votre période défien lors du paiement servent à la configuration technique de votre espace.";
 
 export function calculateModulePrice(count: number): number {
   if (count === 0) return 0;
