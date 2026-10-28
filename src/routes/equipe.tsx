@@ -355,12 +355,12 @@ function EquipePage() {
           <DialogHeader><DialogTitle>Mes rôles</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              ["technicien", "Technicien"],
-              ["caissier", "Caissier"],
-              ["magasinier", "Magasinier"],
-              ["receptionniste", "Réceptionniste"],
-              ["vendeur", "Vendeur"],
-            ].map(([value, label]) => (
+              { value: "technicien", label: "Technicien" },
+              { value: "caissier", label: "Caissier" },
+              { value: "magasinier", label: "Magasinier" },
+              { value: "receptionniste", label: "Réceptionniste" },
+              { value: "vendeur", label: "Vendeur" },
+            ].map(({ value, label }) => (
               <label key={value} className="flex items-center gap-3 rounded-lg border p-3">
                 <input
                   type="checkbox"
