@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,26 +88,17 @@ function ShopOnboardingPage() {
   }
 
   return (
-    <main className="grid min-h-screen lg:grid-cols-[minmax(320px,42%)_1fr]">
-      <section className="relative hidden overflow-hidden bg-slate-900 px-10 py-12 text-white lg:flex lg:flex-col lg:justify-between">
-        <img src={logo} alt="GogoSoft" className="size-20 rounded-full bg-white p-2 shadow-xl ring-4 ring-orange-500/30" />
-        <div className="max-w-md">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-orange-400">GogoSoft Tools Manager</p>
-          <h1 className="font-display text-4xl font-bold leading-tight">Bienvenue dans votre nouvel espace.</h1>
-          <p className="mt-5 text-lg text-slate-300">Configurez votre boutique et commencez à piloter votre activité.</p>
-        </div>
-        <p className="text-sm text-slate-400">Orange, blanc et vert pour une gestion simple et efficace.</p>
-      </section>
-      <section className="flex min-h-screen items-center bg-white px-5 py-10 dark:bg-slate-800 sm:px-10">
-        <div className="mx-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900 sm:p-8">
-          <div className="mb-7 lg:hidden">
-            <img src={logo} alt="GogoSoft" className="mx-auto size-16 rounded-full bg-white p-2 shadow-lg ring-4 ring-orange-500/30" />
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
+      <Card className="card-3d shadow-3d w-full max-w-lg rounded-2xl border bg-background">
+        <CardContent className="p-5 sm:p-8">
+          <div className="mb-6 flex flex-col items-center text-center">
+            <img src={logo} alt="GogoSoft" className="size-16 rounded-full bg-white object-cover p-1 shadow-lg ring-4 ring-orange-500/30" />
+            <h1 className="mt-4 text-2xl font-bold">Créez votre atelier</h1>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Quelques infos pour démarrer</p>
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Créez votre boutique</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Renseignez les informations essentielles de votre établissement.</p>
-          <div className="mt-6 space-y-5">
+          <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="shop-name">Nom de la boutique *</Label>
+              <Label htmlFor="shop-name">Nom de l&apos;atelier *</Label>
               <Input id="shop-name" value={name} onChange={(event) => setName(event.target.value)} required />
             </div>
             <div className="space-y-2">
@@ -118,11 +110,11 @@ function ShopOnboardingPage() {
               <Input id="shop-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
             </div>
             <Button type="button" onClick={() => void createOnboardingShop()} disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
-              {submitting ? "Création en cours..." : "Créer ma boutique"}
+              {submitting ? "Création en cours..." : "Créer mon atelier"}
             </Button>
           </div>
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </main>
   );
 }

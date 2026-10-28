@@ -95,10 +95,27 @@ export function useUserRole(): UserRoleInfo {
           if (!active) return;
           if (error) {
             setShopRole(null);
-          } else {
-            setShopRole(normalizeRole(data?.role ?? null));
+            setLoading(false);
+            return;
           }
-          setLoading(false);
+
+          const memberRole = normalizeRole(data?.role ?? null);
+          if (memberRole) {
+            setShopRole(memberRole);
+            setLoading(false);
+            return;
+          }
+
+          void supabase
+            .from("shops")
+            .select("owner_id")
+            .eq("id", shopId)
+            .maybeSingle()
+            .then(({ data: shop }) => {
+              if (!active) return;
+              setShopRole(shop?.owner_id === user.id ? "owner" : null);
+              setLoading(false);
+            });
         },
         () => {
           if (!active) return;

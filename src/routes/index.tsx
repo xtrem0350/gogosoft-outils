@@ -223,25 +223,29 @@ function HomePage() {
   }, [loading, navigate, user]);
 
   function toggleModule(id: ModuleId) {
-    const next = selectedModules.includes(id)
-      ? selectedModules.filter((moduleId) => moduleId !== id)
-      : [...selectedModules, id];
-    const activityCount = next.filter(
-      (moduleId) => moduleId.startsWith("reparation-") || moduleId.startsWith("vente-"),
-    ).length;
-    const vitrineCount = next.filter((moduleId) => moduleId.startsWith("vitrine-")).length;
-    setSelectedModules(next);
-    const nextPricingMode =
-      next.length === 0 || next.length === WELCOME_MODULES.length
-        ? "all_in_one"
-        : activityCount > 0 && vitrineCount > 0
-          ? "modules"
-          : activityCount > 0
-            ? "modules"
-            : vitrineCount > 0
-              ? "vitrines"
-              : "all_in_one";
-    setPricingMode(nextPricingMode);
+    setSelectedModules((current) => {
+      const next = current.includes(id)
+        ? current.filter((moduleId) => moduleId !== id)
+        : [...current, id];
+      const activityCount = next.filter(
+        (moduleId) => moduleId.startsWith("reparation-") || moduleId.startsWith("vente-"),
+      ).length;
+      const vitrineCount = next.filter((moduleId) => moduleId.startsWith("vitrine-")).length;
+
+      if (next.length === WELCOME_MODULES.length || next.length === 0) {
+        setPricingMode("all_in_one");
+      } else if (pricingMode === "all_in_one") {
+        setPricingMode(activityCount > 0 ? "modules" : vitrineCount > 0 ? "vitrines" : "all_in_one");
+      } else if (activityCount > 0 && vitrineCount > 0) {
+        setPricingMode("modules");
+      } else if (activityCount > 0) {
+        setPricingMode("modules");
+      } else if (vitrineCount > 0) {
+        setPricingMode("vitrines");
+      }
+
+      return next;
+    });
   }
 
   function chooseAllInOne() {
@@ -276,8 +280,8 @@ function HomePage() {
   const moduleCount = activityModules.length;
   const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
-  const areModulesActive = moduleCount > 0;
-  const areVitrinesActive = vitrineCount > 0;
+  const areModulesActive = moduleCount > 0 && pricingMode === "modules";
+  const areVitrinesActive = vitrineCount > 0 && pricingMode === "vitrines";
   const totalPrice = isAllInOneActive
     ? 99000
     : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);
@@ -451,10 +455,13 @@ function HomePage() {
 
                 <article
                   aria-label="Modules d'activité"
+                  aria-disabled={isAllInOneActive}
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
-                    areModulesActive
-                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-slate-100 opacity-50"
+                    isAllInOneActive
+                      ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-50"
+                      : areModulesActive
+                        ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                        : "border-slate-200 bg-slate-100 opacity-50"
                   }`}
                 >
                   {areModulesActive ? (
@@ -482,10 +489,13 @@ function HomePage() {
 
                 <article
                   aria-label="Vitrines en ligne"
+                  aria-disabled={isAllInOneActive}
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
-                    areVitrinesActive
-                      ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                      : "border-slate-200 bg-slate-100 opacity-50"
+                    isAllInOneActive
+                      ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-50"
+                      : areVitrinesActive
+                        ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                        : "border-slate-200 bg-slate-100 opacity-50"
                   }`}
                 >
                   {areVitrinesActive ? (

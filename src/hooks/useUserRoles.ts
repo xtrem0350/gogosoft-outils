@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
 import { getUserShopRoles } from "@/services/roleService";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ShopRole =
   | "owner"
@@ -65,8 +66,16 @@ export function useUserRoles(): UseUserRolesResult {
     let active = true;
     void (async () => {
       try {
-        const nextRoles = await getUserShopRoles(shopId);
+        let nextRoles = await getUserShopRoles(shopId);
         if (!active) return;
+        if (nextRoles.length === 0) {
+          const { data: shop } = await supabase
+            .from("shops")
+            .select("owner_id")
+            .eq("id", shopId)
+            .maybeSingle();
+          if (shop?.owner_id === user.id) nextRoles = ["owner"];
+        }
         setRoles(nextRoles);
 
         const stored = typeof window !== "undefined" ? window.sessionStorage.getItem(STORAGE_KEY) : null;
