@@ -131,16 +131,16 @@ const clientSeeds = [
 const phoneSeeds = [
   ["iPhone 12", "Écran cassé", 35000, "en_cours"],
   ["Samsung A54", "Batterie hors service", 18000, "diagnostic"],
-  ["Tecno Spark 10", "Connecteur de charge", 12000, "en_attente"],
-  ["Infinix Hot 30", "Ne s'allume pas", 25000, "termine"],
+  ["Tecno Spark 10", "Connecteur de charge", 12000, "en_attente_caissier_entree"],
+  ["Infinix Hot 30", "Ne s'allume pas", 25000, "en_attente_caissier_solde"],
   ["Xiaomi Redmi Note 12", "Caméra", 22000, "livre"],
 ] as const;
 
 const computerSeeds = [
   ["HP EliteBook 840", "Remplacement SSD", 45000, "en_cours"],
-  ["Dell Latitude 5420", "Batterie", 38000, "diagnostique"],
-  ["Lenovo ThinkPad T14", "Clavier", 30000, "en_attente"],
-  ["MacBook Air M1", "Nettoyage et maintenance", 55000, "termine"],
+  ["Dell Latitude 5420", "Batterie", 38000, "en_attente_technicien"],
+  ["Lenovo ThinkPad T14", "Clavier", 30000, "en_attente_caissier_entree"],
+  ["MacBook Air M1", "Nettoyage et maintenance", 55000, "en_attente_caissier_solde"],
 ] as const;
 
 function createSeedSession(selectedModules: string[]): DemoSession {
@@ -179,7 +179,7 @@ function createSeedSession(selectedModules: string[]): DemoSession {
           diagnosis: null,
           notes: "Donnée de démonstration",
           price_estimate: price,
-          price_final: status === "termine" || status === "livre" ? price : null,
+          price_final: status === "en_attente_caissier_solde" || status === "livre" ? price : null,
           notified_at: null,
           entry_fee: 2000,
           entry_fee_paid: true,
@@ -195,8 +195,8 @@ function createSeedSession(selectedModules: string[]): DemoSession {
   const consumableTickets = selected.includes("consumable")
     ? [
         ["Écran iPhone 12", "Écran", 2, "en_cours"],
-        ["Batterie Samsung A14", "Batterie", 4, "en_attente"],
-        ["Chargeur USB-C 25 W", "Chargeur", 9, "termine"],
+        ["Batterie Samsung A14", "Batterie", 4, "en_attente_caissier_entree"],
+        ["Chargeur USB-C 25 W", "Chargeur", 9, "en_attente_caissier_solde"],
         ["Coque renforcée universelle", "Coque", 12, "en_cours"],
       ].map(([device_model, category, quantity, status], index) => ({
         id: `demo-consumable-${index + 1}`,

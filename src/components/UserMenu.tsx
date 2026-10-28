@@ -23,10 +23,12 @@ import { toast } from "sonner";
 
 import { signOut } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 export function UserMenu() {
   const navigate = useNavigate();
   const { profile, user, loading, isSuperAdmin } = useAuth();
+  const { activeRole, isOwner } = useUserRoles();
 
   if (loading || !user) return null;
 
@@ -73,13 +75,18 @@ export function UserMenu() {
           </Avatar>
           <div className="hidden min-w-0 text-left md:block">
             <p className="truncate text-sm font-medium leading-none">{resolvedName}</p>
-            <p className="text-[10px] text-sidebar-foreground/65">
-              {profile?.role ?? "Réparateur"}
-            </p>
+            <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-800">
+              {activeRole ? activeRole[0].toUpperCase() + activeRole.slice(1) : "Équipier"}
+            </span>
           </div>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        <div className="px-2 py-2">
+          <p className="truncate text-sm font-semibold">{resolvedName}</p>
+          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+        </div>
+        <DropdownMenuSeparator />
         {isSuperAdmin ? (
           <>
             <DropdownMenuItem onClick={() => void navigate({ to: "/admin" as any })}>
@@ -106,9 +113,11 @@ export function UserMenu() {
             <DropdownMenuItem onClick={() => void navigate({ to: "/abonnement" as any })}>
               <CreditCard className="size-4" /> Mon forfait
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
-              <Settings className="size-4" /> Paramètres
-            </DropdownMenuItem>
+            {isOwner ? (
+              <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
+                <Settings className="size-4" /> Paramètres
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem onClick={() => void navigate({ to: "/nouveautes" })}>
               <Sparkles className="size-4" /> Nouveautés
             </DropdownMenuItem>

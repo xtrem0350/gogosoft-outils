@@ -38,7 +38,7 @@ function ReceptionPage() {
     void (async () => {
       try {
         const { data } = await import("@/integrations/supabase/client").then(({ supabase }) =>
-          supabase.from("workshop_tickets").select("*").eq("shop_id", shopId).eq("status", "en_attente_receptionniste").order("created_at", { ascending: false }),
+          supabase.from("workshop_tickets").select("*").eq("shop_id", shopId).eq("status", "en_attente_caissier_entree").order("created_at", { ascending: false }),
         );
         setTickets((data ?? []) as WorkshopTicket[]);
         const nextLocations = await getLocationsByShop(shopId);

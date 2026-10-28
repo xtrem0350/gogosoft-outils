@@ -70,7 +70,7 @@ function getNavigationGroups(
   shopSlug: string | null,
   hasShop: boolean,
   vocabulary: SectorVocabulary,
-  role: UserRole,
+  role: UserRole | string | null,
 ): NavigationGroup[] {
   const hasModule = (id: ModuleId) => activeModules.includes(id);
   const groups: NavigationGroup[] = [
@@ -111,10 +111,6 @@ function getNavigationGroups(
         { label: "Carnet", to: "/computer/carnet", icon: History },
       ] });
     }
-    groups.push(
-      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
-      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
-    );
     return groups;
   }
 
@@ -126,8 +122,6 @@ function getNavigationGroups(
         icon: Wallet,
         items: [{ label: "Encaissements", to: "/caisse", icon: Wallet }],
       },
-      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
-      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
     return cashierGroups;
   }
@@ -145,8 +139,6 @@ function getNavigationGroups(
             : []),
         ],
       },
-      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
-      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
   }
 
@@ -163,8 +155,6 @@ function getNavigationGroups(
     return [
       groups[0]!,
       ...(receptionItems.length ? [{ label: "RÉCEPTION", icon: UserRound, items: receptionItems }] : []),
-      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
-      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
   }
 
@@ -183,8 +173,6 @@ function getNavigationGroups(
     return [
       groups[0]!,
       ...(salesItems.length ? [{ label: "VENTES", icon: ShoppingCart, items: salesItems }] : []),
-      { label: "CLIENTS", icon: Users, items: [{ label: "Clients", to: "/clients", icon: Users }] },
-      { label: "CATALOGUE", icon: BookOpen, items: [{ label: "Catalogue", to: "/catalogue", icon: BookOpen }] },
     ];
   }
 
@@ -354,7 +342,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     shop?.shop_slug ?? null,
     Boolean(shop?.id),
     vocabulary,
-    role,
+    activeRole || role,
   );
   const hasPendingAlert = (to: string) => pendingCount > 0 && (
     ((activeRole === "caissier" || activeRole === "owner") && to === "/caisse") ||
