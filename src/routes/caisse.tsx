@@ -4,6 +4,8 @@ import { Banknote, CalendarDays, Plus, Printer, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosureModal } from "@/components/CashClosureModal";
+import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
+import { supabase } from "@/integrations/supabase/client";
 import { CashReceiptModal, type CashReceipt } from "@/components/CashReceiptModal";
 import { PageHero } from "@/components/PageHero";
 import { StatsCard } from "@/components/StatsCard";
@@ -104,6 +106,9 @@ function CashPage() {
   const [summary, setSummary] = useState<CashSummary | null>(null);
   const [closures, setClosures] = useState<CashClosure[]>([]);
   const [exits, setExits] = useState<CashExit[]>([]);
+  const [entryTickets, setEntryTickets] = useState<Array<{ id: string; ticket_number: string; client_name: string }>>([]);
+  const [finalTickets, setFinalTickets] = useState<Array<{ id: string; ticket_number: string; client_name: string; quote_amount?: number }>>([]);
+  const [ticketPayment, setTicketPayment] = useState<{ ticket: { id: string; ticket_number: string; client_name: string; quote_amount?: number }; type: "entry" | "final" } | null>(null);
   const [pendingSales, setPendingSales] = useState<
     Array<{ id: string; product_name: string; client_name: string | null; total_price: number; created_at: string }>
   >([]);
@@ -132,20 +137,24 @@ function CashPage() {
     }
     setLoading(true);
     try {
-      const [nextSummary, nextClosures, members, nextExits, sales] = await Promise.all([
+      const [nextSummary, nextClosures, members, nextExits, sales, workshopRows] = await Promise.all([
         getCashSummary(shopId, period),
         getCashClosures(shopId),
         getTeamMembers(shopId),
         getCashExits(shopId, period),
         listSales(shopId),
+        supabase.from("workshop_tickets" as never).select("id,ticket_number,client_name,status,quote_amount").eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
       ]);
       setSummary(nextSummary);
       setClosures(nextClosures);
       setExits(nextExits);
+      const workshopTickets = (workshopRows.data ?? []) as Array<{ id: string; ticket_number: string; client_name: string; status: string; quote_amount?: number }>;
+      setEntryTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_entree"));
+      setFinalTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_solde"));
       setPendingSales(
         demo
           ? []
-          : sales.filter((sale) => sale.payment_status === "awaiting_payment"),
+          : sales.filter((sale) => sale.payment_status === "pending" || sale.payment_status === "awaiting_payment"),
       );
       setMemberAvatars(Object.fromEntries(
         members.filter((member) => member.avatar_url).map((member) => [member.user_id, member.avatar_url as string]),
@@ -194,6 +203,24 @@ function CashPage() {
     } finally {
       setSavingExit(false);
     }
+  }
+
+  async function collectTicketPayment(method: string, amount: number) {
+    if (!ticketPayment || !shopId) return;
+    const isEntry = ticketPayment.type === "entry";
+    const { error } = await supabase.from("workshop_tickets" as never).update({ status: isEntry ? "en_attente_technicien" : "en_attente_receptionniste" }).eq("id", ticketPayment.ticket.id);
+    if (error) throw error;
+    const { error: paymentError } = await supabase.from("workshop_payments" as never).insert({
+      shop_id: shopId,
+      ticket_id: ticketPayment.ticket.id,
+      payment_type: isEntry ? "entry" : "final",
+      amount,
+      method,
+    } as never);
+    if (paymentError) throw paymentError;
+    toast.success(isEntry ? "Entrée encaissée. Le technicien a été notifié." : "Solde encaissé. Le réceptionniste a été notifié.");
+    setTicketPayment(null);
+    await load();
   }
 
   async function collectSale(saleId: string) {
@@ -435,6 +462,19 @@ function CashPage() {
       </Card> : null}
 
       {!demo ? <Card className="card-3d rounded-xl">
+        <CardHeader><CardTitle>Fiches atelier à encaisser</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {[...entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: 2000 })), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - 2000) }))].map(({ ticket, type, amount }) => (
+            <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+              <div><p className="font-medium">{ticket.ticket_number} · {ticket.client_name}</p><p className="text-xs text-muted-foreground">{type === "entry" ? "Entrée" : "Solde"} · {formatMoney(amount)}</p></div>
+              <Button size="sm" onClick={() => setTicketPayment({ ticket, type })}>{type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}</Button>
+            </div>
+          ))}
+          {entryTickets.length === 0 && finalTickets.length === 0 ? <p className="text-sm text-muted-foreground">Aucune fiche atelier en attente.</p> : null}
+        </CardContent>
+      </Card> : null}
+
+      {!demo ? <Card className="card-3d rounded-xl">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle>Sorties de caisse</CardTitle>
@@ -574,6 +614,15 @@ function CashPage() {
         />
       ) : null}
       <CashReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
+      {ticketPayment ? (
+        <WorkshopPaymentModal
+          open={Boolean(ticketPayment)}
+          onClose={() => setTicketPayment(null)}
+          amount={ticketPayment.type === "entry" ? 2000 : Math.max(0, Number(ticketPayment.ticket.quote_amount ?? 0) - 2000)}
+          title={ticketPayment.type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}
+          onSuccess={(method, amount) => void collectTicketPayment(method, amount)}
+        />
+      ) : null}
       <Dialog open={exitOpen} onOpenChange={(open) => !savingExit && setExitOpen(open)}>
         <DialogContent>
           <DialogHeader>

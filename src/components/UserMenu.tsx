@@ -76,7 +76,7 @@ export function UserMenu() {
           <div className="hidden min-w-0 text-left md:block">
             <p className="truncate text-sm font-medium leading-none">{resolvedName}</p>
             <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-800">
-              {activeRole ? activeRole[0].toUpperCase() + activeRole.slice(1) : "Équipier"}
+              {activeRole ? activeRole.charAt(0).toUpperCase() + activeRole.slice(1) : "Équipier"}
             </span>
           </div>
         </Button>

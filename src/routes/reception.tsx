@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AlertCircle, CalendarClock, PackageCheck, Plus, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
 import { StatsCard } from "@/components/StatsCard";
@@ -10,6 +11,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
+import { ClientSelect } from "@/components/selects/ClientSelect";
+import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
+import { DeviceCatalogPicker } from "@/components/DeviceCatalogPicker";
+import { StepIndicator } from "@/components/StepIndicator";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import type { ClientRecord } from "@/services/clientService";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
@@ -18,8 +26,15 @@ import { assignTicketToLocation, getLocationsByShop } from "@/services/storageSe
 export const Route = createFileRoute("/reception")({ component: ReceptionPage });
 
 function ReceptionPage() {
+  const navigate = useNavigate();
   const { shopId } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
+  const [step, setStep] = useState(1);
+  const [selectedClient, setSelectedClient] = useState<ClientRecord>();
+  const [clientDialogOpen, setClientDialogOpen] = useState(false);
+  const [clientRefreshKey, setClientRefreshKey] = useState(0);
+  const [paymentPaid, setPaymentPaid] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [locations, setLocations] = useState<Array<{ id: string; name: string; status: string }>>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -79,8 +94,21 @@ function ReceptionPage() {
     if (selectedLocationId) {
       await assignTicketToLocation(ticket.id, selectedLocationId);
     }
+    const { error: paymentError } = await supabase.from("workshop_payments" as never).insert({
+      shop_id: shopId,
+      ticket_id: ticket.id,
+      payment_type: "entry",
+      amount: 2000,
+      method: paymentMethod || "cash",
+    } as never);
+    if (paymentError) throw paymentError;
 
+    toast.success("Fiche créée. Le caissier a été notifié.");
     setOpenCreate(false);
+    setStep(1);
+    setPaymentPaid(false);
+    setPaymentMethod("");
+    setSelectedClient(undefined);
     setClientName("");
     setClientPhone("");
     setDeviceBrand("");
@@ -122,7 +150,10 @@ function ReceptionPage() {
                     <p className="font-medium">{ticket.client_name}</p>
                     <p className="text-sm text-muted-foreground">{ticket.device_model ?? "Appareil"}</p>
                   </div>
-                  <span className="text-xs uppercase text-amber-700">{ticket.status}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase text-amber-700">{ticket.ticket_number}</span>
+                    <Button size="sm" variant="outline" onClick={() => void navigate({ to: `/phone/atelier/${ticket.id}` as string })}>Voir</Button>
+                  </div>
                 </div>
               ))
             )}
@@ -154,45 +185,53 @@ function ReceptionPage() {
             <DialogTitle>Nouveau client</DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Client</Label>
-              <Input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Nom du client" />
-            </div>
-            <div className="space-y-2">
-              <Label>WhatsApp</Label>
-              <Input value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} placeholder="+225 ..." />
-            </div>
-            <div className="space-y-2">
-              <Label>Marque</Label>
-              <Input value={deviceBrand} onChange={(event) => setDeviceBrand(event.target.value)} placeholder="Samsung, iPhone..." />
-            </div>
-            <div className="space-y-2">
-              <Label>Modèle</Label>
-              <Input value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} placeholder="A54, 13 Pro..." />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Panne</Label>
-              <Input value={issue} onChange={(event) => setIssue(event.target.value)} placeholder="Description de la panne" />
-            </div>
-            <div className="space-y-2">
-              <Label>IMEI</Label>
-              <Input value={deviceImei} onChange={(event) => setDeviceImei(event.target.value)} placeholder="IMEI" />
-            </div>
-            <div className="space-y-2">
-              <Label>Entrée</Label>
-              <Input type="number" value={entryFee} onChange={(event) => setEntryFee(Number(event.target.value || 0))} />
-            </div>
-            <div className="space-y-2 md:col-span-2">
-              <Label>Choix casier</Label>
-              <StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} />
-            </div>
+          <div className="grid grid-cols-4 gap-2 rounded-xl bg-slate-50 p-3">
+            {["Client", "Appareil", "Paiement", "Casier"].map((label, index) => (
+              <StepIndicator key={label} number={index + 1} label={label} active={step === index + 1} completed={step > index + 1} />
+            ))}
           </div>
 
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setOpenCreate(false)}>Annuler</Button>
-            <Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={handleCreateTicket}>Enregistrer</Button>
-          </DialogFooter>
+          {step === 1 ? (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between"><Label>Client</Label><Button size="sm" variant="outline" onClick={() => setClientDialogOpen(true)}><Plus className="size-4" /> Nouveau</Button></div>
+                <ClientSelect shopId={shopId ?? null} value={selectedClient?.id} refreshKey={clientRefreshKey} selectedClient={selectedClient} onSelect={(client) => { setSelectedClient(client); setClientName(client.full_name); setClientPhone(client.whatsapp ?? ""); }} />
+                <Input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Nom du client" />
+                <Input value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} placeholder="WhatsApp" />
+              </div>
+              <DialogFooter><Button disabled={!clientName.trim()} onClick={() => setStep(2)}>Suivant</Button></DialogFooter>
+            </div>
+          ) : null}
+
+          {step === 2 ? (
+            <div className="space-y-4">
+              <DeviceCatalogPicker shopId={shopId ?? null} category="smartphone" onSelect={(device) => { setDeviceBrand(device.brand); setDeviceModel(device.model); }} onFreeEntry={() => { setDeviceBrand(""); setDeviceModel(""); }} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2"><Label>Marque</Label><Input value={deviceBrand} onChange={(event) => setDeviceBrand(event.target.value)} /></div>
+                <div className="space-y-2"><Label>Modèle</Label><Input value={deviceModel} onChange={(event) => setDeviceModel(event.target.value)} /></div>
+              </div>
+              <div className="space-y-2"><Label>IMEI (optionnel)</Label><Input value={deviceImei} onChange={(event) => setDeviceImei(event.target.value)} /></div>
+              <div className="space-y-2"><Label>Description de la panne</Label><Textarea value={issue} onChange={(event) => setIssue(event.target.value)} /></div>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(1)}>Retour</Button><Button disabled={!deviceModel.trim()} onClick={() => setStep(3)}>Suivant</Button></DialogFooter>
+            </div>
+          ) : null}
+
+          {step === 3 ? (
+            <div className="space-y-5 text-center">
+              <AlertCircle className="mx-auto size-10 text-orange-500" />
+              <p className="font-semibold">Frais d&apos;entrée diagnostic : 2 000 FCFA (non remboursable)</p>
+              {paymentPaid ? <p className="text-sm font-medium text-green-700">Paiement enregistré · {paymentMethod}</p> : null}
+              <DialogFooter><Button variant="outline" onClick={() => setStep(2)}>Retour</Button>{paymentPaid ? <Button onClick={() => setStep(4)}>Suivant</Button> : <Button onClick={() => setPaymentOpen(true)}>Encaisser 2 000 FCFA</Button>}</DialogFooter>
+            </div>
+          ) : null}
+
+          {step === 4 ? (
+            <div className="space-y-4">
+              <div className="space-y-2"><Label>Casier</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
+              <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> 2 000 FCFA</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId} onClick={handleCreateTicket}>Créer la fiche</Button></DialogFooter>
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
 
@@ -201,10 +240,25 @@ function ReceptionPage() {
         onClose={() => setPaymentOpen(false)}
         amount={entryFee}
         title="Paiement d'entrée"
-        onSuccess={() => {
+        onSuccess={(method, amount) => {
+          setPaymentMethod(method);
+          setEntryFee(amount);
+          setPaymentPaid(true);
           setPaymentOpen(false);
         }}
       />
+      {shopId ? <QuickCreateClientDialog
+        open={clientDialogOpen}
+        onOpenChange={setClientDialogOpen}
+        shopId={shopId}
+        onCreated={(client) => {
+          setSelectedClient(client);
+          setClientName(client.full_name);
+          setClientPhone(client.whatsapp ?? "");
+          setClientRefreshKey((key) => key + 1);
+          setClientDialogOpen(false);
+        }}
+      /> : null}
     </div>
   );
 }

@@ -114,6 +114,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 parametres.emplacements.tsx
 │   │   ├── 📄 outils.index.tsx
 │   │   ├── 📄 outils.$id.tsx
+│   │   ├── 📄 onboarding.shop.tsx
 │   │   ├── 📄 nouveautes.tsx
 │   │   ├── 📄 mot-de-passe-oublie.tsx
 │   │   ├── 📄 magasin.tsx
@@ -200,6 +201,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useStats.ts
 │   │   ├── 📄 useShopModules.ts
 │   │   ├── 📄 useSectorVocabulary.ts
+│   │   ├── 📄 usePendingItems.ts
 │   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
 │   │   ├── 📄 useCart.ts
@@ -328,6 +330,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 EditDeviceModal.tsx
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
+│   │   ├── 📄 DeviceCatalogPage.tsx
 │   │   ├── 📄 DemoBanner.tsx
 │   │   ├── 📄 dashboards
 │   │   ├── 📄 CreateInvitationModal.tsx

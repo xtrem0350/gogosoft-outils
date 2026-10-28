@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { supabase } from "@/integrations/supabase/client";
 import { createStockItem, getStockItems, getSupplierOrders, createSupplierOrder, adjustStock, type StockItem, type SupplierOrder } from "@/services/stockService";
 
 export const Route = createFileRoute("/magasin")({ component: MagasinPage });
@@ -28,6 +29,11 @@ function MagasinPage() {
   const [supplier, setSupplier] = useState("");
   const [supplierName, setSupplierName] = useState("");
   const [orderTotal, setOrderTotal] = useState(0);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustItem, setAdjustItem] = useState<StockItem | null>(null);
+  const [movementType, setMovementType] = useState<"entry" | "exit">("entry");
+  const [movementQuantity, setMovementQuantity] = useState(1);
+  const [movementReason, setMovementReason] = useState("");
 
   const refresh = async () => {
     if (!shopId) return;
@@ -42,6 +48,16 @@ function MagasinPage() {
 
   const lowStockCount = items.filter((item) => item.quantity <= item.min_quantity).length;
   const pendingOrders = orders.filter((order) => order.status !== "received").length;
+
+  async function handleAdjustStock() {
+    if (!shopId || !adjustItem) return;
+    await adjustStock(shopId, adjustItem.id, movementType, movementQuantity, movementReason.trim() || "Ajustement manuel");
+    setAdjustOpen(false);
+    setAdjustItem(null);
+    setMovementQuantity(1);
+    setMovementReason("");
+    await refresh();
+  }
 
   async function handleCreateItem() {
     if (!shopId || !name.trim()) return;
@@ -60,6 +76,13 @@ function MagasinPage() {
     setUnitPrice(1000);
     setSupplier("");
     setArticleOpen(false);
+    await refresh();
+  }
+
+  async function markOrderReceived(order: SupplierOrder) {
+    if (!shopId) return;
+    const { error } = await supabase.from("supplier_orders").update({ status: "received", received_at: new Date().toISOString() }).eq("id", order.id);
+    if (error) throw error;
     await refresh();
   }
 
@@ -120,6 +143,7 @@ function MagasinPage() {
                     ) : (
                       <span className="text-xs text-emerald-700">OK</span>
                     )}
+                    <Button size="sm" variant="outline" className="mt-2" onClick={() => { setAdjustItem(item); setAdjustOpen(true); }}>Ajuster</Button>
                   </div>
                 </div>
               ))
@@ -141,13 +165,28 @@ function MagasinPage() {
                     <p className="font-medium">{order.supplier_name}</p>
                     <p className="text-xs text-muted-foreground">{order.order_number}</p>
                   </div>
-                  <span className="text-xs uppercase text-slate-700">{order.status}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs uppercase text-slate-700">{order.status}</span>
+                    {order.status === "pending" ? <Button size="sm" variant="outline" onClick={() => void markOrderReceived(order)}>Marquer reçu</Button> : null}
+                  </div>
                 </div>
               ))
             )}
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Ajuster {adjustItem?.name}</DialogTitle></DialogHeader>
+          <div className="grid gap-4">
+            <div className="grid gap-2"><Label>Type de mouvement</Label><select value={movementType} onChange={(event) => setMovementType(event.target.value as "entry" | "exit")} className="h-10 rounded-md border px-3"><option value="entry">Entrée</option><option value="exit">Sortie</option></select></div>
+            <div className="grid gap-2"><Label>Quantité</Label><Input type="number" min="1" value={movementQuantity} onChange={(event) => setMovementQuantity(Number(event.target.value || 1))} /></div>
+            <div className="grid gap-2"><Label>Raison</Label><Input value={movementReason} onChange={(event) => setMovementReason(event.target.value)} /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setAdjustOpen(false)}>Annuler</Button><Button onClick={() => void handleAdjustStock()}>Valider</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={articleOpen} onOpenChange={setArticleOpen}>
         <DialogContent className="max-w-xl">
