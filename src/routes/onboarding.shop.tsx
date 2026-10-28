@@ -3,7 +3,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,33 +87,73 @@ function ShopOnboardingPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
-      <Card className="card-3d shadow-3d w-full max-w-lg rounded-2xl border bg-background">
-        <CardContent className="p-5 sm:p-8">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <img src={logo} alt="GogoSoft" className="size-16 rounded-full bg-white object-cover p-1 shadow-lg ring-4 ring-orange-500/30" />
-            <h1 className="mt-4 text-2xl font-bold">Créez votre atelier</h1>
-            <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">Quelques infos pour démarrer</p>
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-b from-orange-50 via-white to-green-50 p-4">
+      <div className="card-3d shadow-3d grid w-full max-w-4xl overflow-hidden rounded-2xl bg-white lg:grid-cols-2">
+        <aside className="flex min-h-[280px] flex-col justify-between bg-slate-900 p-8 text-white lg:min-h-[620px]">
+          <div className="flex flex-col items-center gap-4 text-center lg:items-start lg:text-left">
+            <img src={logo} alt="GogoSoft" className="size-20 rounded-full bg-white object-cover" />
+            <h1 className="text-2xl font-bold">GogoSoft</h1>
+            <p className="text-sm text-slate-300">Gérez votre atelier comme un pro.</p>
           </div>
-          <div className="space-y-5">
+          <div className="mt-10 space-y-4 text-center lg:text-left">
+            <p className="text-sm font-semibold">Démarrez dès maintenant</p>
+            <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
+          </div>
+        </aside>
+
+        <section className="bg-white p-8 dark:bg-slate-800">
+          <button
+            type="button"
+            onClick={() => void navigate({ to: "/dashboard" })}
+            className="mb-6 text-sm font-medium text-slate-500 transition-colors hover:text-orange-600 dark:text-slate-300"
+          >
+            ← Retour
+          </button>
+          <header>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Créez votre atelier</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">Quelques infos pour démarrer</p>
+          </header>
+          <form
+            className="mt-6 space-y-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void createOnboardingShop();
+            }}
+          >
             <div className="space-y-2">
               <Label htmlFor="shop-name">Nom de l&apos;atelier *</Label>
-              <Input id="shop-name" value={name} onChange={(event) => setName(event.target.value)} required />
+              <Input
+                id="shop-name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                className="focus-visible:ring-orange-500"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="shop-address">Adresse (optionnel)</Label>
-              <Input id="shop-address" value={address} onChange={(event) => setAddress(event.target.value)} />
+              <Input
+                id="shop-address"
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                className="focus-visible:ring-orange-500"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="shop-phone">Téléphone (optionnel)</Label>
-              <Input id="shop-phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+              <Input
+                id="shop-phone"
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                className="focus-visible:ring-orange-500"
+              />
             </div>
-            <Button type="button" onClick={() => void createOnboardingShop()} disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
+            <Button type="submit" disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
               {submitting ? "Création en cours..." : "Créer mon atelier"}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </form>
+        </section>
+      </div>
     </main>
   );
 }
