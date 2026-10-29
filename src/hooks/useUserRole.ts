@@ -1,3 +1,5 @@
+//  src/hooks/useUserRole.ts
+
 import { useCallback, useEffect, useState } from "react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -101,8 +103,11 @@ export function useUserRole(): UserRoleInfo {
       const storedRole = typeof window !== "undefined"
         ? window.sessionStorage.getItem("gogosoft.activeRole")
         : null;
-      resolvedRole = storedRole && roles.includes(storedRole as UserRole)
-        ? (storedRole as UserRole)
+      const validStoredRole: UserRole = storedRole
+        ? (normalizeRole(storedRole) ?? null)
+        : null;
+      resolvedRole = validStoredRole && roles.includes(validStoredRole)
+        ? validStoredRole
         : roles[0] ?? null;
 
       if (!resolvedRole) {
