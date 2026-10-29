@@ -83,3 +83,8 @@ export const supabase = new Proxy({} as ReturnType<typeof createSupabaseClient>,
     return Reflect.get(_supabase, prop, receiver);
   },
 });
+
+// TEMPORAIRE - DIAGNOSTIC UNIQUEMENT, a retirer apres
+if (typeof window !== "undefined") {
+  (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
+}

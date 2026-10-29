@@ -54,7 +54,7 @@ export function usePendingItems(role: string): PendingItems {
           next.pendingReparation = result.count ?? 0;
         }
         if (role === "vendeur" || role === "owner") {
-          const result = await supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("status", ["en_attente_caissier", "payee"]);
+          const result = await supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("payment_status", ["en_attente_caissier", "payee"]);
           if (result.error) console.warn("[usePendingItems] ventes:", result.error);
           next.pendingVentes = result.count ?? 0;
         }
