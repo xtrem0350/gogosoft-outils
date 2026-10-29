@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useNavigate } from "@tanstack/react-router";
 
 import {
   AlertDialog,
@@ -35,7 +36,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   disableShopModule,
-  enableShopModules,
   getAvailableModules,
   getModulePricingSummary,
   getPricingPlans,
@@ -61,6 +61,7 @@ function ModuleIcon({ name }: { name: string }) {
 
 /** Gestion des modules de l'atelier actif. */
 export function ShopModulesSection({ shopId }: { shopId: string | null }) {
+  const navigate = useNavigate();
   const [all, setAll] = useState<ActivityModule[]>([]);
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [enabled, setEnabled] = useState<string[]>([]);
@@ -97,17 +98,13 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
 
   async function add(code: string) {
     if (!shopId) return;
-    try {
-      await enableShopModules(shopId, [code]);
-      const next = [...new Set([...enabled, code])];
-      setEnabled(next);
-      notifyShopModulesChanged(shopId);
-      await syncSubscriptionModules(next);
-      setAddOpen(false);
-      toast.success("Domaine ajouté.");
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Ajout impossible.");
-    }
+    const next = [...new Set([...enabled, code])];
+    sessionStorage.setItem(
+      "gogosoft.pendingModuleSelection",
+      JSON.stringify({ shopId, modules: next, source: "parametres" }),
+    );
+    toast.info("Redirection vers le paiement pour activer ce module…");
+    await navigate({ to: "/abonnement", search: { activate: "1" } });
   }
 
   async function remove(code: string) {
@@ -174,7 +171,7 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-          Les changements prendront effet au prochain cycle de facturation.
+          L&apos;activation de ce module nécessite un paiement. Vous allez être redirigé vers le checkout.
         </div>
         {active.length === 0 ? (
           <p className="text-sm text-muted-foreground">Aucun domaine activé.</p>

@@ -17,12 +17,20 @@ import { isDemoMode } from "@/services/demoService";
 import { confirmPayment, createSubscriptionPayment, getPaymentInvoice } from "@/services/subscriptionPaymentService";
 import { getMySubscription, type SubscriptionSummary } from "@/services/subscriptionService";
 import { moduleIdsFromShopCodes } from "@/types/modules";
+import { enableShopModules, syncSubscriptionModules } from "@/services/moduleService";
+import { notifyShopModulesChanged } from "@/hooks/useShopModules";
 
-export const Route = createFileRoute("/abonnement")({ component: AbonnementPage });
+export const Route = createFileRoute("/abonnement")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    activate: search.activate === "1" ? "1" : undefined,
+  }),
+  component: AbonnementPage,
+});
 
 type RenewalMode = "subscription" | "domain" | null;
 
 function AbonnementPage() {
+  const { activate } = Route.useSearch();
   const demo = isDemoMode();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
@@ -31,6 +39,21 @@ function AbonnementPage() {
   const [renewalMode, setRenewalMode] = useState<RenewalMode>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
+  const [pendingModules, setPendingModules] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (activate !== "1" || !shopId) return;
+    try {
+      const stored = sessionStorage.getItem("gogosoft.pendingModuleSelection");
+      if (!stored) return;
+      const selection = JSON.parse(stored) as { shopId?: string; modules?: string[] };
+      if (selection.shopId !== shopId || !Array.isArray(selection.modules)) return;
+      setPendingModules(selection.modules);
+      setRenewalMode("subscription");
+    } catch {
+      sessionStorage.removeItem("gogosoft.pendingModuleSelection");
+    }
+  }, [activate, shopId]);
 
   async function refresh() {
     if (demo || !shopId) {
@@ -104,13 +127,12 @@ function AbonnementPage() {
     const plan = renewalMode === "domain"
       ? { id: "domain-renewal", price: 0 }
       : { id: renewalPlan.id, price: renewalPlan.price };
+    const modules = pendingModules.length > 0 ? pendingModules : [...subscription.selected_modules, ...subscription.storefront_modules];
     const payment = await createSubscriptionPayment({
       shopId,
       planId: plan.id,
       planPrice: plan.price,
-      modules: renewalMode === "domain"
-        ? []
-        : [...subscription.selected_modules, ...subscription.storefront_modules],
+      modules: renewalMode === "domain" ? [] : modules,
       domainName: domainRequest?.assigned_domain ?? "",
       subscriptionMonths: submission.subscriptionMonths,
       paymentMethod: submission.paymentMethod,
@@ -128,20 +150,28 @@ function AbonnementPage() {
       const now = new Date();
       const renewalStart = currentExpiry > now ? currentExpiry : now;
       renewalStart.setDate(renewalStart.getDate() + submission.subscriptionMonths * 30 + BONUS_DAYS);
+      const appCodes = modules.filter((code) => !code.startsWith("shop_"));
+      const storefrontCodes = modules.filter((code) => code.startsWith("shop_"));
       const { error } = await supabase.from("subscriptions").upsert(
         {
           user_id: user.id,
           plan: "mensuel",
           status: "active",
           expires_at: renewalStart.toISOString(),
-          selected_modules: subscription.selected_modules,
-          storefront_modules: subscription.storefront_modules,
+          selected_modules: appCodes,
+          storefront_modules: storefrontCodes,
           domain_included: subscription.domain_included,
           price_fcfa: renewalPlan.price,
         },
         { onConflict: "user_id" },
       );
       if (error) throw error;
+      if (pendingModules.length > 0) {
+        await enableShopModules(shopId, pendingModules);
+        await syncSubscriptionModules(pendingModules);
+        notifyShopModulesChanged(shopId);
+        sessionStorage.removeItem("gogosoft.pendingModuleSelection");
+      }
     }
     return getPaymentInvoice(payment.id);
   }
@@ -247,7 +277,10 @@ function AbonnementPage() {
       {renewalMode && subscription ? (
         <CheckoutModal
           open={renewalMode !== null}
-          onClose={() => setRenewalMode(null)}
+          onClose={() => {
+            setRenewalMode(null);
+            if (activate === "1") sessionStorage.removeItem("gogosoft.pendingModuleSelection");
+          }}
           plan={checkoutPlan}
           selectedDomainIds={renewalMode === "domain" ? [] : selectedDomainIds}
           domainRequired={false}

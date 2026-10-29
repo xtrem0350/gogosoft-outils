@@ -1,3 +1,5 @@
+// src/services/roleService.ts
+
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 
@@ -39,11 +41,24 @@ export async function getUserShopRoles(shopId: string): Promise<string[]> {
   if (!userId) return [];
 
   try {
+    const { data, error } = await supabase
+      .from("user_roles_by_shop" as never)
+      .select("role")
+      .eq("shop_id", validShopId)
+      .eq("user_id", userId);
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return [...new Set((data as Array<{ role?: string | null }>).map((row) => normalizeRole(row.role)).filter((role): role is string => role !== null))];
+    }
+  } catch {
+    // Continue with legacy role sources when the table is unavailable.
+  }
+
+  try {
     const { data, error } = await supabase.rpc("get_user_shop_roles", {
       p_shop_id: validShopId,
     });
-    if (!error && Array.isArray(data)) {
-      return [...new Set((data as Array<string | null | undefined>).map(normalizeRole).filter(Boolean) as string[])];
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return [...new Set((data as Array<string | null | undefined>).map(normalizeRole).filter((role): role is string => role !== null))];
     }
   } catch {
     // Fallback SQL below when the function is not yet present.

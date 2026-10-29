@@ -14,6 +14,7 @@ import {
   SIMULATION_CHANGED_EVENT,
 } from "@/services/simulationService";
 import { MODULE_IDS, shopCodesFromModuleIds } from "@/types/modules";
+import { supabase } from "@/integrations/supabase/client";
 
 const MODULES_CHANGED_EVENT = "gogosoft:shop-modules-changed";
 
@@ -23,7 +24,7 @@ export function notifyShopModulesChanged(shopId: string): void {
 }
 
 export function useShopModules() {
-  const { shopId, loading: shopLoading } = useCurrentShop();
+  const { shopId, shop, loading: shopLoading } = useCurrentShop();
   const [modules, setModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,6 +55,27 @@ export function useShopModules() {
     try {
       const nextModules = await getShopModules(shopId);
       if (isSimulationMode()) return;
+      if (nextModules.length === 0 && shop?.owner_id) {
+        const { data: subscription, error: subscriptionError } = await supabase
+          .from("subscriptions")
+          .select("selected_modules, storefront_modules")
+          .eq("user_id", shop.owner_id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+        if (subscriptionError) throw subscriptionError;
+        if (subscription) {
+          const fallbackModules = [
+            ...((subscription.selected_modules ?? []) as string[]),
+            ...((subscription.storefront_modules ?? []) as string[]),
+          ];
+          if (fallbackModules.length > 0) {
+            setModules(fallbackModules);
+            console.warn("[useShopModules] fallback subscriptions utilisé pour shop", shopId);
+            return;
+          }
+        }
+      }
       setModules(nextModules);
     } catch (error) {
       if (isSimulationMode()) return;
@@ -62,7 +84,7 @@ export function useShopModules() {
     } finally {
       setLoading(false);
     }
-  }, [shopId]);
+  }, [shop, shopId]);
 
   useEffect(() => {
     if (shopLoading) {
