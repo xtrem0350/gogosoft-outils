@@ -1,3 +1,6 @@
+//src/components/AppShell.tsx
+
+
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Bell,
@@ -486,7 +489,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            {!isSuperAdmin && userRoles.length > 1 ? (
+            {!isSuperAdmin && userRoles.length > 0 ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

@@ -8,8 +8,10 @@ import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
 import { EmptyState } from "@/components/EmptyState";
+import { TeamMemberProfileModal } from "@/components/TeamMemberProfileModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { CreateInvitationModal } from "@/components/CreateInvitationModal";
 import {
   Dialog,
@@ -40,6 +42,8 @@ function EquipePage() {
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
   const [avatarPreviews, setAvatarPreviews] = useState<Record<string, string>>({});
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [rolesOpen, setRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const { shopId, loading: shopLoading } = useCurrentShop();
@@ -249,7 +253,14 @@ function EquipePage() {
               const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
               const avatarUrl = avatarPreviews[member.user_id] ?? member.avatar_url;
               return (
-                <Card key={member.id}>
+                <Card
+                  key={member.id}
+                  className="cursor-pointer transition-shadow hover:shadow-md"
+                  onClick={() => {
+                    setSelectedMember(member);
+                    setProfileOpen(true);
+                  }}
+                >
                   <CardContent className="space-y-4 p-4">
                     <div className="flex items-center gap-3">
                       {avatarUrl ? (
@@ -261,21 +272,52 @@ function EquipePage() {
                       )}
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-medium">{displayName}</p>
-                        <p className="truncate text-sm text-muted-foreground">{member.email ?? "E-mail indisponible"}</p>
-                        <p className="truncate text-sm text-muted-foreground">WhatsApp : {member.whatsapp ?? "—"}</p>
-                        <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800">
+                        {member.email ? (
+                          <a
+                            href={`mailto:${member.email}`}
+                            className="block truncate text-sm text-green-700 underline-offset-4 hover:underline"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            {member.email}
+                          </a>
+                        ) : (
+                          <p className="truncate text-sm text-muted-foreground">E-mail indisponible</p>
+                        )}
+                        {member.whatsapp ? (
+                          <a
+                            href={`https://wa.me/${member.whatsapp.replace(/[\s+]/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block truncate text-sm text-green-700 underline-offset-4 hover:underline"
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            WhatsApp : {member.whatsapp}
+                          </a>
+                        ) : (
+                          <p className="truncate text-sm text-muted-foreground">WhatsApp : —</p>
+                        )}
+                        <Badge className={`mt-1 ${member.role === "owner" ? "bg-orange-100 text-orange-800" : "bg-green-100 text-green-800"}`}>
                           {member.role || "Inconnu"}
-                        </span>
+                        </Badge>
+                        {member.created_at ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Ajouté le {new Date(member.created_at).toLocaleDateString("fr-FR")}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-3">
-                      <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 hover:text-orange-700">
+                      <label
+                        className="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-700 hover:text-orange-700"
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         <Camera className="size-4" /> Changer la photo
                         <Input
                           type="file"
                           accept="image/*"
                           className="sr-only"
                           aria-label={`Changer la photo de ${displayName}`}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={(event) => {
                             const file = event.target.files?.[0];
                             event.target.value = "";
@@ -290,7 +332,10 @@ function EquipePage() {
                           size="icon"
                           aria-label={`Retirer ${displayName} de l'équipe`}
                           title="Retirer de l'équipe"
-                          onClick={() => void removeMember(member)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void removeMember(member);
+                          }}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -353,6 +398,13 @@ function EquipePage() {
         open={invitationOpen}
         onClose={() => setInvitationOpen(false)}
         onSuccess={() => void refreshInvitations()}
+        shopId={shopId ?? ""}
+      />
+
+      <TeamMemberProfileModal
+        open={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        member={selectedMember}
         shopId={shopId ?? ""}
       />
 

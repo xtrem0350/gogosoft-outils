@@ -1,3 +1,5 @@
+// src/components/ShopSelector.tsx
+
 /** Sélecteur d'atelier actuellement active. */
 import { ChevronDown, Store } from "lucide-react";
 

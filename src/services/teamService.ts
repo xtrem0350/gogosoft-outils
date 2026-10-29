@@ -7,6 +7,7 @@ export interface TeamMember {
   shop_id: string;
   user_id: string;
   role: string;
+  created_at?: string | null;
   avatar_url: string | null;
   full_name: string | null;
   email: string | null;
@@ -16,7 +17,7 @@ export interface TeamMember {
 export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const { data, error } = await (supabase.from("shop_members" as any) as any)
-    .select("id, shop_id, user_id, role, avatar_url")
+    .select("id, shop_id, user_id, role, avatar_url, created_at")
     .eq("shop_id", requireShopId(shopId))
     .order("created_at", { ascending: true });
   if (error) throw error;
@@ -37,6 +38,7 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
       shop_id: String(row["shop_id"] ?? shopId),
       user_id: userId,
       role: String(row["role"] ?? "technicien"),
+      created_at: typeof row["created_at"] === "string" ? row["created_at"] : null,
       avatar_url: typeof row["avatar_url"] === "string" ? row["avatar_url"] : null,
       full_name: profile?.full_name ?? null,
       email: profile?.email ?? null,
