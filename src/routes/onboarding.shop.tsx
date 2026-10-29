@@ -54,7 +54,10 @@ function ShopOnboardingPage() {
       await enableShopModules(shop.id, shopCodesFromModuleIds(selectedModules as ModuleId[]));
 
       const rawPlanPrice = sessionStorage.getItem("gogosoft.checkout.planPrice");
-      const plan = sessionStorage.getItem("gogosoft.checkout.pricingMode") || "mensuel";
+      const storedPlan = sessionStorage.getItem("gogosoft.checkout.pricingMode") || "mensuel";
+      const plan = ["trial", "mensuel", "annuel", "all_in_one", "modules", "vitrines"].includes(storedPlan)
+        ? storedPlan
+        : "mensuel";
       const expiresAt = new Date(Date.now() + (7 + 30) * 24 * 60 * 60 * 1000).toISOString();
       const { error: subscriptionError } = await supabase.from("subscriptions").upsert({
         user_id: user.id,
@@ -96,7 +99,8 @@ function ShopOnboardingPage() {
             <p className="text-sm text-slate-300">Gérez votre atelier comme un pro.</p>
           </div>
           <div className="mt-10 space-y-4 text-center lg:text-left">
-            <p className="text-sm font-semibold">Démarrez dès maintenant</p>
+            <p className="text-sm font-semibold">Bienvenue dans votre boutique</p>
+            <p className="text-xs text-slate-300">Configurez votre espace et commencez à travailler dès maintenant.</p>
             <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
           </div>
         </aside>
@@ -110,7 +114,7 @@ function ShopOnboardingPage() {
             ← Retour
           </button>
           <header>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Créez votre atelier</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Créez votre boutique</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-300">Quelques infos pour démarrer</p>
           </header>
           <form
@@ -121,7 +125,7 @@ function ShopOnboardingPage() {
             }}
           >
             <div className="space-y-2">
-              <Label htmlFor="shop-name">Nom de l&apos;atelier *</Label>
+              <Label htmlFor="shop-name">Nom de la boutique *</Label>
               <Input
                 id="shop-name"
                 value={name}
@@ -149,7 +153,7 @@ function ShopOnboardingPage() {
               />
             </div>
             <Button type="submit" disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
-              {submitting ? "Création en cours..." : "Créer mon atelier"}
+              {submitting ? "Création en cours..." : "Créer ma boutique"}
             </Button>
           </form>
         </section>

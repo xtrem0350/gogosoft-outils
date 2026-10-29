@@ -105,7 +105,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
   const { roles: userRoles, activeRole, setActiveRole } = useUserRoles();
-  const pendingCount = usePendingItems(activeRole);
+  const pendingItems = usePendingItems(activeRole);
+  const pendingCount = Object.values(pendingItems).reduce((total, count) => total + count, 0);
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();

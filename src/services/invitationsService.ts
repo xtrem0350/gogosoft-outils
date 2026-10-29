@@ -65,6 +65,10 @@ export async function createInvitation(input: {
   if (!input.whatsapp?.trim()) {
     throw new Error("Le numéro WhatsApp est requis.");
   }
+  const allowedRoles: EmployeeRole[] = ["technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
+  if (!allowedRoles.includes(input.role)) {
+    throw new Error("Le rôle sélectionné n'est pas valide.");
+  }
 
   const { data: userData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
@@ -86,6 +90,9 @@ export async function createInvitation(input: {
     if (error) {
       console.error("[invitations] createInvitation FULL ERROR:", JSON.stringify(error, null, 2));
       if (error.code === "23505" && attempt < 2) continue;
+      if (error.code === "23514") {
+        throw new Error("La base Supabase n'autorise pas encore ce rôle. Contactez l'administrateur.");
+      }
       throw error;
     }
     if (!data) {

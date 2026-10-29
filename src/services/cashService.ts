@@ -287,6 +287,8 @@ export async function createCashExit(
   return data as CashExit;
 }
 
+export const registerCashOutflow = createCashExit;
+
 export async function getCashClosures(shopId: string): Promise<CashClosure[]> {
   if (isDemoMode()) return getDemoCashClosures().filter((closure) => closure.shop_id === shopId);
   if (!(await hasActiveSession())) return [];

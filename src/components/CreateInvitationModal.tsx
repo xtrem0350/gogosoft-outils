@@ -1,3 +1,5 @@
+// src\components\CreateInvitationModal.tsx
+//
 import { useState, type FormEvent } from "react";
 import { Check, Copy, MessageCircle } from "lucide-react";
 import { toast } from "sonner";

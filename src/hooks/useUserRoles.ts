@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
 import { getUserShopRoles } from "@/services/roleService";
-import { supabase } from "@/integrations/supabase/client";
 
 export type ShopRole =
   | "owner"
@@ -68,14 +67,6 @@ export function useUserRoles(): UseUserRolesResult {
       try {
         let nextRoles = await getUserShopRoles(shopId);
         if (!active) return;
-        if (nextRoles.length === 0) {
-          const { data: shop } = await supabase
-            .from("shops")
-            .select("owner_id")
-            .eq("id", shopId)
-            .maybeSingle();
-          if (shop?.owner_id === user.id) nextRoles = ["owner"];
-        }
         setRoles(nextRoles);
 
         const stored = typeof window !== "undefined" ? window.sessionStorage.getItem(STORAGE_KEY) : null;
@@ -142,7 +133,7 @@ export function useUserRoles(): UseUserRolesResult {
       activeRole,
       setActiveRole,
       hasRole,
-      isOwner: activeRole === "owner",
+      isOwner: roles.includes("owner"),
       isTechnicien: activeRole === "technicien",
       isCaissier: activeRole === "caissier",
       isMagasinier: activeRole === "magasinier",

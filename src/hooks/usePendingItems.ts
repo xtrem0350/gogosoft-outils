@@ -3,42 +3,65 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 
-export function usePendingItems(role: string) {
+export interface PendingItems {
+  pendingCaisse: number;
+  pendingReception: number;
+  pendingReparation: number;
+  pendingVentes: number;
+}
+
+export function usePendingItems(role: string): PendingItems {
   const { shopId } = useCurrentShop();
-  const [pendingCount, setPendingCount] = useState(0);
+  const [pendingItems, setPendingItems] = useState<PendingItems>({
+    pendingCaisse: 0,
+    pendingReception: 0,
+    pendingReparation: 0,
+    pendingVentes: 0,
+  });
 
   useEffect(() => {
     if (!shopId || !role) {
-      setPendingCount(0);
+      setPendingItems({ pendingCaisse: 0, pendingReception: 0, pendingReparation: 0, pendingVentes: 0 });
       return;
     }
 
     let active = true;
     const refresh = async () => {
       try {
-        let count = 0;
+        const next: PendingItems = {
+          pendingCaisse: 0,
+          pendingReception: 0,
+          pendingReparation: 0,
+          pendingVentes: 0,
+        };
         if (role === "caissier" || role === "owner") {
           const [tickets, sales] = await Promise.all([
             supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
-            supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "en_attente_caissier"),
+            supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("payment_status", "en_attente_caissier"),
           ]);
-          count += (tickets.count ?? 0) + (sales.count ?? 0);
+          if (tickets.error) console.warn("[usePendingItems] caisse ateliers:", tickets.error);
+          if (sales.error) console.warn("[usePendingItems] caisse ventes:", sales.error);
+          next.pendingCaisse = (tickets.count ?? 0) + (sales.count ?? 0);
         }
         if (role === "receptionniste" || role === "owner") {
           const result = await supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "en_attente_receptionniste");
-          count += result.count ?? 0;
+          if (result.error) console.warn("[usePendingItems] réception:", result.error);
+          next.pendingReception = result.count ?? 0;
         }
         if (role === "technicien" || role === "owner") {
           const result = await supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "en_attente_technicien");
-          count += result.count ?? 0;
+          if (result.error) console.warn("[usePendingItems] réparation:", result.error);
+          next.pendingReparation = result.count ?? 0;
         }
-        if (role === "vendeur") {
+        if (role === "vendeur" || role === "owner") {
           const result = await supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("status", ["en_attente_caissier", "payee"]);
-          count += result.count ?? 0;
+          if (result.error) console.warn("[usePendingItems] ventes:", result.error);
+          next.pendingVentes = result.count ?? 0;
         }
-        if (active) setPendingCount(count);
-      } catch {
-        if (active) setPendingCount(0);
+        if (active) setPendingItems(next);
+      } catch (error) {
+        console.warn("[usePendingItems] Impossible de charger les éléments en attente.", error);
+        if (active) setPendingItems({ pendingCaisse: 0, pendingReception: 0, pendingReparation: 0, pendingVentes: 0 });
       }
     };
 
@@ -50,5 +73,5 @@ export function usePendingItems(role: string) {
     };
   }, [role, shopId]);
 
-  return pendingCount;
+  return pendingItems;
 }

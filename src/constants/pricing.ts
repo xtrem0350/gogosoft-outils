@@ -36,7 +36,7 @@ export const PRICING_RULES = {
 export type PricingMode = "all_in_one" | "modules" | "vitrines" | null;
 
 export const INSTALLATION_NOTICE =
-  "Les 7 jours offerts en plus de votre période défien lors du paiement servent à la configuration technique de votre espace.";
+  "Votre compteur d'abonnement démarre officiellement à l'issue de la période des 7 jours gratuits de configuration et de paramétrage de votre compte.";
 
 export function calculateModulePrice(count: number): number {
   if (count === 0) return 0;

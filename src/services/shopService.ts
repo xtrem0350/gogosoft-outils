@@ -1,3 +1,5 @@
+//src\services\shopService.ts
+// 
 /** Services de gestion des boutiques / shops pour l'espace multi-boutique SaaS. */
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";

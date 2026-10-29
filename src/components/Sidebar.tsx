@@ -334,7 +334,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const { shop } = useCurrentShop();
   const { role, isSuperAdminAccount, viewMode, setViewMode } = useUserRole();
   const { roles, activeRole, setActiveRole } = useUserRoles();
-  const pendingCount = usePendingItems(activeRole);
+  const pendingItems = usePendingItems(activeRole);
   const vocabulary = useSectorVocabulary();
   const navigationGroups = getNavigationGroups(
     activeModules,
@@ -344,12 +344,23 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     vocabulary,
     activeRole || role,
   );
-  const hasPendingAlert = (to: string) => pendingCount > 0 && (
-    ((activeRole === "caissier" || activeRole === "owner") && to === "/caisse") ||
-    ((activeRole === "receptionniste" || activeRole === "owner") && to === "/reception") ||
-    ((activeRole === "technicien" || activeRole === "owner") && (to.includes("/atelier") || to.includes("/historique") || to.includes("/carnet"))) ||
-    ((activeRole === "vendeur" || activeRole === "owner") && to.startsWith("/sales"))
-  );
+  const pendingCountFor = (to: string) => {
+    if (activeRole === "caissier" || activeRole === "owner") {
+      if (to === "/caisse") return pendingItems.pendingCaisse;
+    }
+    if (activeRole === "receptionniste" || activeRole === "owner") {
+      if (to === "/reception") return pendingItems.pendingReception;
+    }
+    if (activeRole === "technicien" || activeRole === "owner") {
+      if (to.includes("/atelier") || to.includes("/historique") || to.includes("/carnet")) {
+        return pendingItems.pendingReparation;
+      }
+    }
+    if (activeRole === "vendeur" || activeRole === "owner") {
+      if (to.startsWith("/sales")) return pendingItems.pendingVentes;
+    }
+    return 0;
+  };
   const activeGroup = navigationGroups.findIndex((group) =>
     group.items.some(
       (item) =>
@@ -438,7 +449,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                     collapsed && "justify-center border-l-0 px-0",
                     pathname === to &&
                       "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
-                    hasPendingAlert(to) && "animate-pulse",
+                    pendingCountFor(to) > 0 && "animate-pulse",
                   )}
                 >
                   <Icon
@@ -448,8 +459,8 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                     )}
                   />
                   {!collapsed ? <span className="min-w-0 flex-1 truncate">{itemLabel}</span> : null}
-                  {hasPendingAlert(to) && !collapsed ? (
-                    <span className="ml-auto flex size-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">{pendingCount}</span>
+                  {pendingCountFor(to) > 0 && !collapsed ? (
+                    <span className="ml-auto flex size-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">{pendingCountFor(to)}</span>
                   ) : null}
                   {!collapsed && pathname === to ? (
                     <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" />

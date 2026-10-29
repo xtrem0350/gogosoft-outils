@@ -1,3 +1,6 @@
+//
+// src\routes\equipe.tsx
+
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { Camera, Copy, Mail, MessageCircle, Trash2, UserCog, UserPlus, Users, X } from "lucide-react";
@@ -139,7 +142,10 @@ function EquipePage() {
       .select("role")
       .eq("shop_id", shopId)
       .eq("user_id", user.id);
-    if (error) throw error;
+    if (error) {
+      toast.error(error.message || "Impossible de charger vos rôles.");
+      return;
+    }
     setSelectedRoles((data ?? []).map((row: { role: string }) => row.role).filter((role) => role !== "owner"));
     setRolesOpen(true);
   }
