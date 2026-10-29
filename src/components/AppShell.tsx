@@ -14,7 +14,6 @@ import {
   ShoppingCart,
   Smartphone,
   Sparkles,
-  UserCog,
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -111,11 +110,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
-  const { roles: userRoles, activeRole, setActiveRole } = useUserRoles();
+  const { activeRole } = useUserRoles();
   const pendingItems = usePendingItems(activeRole);
   const pendingCount = Object.values(pendingItems).reduce((total, count) => total + count, 0);
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
-  console.log("[AppShell] userRoles =", userRoles, "| activeRole =", activeRole, "| shopId =", shopId);
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
@@ -179,22 +177,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isExemptRoute =
     isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
   const loading = authLoading || roleLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
-  const roleLabelMap: Record<string, string> = {
-    owner: "Chef d'atelier",
-    technicien: "Technicien",
-    caissier: "Caissier",
-    magasinier: "Magasinier",
-    receptionniste: "Réceptionniste",
-    vendeur: "Vendeur",
-  };
-  const roleRouteMap: Record<string, string> = {
-    owner: "/dashboard",
-    technicien: "/dashboard",
-    caissier: "/caisse",
-    magasinier: "/magasin",
-    receptionniste: "/reception",
-    vendeur: "/sales",
-  };
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
@@ -484,36 +466,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               <Bell />
             </Button>
-            {!isSuperAdmin && userRoles.length > 0 ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="hidden h-10 items-center gap-2 rounded-full border-green-900/20 bg-green-900 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-800 sm:flex"
-                  >
-                    <UserCog className="size-4" />
-                    <span>{roleLabelMap[activeRole] ?? activeRole}</span>
-                    <ChevronDown className="size-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-52">
-                  {userRoles.map((roleName) => (
-                    <DropdownMenuItem
-                      key={roleName}
-                      onSelect={() => {
-                        setActiveRole(roleName);
-                        void navigate({ to: roleRouteMap[roleName] ?? "/dashboard" });
-                      }}
-                      className={roleName === activeRole ? "bg-green-50 text-green-900 font-semibold" : undefined}
-                    >
-                      <span className="flex-1">{roleLabelMap[roleName] ?? roleName}</span>
-                      {roleName === activeRole ? <span className="size-2 rounded-full bg-green-900" /> : null}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : null}
             {!isSuperAdmin && (canCreateClientFromHeader || createOptions.length > 0) ? (
               <div className="hidden sm:block">
                 <DropdownMenu>
