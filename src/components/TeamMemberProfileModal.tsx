@@ -33,6 +33,10 @@ export function TeamMemberProfileModal({
     let active = true;
     setLoading(true);
     async function loadRoles() {
+      if (!member) {
+        setRoles([]);
+        return;
+      }
       try {
         const { data, error } = await supabase
           .from("user_roles_by_shop" as never)

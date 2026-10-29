@@ -69,8 +69,6 @@ import {
   readDemoSession,
 } from "@/services/demoService";
 import { savePendingModuleSelection } from "@/services/moduleService";
-import headerLogo from "@/assets/images/leprofile.png";
-
 // TEMPORAIRE - DIAGNOSTIC UNIQUEMENT, a retirer apres
 if (typeof window !== "undefined") {
   (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
@@ -117,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pendingItems = usePendingItems(activeRole);
   const pendingCount = Object.values(pendingItems).reduce((total, count) => total + count, 0);
   const { shopId, shops, loading: shopLoading } = useCurrentShop();
+  console.log("[AppShell] userRoles =", userRoles, "| activeRole =", activeRole, "| shopId =", shopId);
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
@@ -446,20 +445,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 />
               )}
             </div>
-            <img
-              loading="lazy"
-              decoding="async"
-              src={headerLogo}
-              alt="GogoSoft"
-              className="size-10 rounded-xl object-cover"
-            />
             <CurrentPageIcon
               aria-hidden="true"
               className="size-5 shrink-0 text-orange-500 xl:hidden"
             />
-            <h1 className="truncate font-display text-base font-semibold text-sidebar-foreground sm:text-lg">
-              {isSuperAdmin ? "GogoSoft Admin" : "GogoSoft Tools Manager"}
-            </h1>
             {showNewBadge ? (
               <Button
                 type="button"
@@ -501,7 +490,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Button
                     type="button"
                     variant="outline"
-                    className="hidden h-10 items-center gap-2 rounded-full border-orange-200 bg-orange-50 px-3 text-sm font-medium text-orange-900 shadow-sm sm:flex"
+                    className="hidden h-10 items-center gap-2 rounded-full border-green-900/20 bg-green-900 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-green-800 sm:flex"
                   >
                     <UserCog className="size-4" />
                     <span>{roleLabelMap[activeRole] ?? activeRole}</span>
@@ -516,10 +505,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                         setActiveRole(roleName);
                         void navigate({ to: roleRouteMap[roleName] ?? "/dashboard" });
                       }}
-                      className={roleName === activeRole ? "bg-orange-50 text-orange-700" : undefined}
+                      className={roleName === activeRole ? "bg-green-50 text-green-900 font-semibold" : undefined}
                     >
                       <span className="flex-1">{roleLabelMap[roleName] ?? roleName}</span>
-                      {roleName === activeRole ? <span className="size-2 rounded-full bg-orange-500" /> : null}
+                      {roleName === activeRole ? <span className="size-2 rounded-full bg-green-900" /> : null}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
