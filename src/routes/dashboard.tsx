@@ -356,7 +356,7 @@ function OwnerDashboard() {
             asChild
             className="h-11 rounded-xl bg-ivoirien px-5 font-semibold shadow-3d active:scale-95"
           >
-            <Link to="/abonnement">Renouveler</Link>
+            <Link to="/abonnement" search={{ activate: undefined }}>Renouveler</Link>
           </Button>
         </div>
       ) : null}

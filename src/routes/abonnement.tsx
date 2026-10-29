@@ -22,7 +22,7 @@ import { notifyShopModulesChanged } from "@/hooks/useShopModules";
 
 export const Route = createFileRoute("/abonnement")({
   validateSearch: (search: Record<string, unknown>) => ({
-    activate: search.activate === "1" ? "1" : undefined,
+    activate: search["activate"] === "1" ? "1" : undefined,
   }),
   component: AbonnementPage,
 });

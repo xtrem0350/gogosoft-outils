@@ -32,24 +32,25 @@ export function TeamMemberProfileModal({
 
     let active = true;
     setLoading(true);
-    void supabase
-      .from("user_roles_by_shop" as never)
-      .select("role")
-      .eq("shop_id", shopId)
-      .eq("user_id", member.user_id)
-      .then(({ data, error }) => {
+    async function loadRoles() {
+      try {
+        const { data, error } = await supabase
+          .from("user_roles_by_shop" as never)
+          .select("role")
+          .eq("shop_id", shopId)
+          .eq("user_id", member.user_id);
         if (!active) return;
         if (error) throw error;
         setRoles((data ?? []).map((row: { role: string }) => row.role));
-      })
-      .catch((error: unknown) => {
+      } catch (error) {
         if (!active) return;
         setRoles([]);
         toast.error(error instanceof Error ? error.message : "Impossible de charger les rôles cumulés.");
-      })
-      .finally(() => {
+      } finally {
         if (active) setLoading(false);
-      });
+      }
+    }
+    void loadRoles();
 
     return () => {
       active = false;

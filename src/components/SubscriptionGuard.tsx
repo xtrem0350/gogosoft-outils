@@ -66,7 +66,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
             </div>
             <Button
               className="w-full"
-              onClick={() => void navigate({ to: "/abonnement" })}
+              onClick={() => void navigate({ to: "/abonnement", search: { activate: undefined } })}
             >
               Renouveler
               <ArrowRight className="size-4" />

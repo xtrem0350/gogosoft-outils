@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
@@ -69,6 +70,11 @@ import {
 } from "@/services/demoService";
 import { savePendingModuleSelection } from "@/services/moduleService";
 import headerLogo from "@/assets/images/leprofile.png";
+
+// TEMPORAIRE - DIAGNOSTIC UNIQUEMENT, a retirer apres
+if (typeof window !== "undefined") {
+  (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
+}
 
 function requiredRoles(pathname: string): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
