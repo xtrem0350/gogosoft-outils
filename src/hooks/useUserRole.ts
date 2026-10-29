@@ -84,45 +84,45 @@ export function useUserRole(): UserRoleInfo {
     }
 
     setLoading(true);
-    void supabase
-      .from("shop_members")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("shop_id", shopId)
-      .maybeSingle()
-      .then(
-        ({ data, error }) => {
-          if (!active) return;
-          if (error) {
-            setShopRole(null);
-            setLoading(false);
-            return;
-          }
+    void (async () => {
+      let resolvedRole: UserRole = null;
 
-          const memberRole = normalizeRole(data?.role ?? null);
-          if (memberRole) {
-            setShopRole(memberRole);
-            setLoading(false);
-            return;
-          }
+      const { data: rolesData } = await supabase
+        .from("user_roles_by_shop" as never)
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("shop_id", shopId);
 
-          void supabase
-            .from("shops")
-            .select("owner_id")
-            .eq("id", shopId)
-            .maybeSingle()
-            .then(({ data: shop }) => {
-              if (!active) return;
-              setShopRole(shop?.owner_id === user.id ? "owner" : null);
-              setLoading(false);
-            });
-        },
-        () => {
-          if (!active) return;
-          setShopRole(null);
-          setLoading(false);
-        },
-      );
+      const roles = [...new Set(
+        ((rolesData ?? []) as Array<{ role?: string | null }> )
+          .map((entry) => normalizeRole(entry.role))
+          .filter((entry): entry is NonNullable<UserRole> => entry !== null),
+      )];
+      const storedRole = typeof window !== "undefined"
+        ? window.sessionStorage.getItem("gogosoft.activeRole")
+        : null;
+      resolvedRole = storedRole && roles.includes(storedRole as UserRole)
+        ? (storedRole as UserRole)
+        : roles[0] ?? null;
+
+      if (!resolvedRole) {
+        const { data: legacy } = await supabase
+          .from("shop_members")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("shop_id", shopId)
+          .maybeSingle();
+        resolvedRole = normalizeRole(legacy?.role ?? null);
+      }
+
+      if (!active) return;
+      setShopRole(resolvedRole);
+      setLoading(false);
+    })().catch(() => {
+      if (!active) return;
+      setShopRole(null);
+      setLoading(false);
+    });
 
     return () => { active = false; };
   }, [authLoading, isDemo, isSimulation, shopId, shopLoading, user]);

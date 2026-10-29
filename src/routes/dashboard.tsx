@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { isSimulationMode } from "@/services/simulationService";
@@ -79,15 +79,16 @@ function formatRelativeTime(value: string | null) {
 }
 
 function DashboardRouter() {
-  const { role, loading } = useUserRole();
+  const { activeRole, loading, isSuperAdmin } = useUserRoles();
   if (isSimulationMode()) return <OwnerDashboard />;
   if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement du rôle…</p>;
-  if (role === "technicien") return <TechnicianDashboard />;
-  if (role === "caissier") return <CashierDashboard />;
-  if (role === "super_admin") return <PlatformDashboard />;
-  if (role === "owner") return <OwnerDashboard />;
-  if (role === "magasinier" || role === "receptionniste" || role === "vendeur") {
-    return <EmployeeDashboard role={role} />;
+  if (isSuperAdmin) return <PlatformDashboard />;
+  if (activeRole === "technicien") return <TechnicianDashboard />;
+  if (activeRole === "caissier") return <CashierDashboard />;
+  if (activeRole === "super_admin") return <PlatformDashboard />;
+  if (activeRole === "owner") return <OwnerDashboard />;
+  if (activeRole === "magasinier" || activeRole === "receptionniste" || activeRole === "vendeur") {
+    return <EmployeeDashboard role={activeRole} />;
   }
   return <EmptyState icon={UserRound} title="Rôle non attribué" description="Contactez le propriétaire de la boutique pour obtenir un accès." />;
 }

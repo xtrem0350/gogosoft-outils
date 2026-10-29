@@ -128,6 +128,7 @@ function JoinInvitationPage() {
       window.localStorage.setItem("gogosoft.currentShopId", result.shop_id);
       await refreshShops(userId, true);
       toast.success("Bienvenue ! Votre compte est créé.");
+      // useUserRoles recharge les rôles cumulés au montage du dashboard.
       await navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer le compte.");
