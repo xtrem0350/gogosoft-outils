@@ -67,6 +67,26 @@ export interface CashExit {
   created_at: string;
 }
 
+export type WorkshopPaymentMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";
+
+export async function closeWorkshopTicketPayment(input: {
+  ticketId: string;
+  amount: number;
+  paymentType: "entry" | "balance";
+  paymentMethod: WorkshopPaymentMethod;
+  notes?: string;
+}): Promise<{ success: boolean; payment_id: string; new_status: string; amount: number }> {
+  const { data, error } = await (supabase.rpc("close_workshop_ticket_payment" as never, {
+    p_ticket_id: input.ticketId,
+    p_amount: input.amount,
+    p_payment_type: input.paymentType,
+    p_payment_method: input.paymentMethod,
+    p_notes: input.notes ?? null,
+  } as never) as never as { data: unknown; error: { message: string } | null });
+  if (error) throw new Error(error.message);
+  return data as { success: boolean; payment_id: string; new_status: string; amount: number };
+}
+
 type WorkshopPaymentRow = {
   id: string;
   amount: number;

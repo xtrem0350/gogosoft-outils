@@ -25,6 +25,7 @@ import { isDemoMode } from "@/services/demoService";
 import { listSales, markAsPaid, type SalePaymentMethod } from "@/services/salesService";
 import { getTeamMembers } from "@/services/teamService";
 import {
+  closeWorkshopTicketPayment,
   createCashExit,
   getCashExits,
   getCashClosures,
@@ -207,20 +208,34 @@ function CashPage() {
 
   async function collectTicketPayment(method: string, amount: number) {
     if (!ticketPayment || !shopId) return;
-    const isEntry = ticketPayment.type === "entry";
-    const { error } = await supabase.from("workshop_tickets" as never).update({ status: isEntry ? "en_attente_technicien" : "en_attente_receptionniste" }).eq("id", ticketPayment.ticket.id);
-    if (error) throw error;
-    const { error: paymentError } = await supabase.from("workshop_payments" as never).insert({
-      shop_id: shopId,
-      ticket_id: ticketPayment.ticket.id,
-      payment_type: isEntry ? "entry" : "final",
-      amount,
-      method,
-    } as never);
-    if (paymentError) throw paymentError;
-    toast.success(isEntry ? "Entrée encaissée. Le technicien a été notifié." : "Solde encaissé. Le réceptionniste a été notifié.");
-    setTicketPayment(null);
-    await load();
+    const paymentMethodMap: Record<string, "cash" | "wave" | "orange_money" | "mtn" | "moov"> = {
+      Espèces: "cash",
+      Wave: "wave",
+      "Orange Money": "orange_money",
+      MTN: "mtn",
+      Moov: "moov",
+    };
+    const paymentMethod = paymentMethodMap[method];
+    if (!paymentMethod) {
+      toast.error("Mode de paiement invalide.");
+      return;
+    }
+
+    try {
+      await closeWorkshopTicketPayment({
+        ticketId: ticketPayment.ticket.id,
+        amount,
+        paymentType: ticketPayment.type === "entry" ? "entry" : "balance",
+        paymentMethod,
+      });
+      toast.success(ticketPayment.type === "entry"
+        ? "Entrée encaissée. Le technicien a été notifié."
+        : "Solde encaissé. Le réceptionniste a été notifié.");
+      setTicketPayment(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'encaisser le ticket.");
+    }
   }
 
   async function collectSale(saleId: string) {

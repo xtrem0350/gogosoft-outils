@@ -33,6 +33,15 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   return rows.map((row) => {
     const userId = String(row["user_id"] ?? "");
     const profile = profileById.get(userId);
+    const fullName = typeof profile?.full_name === "string" && profile.full_name.trim()
+      ? profile.full_name.trim()
+      : null;
+    const email = typeof profile?.email === "string" && profile.email.trim()
+      ? profile.email.trim()
+      : null;
+    const whatsapp = typeof profile?.phone === "string" && profile.phone.trim()
+      ? profile.phone.trim()
+      : null;
     return {
       id: String(row["id"] ?? userId),
       shop_id: String(row["shop_id"] ?? shopId),
@@ -40,9 +49,9 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
       role: String(row["role"] ?? "technicien"),
       created_at: typeof row["created_at"] === "string" ? row["created_at"] : null,
       avatar_url: typeof row["avatar_url"] === "string" ? row["avatar_url"] : null,
-      full_name: profile?.full_name ?? null,
-      email: profile?.email ?? null,
-      whatsapp: profile?.phone ?? null,
+      full_name: fullName,
+      email,
+      whatsapp,
     };
   });
 }
