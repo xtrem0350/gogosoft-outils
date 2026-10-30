@@ -1,3 +1,5 @@
+// src/hooks/usePendingItems.ts
+
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";

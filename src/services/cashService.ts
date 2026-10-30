@@ -1,3 +1,5 @@
+// src/services/cashService.ts
+
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import {
@@ -65,6 +67,70 @@ export interface CashExit {
   description: string | null;
   created_by: string | null;
   created_at: string;
+}
+
+export interface CashSession {
+  id: string;
+  shop_id: string;
+  opened_by: string;
+  opened_at: string;
+  opening_amount: number;
+  closed_by: string | null;
+  closed_at: string | null;
+  closing_amount: number | null;
+  theoretical_amount: number | null;
+  difference: number | null;
+  status: "ouverte" | "fermee";
+  notes: string | null;
+}
+
+export async function getOpenCashSession(shopId: string): Promise<CashSession | null> {
+  const { data, error } = await supabase
+    .from("cash_sessions" as never)
+    .select("*")
+    .eq("shop_id", shopId)
+    .eq("status", "ouverte")
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as CashSession | null;
+}
+
+export async function openCashSession(shopId: string, openingAmount: number): Promise<{ session_id: string }> {
+  const { data, error } = await supabase.rpc("open_cash_session" as never, {
+    p_shop_id: shopId,
+    p_opening_amount: openingAmount,
+  } as never);
+  if (error) throw new Error(error.message);
+  return data as { session_id: string };
+}
+
+export async function closeCashSession(sessionId: string, closingAmount: number, notes?: string): Promise<{
+  theoretical_amount: number;
+  closing_amount: number;
+  difference: number;
+}> {
+  const { data, error } = await supabase.rpc("close_cash_session" as never, {
+    p_session_id: sessionId,
+    p_closing_amount: closingAmount,
+    p_notes: notes ?? null,
+  } as never);
+  if (error) throw new Error(error.message);
+  return data as { theoretical_amount: number; closing_amount: number; difference: number };
+}
+
+export async function createCashEntry(shopId: string, input: {
+  amount: number;
+  method: "cash" | "wave" | "orange_money" | "mtn" | "moov";
+  description?: string;
+}): Promise<{ entry_id: string }> {
+  const { data, error } = await supabase.rpc("create_cash_entry" as never, {
+    p_shop_id: shopId,
+    p_amount: input.amount,
+    p_method: input.method,
+    p_description: input.description ?? null,
+  } as never);
+  if (error) throw new Error(error.message);
+  return data as { entry_id: string };
 }
 
 export type WorkshopPaymentMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";

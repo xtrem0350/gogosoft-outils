@@ -1,3 +1,5 @@
+// src/components/WorkshopPaymentModal.tsx
+
 import { useEffect, useState } from "react";
 import { useUserRoles } from "@/hooks/useUserRoles";
 

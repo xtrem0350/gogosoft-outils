@@ -1,3 +1,4 @@
+-- supabase/migrations/20261029000001_close_workshop_ticket_payment.sql
 -- RPC atomique : encaisser un ticket atelier (entrée ou solde).
 CREATE OR REPLACE FUNCTION public.close_workshop_ticket_payment(
   p_ticket_id uuid,

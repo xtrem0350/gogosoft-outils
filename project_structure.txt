@@ -3,6 +3,8 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 20261029000001_close_workshop_ticket_payment.sql
+│   │   ├── 📄 20261029000000_cash_sessions_and_reconciliation.sql
 │   │   ├── 📄 20261023160000_team_invitations.sql
 │   │   ├── 📄 20261007000000_vitrine_pricing.sql
 │   │   ├── 📄 20261006090000_admin_platform.sql
@@ -201,6 +203,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useStats.ts
 │   │   ├── 📄 useShopModules.ts
 │   │   ├── 📄 useSectorVocabulary.ts
+│   │   ├── 📄 usePersistedWizardState.ts
 │   │   ├── 📄 usePendingItems.ts
 │   │   ├── 📄 useInactivityLogout.ts
 │   │   ├── 📄 useCurrentShop.ts
@@ -290,6 +293,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
+│   │   ├── 📄 TeamMemberProfileModal.tsx
 │   │   ├── 📄 SubscriptionGuard.tsx
 │   │   ├── 📄 SubscriptionCard.tsx
 │   │   ├── 📄 SubscriptionBadge.tsx

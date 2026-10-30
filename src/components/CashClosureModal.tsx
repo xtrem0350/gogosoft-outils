@@ -1,3 +1,5 @@
+// src/components/CashClosureModal.tsx
+
 import { useState } from "react";
 import { toast } from "sonner";
 

@@ -75,7 +75,7 @@ if (typeof window !== "undefined") {
 
 function requiredRoles(pathname: string): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
-  if (pathname.startsWith("/caisse")) return ["owner", "caissier"];
+  if (pathname === "/caisse" || pathname.startsWith("/caisse")) return ["owner", "caissier"];
   if (pathname === "/reception" || pathname.startsWith("/reception")) return ["owner", "receptionniste"];
   if (pathname === "/magasin" || pathname.startsWith("/magasin")) return ["owner", "magasinier"];
   if (pathname.startsWith("/sales")) return ["owner", "vendeur"];

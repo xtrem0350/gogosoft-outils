@@ -1,3 +1,4 @@
+-- supabase/migrations/20261029000000_cash_sessions_and_reconciliation.sql
 -- 1. Table cash_sessions (ouverture / fermeture de caisse)
 CREATE TABLE IF NOT EXISTS public.cash_sessions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

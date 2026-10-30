@@ -1,3 +1,5 @@
+// src/components/CashReceiptModal.tsx
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
