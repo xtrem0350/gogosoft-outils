@@ -919,9 +919,8 @@ function NewWorkshopTicketPage({
         diagnosis: generateDiagnosis(issues),
         description: description.trim(),
         notes: description.trim(),
-        entry_fee: entryPayment?.amount ?? 2000,
-        entry_fee_paid: Boolean(entryPayment),
-        entry_fee_method: entryPayment?.method ?? "cash",
+        entry_fee: 2000,
+        entry_fee_paid: false,
         technicien_id: technician?.user_id,
         storage_location_id: location?.id,
       });
@@ -1235,9 +1234,13 @@ function NewWorkshopTicketPage({
               <Button
                 type="button"
                 className="w-full bg-ivoirien bg-ivoirien-hover shadow-3d"
-                onClick={() => setPaymentOpen(true)}
+                disabled={!selectedClient}
+                onClick={() => {
+                  setStep(5);
+                  toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
+                }}
               >
-                {entryPayment ? "Modifier le paiement" : "Encaisser"}
+                Envoyer à la caisse
               </Button>
             </>
           ) : null}

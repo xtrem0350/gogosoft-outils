@@ -23,6 +23,9 @@ import { SubscriptionBadge } from "@/components/SubscriptionBadge";
 import { CashierDashboard } from "@/components/dashboards/CashierDashboard";
 import { PlatformDashboard } from "@/components/dashboards/PlatformDashboard";
 import { TechnicianDashboard } from "@/components/dashboards/TechnicianDashboard";
+import { ReceptionDashboard } from "@/components/dashboards/ReceptionDashboard";
+import { StockDashboard } from "@/components/dashboards/StockDashboard";
+import { SalesDashboard } from "@/components/dashboards/SalesDashboard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
@@ -85,61 +88,12 @@ function DashboardRouter() {
   if (isSuperAdmin) return <PlatformDashboard />;
   if (activeRole === "technicien") return <TechnicianDashboard />;
   if (activeRole === "caissier") return <CashierDashboard />;
+  if (activeRole === "receptionniste") return <ReceptionDashboard />;
+  if (activeRole === "magasinier") return <StockDashboard />;
+  if (activeRole === "vendeur") return <SalesDashboard />;
   if (activeRole === "super_admin") return <PlatformDashboard />;
   if (activeRole === "owner") return <OwnerDashboard />;
-  if (activeRole === "magasinier" || activeRole === "receptionniste" || activeRole === "vendeur") {
-    return <EmployeeDashboard role={activeRole} />;
-  }
   return <EmptyState icon={UserRound} title="Rôle non attribué" description="Contactez le propriétaire de la boutique pour obtenir un accès." />;
-}
-
-function EmployeeDashboard({ role }: { role: "magasinier" | "receptionniste" | "vendeur" }) {
-  const { isModuleActive } = useActiveModules();
-  const roleLabels = {
-    magasinier: "Magasinier",
-    receptionniste: "Réceptionniste",
-    vendeur: "Vendeur",
-  };
-  const actions = [
-    ...(role === "magasinier" && isModuleActive("consommables")
-      ? [{ label: "Stock", description: "Consulter le stock atelier", to: "/consumable/stock" as const, icon: Package }]
-      : []),
-    ...(role === "receptionniste" && isModuleActive("reparation-telephone")
-      ? [{ label: "Réception téléphone", description: "Créer une fiche téléphone", to: "/phone/atelier/nouveau" as const, icon: Smartphone }]
-      : []),
-    ...(role === "receptionniste" && isModuleActive("reparation-pc")
-      ? [{ label: "Réception ordinateur", description: "Créer une fiche ordinateur", to: "/computer/atelier/nouveau" as const, icon: Laptop }]
-      : []),
-    ...(role === "vendeur" && (isModuleActive("vente-telephone") || isModuleActive("vente-pc"))
-      ? [{ label: "Nouvelle vente", description: "Enregistrer une vente", to: "/sales/nouveau" as const, icon: ShoppingCart }]
-      : []),
-    { label: "Clients", description: "Consulter les clients de l'atelier", to: "/clients" as const, icon: UserRound },
-    { label: "Catalogue", description: "Consulter le catalogue appareils", to: "/catalogue" as const, icon: Package },
-  ];
-
-  return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <p className="text-sm font-semibold text-primary">Espace employé</p>
-        <h1 className="mt-1 text-2xl font-bold">{roleLabels[role]}</h1>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {actions.map(({ label, description, to, icon: Icon }) => (
-          <Link key={label} to={to} className="group block rounded-lg border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-muted/40">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-orange-100 text-orange-700">
-                <Icon className="size-5" />
-              </span>
-              <div className="min-w-0">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">{label}</p>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{description}</p>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 function OwnerDashboard() {

@@ -46,7 +46,7 @@ export function usePendingItems(role: string): PendingItems {
           next.pendingCaisse = (tickets.count ?? 0) + (sales.count ?? 0);
         }
         if (role === "receptionniste" || role === "owner") {
-          const result = await supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "en_attente_receptionniste");
+          const result = await supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("status", "en_attente_technicien").eq("entry_fee_paid", true);
           if (result.error) console.warn("[usePendingItems] réception:", result.error);
           next.pendingReception = result.count ?? 0;
         }

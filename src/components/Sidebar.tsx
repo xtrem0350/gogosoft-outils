@@ -441,7 +441,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                 <Link
                   key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
                   to={to}
-                  search={itemSearch ?? {}}
+                  search={to === "/caisse" ? { action: "validate", ticket: "" } : (itemSearch ?? {})}
                   onClick={() => setOpen(false)}
                   title={itemLabel}
                   className={cn(

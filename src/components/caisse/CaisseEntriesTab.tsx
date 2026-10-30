@@ -47,6 +47,7 @@ interface CaisseEntriesTabProps {
   entryTickets: WorkshopTicket[];
   finalTickets: WorkshopTicket[];
   onCollectTicket: (ticket: WorkshopTicket, type: "entry" | "final") => void;
+  onTicketDetail: (ticket: WorkshopTicket, type: "entry" | "final") => void;
   sessionOpen: boolean;
   onAddEntry: () => void;
 }
@@ -61,6 +62,7 @@ export function CaisseEntriesTab({
   entryTickets,
   finalTickets,
   onCollectTicket,
+  onTicketDetail,
   sessionOpen,
   onAddEntry,
 }: CaisseEntriesTabProps) {
@@ -126,7 +128,10 @@ export function CaisseEntriesTab({
         <CardContent className="space-y-3">
           {[...entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: 2000 })), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - 2000) }))].map(({ ticket, type, amount }) => (
             <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-              <div><p className="font-medium">{ticket.ticket_number} · {ticket.client_name}</p><p className="text-xs text-muted-foreground">{type === "entry" ? "Entrée" : "Solde"} · {formatMoney(amount)}</p></div>
+              <div>
+                <Button type="button" variant="ghost" className="h-auto p-0 font-medium underline-offset-4 hover:underline" onClick={() => onTicketDetail(ticket, type)}>{ticket.ticket_number}</Button>
+                <p className="text-xs text-muted-foreground">{ticket.client_name} · {type === "entry" ? "Entrée" : "Solde"} · {formatMoney(amount)}</p>
+              </div>
               <Button size="sm" onClick={() => onCollectTicket(ticket, type)}>{type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}</Button>
             </div>
           ))}

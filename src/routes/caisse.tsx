@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { CashClosureModal } from "@/components/CashClosureModal";
 import { CashReceiptModal, type CashReceipt } from "@/components/CashReceiptModal";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
+import { TicketDetailModal } from "@/components/caisse/TicketDetailModal";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +43,13 @@ import { isDemoMode } from "@/services/demoService";
 import { listSales, markAsPaid, type SalePaymentMethod } from "@/services/salesService";
 import { getTeamMembers } from "@/services/teamService";
 
-export const Route = createFileRoute("/caisse")({ component: CashPage });
+export const Route = createFileRoute("/caisse")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    action: typeof Reflect.get(search, "action") === "string" ? Reflect.get(search, "action") : undefined,
+    ticket: typeof Reflect.get(search, "ticket") === "string" ? Reflect.get(search, "ticket") : undefined,
+  }),
+  component: CashPage,
+});
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "Espèces",
@@ -84,10 +91,20 @@ interface WorkshopTicket {
   id: string;
   ticket_number: string;
   client_name: string;
+  client_whatsapp?: string;
+  device_brand?: string;
+  device_model?: string;
+  device_imei?: string;
+  description?: string;
+  technicien_id?: string;
+  technicien_name?: string;
   quote_amount?: number;
+  entry_fee?: number;
+  status?: string;
 }
 
 function CashPage() {
+  const { action, ticket: requestedTicketId } = Route.useSearch();
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { isOwner, isCaissier } = useUserRole();
   const demo = isDemoMode();
@@ -100,6 +117,7 @@ function CashPage() {
   const [entryTickets, setEntryTickets] = useState<WorkshopTicket[]>([]);
   const [finalTickets, setFinalTickets] = useState<WorkshopTicket[]>([]);
   const [ticketPayment, setTicketPayment] = useState<{ ticket: WorkshopTicket; type: "entry" | "final" } | null>(null);
+  const [ticketDetail, setTicketDetail] = useState<{ ticket: WorkshopTicket; type: "entry" | "final" } | null>(null);
   const [pendingSales, setPendingSales] = useState<Array<{ id: string; product_name: string; client_name: string | null; total_price: number; created_at: string }>>([]);
   const [paymentMethodsBySale, setPaymentMethodsBySale] = useState<Record<string, SalePaymentMethod>>({});
   const [memberAvatars, setMemberAvatars] = useState<Record<string, string>>({});
@@ -132,13 +150,18 @@ function CashPage() {
         getTeamMembers(shopId),
         getCashExits(shopId, period),
         listSales(shopId),
-        supabase.from("workshop_tickets" as never).select("id,ticket_number,client_name,status,quote_amount").eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
+        supabase.from("workshop_tickets" as never).select("id,ticket_number,client_name,client_whatsapp,device_brand,device_model,device_imei,description,technicien_id,status,quote_amount,entry_fee").eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
         getOpenCashSession(shopId),
       ]);
       setSummary(nextSummary);
       setClosures(nextClosures);
       setExits(nextExits);
-      const workshopTickets = (workshopRows.data ?? []) as Array<{ id: string; ticket_number: string; client_name: string; status: string; quote_amount?: number }>;
+      const workshopTickets = (workshopRows.data ?? []) as WorkshopTicket[];
+      workshopTickets.forEach((ticket) => {
+        ticket.technicien_name = ticket.technicien_id
+          ? Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id]))[ticket.technicien_id] ?? ""
+          : "";
+      });
       setEntryTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_entree"));
       setFinalTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_solde"));
       setPendingSales(demo ? [] : sales.filter((sale) => sale.payment_status === "pending" || sale.payment_status === "awaiting_payment"));
@@ -155,6 +178,26 @@ function CashPage() {
   useEffect(() => {
     if (!shopLoading) void load();
   }, [load, shopLoading]);
+
+  useEffect(() => {
+    if (action !== "validate" || loading) return;
+    const pendingTickets = [...entryTickets, ...finalTickets];
+    if (pendingTickets.length === 0) {
+      toast.info("Aucun paiement en attente.");
+      return;
+    }
+    const targetTicket = requestedTicketId
+      ? pendingTickets.find((ticket) => ticket.id === requestedTicketId)
+      : pendingTickets[0];
+    if (!targetTicket) {
+      toast.info("Aucun paiement en attente.");
+      return;
+    }
+    setTicketPayment({
+      ticket: targetTicket,
+      type: entryTickets.some((ticket) => ticket.id === targetTicket.id) ? "entry" : "final",
+    });
+  }, [action, entryTickets, finalTickets, loading, requestedTicketId]);
 
   const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
   const canManageCash = isOwner || isCaissier;
@@ -201,7 +244,7 @@ function CashPage() {
     }
     try {
       await closeWorkshopTicketPayment({ ticketId: ticketPayment.ticket.id, amount, paymentType: ticketPayment.type === "entry" ? "entry" : "balance", paymentMethod });
-      toast.success(ticketPayment.type === "entry" ? "Entrée encaissée. Le technicien a été notifié." : "Solde encaissé. Le réceptionniste a été notifié.");
+      toast.success(ticketPayment.type === "entry" ? "Entrée encaissée. Réceptionniste notifié pour le rangement." : "Solde encaissé. Réceptionniste notifié pour le rangement.");
       setTicketPayment(null);
       await load();
     } catch (error) {
@@ -273,7 +316,7 @@ function CashPage() {
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="encaissements">
-          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} onCollectTicket={(ticket, type) => { if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
+          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} onCollectTicket={(ticket, type) => { if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
         </TabsContent>
         <TabsContent value="decaissements">
           {!demo && canManageCash ? <CaisseExitsTab exits={exits} onAdd={() => setExitOpen(true)} onReceipt={() => undefined} /> : null}
@@ -286,6 +329,21 @@ function CashPage() {
       {summary ? <CashClosureModal open={closureOpen} onClose={() => setClosureOpen(false)} summary={summary} period={period} exitsTotal={totalExits} onSuccess={() => void load()} /> : null}
       <CashReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
       <CashEntryModal open={entryModalOpen} onClose={() => setEntryModalOpen(false)} onSuccess={() => void load()} shopId={shopId} />
+      <TicketDetailModal
+        open={Boolean(ticketDetail)}
+        onClose={() => setTicketDetail(null)}
+        ticket={ticketDetail?.ticket ?? null}
+        ticketType={ticketDetail?.type ?? "entry"}
+        onValidate={() => {
+          if (!ticketDetail) return;
+          if (!cashSession) {
+            toast.error("Ouvrez la caisse avant d'encaisser.");
+            return;
+          }
+          setTicketPayment({ ticket: ticketDetail.ticket, type: ticketDetail.type });
+          setTicketDetail(null);
+        }}
+      />
       {ticketPayment ? <WorkshopPaymentModal open={Boolean(ticketPayment)} onClose={() => setTicketPayment(null)} amount={ticketPayment.type === "entry" ? 2000 : Math.max(0, Number(ticketPayment.ticket.quote_amount ?? 0) - 2000)} title={ticketPayment.type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"} onSuccess={(method, amount) => void collectTicketPayment(method, amount)} /> : null}
       <Dialog open={exitOpen} onOpenChange={(open) => !savingExit && setExitOpen(open)}>
         <DialogContent>

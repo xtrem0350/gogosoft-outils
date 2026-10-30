@@ -82,7 +82,7 @@ export function CashierDashboard() {
           <p className="text-sm text-slate-500">Encaissements du jour</p>
         </div>
         <Button asChild>
-          <Link to="/caisse">
+          <Link to="/caisse" search={{ action: undefined, ticket: undefined }}>
             <Wallet className="mr-2 size-4" />
             Ouvrir la caisse
           </Link>

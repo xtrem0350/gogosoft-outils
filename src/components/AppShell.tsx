@@ -121,12 +121,23 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (pendingCount <= 0) return;
     const interval = window.setInterval(() => {
       toast.info(`Vous avez ${pendingCount} élément(s) en attente`, {
-        action: { label: "Voir", onClick: () => void navigate({ to: "/caisse" }) },
+        action: { label: "Voir", onClick: () => void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } }) },
         duration: 5000,
       });
     }, 5 * 60 * 1000);
     return () => window.clearInterval(interval);
   }, [navigate, pendingCount]);
+  useEffect(() => {
+    const pendingReception = pendingItems.pendingReception;
+    if (pendingReception <= 0) return;
+    const interval = window.setInterval(() => {
+      toast.info(`${pendingReception} fiche(s) à ranger en réception.`, {
+        action: { label: "Voir", onClick: () => void navigate({ to: "/reception" }) },
+        duration: 5000,
+      });
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(interval);
+  }, [navigate, pendingItems.pendingReception]);
   useEffect(() => {
     let active = true;
     if (!userId) {

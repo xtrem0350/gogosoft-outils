@@ -19,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import type { ClientRecord } from "@/services/clientService";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
+import { PlaceTicketModal } from "@/components/caisse/PlaceTicketModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
@@ -30,6 +31,8 @@ function ReceptionPage() {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
+  const [ticketsToPlace, setTicketsToPlace] = useState<WorkshopTicket[]>([]);
+  const [placeTicket, setPlaceTicket] = useState<{ ticket: WorkshopTicket } | null>(null);
   const [step, setStep, clearStep] = usePersistedWizardState("reception-step", 1);
   const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | undefined>("reception-selected-client", undefined);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
@@ -66,6 +69,26 @@ function ReceptionPage() {
     })();
   }, [shopId]);
 
+  async function loadTicketsToPlace() {
+    if (!shopId) return;
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .select("*")
+      .eq("shop_id", shopId)
+      .eq("status", "en_attente_technicien")
+      .eq("entry_fee_paid", true)
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setTicketsToPlace((data ?? []) as WorkshopTicket[]);
+  }
+
+  useEffect(() => {
+    void loadTicketsToPlace();
+  }, [shopId]);
+
   const waitingCount = tickets.length;
   const occupiedCount = useMemo(
     () => locations.filter((location) => location.status === "occupied").length,
@@ -95,16 +118,7 @@ function ReceptionPage() {
     if (selectedLocationId) {
       await assignTicketToLocation(ticket.id, selectedLocationId);
     }
-    const { error: paymentError } = await supabase.from("workshop_payments" as never).insert({
-      shop_id: shopId,
-      ticket_id: ticket.id,
-      payment_type: "entry",
-      amount: 2000,
-      method: paymentMethod || "cash",
-    } as never);
-    if (paymentError) throw paymentError;
-
-    toast.success("Fiche créée. Le caissier a été notifié.");
+    toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
     setOpenCreate(false);
     setStep(1);
     setPaymentPaid(false);
@@ -166,6 +180,27 @@ function ReceptionPage() {
         <StatsCard title="Paiement d'entrée" value="2000 FCFA" icon={AlertCircle} color="blue" />
       </div>
 
+      <Card className="card-3d rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><PackageCheck className="size-4" /> Fiches à ranger</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {ticketsToPlace.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune fiche à ranger en réception.</p>
+          ) : (
+            ticketsToPlace.map((ticket) => (
+              <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
+                <div>
+                  <p className="font-medium">{ticket.ticket_number ?? ticket.id} · {ticket.client_name}</p>
+                  <p className="text-sm text-muted-foreground">{[ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "Appareil"}</p>
+                </div>
+                <Button size="sm" onClick={() => setPlaceTicket({ ticket })}>Ranger dans le tiroir</Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="card-3d rounded-2xl">
           <CardHeader>
@@ -182,6 +217,7 @@ function ReceptionPage() {
                     <p className="text-sm text-muted-foreground">{ticket.device_model ?? "Appareil"}</p>
                   </div>
                   <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">En attente de caisse (entrée 2 000 F)</span>
                     <span className="text-xs uppercase text-amber-700">{ticket.ticket_number}</span>
                     <Button size="sm" variant="outline" onClick={() => void navigate({ to: `/phone/atelier/${ticket.id}` as string })}>Voir</Button>
                   </div>
@@ -252,7 +288,7 @@ function ReceptionPage() {
               <AlertCircle className="mx-auto size-10 text-orange-500" />
               <p className="font-semibold">Frais d&apos;entrée diagnostic : 2 000 FCFA (non remboursable)</p>
               {paymentPaid ? <p className="text-sm font-medium text-green-700">Paiement enregistré · {paymentMethod}</p> : null}
-              <DialogFooter><Button variant="outline" onClick={() => setStep(2)}>Retour</Button>{paymentPaid ? <Button onClick={() => setStep(4)}>Suivant</Button> : <Button onClick={() => setPaymentOpen(true)}>Encaisser 2 000 FCFA</Button>}</DialogFooter>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(2)}>Retour</Button><Button onClick={() => setStep(4)}>Envoyer à la caisse</Button></DialogFooter>
             </div>
           ) : null}
 
@@ -280,6 +316,12 @@ function ReceptionPage() {
           setPaymentPaid(true);
           setPaymentOpen(false);
         }}
+      />
+      <PlaceTicketModal
+        open={Boolean(placeTicket)}
+        onClose={() => setPlaceTicket(null)}
+        ticket={placeTicket?.ticket ?? null}
+        onSuccess={() => void loadTicketsToPlace()}
       />
       {shopId ? <QuickCreateClientDialog
         open={clientDialogOpen}

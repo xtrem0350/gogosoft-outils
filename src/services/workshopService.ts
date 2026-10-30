@@ -839,6 +839,35 @@ export async function getTodayWorkshopPayments(
   }));
 }
 
+export async function placeTicketInStorage(
+  ticketId: string,
+  locationId: string,
+): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData?.user?.id ?? null;
+  const { error } = await supabase
+    .from("workshop_tickets")
+    .update({
+      storage_location_id: locationId,
+      status: "en_cours",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ticketId);
+  if (error) throw error;
+
+  try {
+    await supabase.from("audit_logs").insert({
+      user_id: userId,
+      action: "ticket_placed_in_storage",
+      entity: "workshop_ticket",
+      entity_id: ticketId,
+      metadata: { location_id: locationId },
+    });
+  } catch {
+    // Audit best effort.
+  }
+}
+
 /** Marque une réparation comme notifiée au client par WhatsApp. */
 export async function markTicketNotified(
   id: string,
