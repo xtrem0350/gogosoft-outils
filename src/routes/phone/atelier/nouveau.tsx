@@ -3,4 +3,5 @@ import { NewActivityPage } from "@/components/ActivityWorkshopPages";
 
 export const Route = createFileRoute("/phone/atelier/nouveau")({
   component: () => <NewActivityPage activityType="phone" />,
+  shouldReload: false,
 });

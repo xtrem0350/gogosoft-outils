@@ -48,6 +48,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 import { supabase } from "@/integrations/supabase/client";
 import {
   assignTicketToLocation,
@@ -751,35 +752,36 @@ function NewWorkshopTicketPage({
       ? null
       : new URLSearchParams(window.location.search).get("clientId"),
   );
-  const [step, setStep] = useState(1);
-  const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
-  const [clientName, setClientName] = useState("");
-  const [clientWhatsapp, setClientWhatsapp] = useState("");
+  const [step, setStep, clearStep] = usePersistedWizardState(`${activityType}-step`, 1);
+  const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | null>(`${activityType}-selected-client`, null);
+  const [clientName, setClientName, clearClientName] = usePersistedWizardState(`${activityType}-client-name`, "");
+  const [clientWhatsapp, setClientWhatsapp, clearClientWhatsapp] = usePersistedWizardState(`${activityType}-client-whatsapp`, "");
   const [createClientOpen, setCreateClientOpen] = useState(false);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
   const [createStaffOpen, setCreateStaffOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [locationRefreshKey, setLocationRefreshKey] = useState(0);
   const [memberRefreshKey, setMemberRefreshKey] = useState(0);
-  const [deviceBrand, setDeviceBrand] = useState("");
-  const [deviceModel, setDeviceModel] = useState("");
-  const [deviceProcessor, setDeviceProcessor] = useState("");
-  const [deviceImei, setDeviceImei] = useState("");
-  const [deviceSerial, setDeviceSerial] = useState("");
-  const [deviceOs, setDeviceOs] = useState("");
-  const [devicePhoto, setDevicePhoto] = useState<string | null>(null);
+  const [deviceBrand, setDeviceBrand, clearDeviceBrand] = usePersistedWizardState(`${activityType}-device-brand`, "");
+  const [deviceModel, setDeviceModel, clearDeviceModel] = usePersistedWizardState(`${activityType}-device-model`, "");
+  const [deviceProcessor, setDeviceProcessor, clearDeviceProcessor] = usePersistedWizardState(`${activityType}-device-processor`, "");
+  const [deviceImei, setDeviceImei, clearDeviceImei] = usePersistedWizardState(`${activityType}-device-imei`, "");
+  const [deviceSerial, setDeviceSerial, clearDeviceSerial] = usePersistedWizardState(`${activityType}-device-serial`, "");
+  const [deviceOs, setDeviceOs, clearDeviceOs] = usePersistedWizardState(`${activityType}-device-os`, "");
+  const [devicePhoto, setDevicePhoto, clearDevicePhoto] = usePersistedWizardState<string | null>(`${activityType}-device-photo`, null);
   const [knownDevicesExist, setKnownDevicesExist] = useState(false);
-  const [deviceMode, setDeviceMode] = useState<"catalog" | "known" | "free">("catalog");
-  const [issues, setIssues] = useState<IssueKey[]>([
+  const [deviceMode, setDeviceMode, clearDeviceMode] = usePersistedWizardState<"catalog" | "known" | "free">(`${activityType}-device-mode`, "catalog");
+  const [issues, setIssues, clearIssues] = usePersistedWizardState<IssueKey[]>(`${activityType}-issues`, [
     activityType === "computer" ? "pc_ecran_casse" : "ecran_casse",
   ]);
-  const [description, setDescription] = useState("");
+  const [description, setDescription, clearDescription] = usePersistedWizardState(`${activityType}-description`, "");
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [entryPayment, setEntryPayment] = useState<{ method: string; amount: number } | null>(
+  const [entryPayment, setEntryPayment, clearEntryPayment] = usePersistedWizardState<{ method: string; amount: number } | null>(
+    `${activityType}-entry-payment`,
     null,
   );
-  const [location, setLocation] = useState<StorageLocation | null>(null);
-  const [technician, setTechnician] = useState<MemberOption | null>(null);
+  const [location, setLocation, clearLocation] = usePersistedWizardState<StorageLocation | null>(`${activityType}-location`, null);
+  const [technician, setTechnician, clearTechnician] = usePersistedWizardState<MemberOption | null>(`${activityType}-technician`, null);
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createdTicket, setCreatedTicket] = useState<WorkshopTicket | null>(null);
@@ -924,6 +926,23 @@ function NewWorkshopTicketPage({
         storage_location_id: location?.id,
       });
       setCreatedTicket(ticket);
+      clearStep();
+      clearSelectedClient();
+      clearClientName();
+      clearClientWhatsapp();
+      clearDeviceBrand();
+      clearDeviceModel();
+      clearDeviceProcessor();
+      clearDeviceImei();
+      clearDeviceSerial();
+      clearDeviceOs();
+      clearDevicePhoto();
+      clearDeviceMode();
+      clearIssues();
+      clearDescription();
+      clearEntryPayment();
+      clearLocation();
+      clearTechnician();
       toast.success("Fiche créée.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer la fiche.");
@@ -933,6 +952,27 @@ function NewWorkshopTicketPage({
   }
 
   const steps = ["Client", "Appareil", "Problème", "Paiement", "Rangement"];
+
+  function resetWizard() {
+    clearStep();
+    clearSelectedClient();
+    clearClientName();
+    clearClientWhatsapp();
+    clearDeviceBrand();
+    clearDeviceModel();
+    clearDeviceProcessor();
+    clearDeviceImei();
+    clearDeviceSerial();
+    clearDeviceOs();
+    clearDevicePhoto();
+    clearDeviceMode();
+    clearIssues();
+    clearDescription();
+    clearEntryPayment();
+    clearLocation();
+    clearTechnician();
+    setStep(1);
+  }
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
@@ -1240,7 +1280,7 @@ function NewWorkshopTicketPage({
                       shopId={shopId}
                       refreshKey={memberRefreshKey}
                       selectedUserId={technician?.user_id}
-                      filterRoles={["technicien", "technicien_pc", "manager"]}
+                      filterRoles={["technicien"]}
                       onSelect={setTechnician}
                     />
                   </div>
@@ -1274,6 +1314,9 @@ function NewWorkshopTicketPage({
           ) : null}
 
           <div className="flex justify-between gap-3 border-t pt-4">
+            <Button type="button" variant="outline" disabled={saving} onClick={resetWizard}>
+              Réinitialiser
+            </Button>
             <Button
               type="button"
               variant="outline"
@@ -1817,7 +1860,7 @@ export function ActivityDetailsPage({
                   shopId={shopId}
                   refreshKey={memberRefreshKey}
                   selectedUserId={technician?.user_id ?? ticket.technicien_id ?? undefined}
-                  filterRoles={["technicien", "technicien_pc", "manager"]}
+                  filterRoles={["technicien"]}
                   onSelect={setTechnician}
                 />
               </label>

@@ -531,6 +531,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const payload: Record<string, unknown> = {
       shop_id: shopId,
       activity_type: data.activity_type ?? "phone",
+      status: "en_attente_caissier_entree",
       category: data.category,
       client_id: data.client_id ?? null,
       client_name: data.client_name,

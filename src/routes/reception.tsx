@@ -22,6 +22,7 @@ import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
+import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 
 export const Route = createFileRoute("/reception")({ component: ReceptionPage });
 
@@ -29,23 +30,23 @@ function ReceptionPage() {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
-  const [step, setStep] = useState(1);
-  const [selectedClient, setSelectedClient] = useState<ClientRecord>();
+  const [step, setStep, clearStep] = usePersistedWizardState("reception-step", 1);
+  const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | undefined>("reception-selected-client", undefined);
   const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
-  const [paymentPaid, setPaymentPaid] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentPaid, setPaymentPaid, clearPaymentPaid] = usePersistedWizardState("reception-payment-paid", false);
+  const [paymentMethod, setPaymentMethod, clearPaymentMethod] = usePersistedWizardState("reception-payment-method", "");
   const [locations, setLocations] = useState<Array<{ id: string; name: string; status: string }>>([]);
   const [openCreate, setOpenCreate] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
-  const [clientName, setClientName] = useState("");
-  const [clientPhone, setClientPhone] = useState("");
-  const [deviceBrand, setDeviceBrand] = useState("");
-  const [deviceModel, setDeviceModel] = useState("");
-  const [deviceImei, setDeviceImei] = useState("");
-  const [issue, setIssue] = useState("écran cassé");
-  const [selectedLocationId, setSelectedLocationId] = useState<string | undefined>();
-  const [entryFee, setEntryFee] = useState(2000);
+  const [clientName, setClientName, clearClientName] = usePersistedWizardState("reception-client-name", "");
+  const [clientPhone, setClientPhone, clearClientPhone] = usePersistedWizardState("reception-client-phone", "");
+  const [deviceBrand, setDeviceBrand, clearDeviceBrand] = usePersistedWizardState("reception-device-brand", "");
+  const [deviceModel, setDeviceModel, clearDeviceModel] = usePersistedWizardState("reception-device-model", "");
+  const [deviceImei, setDeviceImei, clearDeviceImei] = usePersistedWizardState("reception-device-imei", "");
+  const [issue, setIssue, clearIssue] = usePersistedWizardState("reception-issue", "écran cassé");
+  const [selectedLocationId, setSelectedLocationId, clearSelectedLocationId] = usePersistedWizardState<string | undefined>("reception-location", undefined);
+  const [entryFee, setEntryFee, clearEntryFee] = usePersistedWizardState("reception-entry-fee", 2000);
 
   useEffect(() => {
     if (!shopId) return;
@@ -117,6 +118,36 @@ function ReceptionPage() {
     setIssue("écran cassé");
     setSelectedLocationId(undefined);
     setEntryFee(2000);
+    clearStep();
+    clearSelectedClient();
+    clearClientName();
+    clearClientPhone();
+    clearDeviceBrand();
+    clearDeviceModel();
+    clearDeviceImei();
+    clearIssue();
+    clearSelectedLocationId();
+    clearEntryFee();
+    clearPaymentPaid();
+    clearPaymentMethod();
+  }
+
+  function resetWizard() {
+    clearStep();
+    clearSelectedClient();
+    clearClientName();
+    clearClientPhone();
+    clearDeviceBrand();
+    clearDeviceModel();
+    clearDeviceImei();
+    clearIssue();
+    clearSelectedLocationId();
+    clearEntryFee();
+    clearPaymentPaid();
+    clearPaymentMethod();
+    setPaymentPaid(false);
+    setPaymentMethod("");
+    setStep(1);
   }
 
   return (
@@ -232,6 +263,9 @@ function ReceptionPage() {
               <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId} onClick={handleCreateTicket}>Créer la fiche</Button></DialogFooter>
             </div>
           ) : null}
+          <div className="flex justify-end border-t pt-4">
+            <Button type="button" variant="outline" onClick={resetWizard}>Réinitialiser</Button>
+          </div>
         </DialogContent>
       </Dialog>
 

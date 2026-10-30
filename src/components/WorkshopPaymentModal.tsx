@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +29,11 @@ export function WorkshopPaymentModal({
   onSuccess,
 }: WorkshopPaymentModalProps) {
   const [method, setMethod] = useState<string>(paymentMethods[0]);
+  const { activeRole, loading: rolesLoading } = useUserRoles();
+  const canEncash = activeRole === "owner" || activeRole === "caissier";
+  const roleMessage = activeRole === "receptionniste"
+    ? "Le caissier doit encaisser cette fiche."
+    : "Seuls le caissier ou l'owner peuvent encaisser.";
 
   useEffect(() => {
     if (open) setMethod(paymentMethods[0]);
@@ -75,6 +81,7 @@ export function WorkshopPaymentModal({
           <Button
             type="button"
             className="bg-ivoirien bg-ivoirien-hover shadow-3d"
+            disabled={rolesLoading || !canEncash}
             onClick={() => {
               onSuccess(method, amount);
               onClose();
@@ -83,6 +90,9 @@ export function WorkshopPaymentModal({
             Valider l'encaissement
           </Button>
         </DialogFooter>
+        {!rolesLoading && !canEncash ? (
+          <p className="text-center text-sm font-medium text-destructive">{roleMessage}</p>
+        ) : null}
       </DialogContent>
     </Dialog>
   );
