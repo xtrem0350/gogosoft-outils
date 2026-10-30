@@ -40,3 +40,5 @@ dist-ssr
 
 # Vercel
 .vercel/
+supabase/migrations/liste.mjs 
+supabase/migrations/project_structure.txt 
