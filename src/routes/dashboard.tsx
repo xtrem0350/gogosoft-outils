@@ -7,6 +7,7 @@ import {
   CreditCard,
   Laptop,
   Package,
+  Plus,
   Smartphone,
   ShoppingCart,
   UserPlus,
@@ -109,6 +110,17 @@ function OwnerDashboard() {
   const [events, setEvents] = useState<WorkshopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const createShopAction = (
+    <Button
+      type="button"
+      variant="outline"
+      className="border-white/70 bg-white/70 text-slate-900 hover:bg-white"
+      onClick={() => void navigate({ to: "/boutiques/nouveau" })}
+    >
+      <Plus className="mr-2 size-4" />
+      Créer une boutique
+    </Button>
+  );
 
   const load = useCallback(async () => {
     if (isSimulationMode()) {
@@ -289,6 +301,9 @@ function OwnerDashboard() {
           </div>
           <div className="hidden rounded-2xl border border-white/60 bg-white/35 p-3 shadow-3d sm:block">
             <IconBadge3D icon={Wrench} size="lg" color="orange" />
+          </div>
+          <div className="absolute bottom-4 right-4 sm:relative sm:bottom-auto sm:right-auto">
+            {createShopAction}
           </div>
         </div>
       </div>

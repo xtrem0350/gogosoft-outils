@@ -140,12 +140,21 @@ export async function createShop(data: CreateShopData): Promise<Shop> {
 
   if (error) throw error;
 
-  await supabase
+  const { error: memberError } = await supabase
     .from("shop_members")
     .upsert(
       { shop_id: shop.id, user_id: userId, role: "owner" },
       { onConflict: "shop_id,user_id" },
     );
+  if (memberError) throw memberError;
+
+  const { error: roleError } = await supabase
+    .from("user_roles_by_shop")
+    .upsert(
+      { shop_id: shop.id, user_id: userId, role: "owner" },
+      { onConflict: "shop_id,user_id,role" },
+    );
+  if (roleError) throw roleError;
 
   return shop as unknown as Shop;
 }
