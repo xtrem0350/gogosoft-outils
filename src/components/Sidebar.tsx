@@ -573,7 +573,13 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
           )}
         >
           <div className="flex min-w-0 items-center gap-2">
-            <AnimatedLogo compact />
+            <a
+              href="https://gogosoft-outils.vercel.app/"
+              aria-label="Retour à l'accueil GogoSoft"
+              className="inline-flex shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+            >
+              <AnimatedLogo compact />
+            </a>
             {!collapsed ? (
               <span className="truncate font-display text-sm font-semibold">GogoSoft</span>
             ) : null}
@@ -613,7 +619,13 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             className="flex h-dvh max-h-dvh w-72 flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
           >
             <div className="mb-3 flex shrink-0 items-center gap-3 border-b border-sidebar-border pb-4">
-              <AnimatedLogo compact />
+              <a
+                href="https://gogosoft-outils.vercel.app/"
+                aria-label="Retour à l'accueil GogoSoft"
+                className="inline-flex shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              >
+                <AnimatedLogo compact />
+              </a>
               <SheetTitle className="font-display text-sm">GogoSoft</SheetTitle>
             </div>
             <div className="relative mb-3 shrink-0 border-b border-sidebar-border pb-3">
