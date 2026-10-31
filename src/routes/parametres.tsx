@@ -164,7 +164,7 @@ function ParametresPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className={`grid w-full md:grid-cols-${isOwner ? 6 : 5}`}>
+        <TabsList className="flex h-auto w-full flex-nowrap justify-start overflow-x-auto">
           <TabsTrigger value="profil">Profil</TabsTrigger>
           <TabsTrigger value="boutique">Atelier</TabsTrigger>
           <TabsTrigger value="modules">Mes domaines</TabsTrigger>
