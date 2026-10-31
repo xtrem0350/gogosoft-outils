@@ -151,7 +151,7 @@ export async function createShop(data: CreateShopData): Promise<Shop> {
   const { error: roleError } = await supabase
     .from("user_roles_by_shop")
     .upsert(
-      { shop_id: shop.id, user_id: userId, role: "owner" },
+      { shop_id: shop.id, user_id: userId, role: "owner", enabled_at: new Date().toISOString() },
       { onConflict: "shop_id,user_id,role" },
     );
   if (roleError) throw roleError;

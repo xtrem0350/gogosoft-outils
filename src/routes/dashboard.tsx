@@ -18,6 +18,7 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/EmptyState";
+import { CreateShopModal } from "@/components/CreateShopModal";
 import { IconBadge3D } from "@/components/IconBadge3D";
 import { StatsCard } from "@/components/StatsCard";
 import { SubscriptionBadge } from "@/components/SubscriptionBadge";
@@ -100,7 +101,7 @@ function DashboardRouter() {
 function OwnerDashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
-  const { shop, shopId, loading: shopLoading } = useCurrentShop();
+  const { shop, shopId, loading: shopLoading, refresh } = useCurrentShop();
   const { activeModules: modules, isModuleActive: hasModule, loading: modulesLoading } = useActiveModules();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
 
@@ -110,12 +111,13 @@ function OwnerDashboard() {
   const [events, setEvents] = useState<WorkshopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const createShopAction = (
     <Button
       type="button"
       variant="outline"
       className="border-white/70 bg-white/70 text-slate-900 hover:bg-white"
-      onClick={() => void navigate({ to: "/boutiques/nouveau" })}
+      onClick={() => setCreateOpen(true)}
     >
       <Plus className="mr-2 size-4" />
       Créer une boutique
@@ -307,6 +309,14 @@ function OwnerDashboard() {
           </div>
         </div>
       </div>
+      <CreateShopModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={(newShopId) => {
+          window.localStorage.setItem("gogosoft.currentShopId", newShopId);
+          void refresh(user?.id, true);
+        }}
+      />
 
       {isSimulationMode() ? (
         <div className="mb-4 rounded-lg bg-orange-100 px-4 py-2 text-sm text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">

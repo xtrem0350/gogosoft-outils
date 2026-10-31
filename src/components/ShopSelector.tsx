@@ -2,7 +2,7 @@
 
 /** Sélecteur d'atelier actuellement active. */
 import { ChevronDown, Plus, Store } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,25 +13,38 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { CreateShopModal } from "@/components/CreateShopModal";
 
 /** Sélecteur d'atelier affiché dans le header. */
 export function ShopSelector() {
-  const { shop, shopId, shops, switchShop, loading } = useCurrentShop();
+  const { shop, shopId, shops, switchShop, refresh, loading } = useCurrentShop();
+  const { user } = useAuth();
   const { isOwner } = useUserRoles();
-  const navigate = useNavigate();
+  const [createOpen, setCreateOpen] = useState(false);
 
   if (loading || shops.length === 0) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
-        onClick={isOwner ? () => void navigate({ to: "/boutiques/nouveau" }) : undefined}
-      >
-        <Store className="size-4" />
-        Sélectionner un atelier...
-      </Button>
+      <>
+        <Button
+          variant="outline"
+          size="sm"
+          className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-accent-foreground"
+          onClick={isOwner ? () => setCreateOpen(true) : undefined}
+        >
+          <Store className="size-4" />
+          Sélectionner un atelier...
+        </Button>
+        <CreateShopModal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          onSuccess={(newShopId) => {
+            window.localStorage.setItem("gogosoft.currentShopId", newShopId);
+            void refresh(user?.id, true);
+          }}
+        />
+      </>
     );
   }
 
@@ -58,13 +71,21 @@ export function ShopSelector() {
         {isOwner ? (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => void navigate({ to: "/boutiques/nouveau" })}>
+            <DropdownMenuItem onSelect={() => setCreateOpen(true)}>
               <Plus className="mr-2 size-4" />
               Créer une boutique ou atelier
             </DropdownMenuItem>
           </>
         ) : null}
       </DropdownMenuContent>
+      <CreateShopModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSuccess={(newShopId) => {
+          window.localStorage.setItem("gogosoft.currentShopId", newShopId);
+          void refresh(user?.id, true);
+        }}
+      />
     </DropdownMenu>
   );
 }
