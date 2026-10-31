@@ -442,7 +442,13 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
                   to={to}
                   search={to === "/caisse" ? { action: "validate", ticket: "" } : (itemSearch ?? {})}
-                  onClick={() => setOpen(false)}
+                  onClick={(event) => {
+                    if (to === "/caisse" && pendingCountFor(to) > 0) {
+                      event.preventDefault();
+                      void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } });
+                    }
+                    setOpen(false);
+                  }}
                   title={itemLabel}
                   className={cn(
                     "flex h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 pl-7 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-sidebar-foreground/65 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",

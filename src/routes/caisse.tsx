@@ -150,24 +150,31 @@ function CashPage() {
         getTeamMembers(shopId),
         getCashExits(shopId, period),
         listSales(shopId),
-        supabase.from("workshop_tickets" as never).select("id,ticket_number,client_name,client_whatsapp,device_brand,device_model,device_imei,description,technicien_id,status,quote_amount,entry_fee").eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
+        supabase.from("workshop_tickets" as never)
+          .select("id,ticket_number,client_name,client_whatsapp,device_brand,device_model,device_imei,description,technicien_id,status,quote_amount,entry_fee,storage_location_id,created_at")
+          .eq("shop_id", shopId)
+          .in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
         getOpenCashSession(shopId),
       ]);
       setSummary(nextSummary);
       setClosures(nextClosures);
       setExits(nextExits);
-      const workshopTickets = (workshopRows.data ?? []) as WorkshopTicket[];
-      workshopTickets.forEach((ticket) => {
-        ticket.technicien_name = ticket.technicien_id
-          ? Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id]))[ticket.technicien_id] ?? ""
-          : "";
-      });
-      setEntryTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_entree"));
-      setFinalTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_solde"));
-      setPendingSales(demo ? [] : sales.filter((sale) => sale.payment_status === "pending" || sale.payment_status === "awaiting_payment"));
       if (workshopRows.error) {
-        toast.error("Impossible de charger les tickets en attente.");
+        console.error("[caisse] workshopRows error:", workshopRows.error);
+        toast.error("Impossible de charger les tickets : " + workshopRows.error.message);
+        setEntryTickets([]);
+        setFinalTickets([]);
+      } else {
+        const workshopTickets = (workshopRows.data ?? []) as WorkshopTicket[];
+        workshopTickets.forEach((ticket) => {
+          ticket.technicien_name = ticket.technicien_id
+            ? Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id]))[ticket.technicien_id] ?? ""
+            : "";
+        });
+        setEntryTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_entree"));
+        setFinalTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_solde"));
       }
+      setPendingSales(demo ? [] : sales.filter((sale) => sale.payment_status === "pending" || sale.payment_status === "awaiting_payment"));
       setMemberAvatars(Object.fromEntries(members.filter((member) => member.avatar_url).map((member) => [member.user_id, member.avatar_url as string])));
       setMemberNames(Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id])));
       setCashSession(openSession);
