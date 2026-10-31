@@ -17,7 +17,7 @@ export const Route = createFileRoute("/rejoindre")({ component: JoinInvitationPa
 function JoinInvitationPage() {
   const navigate = useNavigate();
   const { refresh: refreshShops } = useCurrentShop();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(() => window.sessionStorage.getItem("gogosoft.pendingInvitationCode") ?? "");
   const [invitation, setInvitation] = useState<PendingInvitation | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,6 +30,25 @@ function JoinInvitationPage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(false);
+
+  useEffect(() => {
+    const pendingCode = window.sessionStorage.getItem("gogosoft.pendingInvitationCode");
+    if (!pendingCode) return;
+
+    void (async () => {
+      try {
+        const found = await getInvitationByCode(pendingCode);
+        if (found) {
+          setInvitation(found);
+          setFullName(found.full_name);
+          setWhatsapp(found.whatsapp);
+        }
+      } catch (error) {
+        console.error("[rejoindre] Impossible de reprendre l'invitation en attente.", error);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!avatar) {
@@ -51,6 +70,7 @@ function JoinInvitationPage() {
         return;
       }
       setInvitation(found);
+      window.sessionStorage.setItem("gogosoft.pendingInvitationCode", found.code);
       setFullName(found.full_name);
       setWhatsapp(found.whatsapp);
     } catch (error) {
@@ -95,7 +115,7 @@ function JoinInvitationPage() {
         if (!userId) throw new Error("Supabase n'a pas retourné l'utilisateur créé.");
         accountEmail = data.user?.email ?? email.trim();
         if (!data.session) {
-          toast.info("Vérifiez votre adresse e-mail, connectez-vous, puis réutilisez ce code pour rejoindre l'atelier.");
+          setEmailConfirmationRequired(true);
           return;
         }
       }
@@ -126,6 +146,7 @@ function JoinInvitationPage() {
       });
       if (!result.success) throw new Error("L'invitation n'a pas pu être acceptée.");
       window.localStorage.setItem("gogosoft.currentShopId", result.shop_id);
+      window.sessionStorage.removeItem("gogosoft.pendingInvitationCode");
       await refreshShops(userId, true);
       toast.success("Bienvenue ! Votre compte est créé.");
       // useUserRoles recharge les rôles cumulés au montage du dashboard.
@@ -155,16 +176,33 @@ function JoinInvitationPage() {
         </aside>
         <section className="flex items-center justify-center p-5 sm:p-8">
           <div className="w-full max-w-lg space-y-6">
-            <header>
-              <p className="text-sm font-semibold text-primary">{invitation ? "Étape 2 sur 2" : "Étape 1 sur 2"}</p>
-              <h2 className="mt-1 text-2xl font-bold">{invitation ? "Créer votre compte" : "Vérifier le code"}</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {invitation
-                  ? `Invitation de ${invitation.shop_name ?? "votre atelier"} · ${invitation.role}`
-                  : "Saisissez le code à 6 caractères communiqué par votre responsable."}
-              </p>
-            </header>
-          {!invitation ? (
+            {emailConfirmationRequired ? (
+              <div className="grid gap-4 text-center">
+                <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="size-7 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Vérifiez votre email</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Un lien de confirmation a été envoyé à votre adresse. Confirmez votre compte, puis connectez-vous pour terminer l&apos;invitation.
+                  </p>
+                </div>
+                <Button type="button" className="w-full" onClick={() => void navigate({ to: "/auth" })}>
+                  Aller à la connexion
+                </Button>
+              </div>
+            ) : (
+              <>
+                <header>
+                  <p className="text-sm font-semibold text-primary">{invitation ? "Étape 2 sur 2" : "Étape 1 sur 2"}</p>
+                  <h2 className="mt-1 text-2xl font-bold">{invitation ? "Créer votre compte" : "Vérifier le code"}</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {invitation
+                      ? `Invitation de ${invitation.shop_name ?? "votre atelier"} · ${invitation.role}`
+                      : "Saisissez le code à 6 caractères communiqué par votre responsable."}
+                  </p>
+                </header>
+                {!invitation ? (
             <form onSubmit={(event) => void verifyCode(event)} className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="invitation-code">Code d&apos;invitation</Label>
@@ -268,6 +306,8 @@ function JoinInvitationPage() {
               </div>
             </form>
           )}
+              </>
+            )}
           </div>
         </section>
       </div>

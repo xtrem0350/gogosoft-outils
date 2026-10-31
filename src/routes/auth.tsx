@@ -202,6 +202,10 @@ function AuthPage() {
         window.localStorage.removeItem("gogosoft.rememberedIdentifier");
       }
       console.info("[auth] sign-in:success");
+      if (window.sessionStorage.getItem("gogosoft.pendingInvitationCode")) {
+        await navigate({ to: "/rejoindre" });
+        return;
+      }
       const signedInUserId = sessionData.session?.user.id;
       if (signedInUserId) {
         const { data: profile } = await supabase
