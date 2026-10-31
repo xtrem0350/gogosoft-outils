@@ -45,8 +45,8 @@ export function TicketDetailModal({
   const whatsapp = ticket.client_whatsapp?.replace(/\D/g, "");
   const amount =
     ticketType === "entry"
-      ? 2000
-      : Math.max(0, Number(ticket.quote_amount ?? 0) - 2000);
+      ? Number(ticket.entry_fee ?? 0)
+      : Math.max(0, Number(ticket.quote_amount ?? 0) - Number(ticket.entry_fee ?? 0));
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>

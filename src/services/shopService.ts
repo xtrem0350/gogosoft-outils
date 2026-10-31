@@ -27,6 +27,44 @@ export interface Shop {
   accepts_cash_on_delivery?: boolean;
   delivery_fee?: number;
   delivery_available?: boolean;
+  entry_fee_amount?: number;
+  entry_fee_enabled?: boolean;
+  entry_fee_refundable?: boolean;
+}
+
+export interface ShopEntryFeeConfig {
+  amount: number;
+  enabled: boolean;
+  refundable: boolean;
+}
+
+export async function getShopEntryFeeConfig(shopId: string): Promise<ShopEntryFeeConfig> {
+  requireShopId(shopId);
+  const { data, error } = await supabase
+    .from("shops")
+    .select("entry_fee_amount, entry_fee_enabled, entry_fee_refundable")
+    .eq("id", shopId)
+    .maybeSingle();
+  if (error) throw error;
+  return {
+    amount: data?.entry_fee_amount ?? 2000,
+    enabled: data?.entry_fee_enabled ?? true,
+    refundable: data?.entry_fee_refundable ?? false,
+  };
+}
+
+export async function updateShopEntryFeeConfig(
+  shopId: string,
+  config: { amount: number; enabled: boolean; refundable: boolean },
+): Promise<void> {
+  requireShopId(shopId);
+  const { error } = await supabase.rpc("update_entry_fee_config", {
+    p_shop_id: shopId,
+    p_amount: config.amount,
+    p_enabled: config.enabled,
+    p_refundable: config.refundable,
+  });
+  if (error) throw error;
 }
 
 export interface CreateShopData {

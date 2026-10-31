@@ -59,6 +59,7 @@ import {
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
 import { getClientById, type ClientRecord } from "@/services/clientService";
 import { getTeamMembers } from "@/services/teamService";
+import { getShopEntryFeeConfig } from "@/services/shopService";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { getEvents, addEvent, createWorkshopPayment, updateWorkshopTicket } from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
@@ -784,6 +785,10 @@ function NewWorkshopTicketPage({
   const [technician, setTechnician, clearTechnician] = usePersistedWizardState<MemberOption | null>(`${activityType}-technician`, null);
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [entryFeeConfig, setEntryFeeConfig] = useState({
+    amount: 2000,
+    enabled: true,
+  });
   const [createdTicket, setCreatedTicket] = useState<WorkshopTicket | null>(null);
   const [createdAt] = useState(() => new Date());
   const createdAtLabel = createdAt.toLocaleString("fr-FR", {
@@ -811,6 +816,13 @@ function NewWorkshopTicketPage({
           serial: "Optionnel",
           serialLabel: "IMEI",
         };
+
+  useEffect(() => {
+    if (!shopId) return;
+    void getShopEntryFeeConfig(shopId)
+      .then((config) => setEntryFeeConfig({ amount: config.amount, enabled: config.enabled }))
+      .catch(() => undefined);
+  }, [shopId]);
 
   useEffect(() => {
     if (!shopId || !initialClientId) return;
@@ -919,12 +931,21 @@ function NewWorkshopTicketPage({
         diagnosis: generateDiagnosis(issues),
         description: description.trim(),
         notes: description.trim(),
-        entry_fee: 2000,
+        entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
         entry_fee_paid: false,
         technicien_id: technician?.user_id,
         storage_location_id: location?.id,
       });
-      setCreatedTicket(ticket);
+      if (!entryFeeConfig.enabled) {
+        const updatedTicket = await updateWorkshopTicket(ticket.id, {
+          status: "en_attente_technicien",
+        }, activityType);
+        setCreatedTicket(updatedTicket);
+        toast.success("Fiche créée (entrée gratuite). Technicien notifié.");
+      } else {
+        setCreatedTicket(ticket);
+        toast.success(`Fiche envoyée à la caisse pour encaissement des ${entryFeeConfig.amount} FCFA.`);
+      }
       clearStep();
       clearSelectedClient();
       clearClientName();
@@ -942,7 +963,6 @@ function NewWorkshopTicketPage({
       clearEntryPayment();
       clearLocation();
       clearTechnician();
-      toast.success("Fiche créée.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer la fiche.");
     } finally {

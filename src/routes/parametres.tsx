@@ -26,15 +26,22 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { getProfile, updateProfile } from "@/services/authService";
-import { updateShop } from "@/services/shopService";
+import {
+  getShopEntryFeeConfig,
+  updateShop,
+  updateShopEntryFeeConfig,
+} from "@/services/shopService";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/parametres")({ component: ParametresPage });
 
 function ParametresPage() {
   const { shop: currentShop, shopId } = useCurrentShop();
+  const { isOwner } = useUserRoles();
   const [tab, setTab] = useState("profil");
   const [profile, setProfile] = useState<{
     nom: string | null;
@@ -51,6 +58,30 @@ function ParametresPage() {
     [],
   );
   const [inactivityTimeout, setInactivityTimeout] = useState<number>(30);
+  const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
+  const [entryFeeEnabled, setEntryFeeEnabled] = useState(true);
+  const [entryFeeRefundable, setEntryFeeRefundable] = useState(false);
+
+  useEffect(() => {
+    if (!shopId || !isOwner) return;
+    void getShopEntryFeeConfig(shopId)
+      .then((config) => {
+        setEntryFeeAmount(config.amount);
+        setEntryFeeEnabled(config.enabled);
+        setEntryFeeRefundable(config.refundable);
+      })
+      .catch(() => undefined);
+  }, [isOwner, shopId]);
+
+  async function saveEntryFeeConfig() {
+    if (!shopId) return;
+    await updateShopEntryFeeConfig(shopId, {
+      amount: entryFeeAmount,
+      enabled: entryFeeEnabled,
+      refundable: entryFeeRefundable,
+    });
+    toast.success("Configuration des frais d'entrée enregistrée.");
+  }
 
   useEffect(() => {
     const storedTimeout = Number(window.localStorage.getItem("gogosoft_inactivity_timeout"));
@@ -133,11 +164,12 @@ function ParametresPage() {
       />
 
       <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="grid w-full md:grid-cols-5">
+        <TabsList className={`grid w-full md:grid-cols-${isOwner ? 6 : 5}`}>
           <TabsTrigger value="profil">Profil</TabsTrigger>
           <TabsTrigger value="boutique">Atelier</TabsTrigger>
           <TabsTrigger value="modules">Mes domaines</TabsTrigger>
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          {isOwner ? <TabsTrigger value="entry-fee">Frais d'entrée</TabsTrigger> : null}
           <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
 
@@ -298,6 +330,48 @@ function ParametresPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isOwner ? (
+          <TabsContent value="entry-fee" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Frais d'entrée</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+                  <Label htmlFor="entry-fee-enabled">Activer les frais d'entrée</Label>
+                  <Switch
+                    id="entry-fee-enabled"
+                    checked={entryFeeEnabled}
+                    onCheckedChange={setEntryFeeEnabled}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="entry-fee-amount">Montant (FCFA)</Label>
+                  <Input
+                    id="entry-fee-amount"
+                    type="number"
+                    min={0}
+                    value={entryFeeAmount}
+                    onChange={(event) => setEntryFeeAmount(Math.max(0, Number(event.target.value)))}
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-4 rounded-lg border p-3">
+                  <Label htmlFor="entry-fee-refundable">Remboursable en cas d'annulation</Label>
+                  <Switch
+                    id="entry-fee-refundable"
+                    checked={entryFeeRefundable}
+                    onCheckedChange={setEntryFeeRefundable}
+                  />
+                </div>
+                <Button onClick={() => void saveEntryFeeConfig()}>
+                  <Save className="size-4" />
+                  Enregistrer
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="danger" className="mt-6">
           <Card className="border-destructive/30 bg-destructive/5">
