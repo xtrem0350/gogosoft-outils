@@ -128,13 +128,13 @@ function ReceptionPage() {
         issues: ["ecran_casse"],
         description: `Panne: ${issue}`,
         entry_fee: entryFee,
-        entry_fee_paid: true,
+        entry_fee_paid: false,
         client_id: null,
         activity_type: "phone",
       });
 
       await assignTicketToLocation(ticket.id, selectedLocationId);
-      toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
+      toast.success("Fiche créée. Envoyée à la caisse pour encaissement.");
       setOpenCreate(false);
       setStep(1);
       setPaymentPaid(false);
