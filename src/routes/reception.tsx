@@ -50,6 +50,7 @@ function ReceptionPage() {
   const [issue, setIssue, clearIssue] = usePersistedWizardState("reception-issue", "écran cassé");
   const [selectedLocationId, setSelectedLocationId, clearSelectedLocationId] = usePersistedWizardState<string | undefined>("reception-location", undefined);
   const [entryFee, setEntryFee, clearEntryFee] = usePersistedWizardState("reception-entry-fee", 2000);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     if (!shopId) return;
@@ -96,54 +97,74 @@ function ReceptionPage() {
   );
 
   async function handleCreateTicket() {
-    if (!shopId) return;
-    const trimmedName = clientName.trim();
-    if (!trimmedName) return;
-
-    const ticket = await createTicket({
-      shop_id: shopId,
-      client_name: trimmedName,
-      client_whatsapp: clientPhone.trim() || "",
-      device_brand: deviceBrand.trim() || "Autre",
-      device_model: deviceModel.trim() || "Modèle inconnu",
-      ...(deviceImei.trim() ? { device_imei: deviceImei.trim() } : {}),
-      issues: ["ecran_casse"],
-      description: `Panne: ${issue}`,
-      entry_fee: entryFee,
-      entry_fee_paid: true,
-      client_id: null,
-      activity_type: "phone",
-    });
-
-    if (selectedLocationId) {
-      await assignTicketToLocation(ticket.id, selectedLocationId);
+    if (creating) return;
+    if (!shopId) {
+      toast.error("Sélectionnez un atelier avant de créer la fiche.");
+      return;
     }
-    toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
-    setOpenCreate(false);
-    setStep(1);
-    setPaymentPaid(false);
-    setPaymentMethod("");
-    setSelectedClient(undefined);
-    setClientName("");
-    setClientPhone("");
-    setDeviceBrand("");
-    setDeviceModel("");
-    setDeviceImei("");
-    setIssue("écran cassé");
-    setSelectedLocationId(undefined);
-    setEntryFee(2000);
-    clearStep();
-    clearSelectedClient();
-    clearClientName();
-    clearClientPhone();
-    clearDeviceBrand();
-    clearDeviceModel();
-    clearDeviceImei();
-    clearIssue();
-    clearSelectedLocationId();
-    clearEntryFee();
-    clearPaymentPaid();
-    clearPaymentMethod();
+    const trimmedName = clientName.trim();
+    if (!trimmedName) {
+      toast.error("Saisissez le nom du client avant de créer la fiche.");
+      return;
+    }
+    if (!deviceModel.trim()) {
+      toast.error("Saisissez le modèle de l'appareil avant de créer la fiche.");
+      return;
+    }
+    if (!selectedLocationId) {
+      toast.error("Sélectionnez un emplacement avant de créer la fiche.");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const ticket = await createTicket({
+        shop_id: shopId,
+        client_name: trimmedName,
+        client_whatsapp: clientPhone.trim() || "",
+        device_brand: deviceBrand.trim() || "Autre",
+        device_model: deviceModel.trim(),
+        ...(deviceImei.trim() ? { device_imei: deviceImei.trim() } : {}),
+        issues: ["ecran_casse"],
+        description: `Panne: ${issue}`,
+        entry_fee: entryFee,
+        entry_fee_paid: true,
+        client_id: null,
+        activity_type: "phone",
+      });
+
+      await assignTicketToLocation(ticket.id, selectedLocationId);
+      toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
+      setOpenCreate(false);
+      setStep(1);
+      setPaymentPaid(false);
+      setPaymentMethod("");
+      setSelectedClient(undefined);
+      setClientName("");
+      setClientPhone("");
+      setDeviceBrand("");
+      setDeviceModel("");
+      setDeviceImei("");
+      setIssue("écran cassé");
+      setSelectedLocationId(undefined);
+      setEntryFee(2000);
+      clearStep();
+      clearSelectedClient();
+      clearClientName();
+      clearClientPhone();
+      clearDeviceBrand();
+      clearDeviceModel();
+      clearDeviceImei();
+      clearIssue();
+      clearSelectedLocationId();
+      clearEntryFee();
+      clearPaymentPaid();
+      clearPaymentMethod();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de créer la fiche.");
+    } finally {
+      setCreating(false);
+    }
   }
 
   function resetWizard() {
@@ -296,7 +317,7 @@ function ReceptionPage() {
             <div className="space-y-4">
               <div className="space-y-2"><Label>Casier</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
               <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> 2 000 FCFA</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
-              <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId} onClick={handleCreateTicket}>Créer la fiche</Button></DialogFooter>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId || creating} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></DialogFooter>
             </div>
           ) : null}
           <div className="flex justify-end border-t pt-4">

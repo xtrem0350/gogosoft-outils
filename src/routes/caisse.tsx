@@ -165,6 +165,9 @@ function CashPage() {
       setEntryTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_entree"));
       setFinalTickets(workshopTickets.filter((ticket) => ticket.status === "en_attente_caissier_solde"));
       setPendingSales(demo ? [] : sales.filter((sale) => sale.payment_status === "pending" || sale.payment_status === "awaiting_payment"));
+      if (workshopRows.error) {
+        toast.error("Impossible de charger les tickets en attente.");
+      }
       setMemberAvatars(Object.fromEntries(members.filter((member) => member.avatar_url).map((member) => [member.user_id, member.avatar_url as string])));
       setMemberNames(Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id])));
       setCashSession(openSession);
