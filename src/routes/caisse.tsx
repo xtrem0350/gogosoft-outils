@@ -103,6 +103,24 @@ interface WorkshopTicket {
   status?: string;
 }
 
+interface WorkshopTicketRow {
+  id: string;
+  ticket_number?: string;
+  client_name: string;
+  client_whatsapp?: string;
+  device_brand?: string;
+  device_model?: string;
+  device_imei?: string;
+  description?: string;
+  technicien_id?: string;
+  status?: string;
+  price_estimate?: number | null;
+  price_final?: number | null;
+  entry_fee?: number | null;
+  storage_location_id?: string;
+  created_at?: string;
+}
+
 function CashPage() {
   const { action, ticket: requestedTicketId } = Route.useSearch();
   const { shopId, loading: shopLoading } = useCurrentShop();
@@ -151,7 +169,7 @@ function CashPage() {
         getCashExits(shopId, period),
         listSales(shopId),
         supabase.from("workshop_tickets" as never)
-          .select("id,ticket_number,client_name,client_whatsapp,device_brand,device_model,device_imei,description,technicien_id,status,quote_amount,entry_fee,storage_location_id,created_at")
+          .select("*")
           .eq("shop_id", shopId)
           .in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
         getOpenCashSession(shopId),
@@ -165,7 +183,20 @@ function CashPage() {
         setEntryTickets([]);
         setFinalTickets([]);
       } else {
-        const workshopTickets = (workshopRows.data ?? []) as WorkshopTicket[];
+        const workshopTickets = ((workshopRows.data ?? []) as WorkshopTicketRow[]).map((ticket) => ({
+          id: ticket.id,
+          ticket_number: ticket.ticket_number ?? ticket.id.slice(0, 8),
+          client_name: ticket.client_name,
+          client_whatsapp: ticket.client_whatsapp,
+          device_brand: ticket.device_brand,
+          device_model: ticket.device_model,
+          device_imei: ticket.device_imei,
+          description: ticket.description,
+          technicien_id: ticket.technicien_id,
+          status: ticket.status,
+          entry_fee: ticket.entry_fee ?? 0,
+          quote_amount: ticket.price_final ?? ticket.price_estimate ?? 0,
+        })) as WorkshopTicket[];
         workshopTickets.forEach((ticket) => {
           ticket.technicien_name = ticket.technicien_id
             ? Object.fromEntries(members.map((member) => [member.user_id, member.full_name ?? member.email ?? member.user_id]))[ticket.technicien_id] ?? ""
