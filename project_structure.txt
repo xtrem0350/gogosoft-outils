@@ -3,6 +3,14 @@ Structure du projet (avec glob)
 
 ├── 📁 supabase/
 │   ├── 📁 migrations/
+│   │   ├── 📄 project_structure.txt
+│   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261031000003_fix_accept_invitation_pseudo_safe.sql
+│   │   ├── 📄 20261031000003_cleanup_test_data.sql
+│   │   ├── 📄 20261031000002_seed_storage_locations.sql
+│   │   ├── 📄 20261031000001_shop_entry_fee_config.sql
+│   │   ├── 📄 20261031000000_fix_accept_invitation_roles.sql
+│   │   ├── 📄 20261030000000_cash_entries_and_session_rpcs.sql
 │   │   ├── 📄 20261029000001_close_workshop_ticket_payment.sql
 │   │   ├── 📄 20261029000000_cash_sessions_and_reconciliation.sql
 │   │   ├── 📄 20261023160000_team_invitations.sql
@@ -175,7 +183,6 @@ Structure du projet (avec glob)
 │   │   ├── 📄 utils.ts
 │   │   ├── 📄 supabaseGuard.ts
 │   │   ├── 📄 passwordStrength.ts
-│   │   ├── 📄 lovable-error-reporting.ts
 │   │   ├── 📄 localAgent.ts
 │   │   ├── 📄 error-page.ts
 │   │   ├── 📄 error-capture.ts
@@ -184,14 +191,11 @@ Structure du projet (avec glob)
 │   ├── 📁 integrations/
 │   │   ├── 📁 supabase/
 │   │   │   ├── 📄 types.ts
-│   │   │   ├── 📄 previewAuthStorage.ts
 │   │   │   ├── 📄 cron-auth.ts
 │   │   │   ├── 📄 client.ts
 │   │   │   ├── 📄 client.server.ts
 │   │   │   ├── 📄 auth-middleware.ts
 │   │   │   └── 📄 auth-attacher.ts
-│   │   ├── 📁 lovable/
-│   │   │   └── 📄 index.ts
 │   │   ├── 📄 supabase
 │   │   └── 📄 lovable
 │   ├── 📁 hooks/
@@ -282,8 +286,22 @@ Structure du projet (avec glob)
 │   │   │   └── 📄 ClientSelect.tsx
 │   │   ├── 📁 dashboards/
 │   │   │   ├── 📄 TechnicianDashboard.tsx
+│   │   │   ├── 📄 StockDashboard.tsx
+│   │   │   ├── 📄 SalesDashboard.tsx
+│   │   │   ├── 📄 ReceptionDashboard.tsx
 │   │   │   ├── 📄 PlatformDashboard.tsx
 │   │   │   └── 📄 CashierDashboard.tsx
+│   │   ├── 📁 caisse/
+│   │   │   ├── 📄 TicketDetailModal.tsx
+│   │   │   ├── 📄 PlaceTicketModal.tsx
+│   │   │   ├── 📄 CashEntryModal.tsx
+│   │   │   ├── 📄 CaisseStatsCards.tsx
+│   │   │   ├── 📄 CaisseSessionHeader.tsx
+│   │   │   ├── 📄 CaisseRecapTab.tsx
+│   │   │   ├── 📄 CaissePeriodSelector.tsx
+│   │   │   ├── 📄 CaisseExitsTab.tsx
+│   │   │   ├── 📄 CaisseEntriesTab.tsx
+│   │   │   └── 📄 CaisseClosureTab.tsx
 │   │   ├── 📄 WorkshopTimeline.tsx
 │   │   ├── 📄 WorkshopTicketPreview.tsx
 │   │   ├── 📄 WorkshopPaymentModal.tsx
@@ -337,6 +355,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 DeviceCatalogPage.tsx
 │   │   ├── 📄 DemoBanner.tsx
 │   │   ├── 📄 dashboards
+│   │   ├── 📄 CreateShopModal.tsx
 │   │   ├── 📄 CreateInvitationModal.tsx
 │   │   ├── 📄 ClientSearchInput.tsx
 │   │   ├── 📄 ClientCard.tsx
@@ -344,6 +363,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 CategoryBadge.tsx
 │   │   ├── 📄 CashReceiptModal.tsx
 │   │   ├── 📄 CashClosureModal.tsx
+│   │   ├── 📄 caisse
 │   │   ├── 📄 AppShell.tsx
 │   │   ├── 📄 AnimatedLogo.tsx
 │   │   ├── 📄 AdminSidebar.tsx
@@ -385,8 +405,6 @@ Structure du projet (avec glob)
 │   ├── 📄 rapport02.md
 │   ├── 📄 rapport01.md
 │   ├── 📄 rappord10.md
-│   ├── 📄 ptlovable01.md
-│   ├── 📄 prompt.md
 │   ├── 📄 point.md
 │   ├── 📄 missions.md
 │   ├── 📄 migrationtri.md
@@ -408,4 +426,6 @@ Structure du projet (avec glob)
 ├── 📄 components.json
 ├── 📄 bunfig.toml
 ├── 📄 bun.lock
-└── 📄 AGENTS.md
+├── 📄 aliases.mac.txt
+├── 📄 AGENTS.md
+└── 📄 $PROFILE.txt
