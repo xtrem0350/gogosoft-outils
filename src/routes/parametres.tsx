@@ -75,6 +75,10 @@ function ParametresPage() {
 
   async function saveEntryFeeConfig() {
     if (!shopId) return;
+    if (entryFeeEnabled && entryFeeAmount < 1) {
+      toast.error("Indiquez un montant supérieur à 0 lorsque les frais sont activés.");
+      return;
+    }
     await updateShopEntryFeeConfig(shopId, {
       amount: entryFeeAmount,
       enabled: entryFeeEnabled,
@@ -354,6 +358,7 @@ function ParametresPage() {
                     min={0}
                     value={entryFeeAmount}
                     onChange={(event) => setEntryFeeAmount(Math.max(0, Number(event.target.value)))}
+                    disabled={!entryFeeEnabled}
                   />
                 </div>
                 <div className="flex items-center justify-between gap-4 rounded-lg border p-3">

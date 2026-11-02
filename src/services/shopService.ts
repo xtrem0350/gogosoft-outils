@@ -71,6 +71,9 @@ export interface CreateShopData {
   name: string;
   address?: string | null;
   phone?: string | null;
+  entry_fee_enabled?: boolean;
+  entry_fee_amount?: number;
+  entry_fee_refundable?: boolean;
 }
 
 /** Récupère toutes les boutiques de l'utilisateur courant, propriétaire ou membre. */

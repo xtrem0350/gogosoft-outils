@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { createShop } from "@/services/shopService";
 
 interface CreateShopModalProps {
@@ -23,6 +24,8 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [entryFeeEnabled, setEntryFeeEnabled] = useState(false);
+  const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -30,6 +33,8 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
     setName("");
     setAddress("");
     setPhone("");
+    setEntryFeeEnabled(false);
+    setEntryFeeAmount(2000);
   }, [open]);
 
   async function handleCreate() {
@@ -45,6 +50,8 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
         name: trimmedName,
         address: address.trim() || null,
         phone: phone.trim() || null,
+        entry_fee_enabled: entryFeeEnabled,
+        entry_fee_amount: entryFeeEnabled ? entryFeeAmount : 0,
       });
       toast.success("Boutique créée.");
       onSuccess(shop.id);
@@ -89,6 +96,33 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
               onChange={(event) => setPhone(event.target.value)}
               placeholder="Numéro de téléphone"
             />
+          </div>
+          <div className="space-y-4 rounded-lg border border-orange-100 p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label htmlFor="create-entry-fee-enabled">Paiement à l'entrée en Atelier</Label>
+                <p className="mt-1 text-xs text-slate-500">
+                  Le client paie-t-il pour l'entrée de l'appareil en réparation ?
+                </p>
+              </div>
+              <Switch
+                id="create-entry-fee-enabled"
+                checked={entryFeeEnabled}
+                onCheckedChange={setEntryFeeEnabled}
+              />
+            </div>
+            {entryFeeEnabled ? (
+              <div className="space-y-2">
+                <Label htmlFor="create-entry-fee-amount">Montant (FCFA)</Label>
+                <Input
+                  id="create-entry-fee-amount"
+                  type="number"
+                  min={1}
+                  value={entryFeeAmount}
+                  onChange={(event) => setEntryFeeAmount(Math.max(1, Number(event.target.value)))}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
         <DialogFooter>

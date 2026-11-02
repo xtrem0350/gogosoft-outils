@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { enableShopModules } from "@/services/moduleService";
 import { createShop } from "@/services/shopService";
@@ -20,6 +21,8 @@ function ShopOnboardingPage() {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [entryFeeEnabled, setEntryFeeEnabled] = useState(false);
+  const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
   const [submitting, setSubmitting] = useState(false);
 
   async function createOnboardingShop() {
@@ -39,6 +42,8 @@ function ShopOnboardingPage() {
         name: name.trim(),
         address: address.trim() || null,
         phone: phone.trim() || null,
+        entry_fee_enabled: entryFeeEnabled,
+        entry_fee_amount: entryFeeEnabled ? entryFeeAmount : 0,
       });
 
       let selectedModules: string[] = [];
@@ -68,11 +73,6 @@ function ShopOnboardingPage() {
         price_fcfa: rawPlanPrice ? Number(rawPlanPrice) : null,
       }, { onConflict: "user_id" });
       if (subscriptionError) throw subscriptionError;
-
-      const { error: rolesError } = await supabase
-        .from("user_roles_by_shop" as never)
-        .insert({ shop_id: shop.id, user_id: user.id, role: "owner" });
-      if (rolesError) throw rolesError;
 
       Object.keys(sessionStorage).forEach((key) => {
         if (key.startsWith("gogosoft.welcome.") || key.startsWith("gogosoft.checkout.") || key === "gogosoft.simulation.active") {
@@ -151,6 +151,34 @@ function ShopOnboardingPage() {
                 onChange={(event) => setPhone(event.target.value)}
                 className="focus-visible:ring-orange-500"
               />
+            </div>
+            <div className="space-y-4 rounded-lg border border-orange-100 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <Label htmlFor="entry-fee-enabled">Paiement à l'entrée en Atelier</Label>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Le client paie-t-il pour l'entrée de l'appareil en réparation ?
+                  </p>
+                </div>
+                <Switch
+                  id="entry-fee-enabled"
+                  checked={entryFeeEnabled}
+                  onCheckedChange={setEntryFeeEnabled}
+                />
+              </div>
+              {entryFeeEnabled ? (
+                <div className="space-y-2">
+                  <Label htmlFor="entry-fee-amount">Montant (FCFA)</Label>
+                  <Input
+                    id="entry-fee-amount"
+                    type="number"
+                    min={1}
+                    value={entryFeeAmount}
+                    onChange={(event) => setEntryFeeAmount(Math.max(1, Number(event.target.value)))}
+                    required
+                  />
+                </div>
+              ) : null}
             </div>
             <Button type="submit" disabled={!name.trim() || submitting} className="min-h-12 w-full bg-green-900 text-white hover:bg-green-800">
               {submitting ? "Création en cours..." : "Créer ma boutique"}
