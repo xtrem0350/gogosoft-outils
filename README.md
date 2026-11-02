@@ -9,12 +9,12 @@ GogoSoft Tools Manager est une application SaaS multi-tenant pour les réparateu
 - Supabase Auth, PostgreSQL et Row Level Security
 - shadcn/ui, Radix UI, Tailwind CSS
 - React Hook Form, Zod et Sonner
-- Bun ou Node.js/npm
+- Node.js/npm
 - Déploiement Vercel
 
 ## Prérequis
 
-- Node.js 20+ ou Bun installé
+- Node.js 20+ et npm
 - Un projet Supabase configuré
 - Un compte Vercel pour le déploiement
 - Un compte Supabase avec accès au SQL Editor
@@ -24,9 +24,9 @@ GogoSoft Tools Manager est une application SaaS multi-tenant pour les réparateu
 ```bash
 git clone https://github.com/xtrem0350/gogosoft-outils.git
 cd gogosoft-outils
-bun install
+npm install
 cp .env.example .env.local
-bun run dev
+npm run dev
 ```
 
 Sous Windows PowerShell, utilisez `Copy-Item .env.example .env.local` à la place de `cp`.
@@ -54,11 +54,11 @@ La clé service Supabase ne doit jamais être utilisée dans le navigateur.
 ## Scripts disponibles
 
 ```bash
-bun run dev
-bun run type-check
-bun run lint
-bun run build
-bun run preview
+npm run dev
+npm run type-check
+npm run lint
+npm run build
+npm run preview
 ```
 
 Les scripts npm équivalents sont également disponibles : `npm run dev`, `npm run type-check`, `npm run lint`, `npm run build` et `npm run preview`.
@@ -67,7 +67,7 @@ Les scripts npm équivalents sont également disponibles : `npm run dev`, `npm r
 
 1. Importez le dépôt GitHub dans Vercel.
 2. Ajoutez `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_DEMO_MODE` et `VITE_LOCAL_AGENT_URL` dans les variables d'environnement.
-3. Utilisez `bun run build` comme commande de build, ou `npm run build` si Vercel utilise npm.
+3. Utilisez `npm run build` comme commande de build.
 4. Le résultat est généré par Vite ; Vercel détecte automatiquement la sortie `dist`.
 5. Redéployez après chaque modification des variables d'environnement.
 
