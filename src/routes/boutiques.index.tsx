@@ -6,7 +6,7 @@ import { ShopCard } from "@/components/ShopCard";
 import { Button } from "@/components/ui/button";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { Card, CardContent } from "@/components/ui/card";
-import { getUserShops, type Shop } from "@/services/shopService";
+import { getUserShops, SHOP_CHANGED_EVENT, type Shop } from "@/services/shopService";
 
 export const Route = createFileRoute("/boutiques/")({
   component: BoutiquesPage,
@@ -19,10 +19,13 @@ function BoutiquesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void getUserShops()
+    const reload = () => getUserShops()
       .then(setShops)
       .catch(() => setShops([]))
       .finally(() => setLoading(false));
+    void reload();
+    window.addEventListener(SHOP_CHANGED_EVENT, reload);
+    return () => window.removeEventListener(SHOP_CHANGED_EVENT, reload);
   }, []);
 
   return (

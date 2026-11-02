@@ -4,6 +4,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 
+export const SHOP_CHANGED_EVENT = "gogosoft.shop.changed";
+
 export interface Shop {
   id: string;
   name: string;
@@ -116,11 +118,21 @@ export async function getUserShops(): Promise<Shop[]> {
   if (ownerError) throw ownerError;
 
   const merged = [...((ownedShops ?? []) as Shop[]), ...memberShops];
-  const unique = merged.filter(
+  const uniqueById = merged.filter(
     (shop, index, array) => array.findIndex((entry) => entry.id === shop.id) === index,
   );
 
-  return unique.sort(
+  const uniqueByIdentity = uniqueById.filter((shop, index, array) => {
+    const name = shop.name.trim().toLocaleLowerCase();
+    const address = (shop.address ?? "").trim().toLocaleLowerCase();
+    return array.findIndex(
+      (entry) =>
+        entry.name.trim().toLocaleLowerCase() === name &&
+        (entry.address ?? "").trim().toLocaleLowerCase() === address,
+    ) === index;
+  });
+
+  return uniqueByIdentity.sort(
     (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime(),
   );
 }
@@ -158,6 +170,8 @@ export async function createShop(data: CreateShopData): Promise<Shop> {
       { onConflict: "shop_id,user_id,role" },
     );
   if (roleError) throw roleError;
+
+  window.dispatchEvent(new CustomEvent(SHOP_CHANGED_EVENT, { detail: { shopId: shop.id } }));
 
   return shop as unknown as Shop;
 }

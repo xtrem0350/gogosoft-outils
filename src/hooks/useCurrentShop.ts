@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
-import { getUserShops, type Shop } from "@/services/shopService";
+import { getUserShops, SHOP_CHANGED_EVENT, type Shop } from "@/services/shopService";
 import { DEMO_SHOP_ID, DEMO_SHOP_SLUG, DEMO_SESSION_CHANGED_EVENT, readDemoSession } from "@/services/demoService";
 import {
   isSimulationMode,
@@ -48,7 +48,7 @@ function useCurrentShopState() {
       return;
     }
     if (!force && loadedUserRef.current === (sessionUserId ?? null) && !loadingRef.current) return;
-    if (loadingRef.current) return;
+    if (loadingRef.current && !force) return;
     loadingRef.current = true;
     setLoading(true);
     try {
@@ -108,11 +108,18 @@ function useCurrentShopState() {
 
     const onSimulationChanged = () => void refresh(undefined, true);
     window.addEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
+    const onShopChanged = () => {
+      void supabase.auth.getSession().then(({ data }) =>
+        refresh(data.session?.user.id, true),
+      );
+    };
+    window.addEventListener(SHOP_CHANGED_EVENT, onShopChanged);
     if (isSimulationMode()) {
       void refresh(undefined, true);
       return () => {
         mounted = false;
         window.removeEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
+        window.removeEventListener(SHOP_CHANGED_EVENT, onShopChanged);
       };
     }
 
@@ -131,6 +138,7 @@ function useCurrentShopState() {
       authListener.subscription.unsubscribe();
       window.removeEventListener(DEMO_SESSION_CHANGED_EVENT, onDemoSessionChanged);
       window.removeEventListener(SIMULATION_CHANGED_EVENT, onSimulationChanged);
+      window.removeEventListener(SHOP_CHANGED_EVENT, onShopChanged);
     };
   }, [refresh]);
 
