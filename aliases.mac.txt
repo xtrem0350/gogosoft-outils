@@ -1,0 +1,6 @@
+cdproj=cd /d C:\Projets\gogosoft-outils
+tc=npm run type-check
+dev=npm run dev
+st=git status
+push=git push origin main --force-with-lease
+liste=node liste.mjs

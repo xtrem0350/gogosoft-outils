@@ -12,7 +12,6 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/AppShell";
 import { ModuleRouteGuard } from "@/components/ModuleRouteGuard";
 import { CartProvider } from "@/contexts/CartContext";
@@ -52,7 +51,6 @@ function ErrorComponent({ error, reset }: { error: unknown; reset?: () => void }
   console.error("[ErrorBoundary]", error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (

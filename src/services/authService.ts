@@ -1,5 +1,4 @@
 import defaultAvatarUrl from "@/assets/images/profile.png";
-import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { getDeviceInfo, hasDeviceUsedTrial, markTrialAsUsed } from "@/services/deviceService";
 import type { AppRole, Profile } from "@/types/database";
@@ -266,7 +265,10 @@ export async function updatePassword(password: string) {
 
 /** Connexion via un compte Google. */
 export async function signInWithGoogle() {
-  return lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+  return supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: window.location.origin },
+  });
 }
 
 /** Envoi d'un code OTP par SMS (si la connexion téléphone est activée). */

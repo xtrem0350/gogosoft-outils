@@ -1,0 +1,17 @@
+# Aller au répertoire de travail
+function cdproj { Set-Location "C:\Projets\gogosoft-outils" }
+
+# Lancer le type-check
+function tc { npm run type-check }
+
+# Lancer le serveur de dev
+function dev { npm run dev }
+
+# Voir le statut Git
+function st { git status }
+
+# Pousser avec force-with-lease
+function push { git push origin main --force-with-lease }
+
+# Lancer le script liste.mjs
+function liste { node liste.mjs }
