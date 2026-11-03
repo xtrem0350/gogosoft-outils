@@ -75,6 +75,26 @@ export interface DomainPricing {
 
 const STOREFRONT_CODES = ["shop_phone", "shop_computer"];
 
+export const SHOP_CODE_TO_MODULE_ID: Record<string, string> = {
+  phone_repair: "reparation-telephone",
+  computer_repair: "reparation-pc",
+  phone_sale: "vente-telephone",
+  computer_sale: "vente-pc",
+  shop_phone: "vitrine-telephone",
+  shop_computer: "vitrine-pc",
+  consumable_stock: "consommables",
+  consumable: "consommables",
+  repair_phone: "reparation-telephone",
+  repair_computer: "reparation-pc",
+  sale_phone: "vente-telephone",
+  sale_computer: "vente-pc",
+  multi_ateliers: "multi-ateliers",
+};
+
+export function moduleIdsFromShopCodes(codes: string[]): string[] {
+  return [...new Set(codes.map((code) => SHOP_CODE_TO_MODULE_ID[code] ?? code).filter(Boolean))];
+}
+
 export interface ModulePricingSummary {
   appPlan: PricingPlan | null;
   storefrontPlan: PricingPlan | null;

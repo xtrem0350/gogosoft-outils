@@ -40,6 +40,7 @@ import {
   getModulePricingSummary,
   getPricingPlans,
   getShopModules,
+  moduleIdsFromShopCodes,
   syncSubscriptionModules,
   type ActivityModule,
   type PricingPlan,
@@ -136,8 +137,11 @@ export function ShopModulesSection({ shopId }: { shopId: string | null }) {
     );
   }
 
-  const active = all.filter((m) => enabled.includes(m.code));
-  const available = all.filter((m) => !enabled.includes(m.code));
+  const enabledModuleIds = moduleIdsFromShopCodes(enabled);
+  const moduleIdForActivity = (module: ActivityModule) =>
+    moduleIdsFromShopCodes([module.code])[0] ?? module.code;
+  const active = all.filter((module) => enabledModuleIds.includes(moduleIdForActivity(module)));
+  const available = all.filter((module) => !enabledModuleIds.includes(moduleIdForActivity(module)));
   const appCodes = active
     .filter((module) => !module.code.startsWith("shop_"))
     .map((module) => module.code);

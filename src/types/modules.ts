@@ -73,7 +73,7 @@ export const MODULES: Record<ModuleId, ModuleDefinition> = {
     routes: ["/consumable"],
     sidebarKeys: ["consumable"],
     icon: "Package",
-    shopModuleCodes: ["consumable"],
+    shopModuleCodes: ["consumable", "consumable_stock"],
   },
   "vitrine-telephone": {
     id: "vitrine-telephone",
@@ -112,6 +112,7 @@ export const MODULE_IDS = Object.keys(MODULES) as ModuleId[];
 
 export function moduleIdsFromShopCodes(codes: string[]): ModuleId[] {
   return MODULE_IDS.filter((id) =>
+    codes.includes(id) ||
     MODULES[id].shopModuleCodes.some((code) => codes.includes(code)) ||
     Boolean(MODULES[id].demoCode && codes.includes(MODULES[id].demoCode!)),
   );

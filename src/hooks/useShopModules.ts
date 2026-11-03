@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { getShopModules } from "@/services/moduleService";
+import { getShopModules, moduleIdsFromShopCodes } from "@/services/moduleService";
 import {
   DEMO_SESSION_CHANGED_EVENT,
   DEMO_SHOP_ID,
@@ -28,6 +28,10 @@ export function useShopModules() {
   const [modules, setModules] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const setMappedModules = useCallback((codes: string[]) => {
+    setModules(moduleIdsFromShopCodes(codes));
+  }, []);
+
   const refresh = useCallback(async () => {
     if (isSimulationMode()) {
       const simulatedModules = readSimulationShop()?.modules ?? [];
@@ -36,18 +40,18 @@ export function useShopModules() {
         id !== "multi-ateliers" &&
         simulatedModules.includes(id),
       );
-      setModules(shopCodesFromModuleIds(moduleIds));
+      setMappedModules(shopCodesFromModuleIds(moduleIds));
       setLoading(false);
       return;
     }
     if (isDemoMode()) {
-      setModules(getDemoModuleCodes());
+      setMappedModules(getDemoModuleCodes());
       setLoading(false);
       return;
     }
     // Juste après la sortie de démo, shopId peut encore valoir l'atelier fictif : aucune requête réelle.
     if (!shopId || shopId === DEMO_SHOP_ID) {
-      setModules([]);
+      setMappedModules([]);
       setLoading(false);
       return;
     }
@@ -70,21 +74,21 @@ export function useShopModules() {
             ...((subscription.storefront_modules ?? []) as string[]),
           ];
           if (fallbackModules.length > 0) {
-            setModules(fallbackModules);
+            setMappedModules(fallbackModules);
             console.warn("[useShopModules] fallback subscriptions utilisé pour shop", shopId);
             return;
           }
         }
       }
-      setModules(nextModules);
+      setMappedModules(nextModules);
     } catch (error) {
       if (isSimulationMode()) return;
       console.error("[useShopModules]", error);
-      setModules([]);
+      setMappedModules([]);
     } finally {
       setLoading(false);
     }
-  }, [shop, shopId]);
+  }, [setMappedModules, shop, shopId]);
 
   useEffect(() => {
     if (shopLoading) {
