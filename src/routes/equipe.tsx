@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreateInvitationModal } from "@/components/CreateInvitationModal";
+import { TransferRoleModal } from "@/components/TransferRoleModal";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,8 @@ function EquipePage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [rolesOpen, setRolesOpen] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [ownerRoles, setOwnerRoles] = useState<string[]>([]);
+  const [transferRole, setTransferRole] = useState<string | null>(null);
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { user } = useAuth();
   const { isOwner } = useUserRoles();
@@ -61,6 +64,25 @@ function EquipePage() {
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, [shopId]);
+
+  const refreshOwnerRoles = useCallback(async () => {
+    if (!shopId || !user || !isOwner) {
+      setOwnerRoles([]);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("user_roles_by_shop" as never)
+      .select("role")
+      .eq("shop_id", shopId)
+      .eq("user_id", user.id);
+    if (!error) {
+      setOwnerRoles([...new Set((data ?? []).map((row) => (row as { role: string }).role))]);
+    }
+  }, [isOwner, shopId, user]);
+
+  useEffect(() => {
+    void refreshOwnerRoles();
+  }, [refreshOwnerRoles]);
 
   const refreshInvitations = useCallback(async () => {
     if (!shopId) {
@@ -228,6 +250,33 @@ function EquipePage() {
         }
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Équipe" }]}
       />
+
+      {isOwner ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Mes rôles actifs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              {ownerRoles.map((role) => (
+                <div key={role} className="flex items-center gap-2 rounded-md border px-3 py-2">
+                  <Badge variant="secondary" className="capitalize">{role}</Badge>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={role === "owner"}
+                    title={role === "owner" ? "Le rôle owner ne peut pas être transféré." : undefined}
+                    onClick={() => setTransferRole(role)}
+                  >
+                    Transférer
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {shopLoading || loading ? (
@@ -407,6 +456,21 @@ function EquipePage() {
         member={selectedMember}
         shopId={shopId ?? ""}
       />
+
+      {shopId && user ? (
+        <TransferRoleModal
+          open={transferRole !== null}
+          onClose={() => setTransferRole(null)}
+          onSuccess={() => {
+            void refreshOwnerRoles();
+            void refreshMembers();
+          }}
+          shopId={shopId}
+          role={transferRole ?? ""}
+          ownerId={user.id}
+          members={members}
+        />
+      ) : null}
 
       <Dialog open={rolesOpen} onOpenChange={setRolesOpen}>
         <DialogContent>

@@ -150,3 +150,31 @@ export async function getUserRolesInShop(shopId: string, userId: string): Promis
     return [];
   }
 }
+
+export async function transferRoleToMember(
+  shopId: string,
+  fromUserId: string,
+  toUserId: string,
+  role: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("transfer_role_to_member" as never, {
+    p_shop_id: shopId,
+    p_from_user_id: fromUserId,
+    p_to_user_id: toUserId,
+    p_role: role,
+  } as never);
+  if (error) throw new Error(error.message);
+}
+
+export async function removeRoleFromUser(
+  shopId: string,
+  userId: string,
+  role: string,
+): Promise<void> {
+  const { error } = await supabase.rpc("remove_role_from_user" as never, {
+    p_shop_id: shopId,
+    p_user_id: userId,
+    p_role: role,
+  } as never);
+  if (error) throw new Error(error.message);
+}

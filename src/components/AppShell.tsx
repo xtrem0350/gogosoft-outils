@@ -351,24 +351,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [location.pathname, mustLeaveSignedOut, mustPickShop, navigate, shops.length]);
 
   if (!loading && !user && !isAuthRoute && !isDemoMode()) {
-    if (location.pathname === "/") {
-      const shellContent = (
-        <>
-          <LoadingShell />
-          <PricingModal
-            open={pricingPromptOpen}
-            onOpenChange={(open) => {
-              setPricingPromptOpen(open);
-              if (!open) void navigate({ to: "/auth" });
-            }}
-            onCreateAccount={(selection) => {
-              savePendingModuleSelection(selection);
-              void navigate({ to: "/auth", search: { mode: "signup" } });
-            }}
-          />
-        </>
-      );
-    }
     return <LoadingShell />;
   }
 
@@ -390,7 +372,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <RoleGuard allowedRoles={allowedRoles}>{baseContent}</RoleGuard>
   ) : baseContent;
 
-  return (
+  const shellContent = (
     <>
       {demoInfo?.is_demo === true ? (
         <DemoBanner
