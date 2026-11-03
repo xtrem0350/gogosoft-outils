@@ -27,6 +27,7 @@ import { getPageIcon } from "@/components/PageIdentity";
 import { HelpButton } from "@/components/HelpButton";
 import { InactivityWarningModal } from "@/components/InactivityWarningModal";
 import { DemoBanner } from "@/components/DemoBanner";
+import { OrientationGuard } from "@/components/OrientationGuard";
 import { PricingModal } from "@/components/PricingModal";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
@@ -351,7 +352,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   if (!loading && !user && !isAuthRoute && !isDemoMode()) {
     if (location.pathname === "/") {
-      return (
+      const shellContent = (
         <>
           <LoadingShell />
           <PricingModal
@@ -564,6 +565,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
       </div>
     </>
+  );
+
+  return user || isDemoMode() ? (
+    <OrientationGuard>{shellContent}</OrientationGuard>
+  ) : (
+    shellContent
   );
 }
 
