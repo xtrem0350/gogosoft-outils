@@ -110,7 +110,7 @@ function ModuleCard({
       className={`relative flex w-full flex-col items-start gap-2 rounded-xl border bg-white p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:bg-slate-800 ${
         isSelected
           ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500 dark:bg-orange-950/30"
-          : "border-slate-200 hover:border-orange-300 hover:shadow-md dark:border-slate-700"
+          : "border-slate-200 dark:border-slate-700"
       }`}
     >
       <span
@@ -125,9 +125,7 @@ function ModuleCard({
       <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
       <p className="text-xs text-slate-500 dark:text-slate-400">{description}</p>
       {isSelected ? (
-        <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
-          <Check className="size-3" />
-        </span>
+        <span className="absolute right-2 top-2 size-2 rounded-full bg-orange-500" />
       ) : null}
     </button>
   );
@@ -161,8 +159,8 @@ function readSelectedModules(): ModuleId[] {
 }
 
 function readInitialPricingMode(): Exclude<PricingMode, null> {
-  const selectedModules = readSelectedModules();
-  if (selectedModules.length === 0 || selectedModules.length === WELCOME_MODULES.length) {
+  const selectedDomains = readSelectedModules();
+  if (selectedDomains.length === 0 || selectedDomains.length === WELCOME_MODULES.length) {
     return "all_in_one";
   }
   return readPricingMode();
@@ -193,15 +191,15 @@ function HomePage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { setActiveModules } = useActiveModules();
-  const [selectedModules, setSelectedModules] = useState<ModuleId[]>(readSelectedModules);
+  const [selectedDomains, setSelectedDomains] = useState<ModuleId[]>(readSelectedModules);
   const [pricingMode, setPricingMode] =
     useState<Exclude<PricingMode, null>>(readInitialPricingMode);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedModules));
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedDomains));
     }
-  }, [selectedModules]);
+  }, [selectedDomains]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -223,7 +221,7 @@ function HomePage() {
   }, [loading, navigate, user]);
 
   function toggleModule(id: ModuleId) {
-    setSelectedModules((current) => {
+    setSelectedDomains((current) => {
       const next = current.includes(id)
         ? current.filter((moduleId) => moduleId !== id)
         : [...current, id];
@@ -249,14 +247,14 @@ function HomePage() {
   }
 
   function chooseAllInOne() {
-    setSelectedModules([]);
+    setSelectedDomains([]);
     setPricingMode("all_in_one");
   }
 
   async function handleGoAuth(mode: "login" | "signup") {
     if (mode === "signup" && !canSignup) return;
     if (mode === "signup" && typeof window !== "undefined") {
-      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedModules));
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedDomains));
       window.sessionStorage.setItem(PRICING_MODE_STORAGE_KEY, pricingMode);
     }
     await navigate({ to: "/auth", search: { mode } });
@@ -264,19 +262,19 @@ function HomePage() {
 
   async function handleStartDemo() {
     if (!canDemo) return;
-    setActiveModules(selectedModules);
+    setActiveModules(selectedDomains);
     try {
-      await startDemo(selectedDemoModuleIds(selectedModules));
+      await startDemo(selectedDemoModuleIds(selectedDomains));
       await navigate({ to: "/dashboard" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de démarrer la démo.");
     }
   }
 
-  const activityModules = selectedModules.filter(
+  const activityModules = selectedDomains.filter(
     (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
   );
-  const vitrines = selectedModules.filter((id) => id.startsWith("vitrine-"));
+  const vitrines = selectedDomains.filter((id) => id.startsWith("vitrine-"));
   const moduleCount = activityModules.length;
   const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
@@ -285,7 +283,7 @@ function HomePage() {
   const totalPrice = isAllInOneActive
     ? 99000
     : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);
-  const hasSelection = selectedModules.length > 0;
+  const hasSelection = selectedDomains.length > 0;
   const canDemo = hasSelection;
   const canSignup = isAllInOneActive
     ? hasSelection
@@ -379,8 +377,8 @@ function HomePage() {
               <div>
                 <p className="text-sm font-medium text-orange-700">Configurez votre espace</p>
                 <p className="mt-1 text-sm text-slate-600">
-                  {selectedModules.length
-                    ? `${selectedModules.length} sélection${selectedModules.length > 1 ? "s" : ""}`
+                  {selectedDomains.length
+                    ? `${selectedDomains.length} sélection${selectedDomains.length > 1 ? "s" : ""}`
                     : "Choisissez vos activités et votre offre"}
                 </p>
               </div>
@@ -409,7 +407,7 @@ function HomePage() {
                     title={title}
                     description={description}
                     color={tone}
-                    isSelected={selectedModules.includes(id)}
+                    isSelected={selectedDomains.includes(id)}
                     onClick={() => toggleModule(id)}
                   />
                 ))}
