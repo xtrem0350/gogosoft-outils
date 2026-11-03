@@ -31,7 +31,7 @@ function ForgotPasswordPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-8 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-md">
+      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-2xl sm:p-8">
         <div className="mb-8">
           <p className="text-sm font-medium text-orange-300">Sécurité du compte</p>
           <h1 className="mt-2 text-3xl font-bold">Mot de passe oublié ?</h1>
@@ -46,7 +46,7 @@ function ForgotPasswordPage() {
               Vérifiez votre boîte de réception et suivez le lien reçu pour choisir un nouveau mot
               de passe.
             </p>
-            <Button asChild className="w-full">
+            <Button asChild className="h-12 w-full">
               <Link to="/auth">Retour à la connexion</Link>
             </Button>
           </div>
@@ -65,12 +65,13 @@ function ForgotPasswordPage() {
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="vous@exemple.com"
                   autoComplete="email"
+                  inputMode="email"
                   required
-                  className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500"
+                  className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-500"
                 />
               </div>
             </div>
-            <Button type="submit" disabled={busy} className="w-full">
+            <Button type="submit" disabled={busy} className="h-12 w-full">
               {busy ? "Envoi en cours..." : "Envoyer le lien"}
             </Button>
           </form>

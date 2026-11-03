@@ -160,8 +160,8 @@ function JoinInvitationPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-2xl border bg-background shadow-2xl md:min-h-[620px] md:grid-cols-[0.8fr_1.2fr]">
-        <aside className="flex flex-col items-center justify-center gap-5 bg-slate-900 p-8 text-center text-white md:items-start md:text-left">
+      <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border bg-background shadow-2xl md:min-h-[620px] md:grid-cols-[0.8fr_1.2fr]">
+        <aside className="hidden flex-col items-center justify-center gap-5 bg-slate-900 p-8 text-center text-white md:flex md:items-start md:text-left">
           <img src={authLogo} alt="GogoSoft" className="size-16 rounded-full object-cover" />
           <div>
             <p className="text-sm font-semibold uppercase text-orange-300">GogoSoft Tools Manager</p>
@@ -174,7 +174,7 @@ function JoinInvitationPage() {
             {invitation ? <UserRound className="size-6" /> : <KeyRound className="size-6" />}
           </div>
         </aside>
-        <section className="flex items-center justify-center p-5 sm:p-8">
+        <section className="flex items-center justify-center p-4 sm:p-8">
           <div className="w-full max-w-lg space-y-6">
             {emailConfirmationRequired ? (
               <div className="grid gap-4 text-center">
@@ -216,10 +216,10 @@ function JoinInvitationPage() {
                   required
                   minLength={6}
                   maxLength={6}
-                  className="text-center font-mono text-2xl font-bold tracking-[0.3em]"
+                  className="h-11 min-h-11 text-center font-mono text-2xl font-bold tracking-[0.3em]"
                 />
               </div>
-              <Button type="submit" disabled={checking || code.length !== 6} className="w-full">
+              <Button type="submit" disabled={checking || code.length !== 6} className="h-12 w-full">
                 {checking ? "Vérification…" : "Vérifier le code"}
               </Button>
             </form>
@@ -238,25 +238,25 @@ function JoinInvitationPage() {
                 <Label htmlFor="join-email">E-mail</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-                  <Input id="join-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" className="pl-9" />
+                  <Input id="join-email" type="email" inputMode="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" className="h-11 min-h-11 pl-9" />
                 </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="join-password">Mot de passe</Label>
-                <PasswordInput id="join-password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} autoComplete="new-password" />
+                <PasswordInput id="join-password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} autoComplete="new-password" className="h-11 min-h-11" />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="join-confirm-password">Confirmer le mot de passe</Label>
-                <PasswordInput id="join-confirm-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} autoComplete="new-password" />
+                <PasswordInput id="join-confirm-password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required minLength={8} autoComplete="new-password" className="h-11 min-h-11" />
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="join-ncni">NCNI (facultatif)</Label>
-                  <Input id="join-ncni" value={ncni} onChange={(event) => setNcni(event.target.value)} maxLength={40} />
+                  <Input id="join-ncni" value={ncni} onChange={(event) => setNcni(event.target.value)} maxLength={40} className="h-11 min-h-11" />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="join-home">Lieu d&apos;habitation (facultatif)</Label>
-                  <Input id="join-home" value={lieuHabitation} onChange={(event) => setLieuHabitation(event.target.value)} maxLength={160} />
+                  <Input id="join-home" value={lieuHabitation} onChange={(event) => setLieuHabitation(event.target.value)} maxLength={160} className="h-11 min-h-11" />
                 </div>
               </div>
               <div className="grid gap-2">
@@ -296,7 +296,7 @@ function JoinInvitationPage() {
                   ) : null}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setInvitation(null)} disabled={creating}>
                   Modifier le code
                 </Button>

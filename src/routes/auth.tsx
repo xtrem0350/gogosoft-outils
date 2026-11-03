@@ -396,7 +396,7 @@ function AuthPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-slate-950">
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 hidden bg-cover bg-center md:block"
         style={{
           backgroundImage:
             "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
@@ -406,8 +406,8 @@ function AuthPage() {
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-6xl items-center justify-center px-4 py-8 sm:px-6 lg:px-8">
         <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md">
-          <div className="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-            <section className="flex min-h-[280px] flex-col justify-center bg-slate-900/70 p-8 text-white lg:min-h-[640px] lg:p-10">
+          <div className="grid gap-0 md:grid-cols-[0.9fr_1.1fr]">
+            <section className="hidden min-h-[280px] flex-col justify-center bg-slate-900/70 p-8 text-white md:flex lg:min-h-[640px] lg:p-10">
               <div className="flex flex-col items-center justify-center gap-5 text-center">
                 {activeTab === "signup" ? (
                   <>
@@ -483,7 +483,7 @@ function AuthPage() {
               </div>
             </section>
 
-            <section className="bg-slate-950/60 p-7 sm:p-10 lg:p-12">
+            <section className="bg-slate-950/60 p-4 sm:p-10 lg:p-12">
               <div className="mx-auto max-w-md">
                 <div className="mb-8">
                   <Link
@@ -505,7 +505,7 @@ function AuthPage() {
                   onValueChange={(value) => setActiveTab(value as "signin" | "signup")}
                   className="w-full"
                 >
-                  <TabsList className="grid w-full grid-cols-2 bg-white/5">
+                  <TabsList className="grid h-11 w-full grid-cols-2 bg-white/5">
                     <TabsTrigger
                       value="signin"
                       className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
@@ -540,7 +540,7 @@ function AuthPage() {
                             onChange={(event) => setIdentifier(event.target.value)}
                             placeholder="Email, pseudo ou WhatsApp"
                             autoComplete="username"
-                            className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                             required
                           />
                         </div>
@@ -555,7 +555,7 @@ function AuthPage() {
                             onChange={(event) => setPassword(event.target.value)}
                             placeholder="Mot de passe"
                             autoComplete="current-password"
-                            className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                           />
                         </div>
                       </div>
@@ -578,7 +578,7 @@ function AuthPage() {
                         </Link>
                       </div>
 
-                      <Button className="mt-4 w-full" disabled={busy} type="submit">
+                      <Button className="mt-4 h-12 w-full" disabled={busy} type="submit">
                         Se connecter
                         <ArrowRight className="size-4" />
                       </Button>
@@ -593,7 +593,8 @@ function AuthPage() {
                             value={fullName}
                             onChange={(event) => setFullName(event.target.value)}
                             placeholder="Nom complet"
-                            className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            autoComplete="name"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                             required
                           />
                         </div>
@@ -604,7 +605,8 @@ function AuthPage() {
                             value={pseudo}
                             onChange={(event) => setPseudo(event.target.value)}
                             placeholder="Pseudo"
-                            className="border-white/10 bg-white/5 text-white placeholder:text-slate-400"
+                            autoComplete="username"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 text-white placeholder:text-slate-400"
                             required
                           />
                         </div>
@@ -624,7 +626,9 @@ function AuthPage() {
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
                             placeholder="Adresse e-mail"
-                            className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            autoComplete="email"
+                            inputMode="email"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                             required
                           />
                         </div>
@@ -637,13 +641,13 @@ function AuthPage() {
                             onChange={(event) => setPassword(event.target.value)}
                             placeholder="Mot de passe"
                             autoComplete="new-password"
-                            className="border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                           />
                         </div>
                         <PasswordStrengthBar password={password} />
                       </div>
 
-                      <Button className="mt-4 w-full" disabled={busy} type="submit">
+                      <Button className="mt-4 h-12 w-full" disabled={busy} type="submit">
                         Créer mon compte
                         <ArrowRight className="size-4" />
                       </Button>

@@ -46,7 +46,7 @@ function ResetPasswordPage() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-8 text-white">
-      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 p-8 shadow-2xl backdrop-blur-md">
+      <section className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 p-4 shadow-2xl sm:p-8">
         <div className="mb-8">
           <div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-orange-500/20 text-orange-300">
             <KeyRound className="size-5" />
@@ -69,7 +69,7 @@ function ResetPasswordPage() {
               autoComplete="new-password"
               placeholder="Nouveau mot de passe"
               required
-              className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+              className="h-11 min-h-11 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
             />
           </div>
           <div className="space-y-2">
@@ -83,10 +83,10 @@ function ResetPasswordPage() {
               autoComplete="new-password"
               placeholder="Confirmer le mot de passe"
               required
-              className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
+              className="h-11 min-h-11 border-white/10 bg-white/5 text-white placeholder:text-slate-500"
             />
           </div>
-          <Button type="submit" disabled={busy} className="w-full">
+          <Button type="submit" disabled={busy} className="h-12 w-full">
             {busy ? "Mise à jour..." : "Enregistrer le nouveau mot de passe"}
           </Button>
         </form>
