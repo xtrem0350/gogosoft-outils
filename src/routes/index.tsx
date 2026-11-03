@@ -109,7 +109,7 @@ function ModuleCard({
       aria-pressed={isSelected}
       className={`relative flex w-full flex-col items-start gap-2 rounded-xl border bg-white p-3 text-left transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 dark:bg-slate-800 ${
         isSelected
-          ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500 dark:bg-orange-950/30"
+          ? "ring-2 ring-orange-500 bg-orange-50 dark:bg-orange-950/30"
           : "border-slate-200 dark:border-slate-700"
       }`}
     >
