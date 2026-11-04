@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import {
   CalendarClock,
@@ -47,6 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 import { supabase } from "@/integrations/supabase/client";
 import {
   assignTicketToLocation,
@@ -1431,9 +1432,31 @@ export function ActivityDetailsPage({
   const { shopId, shop } = useCurrentShop();
   const [ticket, setTicket] = useState<WorkshopTicket | null>(null);
   const [events, setEvents] = useState<Awaited<ReturnType<typeof getEvents>>>([]);
+  const [modelHistory, setModelHistory] = useState<
+    Array<{
+      diagnostic_notes: string | null;
+      pieces_utilisees: ConsumedPart[] | null;
+      created_at: string | null;
+    }>
+  >([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [diagnostic, setDiagnostic] = useState("");
+  const {
+    values: technicianForm,
+    setField: setTechnicianFormField,
+    clear: clearTechnicianForm,
+  } = usePersistedFormState(`atelier-ticket-${activityType}-${id}`, {
+    diagnostic: "",
+    pieces: [] as ConsumedPart[],
+  });
+  const diagnostic = technicianForm.diagnostic;
+  const pieces = technicianForm.pieces;
+  const setDiagnostic = (value: string) => setTechnicianFormField("diagnostic", value);
+  const setPieces: Dispatch<SetStateAction<ConsumedPart[]>> = (value) =>
+    setTechnicianFormField(
+      "pieces",
+      typeof value === "function" ? value(technicianForm.pieces) : value,
+    );
   const [duration, setDuration] = useState("");
   const [laborCost, setLaborCost] = useState("");
   const [partsCost, setPartsCost] = useState("");
@@ -1442,7 +1465,6 @@ export function ActivityDetailsPage({
   const [technician, setTechnician] = useState<MemberOption | null>(null);
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [tools, setTools] = useState("");
-  const [pieces, setPieces] = useState<ConsumedPart[]>([]);
   const [partDialogOpen, setPartDialogOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<WorkshopTicketPreviewMode | null>(null);
@@ -1505,14 +1527,39 @@ export function ActivityDetailsPage({
               },
             );
         }
-        setDiagnostic(result.diagnostic_notes ?? "");
+        if (!technicianForm.diagnostic) setDiagnostic(result.diagnostic_notes ?? "");
         setDuration("");
         setLaborCost(String(result.price_estimate ?? ""));
         setPartsCost("");
         setOtherCost("");
         setPickupDate(defaultPickupDate());
         setTools((result.outils_utilises ?? []).join(", "));
-        setPieces(result.pieces_consommees ?? []);
+        const resultWithPieces = result as WorkshopTicket & {
+          pieces_utilisees?: ConsumedPart[] | null;
+        };
+        if (!technicianForm.pieces.length) {
+          setPieces(resultWithPieces.pieces_utilisees ?? result.pieces_consommees ?? []);
+        }
+        if (shopId && result.device_model) {
+          void supabase
+            .from("workshop_tickets")
+            .select("diagnostic_notes, pieces_utilisees, created_at")
+            .eq("shop_id", shopId)
+            .eq("device_model", result.device_model)
+            .not("diagnostic_notes", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(3)
+            .then(({ data, error: historyError }) => {
+              if (!active) return;
+              if (historyError) {
+                toast.error(historyError.message);
+                return;
+              }
+              setModelHistory((data ?? []) as typeof modelHistory);
+            });
+        } else {
+          setModelHistory([]);
+        }
       })
       .catch((reason: unknown) => {
         if (active) setError(reason instanceof Error ? reason.message : "Chargement impossible.");
@@ -1635,20 +1682,61 @@ export function ActivityDetailsPage({
 
   async function completeRepair() {
     const finalPrice = Math.max(0, Math.round(Number.isFinite(estimateTotal) ? estimateTotal : 0));
-    await recordUpdate(
-      {
-        status: "en_attente_caissier_solde",
-        price_final: finalPrice,
-      },
-      "completed",
-      "Réparation marquée comme terminée.",
-      "Réparation terminée, prêt pour retrait.",
-    );
+    setBusy(true);
+    try {
+      const { error: saveError } = await supabase
+        .from("workshop_tickets")
+        .update({
+          diagnostic_notes: diagnostic.trim(),
+          pieces_utilisees: pieces,
+          status: "en_attente_caissier_solde",
+          price_final: finalPrice,
+        })
+        .eq("id", id);
+      if (saveError) throw saveError;
+      await addEvent(id, "completed", "Réparation marquée comme terminée.");
+      const [refreshedTicket, refreshedEvents] = await Promise.all([
+        getTicketById(id, activityType),
+        getEvents(id),
+      ]);
+      if (!refreshedTicket) throw new Error("La fiche mise à jour est introuvable.");
+      setTicket(refreshedTicket);
+      setEvents(refreshedEvents);
+      clearTechnicianForm();
+      toast.success("Réparation terminée, prêt pour retrait.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Mise à jour impossible.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveTechnicianData() {
+    setBusy(true);
+    try {
+      const { error: saveError } = await supabase
+        .from("workshop_tickets")
+        .update({
+          diagnostic_notes: diagnostic.trim(),
+          pieces_utilisees: pieces,
+        })
+        .eq("id", id);
+      if (saveError) throw saveError;
+      const refreshedTicket = await getTicketById(id, activityType);
+      if (!refreshedTicket) throw new Error("La fiche mise à jour est introuvable.");
+      setTicket(refreshedTicket);
+      toast.success("Diagnostic et pièces enregistrés.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Enregistrement impossible.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   function addConsumedPart(part: ConsumedPart) {
     setPieces((current) => [...current, part]);
   }
+
 
   async function finishDelivery(method: string, amount: number) {
     if (!ticket || !shopId) {
@@ -1752,6 +1840,101 @@ export function ActivityDetailsPage({
           ) : null}
         </CardContent>
       </Card>
+
+      {isRepair ? (
+        <>
+          <Card>
+            <CardHeader><CardTitle>Détails de la fiche</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <label className="grid gap-2 text-sm font-medium">
+                Diagnostic
+                <Textarea
+                  value={diagnostic}
+                  onChange={(event) => setDiagnostic(event.target.value)}
+                  rows={5}
+                  placeholder="Décrivez le diagnostic technique..."
+                />
+              </label>
+              <div className="space-y-3">
+                <p className="text-sm font-semibold">Pièces utilisées</p>
+                <Button type="button" variant="outline" onClick={() => setPartDialogOpen(true)}>
+                  <Plus className="size-4" />
+                  <span className="ml-2">Ajouter une pièce</span>
+                </Button>
+                {pieces.length ? (
+                  <ul className="space-y-2 text-sm">
+                    {pieces.map((part, index) => (
+                      <li key={`${part.name}-${index}`} className="flex items-center justify-between rounded-lg border p-3">
+                        <span>
+                          {part.name} x {part.qty}
+                          {part.unit_price !== undefined
+                            ? ` · ${formatFcfa(part.unit_price)} / unité`
+                            : ""}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Retirer ${part.name}`}
+                          onClick={() =>
+                            setPieces((current) =>
+                              current.filter((_, itemIndex) => itemIndex !== index),
+                            )
+                          }
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Aucune pièce ajoutée.</p>
+                )}
+              </div>
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={() => void saveTechnicianData()}
+                className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d"
+              >
+                Enregistrer le diagnostic
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader><CardTitle>Historique de ce modèle</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {modelHistory.length ? (
+                modelHistory.map((entry, index) => (
+                  <div key={`${entry.created_at ?? "intervention"}-${index}`} className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">
+                      {entry.created_at
+                        ? new Date(entry.created_at).toLocaleString("fr-FR")
+                        : "Date inconnue"}
+                    </p>
+                    <p className="mt-1 whitespace-pre-wrap">{entry.diagnostic_notes}</p>
+                    {entry.pieces_utilisees?.length ? (
+                      <p className="mt-2 text-sm">
+                        Pièces :{" "}
+                        {entry.pieces_utilisees
+                          .map((part) =>
+                            `${part.name} x ${part.qty}${part.unit_price !== undefined ? ` (${formatFcfa(part.unit_price)})` : ""}`,
+                          )
+                          .join(", ")}
+                      </p>
+                    ) : null}
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Aucun historique pour ce modèle.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      ) : null}
 
       {isRepair && ticket.status === "en_attente_technicien" ? (
         <Card>
