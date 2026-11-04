@@ -27,6 +27,8 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
 import {
   calculateModulePrice,
+  countRepairModules,
+  countSaleModules,
   PRICING_RULES,
   WELCOME_PRICING,
   type PricingPlan,
@@ -84,11 +86,15 @@ function readNewPricingSelection(): {
 
   const moduleCount = activityDomainIds.length;
   if (savedMode === "modules" && moduleCount > 0) {
+    const repairModuleCount = countRepairModules(activityDomainIds);
+    const saleModuleCount = countSaleModules(activityDomainIds);
+    const modulePrice =
+      calculateModulePrice(repairModuleCount) + calculateModulePrice(saleModuleCount);
     return {
       plan: {
         id: "modules",
         title: PRICING_RULES.moduleTitle,
-        price: calculateModulePrice(moduleCount),
+        price: modulePrice,
         subtitle: `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
         features: [],
       },

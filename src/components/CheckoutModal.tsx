@@ -7,8 +7,11 @@ import authLogo from "@/assets/images/leprofile.png";
 import {
   BONUS_DAYS,
   calculateModulePrice,
+  countRepairModules,
+  countSaleModules,
   DOMAIN_PRICE,
   INSTALLATION_NOTICE,
+  isAllInOne,
   PRICING_RULES,
   type PricingMode,
   type PricingPlan,
@@ -144,11 +147,15 @@ export function CheckoutModal({
     (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
   );
   const moduleCount = activityModuleIds.length;
+  const repairModuleCount = countRepairModules(activityModuleIds);
+  const saleModuleCount = countSaleModules(activityModuleIds);
+  const repairModulePrice = calculateModulePrice(repairModuleCount);
+  const saleModulePrice = calculateModulePrice(saleModuleCount);
   const planPrice =
     pricingMode === "all_in_one"
       ? PRICING_RULES.allInOne.price
       : pricingMode === "modules"
-        ? calculateModulePrice(moduleCount)
+        ? repairModulePrice + saleModulePrice
         : plan.price;
   const checkoutDomainPrice = pricingMode ? PRICING_RULES.domainPrice : domainPrice;
   const checkoutPlanTitle =
@@ -523,18 +530,17 @@ export function CheckoutModal({
                       ) : null}
                       {pricingMode === "modules" ? (
                         <div className="border-t pt-3 text-slate-700">
-                          <p>
-                            {moduleCount} domaine{moduleCount === 1 ? "" : "s"} (
-                            {(moduleCount * PRICING_RULES.moduleUnitPrice).toLocaleString("fr-FR")} F)
-                            {moduleCount >= 2 ? (
-                              <>
-                                {" "}− réduction 10 % (−
-                                {(moduleCount * PRICING_RULES.moduleUnitPrice *
-                                  PRICING_RULES.moduleDiscountRate).toLocaleString("fr-FR")} F)
-                              </>
-                            ) : null}
-                            {" "} = {planPrice.toLocaleString("fr-FR")} F
-                          </p>
+                          {repairModuleCount > 0 ? (
+                            <p>Réparations ({repairModuleCount} domaines) — {repairModulePrice.toLocaleString("fr-FR")} FCFA</p>
+                          ) : null}
+                          {saleModuleCount > 0 ? (
+                            <p>Ventes ({saleModuleCount} domaines) — {saleModulePrice.toLocaleString("fr-FR")} FCFA</p>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {isAllInOne(activityModuleIds) ? (
+                        <div className="border-t pt-3 text-slate-700">
+                          All-in-One (4 domaines) — {PRICING_RULES.allInOne.price.toLocaleString("fr-FR")} FCFA
                         </div>
                       ) : null}
                       {pricingMode ? (

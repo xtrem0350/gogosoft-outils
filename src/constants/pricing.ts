@@ -15,7 +15,7 @@ export const PRICING_RULES = {
   allInOne: {
     id: "all_in_one",
     title: "Tout-en-un",
-    price: 99000,
+    price: 49000,
     subtitle: "Toutes les activités : ventes et réparations",
     features: ["Tous les modules illimités", "Support prioritaire"],
   },
@@ -37,10 +37,26 @@ export function calculateModulePrice(activityModuleCount: number): number {
   const count = Math.max(0, Math.trunc(activityModuleCount));
   if (count === 0) return 0;
   const base = count * PRICING_RULES.moduleUnitPrice;
-  if (count >= 2) {
-    return Math.round(base - base * PRICING_RULES.moduleDiscountRate);
-  }
-  return base;
+  return Math.round(count >= 2 ? base * (1 - PRICING_RULES.moduleDiscountRate) : base);
+}
+
+export function countActivityModules(ids: readonly string[]): number {
+  return ids.filter((id) => id.startsWith("reparation-") || id.startsWith("vente-")).length;
+}
+
+export function countRepairModules(ids: readonly string[]): number {
+  return ids.filter((id) => id.startsWith("reparation-")).length;
+}
+
+export function countSaleModules(ids: readonly string[]): number {
+  return ids.filter((id) => id.startsWith("vente-")).length;
+}
+
+export function isAllInOne(ids: readonly string[]): boolean {
+  const activityIds = new Set(ids.filter((id) => id.startsWith("reparation-") || id.startsWith("vente-")));
+  return ["reparation-telephone", "reparation-pc", "vente-telephone", "vente-pc"].every((id) =>
+    activityIds.has(id),
+  );
 }
 
 export const WELCOME_PRICING: readonly PricingPlan[] = [

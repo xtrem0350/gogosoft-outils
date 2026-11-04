@@ -22,6 +22,9 @@ import {
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import {
   calculateModulePrice,
+  countRepairModules,
+  countSaleModules,
+  isAllInOne,
   PRICING_RULES,
   type PricingMode,
 } from "@/constants/pricing";
@@ -209,6 +212,10 @@ function HomePage() {
       const next = current.includes(id)
         ? current.filter((moduleId) => moduleId !== id)
         : [...current, id];
+      if (isAllInOne(next)) {
+        setPricingMode("all_in_one");
+        return next;
+      }
       const activityCount = next.filter(
         (moduleId) => moduleId.startsWith("reparation-") || moduleId.startsWith("vente-"),
       ).length;
@@ -225,7 +232,7 @@ function HomePage() {
   }
 
   function chooseAllInOne() {
-    setSelectedDomains([]);
+    setSelectedDomains([...WELCOME_MODULES.map(({ id }) => id)]);
     setPricingMode("all_in_one");
   }
 
@@ -253,11 +260,14 @@ function HomePage() {
     (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
   );
   const moduleCount = activityModules.length;
-  const isAllInOneActive = pricingMode === "all_in_one";
-  const areModulesActive = moduleCount > 0 && !isAllInOneActive;
+  const repairModuleCount = countRepairModules(selectedDomains);
+  const saleModuleCount = countSaleModules(selectedDomains);
+  const isAllInOneActive = isAllInOne(selectedDomains);
+  const areRepairModulesActive = repairModuleCount > 0 && !isAllInOneActive;
+  const areSaleModulesActive = saleModuleCount > 0 && !isAllInOneActive;
   const totalPrice = isAllInOneActive
-    ? 99000
-    : calculateModulePrice(moduleCount);
+    ? PRICING_RULES.allInOne.price
+    : calculateModulePrice(repairModuleCount) + calculateModulePrice(saleModuleCount);
   const hasSelection = selectedDomains.length > 0;
   const canDemo = hasSelection;
   const canSignup = isAllInOneActive
@@ -398,6 +408,7 @@ function HomePage() {
                 <button
                   type="button"
                   aria-pressed={isAllInOneActive}
+                  disabled={!isAllInOneActive}
                   onClick={chooseAllInOne}
                   className={`card-3d shadow-3d relative flex min-h-[176px] flex-col rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                     isAllInOneActive
@@ -427,35 +438,69 @@ function HomePage() {
                 </button>
 
                 <article
-                  aria-label="Modules d'activité"
+                  aria-label="Réparations"
                   aria-disabled={isAllInOneActive}
                   className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
                     isAllInOneActive
-                      ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-50"
-                      : areModulesActive
+                      ? "pointer-events-none border-slate-200 bg-slate-100 opacity-50"
+                      : areRepairModulesActive
                         ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
                         : "border-slate-200 bg-slate-100 opacity-50"
                   }`}
                 >
-                  {areModulesActive ? (
+                  {areRepairModulesActive ? (
                     <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
                       <Check className="size-3" />
                     </div>
                   ) : null}
-                  {moduleCount >= 2 ? (
-                    <span className={`absolute right-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800 ${areModulesActive ? "top-9" : "top-3"}`}>
+                  {repairModuleCount >= 2 ? (
+                    <span className={`absolute right-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800 ${areRepairModulesActive ? "top-9" : "top-3"}`}>
                       −10%
                     </span>
                   ) : null}
-                  <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.moduleTitle}</h3>
+                  <h3 className="text-sm font-bold text-slate-900">Réparations</h3>
                   <p className="mt-1 text-xs text-slate-600">
-                    {moduleCount} domaine{moduleCount === 1 ? "" : "s"}
+                    {repairModuleCount} domaine{repairModuleCount === 1 ? "" : "s"}
                   </p>
                   <p className="mt-3 text-xl font-bold text-slate-900">
-                    {calculateModulePrice(moduleCount).toLocaleString("fr-FR")}{" "}
+                    {calculateModulePrice(repairModuleCount).toLocaleString("fr-FR")}{" "}
                     <span className="text-xs font-medium">FCFA/mois</span>
                   </p>
-                  {moduleCount >= 2 ? (
+                  {repairModuleCount >= 2 ? (
+                    <p className="mt-1 text-xs text-green-800">Réduction de 10 % incluse</p>
+                  ) : null}
+                </article>
+
+                <article
+                  aria-label="Ventes"
+                  aria-disabled={isAllInOneActive}
+                  className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
+                    isAllInOneActive
+                      ? "pointer-events-none border-slate-200 bg-slate-100 opacity-50"
+                      : areSaleModulesActive
+                        ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
+                        : "border-slate-200 bg-slate-100 opacity-50"
+                  }`}
+                >
+                  {areSaleModulesActive ? (
+                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
+                      <Check className="size-3" />
+                    </div>
+                  ) : null}
+                  {saleModuleCount >= 2 ? (
+                    <span className={`absolute right-3 rounded-full bg-green-100 px-2 py-1 text-xs font-bold text-green-800 ${areSaleModulesActive ? "top-9" : "top-3"}`}>
+                      −10%
+                    </span>
+                  ) : null}
+                  <h3 className="text-sm font-bold text-slate-900">Ventes</h3>
+                  <p className="mt-1 text-xs text-slate-600">
+                    {saleModuleCount} domaine{saleModuleCount === 1 ? "" : "s"}
+                  </p>
+                  <p className="mt-3 text-xl font-bold text-slate-900">
+                    {calculateModulePrice(saleModuleCount).toLocaleString("fr-FR")}{" "}
+                    <span className="text-xs font-medium">FCFA/mois</span>
+                  </p>
+                  {saleModuleCount >= 2 ? (
                     <p className="mt-1 text-xs text-green-800">Réduction de 10 % incluse</p>
                   ) : null}
                 </article>
