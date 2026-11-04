@@ -19,17 +19,26 @@ interface Props {
   refreshKey?: number;
   selectedUserId?: string | undefined;
   filterRoles?: StaffRole[];
+  emptyText?: string;
 }
 
 /** Charge les membres et leur nom depuis les profils. */
 async function loadMembers(shopId: string, filterRoles?: StaffRole[]): Promise<MemberOption[]> {
   if (filterRoles !== undefined) {
-    const staff = await getStaffByRole(shopId, filterRoles);
+    const roles = filterRoles.includes("technicien") && !filterRoles.includes("owner")
+      ? [...filterRoles, "owner" as StaffRole]
+      : filterRoles;
+    const staff = await getStaffByRole(shopId, roles);
     return staff.map((member) => ({
       user_id: member.user_id ?? member.id,
       role: member.role,
       name: member.full_name ?? "Sans nom",
-    }));
+    })).sort((left, right) => {
+      if (left.role === right.role) return left.name.localeCompare(right.name);
+      if (left.role === "owner") return -1;
+      if (right.role === "owner") return 1;
+      return left.name.localeCompare(right.name);
+    });
   }
 
   const members = (await getShopMembers(shopId)) as Array<{ user_id: string; role: string }>;
@@ -58,6 +67,7 @@ export function MemberSelect({
   refreshKey = 0,
   selectedUserId,
   filterRoles,
+  emptyText,
 }: Props) {
   const [value, setValue] = useState<string | undefined>(selectedUserId);
   const listKey = shopId ? `${shopId}:${refreshKey}:${filterRoles?.join(",") ?? "all"}` : null;
@@ -68,25 +78,30 @@ export function MemberSelect({
   }, [selectedUserId]);
 
   return (
-    <SearchableSelect
-      options={items.map((member) => ({
-        value: member.user_id,
-        label: `${member.name || "Sans nom"} (${
-          isStaffRole(member.role) ? STAFF_ROLE_LABELS[member.role] : member.role
-        })`,
-      }))}
-      value={value}
-      loading={loading}
-      placeholder={
-        items.length === 0 && !loading ? "Aucun employé disponible" : "Sélectionner un membre"
-      }
-      emptyMessage="Aucun employé disponible"
-      onSelect={(option) => {
-        const member = items.find((item) => item.user_id === option.value);
-        if (!member) return;
-        setValue(option.value);
-        onSelect(member);
-      }}
-    />
+    <div className="grid gap-2">
+      <SearchableSelect
+        options={items.map((member) => ({
+          value: member.user_id,
+          label: `${member.name || "Sans nom"} (${
+            isStaffRole(member.role) ? STAFF_ROLE_LABELS[member.role] : member.role
+          })`,
+        }))}
+        value={value}
+        loading={loading}
+        placeholder={
+          items.length === 0 && !loading ? "Aucun employé disponible" : "Sélectionner un membre"
+        }
+        emptyMessage="Aucun employé disponible"
+        onSelect={(option) => {
+          const member = items.find((item) => item.user_id === option.value);
+          if (!member) return;
+          setValue(option.value);
+          onSelect(member);
+        }}
+      />
+      {!loading && items.length === 0 && emptyText ? (
+        <p className="text-sm text-muted-foreground">{emptyText}</p>
+      ) : null}
+    </div>
   );
 }

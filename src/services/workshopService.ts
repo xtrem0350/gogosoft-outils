@@ -75,7 +75,7 @@ export interface CreateTicketData {
   description?: string;
   ticket_number?: string;
   entry_fee_method?: string;
-  technicien_id?: string | undefined;
+  technicien_id?: string | null | undefined;
   storage_location_id?: string | undefined;
 }
 

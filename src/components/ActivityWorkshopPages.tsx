@@ -20,7 +20,6 @@ import { DeviceCatalogPicker, type CatalogDevice } from "@/components/DeviceCata
 import { EmptyState } from "@/components/EmptyState";
 import { PageHero } from "@/components/PageHero";
 import { AddPartDialog, type ConsumedPart } from "@/components/AddPartDialog";
-import { QuickCreateStaffDialog } from "@/components/QuickCreateStaffDialog";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { DeviceSelect } from "@/components/selects/DeviceSelect";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
@@ -759,10 +758,8 @@ function NewWorkshopTicketPage({
   const [clientWhatsapp, setClientWhatsapp, clearClientWhatsapp] = usePersistedWizardState(`${activityType}-client-whatsapp`, "");
   const [createClientOpen, setCreateClientOpen] = useState(false);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
-  const [createStaffOpen, setCreateStaffOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [locationRefreshKey, setLocationRefreshKey] = useState(0);
-  const [memberRefreshKey, setMemberRefreshKey] = useState(0);
   const [deviceBrand, setDeviceBrand, clearDeviceBrand] = usePersistedWizardState(`${activityType}-device-brand`, "");
   const [deviceModel, setDeviceModel, clearDeviceModel] = usePersistedWizardState(`${activityType}-device-model`, "");
   const [deviceProcessor, setDeviceProcessor, clearDeviceProcessor] = usePersistedWizardState(`${activityType}-device-processor`, "");
@@ -933,7 +930,7 @@ function NewWorkshopTicketPage({
         notes: description.trim(),
         entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
         entry_fee_paid: false,
-        technicien_id: technician?.user_id,
+        technicien_id: technician?.user_id ?? null,
         storage_location_id: location?.id,
       });
       if (!entryFeeConfig.enabled) {
@@ -1301,23 +1298,12 @@ function NewWorkshopTicketPage({
                   <div className="min-w-0 flex-1">
                     <MemberSelect
                       shopId={shopId}
-                      refreshKey={memberRefreshKey}
                       selectedUserId={technician?.user_id}
                       filterRoles={["technicien"]}
                       onSelect={setTechnician}
+                      emptyText="Aucun technicien disponible. Invitez-en un depuis /equipe."
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    aria-label="Ajouter un employé"
-                    title="Ajouter un employé"
-                    disabled={!shopId}
-                    onClick={() => setCreateStaffOpen(true)}
-                  >
-                    <Plus className="size-4" />
-                  </Button>
                 </div>
                 {technician ? (
                   <p className="text-sm text-muted-foreground">Affecté à {technician.name}</p>
@@ -1379,22 +1365,6 @@ function NewWorkshopTicketPage({
           setClientRefreshKey((current) => current + 1);
         }}
       />
-      {shopId ? (
-        <QuickCreateStaffDialog
-          open={createStaffOpen}
-          onClose={() => setCreateStaffOpen(false)}
-          shopId={shopId}
-          defaultRole="technicien"
-          onSuccess={(staff) => {
-            setTechnician({
-              user_id: staff.user_id ?? staff.id,
-              role: staff.role,
-              name: staff.full_name ?? "Sans nom",
-            });
-            setMemberRefreshKey((key) => key + 1);
-          }}
-        />
-      ) : null}
       {shopId ? (
         <StorageLocationDialog
           open={createLocationOpen}
@@ -1515,8 +1485,6 @@ export function ActivityDetailsPage({
   const [pickupDate, setPickupDate] = useState(defaultPickupDate);
   const [technician, setTechnician] = useState<MemberOption | null>(null);
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
-  const [memberDialogOpen, setMemberDialogOpen] = useState(false);
-  const [memberRefreshKey, setMemberRefreshKey] = useState(0);
   const [tools, setTools] = useState("");
   const [pieces, setPieces] = useState<ConsumedPart[]>([]);
   const [partDialogOpen, setPartDialogOpen] = useState(false);
@@ -1710,10 +1678,11 @@ export function ActivityDetailsPage({
   }
 
   async function completeRepair() {
+    const finalPrice = Math.max(0, Math.round(Number.isFinite(estimateTotal) ? estimateTotal : 0));
     await recordUpdate(
       {
         status: "en_attente_caissier_solde",
-        price_final: estimateTotal,
+        price_final: finalPrice,
       },
       "completed",
       "Réparation marquée comme terminée.",
@@ -1879,23 +1848,12 @@ export function ActivityDetailsPage({
                 Technicien
                 <MemberSelect
                   shopId={shopId}
-                  refreshKey={memberRefreshKey}
                   selectedUserId={technician?.user_id ?? ticket.technicien_id ?? undefined}
                   filterRoles={["technicien"]}
                   onSelect={setTechnician}
+                  emptyText="Aucun technicien disponible. Invitez-en un depuis /equipe."
                 />
               </label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                aria-label="Ajouter un employé"
-                title="Ajouter un employé"
-                disabled={!shopId}
-                onClick={() => setMemberDialogOpen(true)}
-              >
-                <Plus className="size-4" />
-              </Button>
             </div>
             <label className="grid gap-2 text-sm font-medium">
               Outils utilisés (séparés par des virgules)
@@ -2005,20 +1963,6 @@ export function ActivityDetailsPage({
         <CardContent><WorkshopTimeline events={events} ticket={ticket} /></CardContent>
       </Card>
 
-      <QuickCreateStaffDialog
-        open={memberDialogOpen}
-        onClose={() => setMemberDialogOpen(false)}
-        shopId={shopId ?? ""}
-        defaultRole="technicien"
-        onSuccess={(staff) => {
-          setTechnician({
-            user_id: staff.user_id ?? staff.id,
-            role: staff.role,
-            name: staff.full_name ?? "Sans nom",
-          });
-          setMemberRefreshKey((key) => key + 1);
-        }}
-      />
       <AddPartDialog
         open={partDialogOpen}
         onOpenChange={setPartDialogOpen}
