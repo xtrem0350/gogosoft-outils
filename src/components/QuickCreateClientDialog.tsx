@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient, uploadClientPhoto, type ClientRecord } from "@/services/clientService";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 interface QuickCreateClientDialogProps {
   open: boolean;
@@ -30,10 +31,13 @@ export function QuickCreateClientDialog({
   shopId,
   onCreated,
 }: QuickCreateClientDialogProps) {
-  const [fullName, setFullName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [email, setEmail] = useState("");
-  const [notes, setNotes] = useState("");
+  const { values, setField, clear } = usePersistedFormState("quick-create-client", {
+    fullName: "",
+    whatsapp: "",
+    email: "",
+    notes: "",
+  });
+  const { fullName, whatsapp, email, notes } = values;
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -50,10 +54,6 @@ export function QuickCreateClientDialog({
 
   useEffect(() => {
     if (!open) return;
-    setFullName("");
-    setWhatsapp("");
-    setEmail("");
-    setNotes("");
     setPhoto(null);
   }, [open]);
 
@@ -86,6 +86,7 @@ export function QuickCreateClientDialog({
       }
       onCreated(client);
       onOpenChange(false);
+      clear();
       toast.success(`Client créé : ${client.full_name}`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer le client.");
@@ -107,7 +108,7 @@ export function QuickCreateClientDialog({
             <Input
               id="quick-client-name"
               value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
+              onChange={(event) => setField("fullName", event.target.value)}
               autoFocus
               required
             />
@@ -116,7 +117,7 @@ export function QuickCreateClientDialog({
             <Label>WhatsApp *</Label>
             <PhoneInput
               value={whatsapp}
-              onChange={setWhatsapp}
+              onChange={(value) => setField("whatsapp", value)}
               className="rounded-md bg-slate-900 p-1"
             />
           </div>
@@ -126,7 +127,7 @@ export function QuickCreateClientDialog({
               id="quick-client-email"
               type="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => setField("email", event.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -134,7 +135,7 @@ export function QuickCreateClientDialog({
             <Textarea
               id="quick-client-notes"
               value={notes}
-              onChange={(event) => setNotes(event.target.value)}
+              onChange={(event) => setField("notes", event.target.value)}
             />
           </div>
           <div className="space-y-2">

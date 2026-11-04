@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { createInvitation, type InvitationRole, type PendingInvitation } from "@/services/invitationsService";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 interface CreateInvitationModalProps {
   open: boolean;
@@ -26,17 +27,18 @@ interface CreateInvitationModalProps {
 }
 
 export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: CreateInvitationModalProps) {
-  const [fullName, setFullName] = useState("");
-  const [whatsapp, setWhatsapp] = useState("");
-  const [role, setRole] = useState<InvitationRole>("technicien");
+  const { values, setField, clear } = usePersistedFormState("create-invitation", {
+    fullName: "",
+    whatsapp: "",
+    role: "technicien" as InvitationRole,
+  });
+  const { fullName, whatsapp, role } = values;
   const [invitation, setInvitation] = useState<PendingInvitation | null>(null);
   const [saving, setSaving] = useState(false);
 
   function close() {
     setInvitation(null);
-    setFullName("");
-    setWhatsapp("");
-    setRole("technicien");
+    clear();
     onClose();
   }
 
@@ -55,6 +57,7 @@ export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: Crea
         role,
       });
       setInvitation(created);
+      clear();
       onSuccess();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer l'invitation.");
@@ -134,7 +137,7 @@ export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: Crea
                 <Input
                   id="invitation-full-name"
                   value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                  onChange={(event) => setField("fullName", event.target.value)}
                   autoComplete="name"
                   required
                   maxLength={120}
@@ -146,7 +149,7 @@ export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: Crea
                   id="invitation-whatsapp"
                   type="tel"
                   value={whatsapp}
-                  onChange={(event) => setWhatsapp(event.target.value)}
+                  onChange={(event) => setField("whatsapp", event.target.value)}
                   placeholder="+225 07 00 00 00 00"
                   required
                   maxLength={30}
@@ -154,7 +157,7 @@ export function CreateInvitationModal({ open, onClose, onSuccess, shopId }: Crea
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="invitation-role">Rôle</Label>
-                <Select value={role} onValueChange={(value) => setRole(value as InvitationRole)}>
+                <Select value={role} onValueChange={(value) => setField("role", value as InvitationRole)}>
                   <SelectTrigger id="invitation-role"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="technicien">Technicien</SelectItem>

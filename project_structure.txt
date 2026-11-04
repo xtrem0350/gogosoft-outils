@@ -5,6 +5,7 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261103000001_owner_gets_all_roles.sql
 │   │   ├── 📄 20261031000003_fix_accept_invitation_pseudo_safe.sql
 │   │   ├── 📄 20261031000003_cleanup_test_data.sql
 │   │   ├── 📄 20261031000002_seed_storage_locations.sql
@@ -308,6 +309,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 WhatsNewModal.tsx
 │   │   ├── 📄 UserMenu.tsx
 │   │   ├── 📄 ui
+│   │   ├── 📄 TransferRoleModal.tsx
 │   │   ├── 📄 tools
 │   │   ├── 📄 ToolCard.tsx
 │   │   ├── 📄 ThemeToggle.tsx
@@ -344,6 +346,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 PageIdentity.tsx
 │   │   ├── 📄 PageHero.tsx
 │   │   ├── 📄 PageBreadcrumb.tsx
+│   │   ├── 📄 OrientationGuard.tsx
 │   │   ├── 📄 ModuleRouteGuard.tsx
 │   │   ├── 📄 InactivityWarningModal.tsx
 │   │   ├── 📄 IconBadge3D.tsx
@@ -424,8 +427,6 @@ Structure du projet (avec glob)
 ├── 📄 eslint.config.js
 ├── 📄 docs
 ├── 📄 components.json
-├── 📄 bunfig.toml
-├── 📄 bun.lock
 ├── 📄 aliases.mac.txt
 ├── 📄 AGENTS.md
 └── 📄 $PROFILE.txt

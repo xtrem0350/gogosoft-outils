@@ -11,18 +11,24 @@ import { enableShopModules } from "@/services/moduleService";
 import { createShop } from "@/services/shopService";
 import { shopCodesFromModuleIds, type ModuleId } from "@/types/modules";
 import logo from "@/assets/images/leprofile.png";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 export const Route = createFileRoute("/onboarding/shop")({
   component: ShopOnboardingPage,
+  shouldReload: false,
 });
 
 function ShopOnboardingPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [entryFeeEnabled, setEntryFeeEnabled] = useState(false);
-  const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
+  const { values, setField, clear } = usePersistedFormState("onboarding-shop", {
+    name: "",
+    address: "",
+    phone: "",
+    entryFeeEnabled: false,
+    entryFeeAmount: 2000,
+  });
+  const { name, address, phone, entryFeeEnabled, entryFeeAmount } = values;
+  const [submitting, setSubmitting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   async function createOnboardingShop() {
@@ -80,6 +86,7 @@ function ShopOnboardingPage() {
         }
       });
       toast.success("Boutique créée !");
+      clear();
       await navigate({ to: "/dashboard" });
     } catch (error) {
       console.error("[onboarding/shop] Création impossible", error);
@@ -129,7 +136,7 @@ function ShopOnboardingPage() {
               <Input
                 id="shop-name"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={(event) => setField("name", event.target.value)}
                 required
                 className="focus-visible:ring-orange-500"
               />
@@ -139,7 +146,7 @@ function ShopOnboardingPage() {
               <Input
                 id="shop-address"
                 value={address}
-                onChange={(event) => setAddress(event.target.value)}
+                onChange={(event) => setField("address", event.target.value)}
                 className="focus-visible:ring-orange-500"
               />
             </div>
@@ -148,7 +155,7 @@ function ShopOnboardingPage() {
               <Input
                 id="shop-phone"
                 value={phone}
-                onChange={(event) => setPhone(event.target.value)}
+                onChange={(event) => setField("phone", event.target.value)}
                 className="focus-visible:ring-orange-500"
               />
             </div>
@@ -163,7 +170,7 @@ function ShopOnboardingPage() {
                 <Switch
                   id="entry-fee-enabled"
                   checked={entryFeeEnabled}
-                  onCheckedChange={setEntryFeeEnabled}
+                  onCheckedChange={(checked) => setField("entryFeeEnabled", checked)}
                 />
               </div>
               {entryFeeEnabled ? (
@@ -174,7 +181,7 @@ function ShopOnboardingPage() {
                     type="number"
                     min={1}
                     value={entryFeeAmount}
-                    onChange={(event) => setEntryFeeAmount(Math.max(1, Number(event.target.value)))}
+                    onChange={(event) => setField("entryFeeAmount", Math.max(1, Number(event.target.value)))}
                     required
                   />
                 </div>

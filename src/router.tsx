@@ -7,6 +7,7 @@ export const getRouter = () => {
     defaultOptions: {
       queries: {
         refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
       },
     },
   });

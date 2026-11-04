@@ -1,7 +1,5 @@
-import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -18,6 +16,7 @@ import { isDemoMode } from "@/services/demoService";
 import { completeSubscriptionCheckout } from "@/services/checkoutService";
 import { createShop } from "@/services/shopService";
 import { getMySubscription } from "@/services/subscriptionService";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 const SELECTED_MODULES_KEY = "gogosoft.welcome.selectedModules";
 const SELECTED_PLAN_KEY = "gogosoft.welcome.selectedPlan";
@@ -40,6 +39,7 @@ function readSelectedPlan(): PricingPlan | null {
 
 export const Route = createFileRoute("/boutiques/nouveau")({
   component: NewShopPage,
+  shouldReload: false,
 });
 
 const formSchema = z.object({
@@ -61,18 +61,12 @@ function NewShopPage() {
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
-  const [shopDetails, setShopDetails] = useState<FormValues>({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shopDetailsError, setShopDetailsError] = useState("");
+  const { values: shopDetails, setField, clear } = usePersistedFormState<FormValues>("boutiques-nouveau", {
     name: "",
     address: "",
     phone: "",
-  });
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { name: "", address: "", phone: "" },
   });
 
   useEffect(() => {
@@ -159,6 +153,7 @@ function NewShopPage() {
     window.sessionStorage.removeItem(SELECTED_MODULES_KEY);
     window.sessionStorage.removeItem(SELECTED_PLAN_KEY);
     setCheckoutOpen(false);
+    clear();
     await navigate({ to: "/dashboard" });
   }
 
@@ -180,29 +175,34 @@ function NewShopPage() {
           <form
             onSubmit={(event) => {
               event.preventDefault();
-              void handleSubmit((values) => {
-                setShopDetails(values);
-                startCheckout();
-              })(event);
+              const parsed = formSchema.safeParse(shopDetails);
+              if (!parsed.success) {
+                setShopDetailsError(parsed.error.issues[0]?.message ?? "Informations invalides.");
+                return;
+              }
+              setShopDetailsError("");
+              setIsSubmitting(true);
+              startCheckout();
+              setIsSubmitting(false);
             }}
             className="space-y-4"
           >
             <div className="space-y-2">
               <Label htmlFor="name">Nom *</Label>
-              <Input id="name" {...register("name")} />
-              {errors.name ? (
-                <p className="text-sm text-destructive">{errors.name.message}</p>
+              <Input id="name" value={shopDetails.name} onChange={(event) => setField("name", event.target.value)} />
+              {shopDetailsError ? (
+                <p className="text-sm text-destructive">{shopDetailsError}</p>
               ) : null}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="address">Adresse</Label>
-              <Input id="address" {...register("address")} />
+              <Input id="address" value={shopDetails.address} onChange={(event) => setField("address", event.target.value)} />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="phone">Téléphone</Label>
-              <Input id="phone" {...register("phone")} />
+              <Input id="phone" value={shopDetails.phone} onChange={(event) => setField("phone", event.target.value)} />
             </div>
 
             {!plan || domainIds.length === 0 ? (

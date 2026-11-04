@@ -25,7 +25,10 @@ import { createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 
-export const Route = createFileRoute("/reception")({ component: ReceptionPage });
+export const Route = createFileRoute("/reception")({
+  component: ReceptionPage,
+  shouldReload: false,
+});
 
 function ReceptionPage() {
   const navigate = useNavigate();

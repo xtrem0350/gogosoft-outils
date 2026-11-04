@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { createShop } from "@/services/shopService";
+import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 interface CreateShopModalProps {
   open: boolean;
@@ -21,21 +22,15 @@ interface CreateShopModalProps {
 }
 
 export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalProps) {
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [phone, setPhone] = useState("");
-  const [entryFeeEnabled, setEntryFeeEnabled] = useState(false);
-  const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
+  const { values, setField, clear } = usePersistedFormState("create-shop-modal", {
+    name: "",
+    address: "",
+    phone: "",
+    entryFeeEnabled: false,
+    entryFeeAmount: 2000,
+  });
+  const { name, address, phone, entryFeeEnabled, entryFeeAmount } = values;
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setName("");
-    setAddress("");
-    setPhone("");
-    setEntryFeeEnabled(false);
-    setEntryFeeAmount(2000);
-  }, [open]);
 
   async function handleCreate() {
     const trimmedName = name.trim();
@@ -54,6 +49,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
         entry_fee_amount: entryFeeEnabled ? entryFeeAmount : 0,
       });
       toast.success("Boutique créée.");
+      clear();
       onSuccess(shop.id);
       onClose();
     } catch (error) {
@@ -75,7 +71,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
             <Input
               id="create-shop-name"
               value={name}
-              onChange={(event) => setName(event.target.value)}
+              onChange={(event) => setField("name", event.target.value)}
               placeholder="Atelier Principal"
             />
           </div>
@@ -84,7 +80,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
             <Input
               id="create-shop-address"
               value={address}
-              onChange={(event) => setAddress(event.target.value)}
+              onChange={(event) => setField("address", event.target.value)}
               placeholder="Adresse de la boutique"
             />
           </div>
@@ -93,7 +89,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
             <Input
               id="create-shop-phone"
               value={phone}
-              onChange={(event) => setPhone(event.target.value)}
+              onChange={(event) => setField("phone", event.target.value)}
               placeholder="Numéro de téléphone"
             />
           </div>
@@ -108,7 +104,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
               <Switch
                 id="create-entry-fee-enabled"
                 checked={entryFeeEnabled}
-                onCheckedChange={setEntryFeeEnabled}
+                onCheckedChange={(checked) => setField("entryFeeEnabled", checked)}
               />
             </div>
             {entryFeeEnabled ? (
@@ -119,7 +115,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
                   type="number"
                   min={1}
                   value={entryFeeAmount}
-                  onChange={(event) => setEntryFeeAmount(Math.max(1, Number(event.target.value)))}
+                  onChange={(event) => setField("entryFeeAmount", Math.max(1, Number(event.target.value)))}
                 />
               </div>
             ) : null}

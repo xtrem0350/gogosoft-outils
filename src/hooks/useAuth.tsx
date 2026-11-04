@@ -1,6 +1,6 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { getProfile, getRoles } from "@/services/authService";
@@ -32,6 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
+  const sessionRef = useRef<Session | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -58,8 +59,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      setSession(nextSession);
       if (event === "TOKEN_REFRESHED") return;
+      if (event === "SIGNED_IN") {
+        if (sessionRef.current?.user.id === nextSession?.user.id) return;
+      } else {
+        if (
+          sessionRef.current?.user.id === nextSession?.user.id &&
+          sessionRef.current?.access_token === nextSession?.access_token
+        ) return;
+      }
+      sessionRef.current = nextSession;
+      setSession(nextSession);
       if (event !== "INITIAL_SESSION") void queryClient.invalidateQueries();
       void loadDetails(nextSession?.user.id).finally(() => {
         if (active) setLoading(false);
