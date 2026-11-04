@@ -458,18 +458,26 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                     pendingCountFor(to) > 0 && "animate-pulse",
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "size-4 shrink-0",
-                      pathname === to ? "text-orange-600" : "text-slate-500",
-                    )}
-                  />
-                  {!collapsed ? <span className="min-w-0 flex-1 truncate">{itemLabel}</span> : null}
-                  {pendingCountFor(to) > 0 && !collapsed ? (
-                    <span className="ml-auto flex size-5 shrink-0 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">{pendingCountFor(to)}</span>
-                  ) : null}
-                  {!collapsed && pathname === to ? (
-                    <span className="ml-auto size-2 shrink-0 rounded-full bg-orange-500 animate-pulse" />
+                  <div className="flex min-w-0 flex-1 items-center gap-2">
+                    <Icon
+                      className={cn(
+                        "size-4 shrink-0",
+                        pathname === to ? "text-orange-600" : "text-slate-500",
+                      )}
+                    />
+                    {!collapsed ? <span className="min-w-0 truncate">{itemLabel}</span> : null}
+                  </div>
+                  {!collapsed ? (
+                    <div className="ml-auto flex shrink-0 items-center gap-2">
+                      {pendingCountFor(to) > 0 ? (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                          {pendingCountFor(to)}
+                        </span>
+                      ) : null}
+                      {pathname === to ? (
+                        <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
+                      ) : null}
+                    </div>
                   ) : null}
                 </Link>
               ))}
