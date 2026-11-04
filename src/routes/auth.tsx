@@ -27,7 +27,6 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
 import {
   calculateModulePrice,
-  calculateVitrinePrice,
   PRICING_RULES,
   WELCOME_PRICING,
   type PricingPlan,
@@ -55,7 +54,7 @@ function readNewPricingSelection(): {
   domainIds: WelcomeDomainId[];
 } | null {
   const savedMode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
-  if (savedMode !== "all_in_one" && savedMode !== "modules" && savedMode !== "vitrines") {
+  if (savedMode !== "all_in_one" && savedMode !== "modules") {
     return null;
   }
 
@@ -70,39 +69,30 @@ function readNewPricingSelection(): {
   const domainIds = Array.isArray(parsedModules)
     ? parsedModules.filter(isWelcomeDomainId)
     : [];
+  const activityDomainIds = domainIds.filter(
+    (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
+  );
 
   if (savedMode === "all_in_one") {
-    return { plan: PRICING_RULES.allInOne, domainIds: [...WELCOME_DOMAIN_IDS] };
+    return {
+      plan: PRICING_RULES.allInOne,
+      domainIds: WELCOME_DOMAIN_IDS.filter(
+        (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
+      ),
+    };
   }
 
-  const moduleCount = domainIds.filter((id) => !id.startsWith("vitrine-")).length;
-  const vitrineCount = domainIds.filter((id) => id.startsWith("vitrine-")).length;
+  const moduleCount = activityDomainIds.length;
   if (savedMode === "modules" && moduleCount > 0) {
     return {
       plan: {
         id: "modules",
-        title: vitrineCount > 0
-          ? `${PRICING_RULES.moduleTitle} + ${PRICING_RULES.vitrineTitle}`
-          : PRICING_RULES.moduleTitle,
-        price: calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount),
-        subtitle: vitrineCount > 0
-          ? `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité + ${vitrineCount} vitrine${vitrineCount === 1 ? "" : "s"}`
-          : `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
+        title: PRICING_RULES.moduleTitle,
+        price: calculateModulePrice(moduleCount),
+        subtitle: `${moduleCount} domaine${moduleCount === 1 ? "" : "s"} d'activité`,
         features: [],
       },
-      domainIds,
-    };
-  }
-  if (savedMode === "vitrines" && vitrineCount > 0) {
-    return {
-      plan: {
-        id: "vitrines",
-        title: PRICING_RULES.vitrineTitle,
-        price: calculateVitrinePrice(vitrineCount),
-        subtitle: `${vitrineCount} vitrine${vitrineCount === 1 ? "" : "s"} en ligne`,
-        features: [],
-      },
-      domainIds,
+      domainIds: activityDomainIds,
     };
   }
   return null;

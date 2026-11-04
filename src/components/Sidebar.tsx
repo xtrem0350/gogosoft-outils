@@ -25,7 +25,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -442,7 +442,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                   key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
                   to={to}
                   search={to === "/caisse" ? { action: "validate", ticket: "" } : (itemSearch ?? {})}
-                  onClick={(event) => {
+                  onClick={(event: MouseEvent<HTMLElement>) => {
                     if (to === "/caisse" && pendingCountFor(to) > 0) {
                       event.preventDefault();
                       void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } });

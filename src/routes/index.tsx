@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Check,
   Gift,
-  Globe,
   Laptop,
   Lock,
   ShoppingCart,
@@ -23,7 +22,6 @@ import {
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import {
   calculateModulePrice,
-  calculateVitrinePrice,
   PRICING_RULES,
   type PricingMode,
 } from "@/constants/pricing";
@@ -70,20 +68,6 @@ const WELCOME_MODULES: Array<{
     description: "Ordinateurs et accessoires de bureau",
     icon: ShoppingCart,
     tone: "green",
-  },
-  {
-    id: "vitrine-telephone",
-    title: "Vitrine Téléphone",
-    description: "Boutique en ligne mobile",
-    icon: Globe,
-    tone: "orange",
-  },
-  {
-    id: "vitrine-pc",
-    title: "Vitrine PC",
-    description: "Boutique en ligne ordinateur",
-    icon: Globe,
-    tone: "orange",
   },
 ];
 
@@ -137,7 +121,7 @@ const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
 function readPricingMode(): Exclude<PricingMode, null> {
   if (typeof window === "undefined") return "all_in_one";
   const savedMode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
-  return savedMode === "modules" || savedMode === "vitrines" || savedMode === "all_in_one"
+  return savedMode === "modules" || savedMode === "all_in_one"
     ? savedMode
     : "all_in_one";
 }
@@ -173,12 +157,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Choisissez vos domaines (réparation, vente, vitrine), démarrez une démo d'un jour ou un essai gratuit de sept jours.",
+          "Choisissez vos domaines (réparation, vente), démarrez une démo d'un jour ou un essai gratuit de sept jours.",
       },
       { property: "og:title", content: "GogoSoft Tools Manager — Gestion d'atelier de réparation" },
       {
         property: "og:description",
-        content: "Réparations, clients, ventes et boutique en ligne pour réparateurs. Essai gratuit 1 jour.",
+        content: "Réparations, clients et ventes pour réparateurs. Essai gratuit 1 jour.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -228,18 +212,12 @@ function HomePage() {
       const activityCount = next.filter(
         (moduleId) => moduleId.startsWith("reparation-") || moduleId.startsWith("vente-"),
       ).length;
-      const vitrineCount = next.filter((moduleId) => moduleId.startsWith("vitrine-")).length;
-
       if (next.length === WELCOME_MODULES.length || next.length === 0) {
         setPricingMode("all_in_one");
       } else if (pricingMode === "all_in_one") {
-        setPricingMode(activityCount > 0 ? "modules" : vitrineCount > 0 ? "vitrines" : "all_in_one");
-      } else if (activityCount > 0 && vitrineCount > 0) {
-        setPricingMode("modules");
+        setPricingMode(activityCount > 0 ? "modules" : "all_in_one");
       } else if (activityCount > 0) {
         setPricingMode("modules");
-      } else if (vitrineCount > 0) {
-        setPricingMode("vitrines");
       }
 
       return next;
@@ -274,20 +252,17 @@ function HomePage() {
   const activityModules = selectedDomains.filter(
     (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
   );
-  const vitrines = selectedDomains.filter((id) => id.startsWith("vitrine-"));
   const moduleCount = activityModules.length;
-  const vitrineCount = vitrines.length;
   const isAllInOneActive = pricingMode === "all_in_one";
   const areModulesActive = moduleCount > 0 && !isAllInOneActive;
-  const areVitrinesActive = vitrineCount > 0 && !isAllInOneActive;
   const totalPrice = isAllInOneActive
     ? 99000
-    : calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount);
+    : calculateModulePrice(moduleCount);
   const hasSelection = selectedDomains.length > 0;
   const canDemo = hasSelection;
   const canSignup = isAllInOneActive
     ? hasSelection
-    : moduleCount > 0 || vitrineCount > 0;
+    : moduleCount > 0;
 
   if (loading || user || isDemoMode()) return null;
 
@@ -485,34 +460,6 @@ function HomePage() {
                   ) : null}
                 </article>
 
-                <article
-                  aria-label="Vitrines en ligne"
-                  aria-disabled={isAllInOneActive}
-                  className={`card-3d shadow-3d relative min-h-[176px] rounded-xl border p-4 transition-colors ${
-                    isAllInOneActive
-                      ? "cursor-not-allowed border-slate-200 bg-slate-100 opacity-50"
-                      : areVitrinesActive
-                        ? "border-orange-300 bg-orange-50 ring-2 ring-orange-500"
-                        : "border-slate-200 bg-slate-100 opacity-50"
-                  }`}
-                >
-                  {areVitrinesActive ? (
-                    <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-orange-500 text-white">
-                      <Check className="size-3" />
-                    </div>
-                  ) : null}
-                  <h3 className="text-sm font-bold text-slate-900">{PRICING_RULES.vitrineTitle}</h3>
-                  <p className="mt-1 text-xs text-slate-600">
-                    {vitrineCount} vitrine{vitrineCount === 1 ? "" : "s"}
-                  </p>
-                  <p className="mt-3 text-xl font-bold text-slate-900">
-                    {calculateVitrinePrice(vitrineCount).toLocaleString("fr-FR")}{" "}
-                    <span className="text-xs font-medium">FCFA/mois</span>
-                  </p>
-                  {vitrineCount === 2 ? (
-                    <p className="mt-1 text-xs text-green-800">Forfait duo</p>
-                  ) : null}
-                </article>
               </div>
               <p className="text-center text-xs text-slate-500">
                 Nom de domaine obligatoire : 10 000 FCFA/an · Pack SMS en option : 15 000 FCFA.

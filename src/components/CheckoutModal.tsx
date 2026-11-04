@@ -7,7 +7,6 @@ import authLogo from "@/assets/images/leprofile.png";
 import {
   BONUS_DAYS,
   calculateModulePrice,
-  calculateVitrinePrice,
   DOMAIN_PRICE,
   INSTALLATION_NOTICE,
   PRICING_RULES,
@@ -83,7 +82,7 @@ function readStoredPricingSelection(): {
 } | null {
   if (typeof window === "undefined") return null;
   const mode = window.sessionStorage.getItem(PRICING_MODE_STORAGE_KEY);
-  if (mode !== "all_in_one" && mode !== "modules" && mode !== "vitrines") return null;
+  if (mode !== "all_in_one" && mode !== "modules") return null;
 
   try {
     const parsed: unknown = JSON.parse(
@@ -141,29 +140,23 @@ export function CheckoutModal({
 
   const storedPricing = readStoredPricingSelection();
   const pricingMode = domainRequired ? storedPricing?.mode ?? null : null;
-  const moduleCount =
-    storedPricing?.modules.filter((id) => !id.startsWith("vitrine-")).length ?? 0;
-  const vitrineCount =
-    storedPricing?.modules.filter((id) => id.startsWith("vitrine-")).length ?? 0;
+  const activityModuleIds = (storedPricing?.modules ?? selectedDomainIds).filter(
+    (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
+  );
+  const moduleCount = activityModuleIds.length;
   const planPrice =
     pricingMode === "all_in_one"
       ? PRICING_RULES.allInOne.price
       : pricingMode === "modules"
-        ? calculateModulePrice(moduleCount) + calculateVitrinePrice(vitrineCount)
-        : pricingMode === "vitrines"
-          ? calculateVitrinePrice(vitrineCount)
-          : plan.price;
+        ? calculateModulePrice(moduleCount)
+        : plan.price;
   const checkoutDomainPrice = pricingMode ? PRICING_RULES.domainPrice : domainPrice;
   const checkoutPlanTitle =
     pricingMode === "all_in_one"
       ? PRICING_RULES.allInOne.title
-      : pricingMode === "modules" && vitrineCount > 0
-        ? `${PRICING_RULES.moduleTitle} + ${PRICING_RULES.vitrineTitle}`
-        : pricingMode === "modules"
-          ? PRICING_RULES.moduleTitle
-          : pricingMode === "vitrines"
-            ? PRICING_RULES.vitrineTitle
-            : plan.title;
+      : pricingMode === "modules"
+        ? PRICING_RULES.moduleTitle
+        : plan.title;
   const totalAmount = pricingMode
     ? planPrice + checkoutDomainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0)
     : plan.price * months + domainPrice + (smsPackChecked ? PRICING_RULES.smsPackPrice : 0);
@@ -462,9 +455,9 @@ export function CheckoutModal({
                     <div className="space-y-4">
                       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm">
                         <p className="font-semibold">Mode de pricing : {checkoutPlanTitle}</p>
-                        <p className="mt-2 font-medium">Modules et vitrines sélectionnés</p>
+                        <p className="mt-2 font-medium">Modules sélectionnés</p>
                         <ul className="mt-1 list-inside list-disc text-slate-600">
-                          {(storedPricing?.modules ?? selectedDomainIds).map((id) => (
+                          {activityModuleIds.map((id) => (
                             <li key={id}>{WELCOME_DOMAIN_LABELS[id] ?? id}</li>
                           ))}
                         </ul>
@@ -514,7 +507,7 @@ export function CheckoutModal({
                       <div>
                         <p className="font-medium">Domaines sélectionnés</p>
                         <ul className="mt-1 list-inside list-disc text-slate-600">
-                          {selectedDomainIds.map((id) => <li key={id}>{WELCOME_DOMAIN_LABELS[id]}</li>)}
+                          {activityModuleIds.map((id) => <li key={id}>{WELCOME_DOMAIN_LABELS[id]}</li>)}
                         </ul>
                       </div>
                       {pricingMode ? (

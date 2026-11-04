@@ -56,11 +56,14 @@ function ShopOnboardingPage() {
           selectedModules = [];
         }
       }
-      await enableShopModules(shop.id, shopCodesFromModuleIds(selectedModules as ModuleId[]));
+      const activityModules = selectedModules.filter(
+        (id) => id.startsWith("reparation-") || id.startsWith("vente-"),
+      );
+      await enableShopModules(shop.id, shopCodesFromModuleIds(activityModules as ModuleId[]));
 
       const rawPlanPrice = sessionStorage.getItem("gogosoft.checkout.planPrice");
       const storedPlan = sessionStorage.getItem("gogosoft.checkout.pricingMode") || "mensuel";
-      const plan = ["trial", "mensuel", "annuel", "all_in_one", "modules", "vitrines"].includes(storedPlan)
+      const plan = ["trial", "mensuel", "annuel", "all_in_one", "modules"].includes(storedPlan)
         ? storedPlan
         : "mensuel";
       const expiresAt = new Date(Date.now() + (7 + 30) * 24 * 60 * 60 * 1000).toISOString();
@@ -69,7 +72,7 @@ function ShopOnboardingPage() {
         plan,
         status: "active",
         expires_at: expiresAt,
-        selected_modules: selectedModules,
+        selected_modules: activityModules,
         price_fcfa: rawPlanPrice ? Number(rawPlanPrice) : null,
       }, { onConflict: "user_id" });
       if (subscriptionError) throw subscriptionError;

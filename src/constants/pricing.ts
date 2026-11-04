@@ -16,41 +16,31 @@ export const PRICING_RULES = {
     id: "all_in_one",
     title: "Tout-en-un",
     price: 99000,
-    subtitle: "Toutes les activités : ventes, réparations et vitrines",
-    features: ["Tous les modules illimités", "Vitrines incluses", "Support prioritaire"],
+    subtitle: "Toutes les activités : ventes et réparations",
+    features: ["Tous les modules illimités", "Support prioritaire"],
   },
   moduleUnitPrice: 15000,
   moduleDiscountRate: 0.10,
   moduleTitle: "Modules d'activité",
-  vitrineTitle: "Vitrines en ligne",
-  vitrinePrices: {
-    single: 25000,
-    duo: 45000,
-  },
   domainPrice: 10000,
   smsPackPrice: 15000,
   smsPackLabel: "Pack SMS illimités (MTN, Moov, Orange) + WhatsApp API",
   trialDays: 7,
 } as const;
 
-export type PricingMode = "all_in_one" | "modules" | "vitrines" | null;
+export type PricingMode = "all_in_one" | "modules" | null;
 
 export const INSTALLATION_NOTICE =
   "Votre compteur d'abonnement démarre officiellement à l'issue de la période des 7 jours gratuits de configuration et de paramétrage de votre compte.";
 
-export function calculateModulePrice(count: number): number {
+export function calculateModulePrice(activityModuleCount: number): number {
+  const count = Math.max(0, Math.trunc(activityModuleCount));
   if (count === 0) return 0;
   const base = count * PRICING_RULES.moduleUnitPrice;
   if (count >= 2) {
     return Math.round(base - base * PRICING_RULES.moduleDiscountRate);
   }
   return base;
-}
-
-export function calculateVitrinePrice(count: number): number {
-  if (count === 0) return 0;
-  if (count === 1) return PRICING_RULES.vitrinePrices.single;
-  return PRICING_RULES.vitrinePrices.duo;
 }
 
 export const WELCOME_PRICING: readonly PricingPlan[] = [
@@ -68,16 +58,5 @@ export const WELCOME_PRICING: readonly PricingPlan[] = [
     subtitle: "3 domaines / mois",
     featured: true,
     features: ["3 domaines au choix", "Support prioritaire", "Multi-appareils"],
-  },
-  {
-    id: "shop_1",
-    title: "Vitrine",
-    price: 25000,
-    subtitle: "Boutique en ligne / mois",
-    features: [
-      "Vitrine tel/PC",
-      "Commandes en ligne",
-      `Domaine en option : ${DOMAIN_PRICE.toLocaleString("fr-FR")} FCFA/an`,
-    ],
   },
 ];
