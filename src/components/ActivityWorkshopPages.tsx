@@ -1712,10 +1712,8 @@ export function ActivityDetailsPage({
   async function completeRepair() {
     await recordUpdate(
       {
-        status: "livre",
-        outils_utilises: tools.split(",").map((tool) => tool.trim()).filter(Boolean),
-        pieces_consommees: pieces,
-        ...(technician ? { technicien_id: technician.user_id } : {}),
+        status: "en_attente_caissier_solde",
+        price_final: estimateTotal,
       },
       "completed",
       "Réparation marquée comme terminée.",

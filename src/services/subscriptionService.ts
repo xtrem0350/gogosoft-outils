@@ -40,7 +40,6 @@ export async function getMySubscription(): Promise<SubscriptionSummary | null> {
     };
   }
   const hasSession = await hasActiveSession();
-  console.log("[subscriptionService] called", { hasSession, shopId: null });
   if (!hasSession) return null;
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData.user?.id;
@@ -84,6 +83,7 @@ export function isSubscriptionActive(
 
 /** Démarre une période d'essai. */
 export async function startTrial(userId: string): Promise<SubscriptionSummary> {
+  if (!userId) return Promise.reject(new Error("Utilisateur introuvable."));
   if (isDemoMode()) throw new Error("Un essai local ne crée pas d'abonnement Supabase.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const { data, error } = await supabase
@@ -106,6 +106,7 @@ export async function startTrial(userId: string): Promise<SubscriptionSummary> {
 
 /** Met à jour l'essai créé à l'inscription avec les modules choisis et sept jours d'accès. */
 export async function updateTrialModules(userId: string, moduleCodes: string[]): Promise<void> {
+  if (!userId) return;
   if (isDemoMode()) throw new Error("Un essai local ne crée pas d'abonnement Supabase.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const uniqueCodes = [...new Set(moduleCodes)];
@@ -132,6 +133,7 @@ export async function upgradePlan(
   plan: SubscriptionPlan,
   durationDays: number,
 ): Promise<SubscriptionSummary> {
+  if (!userId) return Promise.reject(new Error("Utilisateur introuvable."));
   if (isDemoMode()) throw new Error("La modification du forfait est indisponible en démo.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   const expiry = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();

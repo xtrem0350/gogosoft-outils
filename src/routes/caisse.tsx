@@ -285,9 +285,9 @@ function CashPage() {
     }
     try {
       await closeWorkshopTicketPayment({ ticketId: ticketPayment.ticket.id, amount, paymentType: ticketPayment.type === "entry" ? "entry" : "balance", paymentMethod });
-      toast.success(ticketPayment.type === "entry" ? "Entrée encaissée. Réceptionniste notifié pour le rangement." : "Solde encaissé. Réceptionniste notifié pour le rangement.");
       setTicketPayment(null);
       await load();
+      toast.success("Paiement enregistré.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'encaisser le ticket.");
     }
