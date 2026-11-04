@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, CalendarClock, PackageCheck, Plus, UserRound, Wrench } from "lucide-react";
+import { AlertCircle, CalendarClock, PackageCheck, UserRound, Wrench } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
 import { ClientSelect } from "@/components/selects/ClientSelect";
-import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { DeviceCatalogPicker } from "@/components/DeviceCatalogPicker";
 import { StepIndicator } from "@/components/StepIndicator";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +37,6 @@ function ReceptionPage() {
   const [placeTicket, setPlaceTicket] = useState<{ ticket: WorkshopTicket } | null>(null);
   const [step, setStep, clearStep] = usePersistedWizardState("reception-step", 1);
   const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | undefined>("reception-selected-client", undefined);
-  const [clientDialogOpen, setClientDialogOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [paymentPaid, setPaymentPaid, clearPaymentPaid] = usePersistedWizardState("reception-payment-paid", false);
   const [paymentMethod, setPaymentMethod, clearPaymentMethod] = usePersistedWizardState("reception-payment-method", "");
@@ -195,7 +193,7 @@ function ReceptionPage() {
         subtitle="Suivi des clients en attente et des appareils au casier"
         icon={UserRound}
         iconColor="blue"
-        action={<Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={() => setOpenCreate(true)}><Plus className="mr-2 size-4" /> Nouveau client</Button>}
+        action={<Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={() => setOpenCreate(true)}>Nouvelle réception</Button>}
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -277,7 +275,7 @@ function ReceptionPage() {
           </DialogHeader>
 
           <div className="grid grid-cols-4 gap-2 rounded-xl bg-slate-50 p-3">
-            {["Client", "Appareil", "Paiement", "Casier"].map((label, index) => (
+            {["Client", "Appareil", "Paiement", "Rangement"].map((label, index) => (
               <StepIndicator key={label} number={index + 1} label={label} active={step === index + 1} completed={step > index + 1} />
             ))}
           </div>
@@ -285,7 +283,7 @@ function ReceptionPage() {
           {step === 1 ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex items-center justify-between"><Label>Client</Label><Button size="sm" variant="outline" onClick={() => setClientDialogOpen(true)}><Plus className="size-4" /> Nouveau</Button></div>
+                <Label>Client</Label>
                 <ClientSelect shopId={shopId ?? null} value={selectedClient?.id} refreshKey={clientRefreshKey} selectedClient={selectedClient} onSelect={(client) => { setSelectedClient(client); setClientName(client.full_name); setClientPhone(client.whatsapp ?? ""); }} />
                 <Input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Nom du client" />
                 <Input value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} placeholder="WhatsApp" />
@@ -318,7 +316,7 @@ function ReceptionPage() {
 
           {step === 4 ? (
             <div className="space-y-4">
-              <div className="space-y-2"><Label>Casier</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
+              <div className="space-y-2"><Label>Rangement</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
               <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> 2 000 FCFA</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
               <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId || creating} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></DialogFooter>
             </div>
@@ -347,18 +345,6 @@ function ReceptionPage() {
         ticket={placeTicket?.ticket ?? null}
         onSuccess={() => void loadTicketsToPlace()}
       />
-      {shopId ? <QuickCreateClientDialog
-        open={clientDialogOpen}
-        onOpenChange={setClientDialogOpen}
-        shopId={shopId}
-        onCreated={(client) => {
-          setSelectedClient(client);
-          setClientName(client.full_name);
-          setClientPhone(client.whatsapp ?? "");
-          setClientRefreshKey((key) => key + 1);
-          setClientDialogOpen(false);
-        }}
-      /> : null}
     </div>
   );
 }

@@ -23,7 +23,6 @@ import { AddPartDialog, type ConsumedPart } from "@/components/AddPartDialog";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { DeviceSelect } from "@/components/selects/DeviceSelect";
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
-import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { StorageLocationDialog } from "@/components/StorageLocationDialog";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { MemberSelect, type MemberOption } from "@/components/selects/MemberSelect";
@@ -350,7 +349,6 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
   const isConsumable = activityType === "consumable";
   const [issue, setIssue] = useState<IssueKey>("ecran_casse");
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
-  const [createClientOpen, setCreateClientOpen] = useState(false);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [locationRefreshKey, setLocationRefreshKey] = useState(0);
@@ -520,20 +518,8 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
                   value={selectedClient?.id}
                   selectedClient={selectedClient ?? undefined}
                   onSelect={selectClient}
-                  onCreateNew={() => setCreateClientOpen(true)}
                 />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="Créer un client"
-                title="Créer un client"
-                disabled={!shopId}
-                onClick={() => setCreateClientOpen(true)}
-              >
-                <Plus className="size-4" />
-              </Button>
             </div>
             {selectedClient ? (
               <p className="text-sm text-muted-foreground">WhatsApp : {selectedClient.whatsapp}</p>
@@ -671,13 +657,12 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
                   aria-label="Créer un emplacement"
-                  title="Créer un emplacement"
+                  title="Ajouter un rangement"
                   disabled={!shopId}
                   onClick={() => setCreateLocationOpen(true)}
                 >
-                  <Plus className="size-4" />
+                  Ajouter un rangement
                 </Button>
               </div>
             </CardContent>
@@ -719,12 +704,6 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
           Enregistrer la fiche
         </Button>
       </form>
-      <QuickCreateClientDialog
-        open={createClientOpen}
-        onOpenChange={setCreateClientOpen}
-        shopId={shopId ?? ""}
-        onCreated={handleClientCreated}
-      />
       {shopId ? (
         <StorageLocationDialog
           open={createLocationOpen}
@@ -756,7 +735,6 @@ function NewWorkshopTicketPage({
   const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | null>(`${activityType}-selected-client`, null);
   const [clientName, setClientName, clearClientName] = usePersistedWizardState(`${activityType}-client-name`, "");
   const [clientWhatsapp, setClientWhatsapp, clearClientWhatsapp] = usePersistedWizardState(`${activityType}-client-whatsapp`, "");
-  const [createClientOpen, setCreateClientOpen] = useState(false);
   const [createLocationOpen, setCreateLocationOpen] = useState(false);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [locationRefreshKey, setLocationRefreshKey] = useState(0);
@@ -1045,20 +1023,8 @@ function NewWorkshopTicketPage({
                     value={selectedClient?.id}
                     selectedClient={selectedClient ?? undefined}
                     onSelect={selectClient}
-                    onCreateNew={() => setCreateClientOpen(true)}
                   />
                 </label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  aria-label="Créer un client"
-                  title="Créer un client"
-                  disabled={!shopId}
-                  onClick={() => setCreateClientOpen(true)}
-                >
-                  <Plus className="size-4" />
-                </Button>
               </div>
               <label className="grid gap-2 text-sm font-medium">
                 Nom / pseudo
@@ -1282,13 +1248,12 @@ function NewWorkshopTicketPage({
                   <Button
                     type="button"
                     variant="outline"
-                    size="icon"
                     aria-label="Créer un emplacement"
-                    title="Créer un emplacement"
+                    title="Ajouter un rangement"
                     disabled={!shopId}
                     onClick={() => setCreateLocationOpen(true)}
                   >
-                    <Plus className="size-4" />
+                    Ajouter un rangement
                   </Button>
                 </div>
               </div>
@@ -1356,15 +1321,6 @@ function NewWorkshopTicketPage({
         </CardContent>
       </Card>
 
-      <QuickCreateClientDialog
-        open={createClientOpen}
-        onOpenChange={setCreateClientOpen}
-        shopId={shopId ?? ""}
-        onCreated={(client) => {
-          selectClient(client);
-          setClientRefreshKey((current) => current + 1);
-        }}
-      />
       {shopId ? (
         <StorageLocationDialog
           open={createLocationOpen}

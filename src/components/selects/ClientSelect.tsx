@@ -1,4 +1,3 @@
-import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { SearchableSelect } from "@/components/SearchableSelect";
@@ -21,9 +20,7 @@ export function ClientSelect({
   refreshKey = 0,
   selectedClient,
   onSelect,
-  onCreateNew,
 }: Props) {
-  const navigate = useNavigate();
   const { items, loading } = useAsyncList(
     shopId ? `${shopId}:${refreshKey}` : null,
     () => getClientsByShop(shopId ?? ""),
@@ -77,8 +74,6 @@ export function ClientSelect({
       placeholder="Sélectionner un client"
       searchPlaceholder="Nom ou WhatsApp..."
       emptyMessage="Aucun client trouvé."
-      createLabel="Créer un nouveau client"
-      onCreateNew={onCreateNew ?? (() => void navigate({ to: "/clients/nouveau" }))}
       onSelect={(option) => {
         const client = optionsItems.find((item) => item.id === option.value);
         if (client) onSelect(client);

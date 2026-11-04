@@ -1,5 +1,5 @@
 /** Liste déroulante avec recherche pour référencer un élément déjà créé. */
-import { Check, ChevronsUpDown, Loader2, Plus } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -82,21 +82,6 @@ export function SearchableSelect({
               <p className="text-sm text-muted-foreground">
                 {loading ? "Chargement..." : emptyMessage}
               </p>
-              {onCreateNew ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="mt-2"
-                  onClick={() => {
-                    setOpen(false);
-                    onCreateNew();
-                  }}
-                >
-                  <Plus className="size-4" />
-                  {createLabel}
-                </Button>
-              ) : null}
             </CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
@@ -123,20 +108,6 @@ export function SearchableSelect({
                 </CommandItem>
               ))}
             </CommandGroup>
-            {onCreateNew && options.length > 0 ? (
-              <CommandGroup>
-                <CommandItem
-                  value="__create__"
-                  onSelect={() => {
-                    setOpen(false);
-                    onCreateNew();
-                  }}
-                >
-                  <Plus className="size-4" />
-                  {createLabel}
-                </CommandItem>
-              </CommandGroup>
-            ) : null}
           </CommandList>
         </Command>
       </PopoverContent>
