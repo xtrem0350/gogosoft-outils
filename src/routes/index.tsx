@@ -274,8 +274,6 @@ function HomePage() {
     ? hasSelection
     : moduleCount > 0;
 
-  if (loading || user || isDemoMode()) return null;
-
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-slate-950 text-slate-900">
       <div
@@ -408,7 +406,6 @@ function HomePage() {
                 <button
                   type="button"
                   aria-pressed={isAllInOneActive}
-                  disabled={!isAllInOneActive}
                   onClick={chooseAllInOne}
                   className={`card-3d shadow-3d relative flex min-h-[176px] flex-col rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 ${
                     isAllInOneActive
