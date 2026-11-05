@@ -186,7 +186,8 @@ function EquipePage() {
       }
       toast.success("Vos rôles ont été enregistrés.");
       setRolesOpen(false);
-      window.location.reload();
+      await refreshOwnerRoles();
+      await refreshMembers();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer vos rôles.");
     }

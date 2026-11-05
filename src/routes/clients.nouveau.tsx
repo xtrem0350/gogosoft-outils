@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -29,6 +29,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 function NewClientPage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { shopId } = useCurrentShop();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormValues, string>>>({});
@@ -68,6 +69,7 @@ function NewClientPage() {
         notes: values.notes || null,
       });
 
+      await router.invalidate();
       toast.success(`Client créé : ${client.full_name}`);
       clear();
       await navigate({ to: "/clients" });

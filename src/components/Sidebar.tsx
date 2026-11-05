@@ -546,9 +546,9 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
             receptionniste: "Réceptionniste",
             vendeur: "Vendeur",
           };
-          const routeMap: Record<string, string> = {
+          const roleRouteMap: Record<string, string> = {
             owner: "/dashboard",
-            technicien: "/dashboard",
+            technicien: "/phone/atelier",
             caissier: "/caisse",
             magasinier: "/magasin",
             receptionniste: "/reception",
@@ -559,7 +559,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               key={item}
               onSelect={() => {
                 setActiveRole(item);
-                void navigate({ to: routeMap[item] ?? "/dashboard" });
+                void navigate({ to: roleRouteMap[item] ?? "/dashboard" });
               }}
               className={cn(item === activeRole && "bg-orange-50 text-orange-700")}
             >

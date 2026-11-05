@@ -36,7 +36,6 @@ export function TechnicianDashboard() {
         if (!active) return;
         setAssigned(
           [...phoneTickets, ...computerTickets]
-            .filter((ticket) => ticket.status !== "livre")
             .sort((left, right) =>
               (right.created_at ?? "").localeCompare(left.created_at ?? ""),
             )
@@ -61,11 +60,13 @@ export function TechnicianDashboard() {
     };
   }, [shopId, user]);
 
+  const currentTickets = assigned.filter((ticket) => ticket.status !== "livre" && ticket.status !== "annule");
+  const today = new Date().toISOString().slice(0, 10);
   const inProgress = assigned.filter((ticket) => ticket.status === "en_cours").length;
-  const pending = assigned.filter(
-    (ticket) => ticket.status === "en_attente_technicien",
+  const done = assigned.filter((ticket) =>
+    ticket.status === "livre" &&
+    (ticket.delivered_at ?? ticket.updated_at ?? "").slice(0, 10) === today,
   ).length;
-  const done = assigned.filter((ticket) => ticket.status === "livre").length;
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -74,12 +75,17 @@ export function TechnicianDashboard() {
           <h1 className="text-2xl font-bold">Mon espace technicien</h1>
           <p className="text-sm text-slate-500">Vos fiches assignées et à traiter</p>
         </div>
-        <Button asChild>
-          <Link to="/phone/atelier/nouveau">
-            <Plus className="mr-2 size-4" />
-            Nouvelle fiche
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/phone/atelier">Voir mes réparations</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/phone/atelier/nouveau">
+              <Plus className="mr-2 size-4" />
+              Nouvelle fiche
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -91,6 +97,13 @@ export function TechnicianDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-slate-500">Tickets assignés</CardTitle>
+            <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
+          </CardHeader>
+          <CardContent><div className="text-3xl font-bold">{assigned.length}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-slate-500">En cours</CardTitle>
             <Clock className="size-4 text-orange-500" />
           </CardHeader>
@@ -98,14 +111,7 @@ export function TechnicianDashboard() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">À traiter</CardTitle>
-            <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold">{pending}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Terminées</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">Terminées aujourd'hui</CardTitle>
             <CheckCircle2 className="size-4 text-green-800" />
           </CardHeader>
           <CardContent><div className="text-3xl font-bold">{done}</div></CardContent>
@@ -117,11 +123,11 @@ export function TechnicianDashboard() {
         <CardContent>
           {loading ? (
             <p className="text-sm text-slate-500">Chargement…</p>
-          ) : assigned.length === 0 ? (
+          ) : currentTickets.length === 0 ? (
             <p className="text-sm text-slate-500">Aucune fiche assignée pour l’instant.</p>
           ) : (
             <div className="space-y-2">
-              {assigned.map((ticket) => (
+              {currentTickets.map((ticket) => (
                 <Link
                   key={ticket.id}
                   to={ticket.activity_type === "computer" ? "/computer/atelier/$id" : "/phone/atelier/$id"}

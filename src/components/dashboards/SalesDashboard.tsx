@@ -27,7 +27,10 @@ export function SalesDashboard() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex items-center justify-between gap-4">
         <div><h1 className="text-2xl font-bold">Mon espace ventes</h1><p className="text-sm text-slate-500">Ventes du jour</p></div>
-        <Button asChild><Link to="/sales">Voir les ventes</Link></Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild><Link to="/sales">Voir toutes les ventes</Link></Button>
+          <Button asChild><Link to="/sales/nouveau">Nouvelle vente</Link></Button>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm">CA encaissé</CardTitle><CircleDollarSign className="size-4 text-orange-500" /></CardHeader><CardContent><div className="text-2xl font-bold">{formatAmount(revenue)}</div></CardContent></Card>

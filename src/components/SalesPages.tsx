@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   ShoppingCart,
   Plus,
@@ -408,6 +408,7 @@ function SalesMetric({
 
 export function NewSalePage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { shopId } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const { isVendeur, isOwner } = useUserRole();
@@ -516,6 +517,9 @@ export function NewSalePage() {
         notes: null,
       });
       setSavedSale(sale);
+      if (shopId) {
+        setProducts(await getPublicProducts(shopId));
+      }
       toast.success("✅ Vente enregistrée.");
     } catch (error) {
       toast.error(`❌ ${error instanceof Error ? error.message : "Création impossible."}`);
@@ -530,6 +534,7 @@ export function NewSalePage() {
     try {
       await updateSale(savedSale.id, { payment_status: "awaiting_payment" });
       toast.success("Vente transmise à la caisse pour encaissement.");
+      await router.invalidate();
       await navigate({ to: "/sales" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de transmettre la vente.");

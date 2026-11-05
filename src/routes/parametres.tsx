@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import {
   AlertTriangle,
   Building2,
@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/parametres")({ component: ParametresPage });
 
 function ParametresPage() {
+  const router = useRouter();
   const { shop: currentShop, shopId } = useCurrentShop();
   const { isOwner } = useUserRoles();
   const [tab, setTab] = useState("profil");
@@ -84,6 +85,11 @@ function ParametresPage() {
       enabled: entryFeeEnabled,
       refundable: entryFeeRefundable,
     });
+    const config = await getShopEntryFeeConfig(shopId);
+    setEntryFeeAmount(config.amount);
+    setEntryFeeEnabled(config.enabled);
+    setEntryFeeRefundable(config.refundable);
+    await router.invalidate();
     toast.success("Configuration des frais d'entrée enregistrée.");
   }
 
@@ -143,12 +149,22 @@ function ParametresPage() {
       email: profile.email ?? undefined,
       phone: profile.phone ?? null,
     } as never);
+    const nextProfile = await getProfile(userId);
+    if (nextProfile) {
+      setProfile({
+        nom: nextProfile.nom,
+        email: nextProfile.email,
+        phone: (nextProfile as { phone?: string | null }).phone ?? null,
+      });
+    }
+    await router.invalidate();
     toast.success("Profil mis à jour.");
   }
 
   async function saveShop() {
     if (!shop) return;
     await updateShop(shop.id, { name: shop.name, address: shop.address, phone: shop.phone });
+    await router.invalidate();
     toast.success("Boutique mise à jour.");
   }
 

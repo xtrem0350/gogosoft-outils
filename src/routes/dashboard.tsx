@@ -85,7 +85,6 @@ function formatRelativeTime(value: string | null) {
 
 function DashboardRouter() {
   const { activeRole, loading, isSuperAdmin } = useUserRoles();
-  if (isSimulationMode()) return <OwnerDashboard />;
   if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement du rôle…</p>;
   if (isSuperAdmin) return <PlatformDashboard />;
   if (activeRole === "technicien") return <TechnicianDashboard />;

@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,7 @@ export const Route = createFileRoute("/clients/$id")({
 
 function ClientDetailsPage() {
   const navigate = useNavigate();
+  const router = useRouter();
   const { id } = Route.useParams();
   const [client, setClient] = useState<ClientRecord | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -59,6 +60,7 @@ function ClientDetailsPage() {
   async function handleDelete() {
     try {
       await deleteClient(id);
+      await router.invalidate();
       toast.success("Client supprimé.");
       await navigate({ to: "/clients" });
     } catch (error) {
