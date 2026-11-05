@@ -762,8 +762,9 @@ function NewWorkshopTicketPage({
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [entryFeeConfig, setEntryFeeConfig] = useState({
-    amount: 2000,
-    enabled: true,
+    amount: 0,
+    enabled: false,
+    refundable: false,
   });
   const [createdTicket, setCreatedTicket] = useState<WorkshopTicket | null>(null);
   const [createdAt] = useState(() => new Date());
@@ -796,9 +797,19 @@ function NewWorkshopTicketPage({
   useEffect(() => {
     if (!shopId) return;
     void getShopEntryFeeConfig(shopId)
-      .then((config) => setEntryFeeConfig({ amount: config.amount, enabled: config.enabled }))
+      .then((config) =>
+        setEntryFeeConfig({
+          amount: config.amount,
+          enabled: config.enabled,
+          refundable: config.refundable,
+        }),
+      )
       .catch(() => undefined);
   }, [shopId]);
+
+  useEffect(() => {
+    if (!entryFeeConfig.enabled && step === 5) setStep(4);
+  }, [entryFeeConfig.enabled, setStep, step]);
 
   useEffect(() => {
     if (!shopId || !initialClientId) return;
@@ -881,7 +892,7 @@ function NewWorkshopTicketPage({
       toast.error("Sélectionnez au moins une panne constatée.");
       return;
     }
-    setStep((current) => Math.min(current + 1, 5));
+    setStep((current) => Math.min(current + 1, entryFeeConfig.enabled ? 5 : 4));
   }
 
   async function submitTicket() {
@@ -909,15 +920,15 @@ function NewWorkshopTicketPage({
         notes: description.trim(),
         entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
         entry_fee_paid: false,
+        status: entryFeeConfig.enabled
+          ? "en_attente_caissier_entree"
+          : "en_attente_technicien",
         technicien_id: technician?.user_id ?? null,
         storage_location_id: location?.id,
       });
       if (!entryFeeConfig.enabled) {
-        const updatedTicket = await updateWorkshopTicket(ticket.id, {
-          status: "en_attente_technicien",
-        }, activityType);
-        setCreatedTicket(updatedTicket);
-        toast.success("Fiche créée (entrée gratuite). Technicien notifié.");
+        setCreatedTicket(ticket);
+        toast.success("Fiche créée (entrée gratuite). Réparateur notifié.");
       } else {
         setCreatedTicket(ticket);
         toast.success(`Fiche envoyée à la caisse pour encaissement des ${entryFeeConfig.amount} FCFA.`);
@@ -946,7 +957,9 @@ function NewWorkshopTicketPage({
     }
   }
 
-  const steps = ["Client", "Appareil", "Problème", "Paiement", "Rangement"];
+  const steps = entryFeeConfig.enabled
+    ? ["Client", "Appareil", "Problème", "Paiement", "Rangement"]
+    : ["Client", "Appareil", "Problème", "Rangement"];
 
   function resetWizard() {
     clearStep();
@@ -985,7 +998,10 @@ function NewWorkshopTicketPage({
           { label: "Nouvelle fiche" },
         ]}
       />
-      <div className="grid grid-cols-5 gap-2" aria-label="Étapes de création">
+      <div
+        className={`grid ${entryFeeConfig.enabled ? "grid-cols-5" : "grid-cols-4"} gap-2`}
+        aria-label="Étapes de création"
+      >
         {steps.map((label, index) => {
           const number = index + 1;
           return (
@@ -1197,15 +1213,19 @@ function NewWorkshopTicketPage({
             </>
           ) : null}
 
-          {step === 4 ? (
+          {entryFeeConfig.enabled && step === 4 ? (
             <>
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="size-5 text-green-700" />
                 <h2 className="text-lg font-semibold">Paiement d'entrée</h2>
               </div>
               <div className="rounded-xl border border-orange-200 bg-orange-50 p-5 text-slate-900">
-                <p className="font-semibold">Frais d'entrée : 2 000 FCFA</p>
-                <p className="mt-1 text-sm text-slate-700">Non remboursable.</p>
+                <p className="font-semibold">
+                  Frais d'entrée : {new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {entryFeeConfig.refundable ? "Remboursable." : "Non remboursable."}
+                </p>
                 {entryPayment ? (
                   <p className="mt-3 text-sm font-medium text-green-700">
                     Payé · {entryPayment.method} ·{" "}
@@ -1221,7 +1241,9 @@ function NewWorkshopTicketPage({
                 disabled={!selectedClient}
                 onClick={() => {
                   setStep(5);
-                  toast.success("Fiche envoyée à la caisse pour encaissement des 2 000 F.");
+                  toast.success(
+                    `Fiche envoyée à la caisse pour encaissement des ${entryFeeConfig.amount} FCFA.`,
+                  );
                 }}
               >
                 Envoyer à la caisse
@@ -1229,7 +1251,7 @@ function NewWorkshopTicketPage({
             </>
           ) : null}
 
-          {step === 5 ? (
+          {step === (entryFeeConfig.enabled ? 5 : 4) ? (
             <>
               <div className="flex items-center gap-3">
                 <Package className="size-5 text-green-700" />
@@ -1282,7 +1304,14 @@ function NewWorkshopTicketPage({
                   Appareil : {deviceBrand} {deviceModel}
                 </p>
                 <p>Pannes : {issues.map((key) => ISSUES_DATABASE[key].label).join(", ") || "—"}</p>
-                <p>Frais d'entrée : {entryPayment ? `${entryPayment.amount} FCFA (payé)` : "non payé"}</p>
+                {entryFeeConfig.enabled ? (
+                  <p>
+                    Frais d'entrée :{" "}
+                    {entryPayment
+                      ? `${entryPayment.amount} FCFA (payé)`
+                      : `${entryFeeConfig.amount} FCFA (non payé)`}
+                  </p>
+                ) : null}
                 <p>Emplacement : {location?.name ?? "Non attribué"}</p>
               </div>
             </>
@@ -1300,7 +1329,7 @@ function NewWorkshopTicketPage({
             >
               Précédent
             </Button>
-            {step < 5 ? (
+            {step < (entryFeeConfig.enabled ? 5 : 4) ? (
               <Button
                 type="button"
                 className="bg-ivoirien bg-ivoirien-hover shadow-3d"
@@ -1336,7 +1365,7 @@ function NewWorkshopTicketPage({
       <WorkshopPaymentModal
         open={paymentOpen}
         onClose={() => setPaymentOpen(false)}
-        amount={2000}
+        amount={entryFeeConfig.amount}
         title="Encaisser frais d'entrée"
         onSuccess={(method, amount) => setEntryPayment({ method, amount })}
       />
@@ -1473,7 +1502,7 @@ export function ActivityDetailsPage({
   const [diagnosticEventDescription, setDiagnosticEventDescription] = useState("");
   const estimateTotal =
     (Number(laborCost) || 0) + (Number(partsCost) || 0) + (Number(otherCost) || 0);
-  const entryPaid = ticket?.entry_fee_paid ? (ticket.entry_fee ?? 2000) : 0;
+  const entryPaid = ticket?.entry_fee_paid ? (ticket.entry_fee ?? 0) : 0;
   const remainingAmount = Math.max(0, (ticket?.price_estimate ?? 0) - entryPaid);
 
   useEffect(() => {

@@ -58,9 +58,24 @@ export function useUserRole(): UserRoleInfo {
   const [shopRole, setShopRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewMode);
+  const [roleRevision, setRoleRevision] = useState(0);
   const isSuperAdminAccount = profile?.is_super_admin === true;
   const isDemo = isDemoMode();
   const isSimulation = isSimulationMode();
+
+  useEffect(() => {
+    const handleRoleChange = () => setRoleRevision((current) => current + 1);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "gogosoft.activeRole") handleRoleChange();
+    };
+
+    window.addEventListener("gogosoft:role-changed", handleRoleChange);
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("gogosoft:role-changed", handleRoleChange);
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -130,7 +145,7 @@ export function useUserRole(): UserRoleInfo {
     });
 
     return () => { active = false; };
-  }, [authLoading, isDemo, isSimulation, shopId, shopLoading, user]);
+  }, [authLoading, isDemo, isSimulation, roleRevision, shopId, shopLoading, user]);
 
   useEffect(() => {
     if (!isSuperAdminAccount && viewMode !== "shop") {

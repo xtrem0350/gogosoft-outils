@@ -77,7 +77,10 @@ export function TechnicianDashboard() {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link to="/phone/atelier">Voir mes réparations</Link>
+            <Link to="/phone/atelier">Réparations Téléphone</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/computer/atelier">Réparations PC</Link>
           </Button>
           <Button asChild>
             <Link to="/phone/atelier/nouveau">

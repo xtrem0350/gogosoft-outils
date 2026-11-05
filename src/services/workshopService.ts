@@ -77,6 +77,7 @@ export interface CreateTicketData {
   entry_fee_method?: string;
   technicien_id?: string | null | undefined;
   storage_location_id?: string | undefined;
+  status?: WorkshopStatus;
 }
 
 export interface WorkshopPaymentRecord {
@@ -471,7 +472,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       device_sn: data.device_sn ?? null,
       device_os_version: data.device_os_version ?? null,
       issues: data.issues,
-      status: "en_attente_caissier_entree",
+      status: data.status ?? "en_attente_caissier_entree",
       diagnosis: data.diagnosis
         ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
         : null,
@@ -481,7 +482,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       price_estimate: null,
       price_final: null,
       notified_at: null,
-      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 2000),
+      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 0),
       entry_fee_paid: data.entry_fee_paid ?? false,
       entry_fee_method: data.entry_fee_method ?? null,
       technicien_id: data.technicien_id ?? null,
@@ -531,7 +532,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const payload: Record<string, unknown> = {
       shop_id: shopId,
       activity_type: data.activity_type ?? "phone",
-      status: "en_attente_caissier_entree",
+      status: data.status ?? "en_attente_caissier_entree",
       category: data.category,
       client_id: data.client_id ?? null,
       client_name: data.client_name,
@@ -549,7 +550,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       notes: data.notes ?? null,
       description: data.description ?? null,
       ticket_number: ticketNumber,
-      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 2000),
+      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 0),
       entry_fee_paid: data.entry_fee_paid ?? false,
       entry_fee_method: data.entry_fee_method ?? null,
       technicien_id: data.technicien_id ?? null,
@@ -571,7 +572,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       const { error: paymentError } = await (supabase.from("workshop_payments" as any) as any).insert({
         shop_id: shopId,
         ticket_id: created.id,
-        amount: data.entry_fee ?? 2000,
+        amount: data.entry_fee ?? 0,
         method: data.entry_fee_method ?? "",
         payment_type: "entry",
         received_by: auth.user?.id ?? null,
