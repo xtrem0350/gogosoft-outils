@@ -16,6 +16,7 @@ import {
   readDemoSession,
   updateDemoSession,
 } from "@/services/demoService";
+import { getShopEntryFeeConfig } from "@/services/shopService";
 
 export type { WorkshopTicket } from "@/types/database";
 export type ActivityType = "phone" | "computer" | "consumable";
@@ -456,6 +457,21 @@ export function generateDiagnosis(issues: IssueKey[]): WorkshopDiagnosis {
 
 /** Crée une fiche d'atelier et son diagnostic. */
 export async function createTicket(data: CreateTicketData): Promise<WorkshopTicket> {
+  let resolvedEntryFee = data.entry_fee;
+  let resolvedEntryFeePaid = data.entry_fee_paid;
+  let resolvedStatus = data.status;
+  if (
+    data.activity_type !== "consumable" &&
+    !isDemoMode() &&
+    (data.entry_fee === undefined || (data.entry_fee === 0 && data.entry_fee_paid === false))
+  ) {
+    const entryFeeConfig = await getShopEntryFeeConfig(data.shop_id);
+    resolvedEntryFee = entryFeeConfig.enabled ? entryFeeConfig.amount : 0;
+    resolvedEntryFeePaid = entryFeeConfig.enabled ? false : true;
+    resolvedStatus ??= entryFeeConfig.enabled
+      ? "en_attente_caissier_entree"
+      : "en_attente_technicien";
+  }
   if (isDemoMode()) {
     const now = new Date().toISOString();
     const ticket: WorkshopTicket = {
@@ -472,7 +488,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       device_sn: data.device_sn ?? null,
       device_os_version: data.device_os_version ?? null,
       issues: data.issues,
-      status: data.status ?? "en_attente_caissier_entree",
+      status: resolvedStatus ?? "en_attente_caissier_entree",
       diagnosis: data.diagnosis
         ? { tools: data.diagnosis.tools, process: data.diagnosis.process }
         : null,
@@ -482,8 +498,8 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       price_estimate: null,
       price_final: null,
       notified_at: null,
-      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 0),
-      entry_fee_paid: data.entry_fee_paid ?? false,
+      entry_fee: resolvedEntryFee ?? (data.activity_type === "consumable" ? null : 0),
+      entry_fee_paid: resolvedEntryFeePaid ?? false,
       entry_fee_method: data.entry_fee_method ?? null,
       technicien_id: data.technicien_id ?? null,
       diagnostic_notes: data.diagnostic_notes ?? null,
@@ -532,7 +548,7 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
     const payload: Record<string, unknown> = {
       shop_id: shopId,
       activity_type: data.activity_type ?? "phone",
-      status: data.status ?? "en_attente_caissier_entree",
+      status: resolvedStatus ?? "en_attente_caissier_entree",
       category: data.category,
       client_id: data.client_id ?? null,
       client_name: data.client_name,
@@ -550,8 +566,8 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       notes: data.notes ?? null,
       description: data.description ?? null,
       ticket_number: ticketNumber,
-      entry_fee: data.entry_fee ?? (data.activity_type === "consumable" ? null : 0),
-      entry_fee_paid: data.entry_fee_paid ?? false,
+      entry_fee: resolvedEntryFee ?? (data.activity_type === "consumable" ? null : 0),
+      entry_fee_paid: resolvedEntryFeePaid ?? false,
       entry_fee_method: data.entry_fee_method ?? null,
       technicien_id: data.technicien_id ?? null,
       created_by: auth.user?.id ?? null,
@@ -568,11 +584,11 @@ export async function createTicket(data: CreateTicketData): Promise<WorkshopTick
       const assigned = await assignTicketToLocation(created.id, data.storage_location_id);
       if (!assigned) throw new Error("La fiche est créée, mais le casier n'a pas pu être attribué.");
     }
-    if (data.entry_fee_paid) {
+    if (resolvedEntryFeePaid && (resolvedEntryFee ?? 0) > 0) {
       const { error: paymentError } = await (supabase.from("workshop_payments" as any) as any).insert({
         shop_id: shopId,
         ticket_id: created.id,
-        amount: data.entry_fee ?? 0,
+        amount: resolvedEntryFee ?? 0,
         method: data.entry_fee_method ?? "",
         payment_type: "entry",
         received_by: auth.user?.id ?? null,

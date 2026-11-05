@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalePaymentMethod } from "@/services/salesService";
 import type { CashSummary } from "@/services/cashService";
 import type { CashReceipt } from "@/components/CashReceiptModal";
+import type { ShopEntryFeeConfig } from "@/services/shopService";
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "Espèces",
@@ -47,6 +48,7 @@ interface CaisseEntriesTabProps {
   onReceipt: (receipt: CashReceipt) => void;
   entryTickets: WorkshopTicket[];
   finalTickets: WorkshopTicket[];
+  entryFeeConfig: ShopEntryFeeConfig;
   onCollectTicket: (ticket: WorkshopTicket, type: "entry" | "final") => void;
   onTicketDetail: (ticket: WorkshopTicket, type: "entry" | "final") => void;
   sessionOpen: boolean;
@@ -62,6 +64,7 @@ export function CaisseEntriesTab({
   onReceipt,
   entryTickets,
   finalTickets,
+  entryFeeConfig,
   onCollectTicket,
   onTicketDetail,
   sessionOpen,
@@ -127,7 +130,7 @@ export function CaisseEntriesTab({
       <Card className="card-3d rounded-xl">
         <CardHeader><CardTitle>Fiches atelier à encaisser</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {[...entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: Number(ticket.entry_fee ?? 0) })), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - Number(ticket.entry_fee ?? 0)) }))].map(({ ticket, type, amount }) => (
+          {[...(entryFeeConfig.enabled ? entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: entryFeeConfig.amount })) : []), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - (entryFeeConfig.enabled ? Number(ticket.entry_fee ?? entryFeeConfig.amount) : 0)) }))].map(({ ticket, type, amount }) => (
             <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
               <div>
                 <Button type="button" variant="ghost" className="h-auto p-0 font-medium underline-offset-4 hover:underline" onClick={() => onTicketDetail(ticket, type)}>{ticket.ticket_number}</Button>

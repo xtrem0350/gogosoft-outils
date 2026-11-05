@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { ShopEntryFeeConfig } from "@/services/shopService";
 
 interface TicketDetailModalProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface TicketDetailModalProps {
     status?: string;
   } | null;
   ticketType: "entry" | "final";
+  entryFeeConfig: ShopEntryFeeConfig;
   onValidate: () => void;
 }
 
@@ -38,6 +40,7 @@ export function TicketDetailModal({
   onClose,
   ticket,
   ticketType,
+  entryFeeConfig,
   onValidate,
 }: TicketDetailModalProps) {
   if (!ticket) return null;
@@ -45,8 +48,12 @@ export function TicketDetailModal({
   const whatsapp = ticket.client_whatsapp?.replace(/\D/g, "");
   const amount =
     ticketType === "entry"
-      ? Number(ticket.entry_fee ?? 0)
-      : Math.max(0, Number(ticket.quote_amount ?? 0) - Number(ticket.entry_fee ?? 0));
+      ? entryFeeConfig.enabled ? entryFeeConfig.amount : 0
+      : Math.max(
+          0,
+          Number(ticket.quote_amount ?? 0)
+            - (entryFeeConfig.enabled ? Number(ticket.entry_fee ?? entryFeeConfig.amount) : 0),
+        );
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && onClose()}>

@@ -42,6 +42,7 @@ import {
 import { isDemoMode } from "@/services/demoService";
 import { listSales, markAsPaid, type SalePaymentMethod } from "@/services/salesService";
 import { getTeamMembers } from "@/services/teamService";
+import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
 
 export const Route = createFileRoute("/caisse")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -150,7 +151,17 @@ function CashPage() {
   const [receipt, setReceipt] = useState<CashReceipt | null>(null);
   const [cashSession, setCashSession] = useState<CashSession | null>(null);
   const [entryModalOpen, setEntryModalOpen] = useState(false);
+  const [entryFeeConfig, setEntryFeeConfig] = useState<ShopEntryFeeConfig>({
+    amount: 0,
+    enabled: false,
+    refundable: false,
+  });
   const period = useMemo(() => buildPeriod(preset, customStart, customEnd), [preset, customEnd, customStart]);
+
+  useEffect(() => {
+    if (!shopId) return;
+    void getShopEntryFeeConfig(shopId).then(setEntryFeeConfig).catch(console.error);
+  }, [shopId]);
 
   const load = useCallback(async () => {
     if (!shopId) {
@@ -234,11 +245,16 @@ function CashPage() {
       toast.info("Aucun paiement en attente.");
       return;
     }
+    const targetIsEntry = entryTickets.some((ticket) => ticket.id === targetTicket.id);
+    if (targetIsEntry && !entryFeeConfig.enabled) {
+      toast.info("Les frais d'entrée sont désactivés pour cette boutique.");
+      return;
+    }
     setTicketPayment({
       ticket: targetTicket,
-      type: entryTickets.some((ticket) => ticket.id === targetTicket.id) ? "entry" : "final",
+      type: targetIsEntry ? "entry" : "final",
     });
-  }, [action, entryTickets, finalTickets, loading, requestedTicketId]);
+  }, [action, entryFeeConfig.enabled, entryTickets, finalTickets, loading, requestedTicketId]);
 
   const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
   const canManageCash = isOwner || isCaissier;
@@ -275,6 +291,10 @@ function CashPage() {
       return;
     }
     if (!ticketPayment || !shopId) return;
+    if (ticketPayment.type === "entry" && !entryFeeConfig.enabled) {
+      toast.error("Les frais d'entrée sont désactivés pour cette boutique.");
+      return;
+    }
     const paymentMethodMap: Record<string, "cash" | "wave" | "orange_money" | "mtn" | "moov"> = {
       Espèces: "cash", Wave: "wave", "Orange Money": "orange_money", MTN: "mtn", Moov: "moov",
     };
@@ -357,7 +377,7 @@ function CashPage() {
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="encaissements">
-          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} onCollectTicket={(ticket, type) => { if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
+          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} entryFeeConfig={entryFeeConfig} onCollectTicket={(ticket, type) => { if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
         </TabsContent>
         <TabsContent value="decaissements">
           {!demo && canManageCash ? <CaisseExitsTab exits={exits} onAdd={() => setExitOpen(true)} onReceipt={() => undefined} /> : null}
@@ -375,6 +395,7 @@ function CashPage() {
         onClose={() => setTicketDetail(null)}
         ticket={ticketDetail?.ticket ?? null}
         ticketType={ticketDetail?.type ?? "entry"}
+        entryFeeConfig={entryFeeConfig}
         onValidate={() => {
           if (!ticketDetail) return;
           if (!cashSession) {
@@ -385,7 +406,7 @@ function CashPage() {
           setTicketDetail(null);
         }}
       />
-      {ticketPayment ? <WorkshopPaymentModal open={Boolean(ticketPayment)} onClose={() => setTicketPayment(null)} amount={ticketPayment.type === "entry" ? 2000 : Math.max(0, Number(ticketPayment.ticket.quote_amount ?? 0) - 2000)} title={ticketPayment.type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"} onSuccess={(method, amount) => void collectTicketPayment(method, amount)} /> : null}
+      {ticketPayment && (ticketPayment.type !== "entry" || entryFeeConfig.enabled) ? <WorkshopPaymentModal open={Boolean(ticketPayment)} onClose={() => setTicketPayment(null)} amount={ticketPayment.type === "entry" ? entryFeeConfig.amount : Math.max(0, Number(ticketPayment.ticket.quote_amount ?? 0) - Number(ticketPayment.ticket.entry_fee ?? entryFeeConfig.amount))} title={ticketPayment.type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"} onSuccess={(method, amount) => void collectTicketPayment(method, amount)} /> : null}
       <Dialog open={exitOpen} onOpenChange={(open) => !savingExit && setExitOpen(open)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Ajouter une sortie de caisse</DialogTitle></DialogHeader>
