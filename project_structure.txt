@@ -5,6 +5,7 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261104000001_fix_caisse_rls.sql
 │   │   ├── 📄 20261103000001_owner_gets_all_roles.sql
 │   │   ├── 📄 20261031000003_fix_accept_invitation_pseudo_safe.sql
 │   │   ├── 📄 20261031000003_cleanup_test_data.sql
@@ -75,8 +76,6 @@ Structure du projet (avec glob)
 │   │   ├── 📄 authService.ts
 │   │   └── 📄 adminService.ts
 │   ├── 📁 routes/
-│   │   ├── 📁 salles/
-│   │   │   └── 📄 commandes.tsx
 │   │   ├── 📁 sales/
 │   │   │   ├── 📄 nouveau.tsx
 │   │   │   ├── 📄 livraisons.tsx
@@ -112,7 +111,6 @@ Structure du projet (avec glob)
 │   │   ├── 📄 shop.$slug.panier.tsx
 │   │   ├── 📄 shop.$slug.confirmation.$orderId.tsx
 │   │   ├── 📄 shop.$slug.commande.tsx
-│   │   ├── 📄 salles
 │   │   ├── 📄 sales
 │   │   ├── 📄 rejoindre.tsx
 │   │   ├── 📄 reinitialiser-mot-de-passe.tsx
