@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import Draggable from "react-draggable";
 
 import { cn } from "@/lib/utils";
 
@@ -33,34 +34,76 @@ const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid max-h-[90vh] w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto border bg-background p-4 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg sm:p-6",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </DialogPrimitive.Close>
-    </DialogPrimitive.Content>
-  </DialogPortal>
+  <DraggableDialogContent
+    className={className}
+    forwardedRef={ref}
+    {...props}
+  >
+    {children}
+  </DraggableDialogContent>
 ));
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
+type DraggableDialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  forwardedRef: React.ForwardedRef<HTMLDivElement>;
+};
+
+function DraggableDialogContent({
+  className,
+  children,
+  forwardedRef,
+  ...props
+}: DraggableDialogContentProps) {
+  const nodeRef = React.useRef<HTMLDivElement>(null);
+
+  React.useImperativeHandle(forwardedRef, () => nodeRef.current!);
+
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4">
+        <Draggable
+          nodeRef={nodeRef}
+          bounds="parent"
+          handle=".dialog-handle"
+        >
+          <DialogPrimitive.Content
+            ref={nodeRef}
+            className={cn(
+              "pointer-events-auto relative grid max-h-[90vh] w-[calc(100%-2rem)] max-w-[95vw] gap-4 overflow-y-auto overscroll-contain border bg-background p-4 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:max-w-lg sm:rounded-lg sm:p-6",
+              className,
+            )}
+            {...props}
+          >
+            {children}
+            <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background cursor-pointer transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </DialogPrimitive.Close>
+          </DialogPrimitive.Content>
+        </Draggable>
+      </div>
+    </DialogPortal>
+  );
+}
+
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
+  <div
+    className={cn(
+      "dialog-handle flex touch-none cursor-grab flex-col space-y-1.5 text-center active:cursor-grabbing sm:text-left",
+      className,
+    )}
+    {...props}
+  />
 );
 DialogHeader.displayName = "DialogHeader";
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
+    className={cn(
+      "sticky bottom-0 z-10 flex flex-col-reverse bg-background py-2 sm:flex-row sm:justify-end sm:space-x-2",
+      className,
+    )}
     {...props}
   />
 );

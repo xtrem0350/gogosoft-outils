@@ -275,7 +275,7 @@ function HomePage() {
     : moduleCount > 0;
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-slate-950 text-slate-900">
+    <main className="relative isolate min-h-screen overflow-x-hidden bg-slate-950 text-slate-900">
       <div
         aria-hidden="true"
         className="absolute inset-0 bg-cover bg-center"
@@ -286,12 +286,12 @@ function HomePage() {
       />
       <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
 
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl items-center justify-center px-3 py-4 sm:px-6 lg:px-8">
-        <div className="grid w-full max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md lg:h-[min(820px,calc(100vh-2rem))] lg:grid-cols-[0.8fr_1.55fr]">
-          <section className="flex flex-col justify-between gap-8 bg-slate-900/80 p-6 text-white sm:p-8 lg:min-h-0 lg:p-10">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
+        <div className="grid w-full max-w-6xl min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md lg:h-[min(820px,calc(100vh-2rem))] lg:grid-cols-[0.8fr_1.55fr]">
+          <section className="flex min-w-0 flex-col justify-between gap-8 bg-slate-900/80 p-4 text-white sm:p-8 lg:min-h-0 lg:p-10">
             <div>
               <p className="text-sm font-medium text-blue-300">Bienvenue</p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+              <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
                 Gérez votre atelier comme un pro
               </h1>
               <p className="mt-4 text-sm leading-6 text-slate-300">
@@ -355,7 +355,7 @@ function HomePage() {
             <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
           </section>
 
-          <section className="space-y-6 overflow-y-auto bg-white/95 p-5 sm:p-7 lg:min-h-0 lg:p-8">
+          <section className="min-w-0 space-y-6 overflow-y-auto bg-white/95 p-4 sm:p-7 lg:min-h-0 lg:p-8">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-medium text-orange-700">Configurez votre espace</p>
@@ -402,7 +402,7 @@ function HomePage() {
                 <h2 className="text-lg font-semibold">Choisissez votre offre</h2>
                 <p className="text-xs text-slate-600">Tarifs mensuels · Sans engagement</p>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 <button
                   type="button"
                   aria-pressed={isAllInOneActive}
