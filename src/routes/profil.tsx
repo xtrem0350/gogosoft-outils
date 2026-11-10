@@ -264,7 +264,7 @@ function ProfilPage() {
           ) : (
             <SubscriptionCard subscription={subscription} />
           )}
-          {/* Suppression de compte réservée au Super Admin via /admin */}
+          {/* Suppression réservée au Super Admin via /admin */}
           <Card>
             <CardHeader>
               <CardTitle>Session</CardTitle>

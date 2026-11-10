@@ -3,7 +3,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Ban, Camera, CircleCheck, Copy, Mail, MessageCircle, UserCog, UserPlus, Users, X } from "lucide-react";
+import { Ban, Camera, CircleCheck, Copy, MessageCircle, UserCog, UserPlus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
@@ -22,12 +22,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { buildWhatsappLink } from "@/lib/whatsapp";
-import { addShopMember } from "@/services/shopService";
 import { getTeamMembers, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelInvitation, getPendingInvitations, type PendingInvitation } from "@/services/invitationsService";
@@ -37,9 +35,7 @@ export const Route = createFileRoute("/equipe")({ component: EquipePage });
 function EquipePage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [blockedMemberIds, setBlockedMemberIds] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
   const [invitationOpen, setInvitationOpen] = useState(false);
-  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [invitations, setInvitations] = useState<PendingInvitation[]>([]);
   const [invitationsLoading, setInvitationsLoading] = useState(true);
@@ -157,33 +153,6 @@ function EquipePage() {
     window.open(buildWhatsappLink(invitation.whatsapp, message), "_blank", "noopener,noreferrer");
   }
 
-  async function inviteMember() {
-    try {
-      const { data: foundUser } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", email.trim())
-        .maybeSingle();
-      if (!foundUser?.id) {
-        toast.error("Aucun utilisateur trouvé pour cet e-mail.");
-        return;
-      }
-
-      if (!shopId) {
-        toast.error("Aucun atelier actif.");
-        return;
-      }
-
-      await addShopMember(shopId, foundUser.id, "technicien");
-      toast.success("Membre ajouté à l'atelier.");
-      setOpen(false);
-      setEmail("");
-      setMembers(await getTeamMembers(shopId));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Invitation impossible.");
-    }
-  }
-
   async function openMyRoles() {
     if (!shopId || !user) return;
     const { data, error } = await supabase
@@ -272,9 +241,6 @@ function EquipePage() {
                 <UserCog className="size-4" /> Mes rôles
               </Button>
             ) : null}
-            <Button variant="outline" onClick={() => setOpen(true)}>
-              <Mail className="size-4" /> Ajouter un compte existant
-            </Button>
             <Button onClick={() => setInvitationOpen(true)} className="bg-ivoirien bg-ivoirien-hover">
               <UserPlus className="size-4" /> Inviter un employé
             </Button>
@@ -533,32 +499,6 @@ function EquipePage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Inviter un membre</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="member-email">E-mail</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-2.5 size-4 text-muted-foreground" />
-              <Input
-                id="member-email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="pl-9"
-                placeholder="prenom@exemple.com"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Annuler
-            </Button>
-            <Button onClick={() => void inviteMember()}>Inviter</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

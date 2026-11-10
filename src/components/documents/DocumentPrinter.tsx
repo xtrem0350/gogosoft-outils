@@ -12,7 +12,7 @@ interface DocumentPrinterProps {
 }
 
 interface DocumentPrintActionsProps {
-  onClose?: () => void;
+  onClose?: (() => void) | undefined;
 }
 
 const documentTitles: Record<PrintableDocumentType, string> = {

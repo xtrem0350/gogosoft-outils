@@ -19,7 +19,7 @@ interface TeamProfile {
   full_name: string | null;
   email: string | null;
   phone?: string | null;
-  whatsapp?: string | null;
+  pseudo?: string | null;
   avatar_url?: string | null;
 }
 
@@ -27,17 +27,24 @@ function profileText(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const { data, error } = await (supabase.from("shop_members" as any) as any)
-    .select("id, shop_id, user_id, role, avatar_url, created_at")
+    .select("*")
     .eq("shop_id", requireShopId(shopId))
     .order("created_at", { ascending: true });
   if (error) throw error;
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const userIds = [...new Set(rows.map((row) => String(row["user_id"] ?? "")).filter(Boolean))];
   const { data: profiles, error: profileError } = userIds.length
-    ? await supabase.from("profiles").select("*").in("id", userIds)
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone, pseudo, avatar_url")
+        .in("id", userIds)
     : { data: [], error: null };
   if (profileError) throw profileError;
   const profileById = new Map(
@@ -46,13 +53,19 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   return rows.map((row) => {
     const userId = String(row["user_id"] ?? "");
     const profile = profileById.get(userId);
-    const fullName = profileText(profile?.full_name) ?? profileText(row["full_name"]);
-    const email = profileText(profile?.email) ?? profileText(row["email"]);
+    const fullNameCandidates = [
+      profileText(profile?.full_name),
+      profileText(profile?.pseudo),
+      profileText(row["full_name"]),
+    ];
+    const fullName = fullNameCandidates.find((name) => name && !isUuid(name)) ?? "Membre";
+    const safeFullName = isUuid(fullName) ? "Membre" : fullName;
+    const email = profileText(profile?.email) ?? profileText(row["email"]) ?? "—";
     const whatsapp =
-      profileText(profile?.whatsapp) ??
       profileText(profile?.phone) ??
       profileText(row["whatsapp"]) ??
-      profileText(row["phone"]);
+      profileText(row["phone"]) ??
+      "—";
     return {
       id: String(row["id"] ?? userId),
       shop_id: String(row["shop_id"] ?? shopId),
@@ -60,7 +73,7 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
       role: String(row["role"] ?? "technicien"),
       created_at: typeof row["created_at"] === "string" ? row["created_at"] : null,
       avatar_url: profileText(profile?.avatar_url) ?? profileText(row["avatar_url"]),
-      full_name: fullName,
+      full_name: safeFullName,
       email,
       whatsapp,
     };
