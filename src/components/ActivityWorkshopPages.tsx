@@ -7,7 +7,6 @@ import {
   Laptop,
   Package,
   Plus,
-  Printer,
   Search,
   Smartphone,
   UserRound,
@@ -57,8 +56,11 @@ import {
 } from "@/services/storageService";
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
 import { getClientById, type ClientRecord } from "@/services/clientService";
+import { getOpenCashSession } from "@/services/cashService";
+import { isDemoMode } from "@/services/demoService";
 import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig } from "@/services/shopService";
+import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { getEvents, addEvent, createWorkshopPayment, updateWorkshopTicket } from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
@@ -766,6 +768,7 @@ function NewWorkshopTicketPage({
     enabled: false,
     refundable: false,
   });
+  const [entryFeeConfigLoaded, setEntryFeeConfigLoaded] = useState(false);
   const [createdTicket, setCreatedTicket] = useState<WorkshopTicket | null>(null);
   const [createdAt] = useState(() => new Date());
   const createdAtLabel = createdAt.toLocaleString("fr-FR", {
@@ -795,21 +798,32 @@ function NewWorkshopTicketPage({
         };
 
   useEffect(() => {
+    let active = true;
+    setEntryFeeConfigLoaded(false);
     if (!shopId) return;
     void getShopEntryFeeConfig(shopId)
-      .then((config) =>
+      .then((config) => {
+        if (!active) return;
         setEntryFeeConfig({
           amount: config.amount,
           enabled: config.enabled,
           refundable: config.refundable,
-        }),
-      )
-      .catch(() => undefined);
+        });
+        setEntryFeeConfigLoaded(true);
+      })
+      .catch((error: unknown) => {
+        if (!active) return;
+        console.error("[ActivityWorkshopPages] entry fee config:", error);
+        toast.error(error instanceof Error ? error.message : "Impossible de charger les frais d'entrée.");
+      });
+    return () => {
+      active = false;
+    };
   }, [shopId]);
 
   useEffect(() => {
-    if (!entryFeeConfig.enabled && step === 5) setStep(4);
-  }, [entryFeeConfig.enabled, setStep, step]);
+    if (entryFeeConfigLoaded && !entryFeeConfig.enabled && step === 5) setStep(4);
+  }, [entryFeeConfig.enabled, entryFeeConfigLoaded, setStep, step]);
 
   useEffect(() => {
     if (!shopId || !initialClientId) return;
@@ -873,7 +887,11 @@ function NewWorkshopTicketPage({
     setDevicePhoto(null);
   }
 
-  function goToNextStep() {
+  async function goToNextStep() {
+    if (!entryFeeConfigLoaded) {
+      toast.error("La configuration des frais d'entrée n'est pas encore disponible.");
+      return;
+    }
     if (step === 1) {
       if (!selectedClient) {
         toast.error("Sélectionnez un client avant de continuer.");
@@ -892,7 +910,24 @@ function NewWorkshopTicketPage({
       toast.error("Sélectionnez au moins une panne constatée.");
       return;
     }
+    if (entryFeeConfig.enabled && step === 4 && !(await ensureCashSessionIsOpen())) return;
     setStep((current) => Math.min(current + 1, entryFeeConfig.enabled ? 5 : 4));
+  }
+
+  async function ensureCashSessionIsOpen(): Promise<boolean> {
+    if (isDemoMode() || !entryFeeConfig.enabled) return true;
+    if (!shopId) {
+      toast.error("Sélectionnez un atelier avant de vérifier la caisse.");
+      return false;
+    }
+    try {
+      if (await getOpenCashSession(shopId)) return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de vérifier la session de caisse.");
+      return false;
+    }
+    toast.error("Ouvrez la caisse avant d'encaisser.");
+    return false;
   }
 
   async function submitTicket() {
@@ -900,8 +935,13 @@ function NewWorkshopTicketPage({
       toast.error("Sélectionnez un atelier et un client avant de créer la fiche.");
       return;
     }
+    if (!entryFeeConfigLoaded) {
+      toast.error("La configuration des frais d'entrée n'est pas encore disponible.");
+      return;
+    }
     setSaving(true);
     try {
+      if (entryFeeConfig.enabled && !(await ensureCashSessionIsOpen())) return;
       const ticket = await createTicket({
         shop_id: shopId,
         activity_type: activityType,
@@ -1238,13 +1278,14 @@ function NewWorkshopTicketPage({
               <Button
                 type="button"
                 className="w-full bg-ivoirien bg-ivoirien-hover shadow-3d"
-                disabled={!selectedClient}
-                onClick={() => {
+                disabled={!selectedClient || !entryFeeConfigLoaded}
+                onClick={() => void (async () => {
+                  if (!(await ensureCashSessionIsOpen())) return;
                   setStep(5);
                   toast.success(
                     `Fiche envoyée à la caisse pour encaissement des ${entryFeeConfig.amount} FCFA.`,
                   );
-                }}
+                })()}
               >
                 Envoyer à la caisse
               </Button>
@@ -1333,14 +1374,14 @@ function NewWorkshopTicketPage({
               <Button
                 type="button"
                 className="bg-ivoirien bg-ivoirien-hover shadow-3d"
-                onClick={goToNextStep}
+                onClick={() => void goToNextStep()}
               >
                 Suivant
               </Button>
             ) : (
               <Button
                 type="button"
-                disabled={saving}
+                disabled={saving || !entryFeeConfigLoaded}
                 className="bg-ivoirien bg-ivoirien-hover shadow-3d"
                 onClick={() => void submitTicket()}
               >
@@ -1397,10 +1438,7 @@ function NewWorkshopTicketPage({
                 <p className="mt-3 text-xs text-muted-foreground">{createdAtLabel}</p>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => window.print()}>
-                  <Printer className="mr-2 size-4" />
-                  Imprimer
-                </Button>
+                <DocumentPrintActions />
                 <Button
                   type="button"
                   className="bg-ivoirien bg-ivoirien-hover shadow-3d"

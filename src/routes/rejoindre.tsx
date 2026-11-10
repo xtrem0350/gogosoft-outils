@@ -325,7 +325,7 @@ function JoinInvitationPage() {
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setInvitation(null)} disabled={creating}>
                   Modifier le code
                 </Button>
-                <Button type="submit" className="flex-1 bg-ivoirien bg-ivoirien-hover text-white" disabled={creating}>
+                <Button type="submit" className="flex-1 bg-ivoirien bg-ivoirien-hover text-white shadow-sm" disabled={creating}>
                   {creating ? "Création…" : "Créer mon compte"}
                 </Button>
               </div>

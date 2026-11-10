@@ -43,11 +43,16 @@ export async function getUserShopRoles(shopId: string): Promise<string[]> {
   try {
     const { data, error } = await supabase
       .from("user_roles_by_shop" as never)
-      .select("role")
+      .select("role, is_blocked")
       .eq("shop_id", validShopId)
       .eq("user_id", userId);
     if (!error && Array.isArray(data) && data.length > 0) {
-      return [...new Set((data as Array<{ role?: string | null }>).map((row) => normalizeRole(row.role)).filter((role): role is string => role !== null))];
+      return [...new Set(
+        (data as Array<{ role?: string | null; is_blocked?: boolean | null }>)
+          .filter((row) => row.is_blocked !== true)
+          .map((row) => normalizeRole(row.role))
+          .filter((role): role is string => role !== null),
+      )];
     }
   } catch {
     // Continue with legacy role sources when the table is unavailable.

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BONUS_DAYS, DOMAIN_PRICE, WELCOME_PRICING } from "@/constants/pricing";
 import { isWelcomeDomainId, WELCOME_DOMAIN_LABELS } from "@/constants/welcomeDomains";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentDomainRequest, renewDomain, type DomainRequest } from "@/services/domainService";
 import { isDemoMode } from "@/services/demoService";
@@ -33,6 +34,7 @@ function AbonnementPage() {
   const { activate } = Route.useSearch();
   const demo = isDemoMode();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { isOwner } = useUserRoles();
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [domainRequest, setDomainRequest] = useState<DomainRequest | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,7 @@ function AbonnementPage() {
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [pendingModules, setPendingModules] = useState<string[]>([]);
+  const [updatingSubscriptionStatus, setUpdatingSubscriptionStatus] = useState(false);
 
   useEffect(() => {
     if (activate !== "1" || !shopId) return;
@@ -176,6 +179,34 @@ function AbonnementPage() {
     return getPaymentInvoice(payment.id);
   }
 
+  async function updateSubscriptionStatus(status: "active" | "paused") {
+    if (!isOwner || demo || !subscription) return;
+    setUpdatingSubscriptionStatus(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Utilisateur non authentifié.");
+
+      const expectedStatus = status === "paused" ? "active" : "paused";
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .update({ status })
+        .eq("user_id", authData.user.id)
+        .eq("status", expectedStatus)
+        .select("user_id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Aucun abonnement correspondant n'a été modifié.");
+
+      toast.success(status === "paused" ? "Abonnement mis en pause." : "Abonnement repris.");
+      await refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier l'abonnement.");
+    } finally {
+      setUpdatingSubscriptionStatus(false);
+    }
+  }
+
   const checkoutPlan = renewalMode === "domain"
     ? {
         id: "domain-renewal",
@@ -214,7 +245,39 @@ function AbonnementPage() {
                   <p><strong>Expiration :</strong> {subscription?.expires_at
                     ? new Date(subscription.expires_at).toLocaleDateString("fr-FR")
                     : "Non définie"}</p>
-                  <p><strong>Statut :</strong> {subscription?.isActive ? "Actif" : "Expiré"}</p>
+                  <p><strong>Statut :</strong> {String(subscription?.status) === "paused"
+                    ? "En pause"
+                    : subscription?.isActive
+                      ? "Actif"
+                      : "Expiré"}</p>
+                  {String(subscription?.status) === "paused" ? (
+                    <p className="text-amber-700">
+                      La date d&apos;expiration continue de défiler pendant la pause.
+                    </p>
+                  ) : null}
+                  {isOwner && subscription && !demo ? (
+                    String(subscription.status) === "paused" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-2 w-full"
+                        disabled={updatingSubscriptionStatus}
+                        onClick={() => void updateSubscriptionStatus("active")}
+                      >
+                        {updatingSubscriptionStatus ? "Reprise…" : "Reprendre l'abonnement"}
+                      </Button>
+                    ) : subscription.status === "active" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-2 w-full"
+                        disabled={updatingSubscriptionStatus}
+                        onClick={() => void updateSubscriptionStatus("paused")}
+                      >
+                        {updatingSubscriptionStatus ? "Mise en pause…" : "Mettre en pause l'abonnement"}
+                      </Button>
+                    ) : null
+                  ) : null}
                   {!demo ? (
                     <Button onClick={() => setRenewalMode("subscription")} className="mt-2 w-full">
                       <RefreshCw className="size-4" />

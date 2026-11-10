@@ -3,7 +3,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Camera, Copy, Mail, MessageCircle, Trash2, UserCog, UserPlus, Users, X } from "lucide-react";
+import { Ban, Camera, CircleCheck, Copy, Mail, MessageCircle, UserCog, UserPlus, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
@@ -28,7 +28,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { buildWhatsappLink } from "@/lib/whatsapp";
 import { addShopMember } from "@/services/shopService";
-import { getTeamMembers, removeTeamMember, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
+import { getTeamMembers, uploadTeamAvatar, type TeamMember } from "@/services/teamService";
 import { supabase } from "@/integrations/supabase/client";
 import { cancelInvitation, getPendingInvitations, type PendingInvitation } from "@/services/invitationsService";
 
@@ -36,6 +36,7 @@ export const Route = createFileRoute("/equipe")({ component: EquipePage });
 
 function EquipePage() {
   const [members, setMembers] = useState<TeamMember[]>([]);
+  const [blockedMemberIds, setBlockedMemberIds] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [invitationOpen, setInvitationOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -53,17 +54,44 @@ function EquipePage() {
   const { user } = useAuth();
   const { isOwner } = useUserRoles();
 
+  const refreshMembers = useCallback(async () => {
+    if (!shopId) return;
+    const [nextMembers, rolesResult] = await Promise.all([
+      getTeamMembers(shopId),
+      supabase
+        .from("user_roles_by_shop" as never)
+        .select("user_id, is_blocked")
+        .eq("shop_id", shopId),
+    ]);
+    if (rolesResult.error) throw rolesResult.error;
+    const rows = (rolesResult.data ?? []) as Array<{ user_id: string; is_blocked: boolean | null }>;
+    const rolesByMember = new Map<string, Array<{ is_blocked: boolean | null }>>();
+    for (const row of rows) {
+      const memberRoles = rolesByMember.get(row.user_id) ?? [];
+      memberRoles.push(row);
+      rolesByMember.set(row.user_id, memberRoles);
+    }
+    setMembers(nextMembers);
+    setBlockedMemberIds(
+      [...rolesByMember.entries()]
+        .filter(([, memberRoles]) => memberRoles.length > 0 && memberRoles.every((role) => role.is_blocked === true))
+        .map(([userId]) => userId),
+    );
+  }, [shopId]);
+
   useEffect(() => {
     if (!shopId) {
       setLoading(false);
       return;
     }
 
-    void getTeamMembers(shopId)
-      .then(setMembers)
-      .catch(() => setMembers([]))
+    void refreshMembers()
+      .catch((error) => {
+        setMembers([]);
+        toast.error(error instanceof Error ? error.message : "Impossible de charger les membres.");
+      })
       .finally(() => setLoading(false));
-  }, [shopId]);
+  }, [refreshMembers, shopId]);
 
   const refreshOwnerRoles = useCallback(async () => {
     if (!shopId || !user || !isOwner) {
@@ -156,11 +184,6 @@ function EquipePage() {
     }
   }
 
-  async function refreshMembers() {
-    if (!shopId) return;
-    setMembers(await getTeamMembers(shopId));
-  }
-
   async function openMyRoles() {
     if (!shopId || !user) return;
     const { data, error } = await supabase
@@ -214,16 +237,24 @@ function EquipePage() {
     }
   }
 
-  async function removeMember(member: TeamMember) {
-    if (!shopId || member.role === "owner") return;
+  async function toggleMemberBlock(member: TeamMember) {
+    if (!isOwner || !shopId || member.role === "owner") return;
+    const isBlocked = blockedMemberIds.includes(member.user_id);
     const displayName = member.full_name ?? member.email ?? "ce membre";
-    if (!window.confirm(`Retirer ${displayName} de l'équipe ?`)) return;
     try {
-      await removeTeamMember(shopId, member.user_id);
-      toast.success("Membre retiré de l'équipe.");
+      const { data, error } = await supabase
+        .from("user_roles_by_shop" as never)
+        .update({ is_blocked: !isBlocked } as never)
+        .eq("shop_id", shopId)
+        .eq("user_id", member.user_id)
+        .neq("role", "owner")
+        .select("user_id");
+      if (error) throw error;
+      if (!data?.length) throw new Error("Aucun rôle d'équipe n'a été modifié.");
+      toast.success(isBlocked ? `${displayName} peut de nouveau accéder à l'atelier.` : `${displayName} est bloqué pour cet atelier.`);
       await refreshMembers();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de retirer ce membre.");
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier l'accès de ce membre.");
     }
   }
 
@@ -302,6 +333,7 @@ function EquipePage() {
             .map((member) => {
               const displayName = member.full_name ?? member.email ?? member.user_id ?? "Membre";
               const avatarUrl = avatarPreviews[member.user_id] ?? member.avatar_url;
+              const isBlocked = blockedMemberIds.includes(member.user_id);
               return (
                 <Card
                   key={member.id}
@@ -375,19 +407,19 @@ function EquipePage() {
                           }}
                         />
                       </label>
-                      {member.role !== "owner" ? (
+                      {isOwner && member.role !== "owner" ? (
                         <Button
                           type="button"
                           variant="outline"
-                          size="icon"
-                          aria-label={`Retirer ${displayName} de l'équipe`}
-                          title="Retirer de l'équipe"
+                          size="sm"
+                          aria-label={`${isBlocked ? "Réactiver" : "Bloquer"} ${displayName}`}
                           onClick={(event) => {
                             event.stopPropagation();
-                            void removeMember(member);
+                            void toggleMemberBlock(member);
                           }}
                         >
-                          <Trash2 className="size-4" />
+                          {isBlocked ? <CircleCheck className="size-4" /> : <Ban className="size-4" />}
+                          {isBlocked ? "Réactiver" : "Bloquer"}
                         </Button>
                       ) : null}
                     </div>

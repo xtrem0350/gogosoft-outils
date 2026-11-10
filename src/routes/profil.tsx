@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LogOut, ShieldAlert, Store, Trash2, Upload, User } from "lucide-react";
+import { LogOut, Store, Upload, User } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { PageHero } from "@/components/PageHero";
@@ -9,17 +9,6 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { SubscriptionCard } from "@/components/SubscriptionCard";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -108,10 +97,6 @@ function ProfilPage() {
   async function handleSignOut() {
     await signOut();
     await navigate({ to: "/auth" });
-  }
-
-  async function requestAccountDeletion() {
-    toast.error("La suppression complète du compte doit être activée côté serveur Supabase.");
   }
 
   if (authLoading)
@@ -279,41 +264,16 @@ function ProfilPage() {
           ) : (
             <SubscriptionCard subscription={subscription} />
           )}
-          <Card className="border-destructive/30">
+          {/* Suppression de compte réservée au Super Admin via /admin */}
+          <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-destructive">
-                <ShieldAlert className="size-5" />
-                Danger
-              </CardTitle>
+              <CardTitle>Session</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Button variant="outline" className="w-full" onClick={() => void handleSignOut()}>
                 <LogOut className="size-4" />
                 Se déconnecter
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full">
-                    <Trash2 className="size-4" />
-                    Supprimer mon compte
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Supprimer le compte ?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Cette action est irréversible. La suppression complète doit être exécutée par
-                      une fonction serveur Supabase sécurisée.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annuler</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => void requestAccountDeletion()}>
-                      Confirmer
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </CardContent>
           </Card>
         </div>

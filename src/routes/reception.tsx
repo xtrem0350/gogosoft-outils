@@ -21,6 +21,8 @@ import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { PlaceTicketModal } from "@/components/caisse/PlaceTicketModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
+import { getOpenCashSession } from "@/services/cashService";
+import { isDemoMode } from "@/services/demoService";
 import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
 import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
@@ -122,6 +124,22 @@ function ReceptionPage() {
     [locations],
   );
 
+  async function ensureCashSessionIsOpen(): Promise<boolean> {
+    if (isDemoMode() || !entryFeeConfig?.enabled) return true;
+    if (!shopId) {
+      toast.error("Sélectionnez un atelier avant de vérifier la caisse.");
+      return false;
+    }
+    try {
+      if (await getOpenCashSession(shopId)) return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de vérifier la session de caisse.");
+      return false;
+    }
+    toast.error("Ouvrez la caisse avant d'encaisser.");
+    return false;
+  }
+
   async function handleCreateTicket() {
     if (creating) return;
     if (!shopId) {
@@ -148,6 +166,7 @@ function ReceptionPage() {
 
     setCreating(true);
     try {
+      if (entryFeeConfig.enabled && !(await ensureCashSessionIsOpen())) return;
       const ticket = await createTicket({
         shop_id: shopId,
         client_name: trimmedName,
@@ -168,7 +187,7 @@ function ReceptionPage() {
       toast.success(
         entryFeeConfig.enabled
           ? "Fiche créée. Envoyée à la caisse pour encaissement."
-          : "Fiche créée. Entrée gratuite, envoyée au technicien.",
+          : "Fiche créée (entrée gratuite). Réparateur notifié.",
       );
       setOpenCreate(false);
       setStep(1);
@@ -364,7 +383,16 @@ function ReceptionPage() {
                 {entryFeeConfig.refundable ? " (remboursable)" : " (non remboursable)"}
               </p>
               {paymentPaid ? <p className="text-sm font-medium text-green-700">Paiement enregistré · {paymentMethod}</p> : null}
-              <DialogFooter><Button variant="outline" onClick={() => setStep(2)}>Retour</Button><Button onClick={() => setStep(4)}>Envoyer à la caisse</Button></DialogFooter>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setStep(2)}>Retour</Button>
+                <Button
+                  onClick={() => void ensureCashSessionIsOpen().then((isOpen) => {
+                    if (isOpen) setStep(4);
+                  })}
+                >
+                  Envoyer à la caisse
+                </Button>
+              </DialogFooter>
             </div>
           ) : null}
 

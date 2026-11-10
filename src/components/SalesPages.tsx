@@ -29,7 +29,9 @@ import { ClientSelect } from "@/components/selects/ClientSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { DocumentPrinter } from "@/components/documents/DocumentPrinter";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -52,7 +54,7 @@ export function SalesListPage({
   activityType?: "phone" | "computer";
 }) {
   const navigate = useNavigate();
-  const { shopId, loading: shopLoading } = useCurrentShop();
+  const { shopId, shop, loading: shopLoading } = useCurrentShop();
   const { isOwner, isVendeur } = useUserRole();
   const canCreateSales = isOwner || isVendeur;
   const [sales, setSales] = useState<Sale[]>([]);
@@ -64,6 +66,7 @@ export function SalesListPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busySaleId, setBusySaleId] = useState<string | null>(null);
+  const [invoiceSale, setInvoiceSale] = useState<Sale | null>(null);
   const [search, setSearch] = useState("");
   const [deliveryFilter, setDeliveryFilter] = useState("all");
   useEffect(() => {
@@ -347,6 +350,15 @@ export function SalesListPage({
                 <p className="whitespace-nowrap font-bold">
                   {sale.total_price.toLocaleString("fr-FR")} FCFA
                 </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => setInvoiceSale(sale)}
+                >
+                  Facture
+                </Button>
                 {isOrders && sale.delivery_status !== "delivered" ? (
                   <Button
                     type="button"
@@ -378,6 +390,33 @@ export function SalesListPage({
             : {})}
         />
       ) : null}
+      <Dialog open={Boolean(invoiceSale)} onOpenChange={(open) => !open && setInvoiceSale(null)}>
+        <DialogContent className="max-w-lg">
+          {invoiceSale ? (
+            <DocumentPrinter
+              documentType="invoice"
+              documentId={invoiceSale.id}
+              onClose={() => setInvoiceSale(null)}
+              data={{
+                reference: invoiceSale.id,
+                shop_name: shop?.name,
+                shop_address: shop?.shop_address ?? shop?.address,
+                shop_phone: shop?.shop_phone ?? shop?.phone,
+                date: invoiceSale.created_at,
+                client_name: invoiceSale.client_name,
+                client_whatsapp: invoiceSale.client_whatsapp,
+                product_name: invoiceSale.product_name,
+                description: invoiceSale.product_description,
+                quantity: invoiceSale.quantity,
+                unit_price: invoiceSale.unit_price,
+                total_price: invoiceSale.total_price,
+                payment_status: invoiceSale.payment_status,
+                payment_method: invoiceSale.payment_method,
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

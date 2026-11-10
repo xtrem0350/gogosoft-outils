@@ -1,3 +1,4 @@
+import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
 import { Button } from "@/components/ui/button";
 import type { WorkshopTicket } from "@/types/database";
 
@@ -78,9 +79,7 @@ export function WorkshopTicketPreview({
           <Button type="button" variant="outline" onClick={onClose}>
             Fermer
           </Button>
-          <Button type="button" variant="outline" onClick={() => window.print()}>
-            Imprimer
-          </Button>
+          <DocumentPrintActions />
         </div>
         <header className="border-b border-black pb-4">
           {isClientReceipt ? (
