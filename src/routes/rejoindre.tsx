@@ -21,6 +21,7 @@ function JoinInvitationPage() {
   const [invitation, setInvitation] = useState<PendingInvitation | null>(null);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [pseudo, setPseudo] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -91,17 +92,35 @@ function JoinInvitationPage() {
       toast.error("Les mots de passe ne correspondent pas.");
       return;
     }
+    const trimmedPseudo = pseudo.trim();
+    if (trimmedPseudo.length < 3 || /\s/.test(trimmedPseudo)) {
+      toast.error("Le pseudo doit contenir au moins 3 caractères, sans espaces.");
+      return;
+    }
 
     setCreating(true);
     try {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
-      let userId = sessionData.session?.user.id;
-      let accountEmail = sessionData.session?.user.email ?? email.trim();
+      const normalizedEmail = email.trim().toLowerCase();
+      const currentSession = sessionData.session;
+      let userId: string | undefined;
+      let accountEmail = normalizedEmail;
 
-      if (!userId) {
+      if (currentSession?.user.email && currentSession.user.email.toLowerCase() === normalizedEmail) {
+        userId = currentSession.user.id;
+        accountEmail = currentSession.user.email;
+      } else {
+        if (currentSession) {
+          const { error: signOutError } = await supabase.auth.signOut();
+          if (signOutError) throw signOutError;
+          const { data: terminatedSession } = await supabase.auth.getSession();
+          if (terminatedSession.session) {
+            throw new Error("La session précédente n'a pas pu être fermée.");
+          }
+        }
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
+          email: normalizedEmail,
           password,
           options: {
             data: {
@@ -143,6 +162,7 @@ function JoinInvitationPage() {
         ncni,
         lieu_habitation: lieuHabitation,
         ...(avatarUrl ? { avatar_url: avatarUrl } : {}),
+        pseudo: trimmedPseudo,
       });
       if (!result.success) throw new Error("L'invitation n'a pas pu être acceptée.");
       window.localStorage.setItem("gogosoft.currentShopId", result.shop_id);
@@ -242,6 +262,11 @@ function JoinInvitationPage() {
                 </div>
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="join-pseudo">Pseudo</Label>
+                <Input id="join-pseudo" value={pseudo} onChange={(e) => setPseudo(e.target.value)} required minLength={3} maxLength={30} autoComplete="username" className="h-11 min-h-11" />
+                <p className="text-xs text-muted-foreground">Utilisé pour vous identifier. Unique.</p>
+              </div>
+              <div className="grid gap-2">
                 <Label htmlFor="join-password">Mot de passe</Label>
                 <PasswordInput id="join-password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} autoComplete="new-password" className="h-11 min-h-11" />
               </div>
@@ -300,7 +325,7 @@ function JoinInvitationPage() {
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setInvitation(null)} disabled={creating}>
                   Modifier le code
                 </Button>
-                <Button type="submit" className="flex-1 bg-ivoirien bg-ivoirien-hover" disabled={creating}>
+                <Button type="submit" className="flex-1 bg-ivoirien bg-ivoirien-hover text-white" disabled={creating}>
                   {creating ? "Création…" : "Créer mon compte"}
                 </Button>
               </div>

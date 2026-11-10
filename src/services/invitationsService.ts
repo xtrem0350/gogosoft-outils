@@ -137,6 +137,7 @@ export async function acceptInvitation(input: {
   ncni?: string;
   lieu_habitation?: string;
   avatar_url?: string;
+  pseudo?: string;
 }): Promise<{ success: boolean; shop_id: string; role: string }> {
   const { data, error } = await supabase.rpc("accept_invitation" as any, {
     p_code: input.code.toUpperCase().trim(),
@@ -147,6 +148,7 @@ export async function acceptInvitation(input: {
     p_ncni: input.ncni?.trim() || null,
     p_lieu_habitation: input.lieu_habitation?.trim() || null,
     p_avatar_url: input.avatar_url || null,
+    p_pseudo: input.pseudo?.trim() || null,
   } as any);
   if (error) throw error;
   return data as { success: boolean; shop_id: string; role: string };

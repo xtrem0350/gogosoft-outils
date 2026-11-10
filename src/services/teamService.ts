@@ -14,6 +14,19 @@ export interface TeamMember {
   whatsapp: string | null;
 }
 
+interface TeamProfile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  avatar_url?: string | null;
+}
+
+function profileText(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   if (!(await hasActiveSession()) || !shopId) return [];
   const { data, error } = await (supabase.from("shop_members" as any) as any)
@@ -24,31 +37,29 @@ export async function getTeamMembers(shopId: string): Promise<TeamMember[]> {
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const userIds = [...new Set(rows.map((row) => String(row["user_id"] ?? "")).filter(Boolean))];
   const { data: profiles, error: profileError } = userIds.length
-    ? await supabase.from("profiles").select("id, full_name, email, phone").in("id", userIds)
+    ? await supabase.from("profiles").select("*").in("id", userIds)
     : { data: [], error: null };
   if (profileError) throw profileError;
   const profileById = new Map(
-    (profiles ?? []).map((profile) => [profile.id, profile]),
+    ((profiles ?? []) as TeamProfile[]).map((profile) => [profile.id, profile]),
   );
   return rows.map((row) => {
     const userId = String(row["user_id"] ?? "");
     const profile = profileById.get(userId);
-    const fullName = typeof profile?.full_name === "string" && profile.full_name.trim()
-      ? profile.full_name.trim()
-      : null;
-    const email = typeof profile?.email === "string" && profile.email.trim()
-      ? profile.email.trim()
-      : null;
-    const whatsapp = typeof profile?.phone === "string" && profile.phone.trim()
-      ? profile.phone.trim()
-      : null;
+    const fullName = profileText(profile?.full_name) ?? profileText(row["full_name"]);
+    const email = profileText(profile?.email) ?? profileText(row["email"]);
+    const whatsapp =
+      profileText(profile?.whatsapp) ??
+      profileText(profile?.phone) ??
+      profileText(row["whatsapp"]) ??
+      profileText(row["phone"]);
     return {
       id: String(row["id"] ?? userId),
       shop_id: String(row["shop_id"] ?? shopId),
       user_id: userId,
       role: String(row["role"] ?? "technicien"),
       created_at: typeof row["created_at"] === "string" ? row["created_at"] : null,
-      avatar_url: typeof row["avatar_url"] === "string" ? row["avatar_url"] : null,
+      avatar_url: profileText(profile?.avatar_url) ?? profileText(row["avatar_url"]),
       full_name: fullName,
       email,
       whatsapp,

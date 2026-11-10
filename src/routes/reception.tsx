@@ -22,6 +22,7 @@ import { PlaceTicketModal } from "@/components/caisse/PlaceTicketModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
+import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 
 export const Route = createFileRoute("/reception")({
@@ -50,8 +51,32 @@ function ReceptionPage() {
   const [deviceImei, setDeviceImei, clearDeviceImei] = usePersistedWizardState("reception-device-imei", "");
   const [issue, setIssue, clearIssue] = usePersistedWizardState("reception-issue", "écran cassé");
   const [selectedLocationId, setSelectedLocationId, clearSelectedLocationId] = usePersistedWizardState<string | undefined>("reception-location", undefined);
-  const [entryFee, setEntryFee, clearEntryFee] = usePersistedWizardState("reception-entry-fee", 2000);
+  const [entryFeeConfig, setEntryFeeConfig] = useState<ShopEntryFeeConfig | null>(null);
   const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    setEntryFeeConfig(null);
+    if (!shopId) return;
+
+    void getShopEntryFeeConfig(shopId)
+      .then((config) => {
+        if (active) setEntryFeeConfig(config);
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          toast.error(error instanceof Error ? error.message : "Impossible de charger les frais d'entrée.");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
+
+  useEffect(() => {
+    if (entryFeeConfig && !entryFeeConfig.enabled && step > 3) setStep(3);
+  }, [entryFeeConfig, setStep, step]);
 
   useEffect(() => {
     if (!shopId) return;
@@ -103,6 +128,10 @@ function ReceptionPage() {
       toast.error("Sélectionnez un atelier avant de créer la fiche.");
       return;
     }
+    if (!entryFeeConfig) {
+      toast.error("La configuration des frais d'entrée n'est pas encore disponible.");
+      return;
+    }
     const trimmedName = clientName.trim();
     if (!trimmedName) {
       toast.error("Saisissez le nom du client avant de créer la fiche.");
@@ -128,14 +157,19 @@ function ReceptionPage() {
         ...(deviceImei.trim() ? { device_imei: deviceImei.trim() } : {}),
         issues: ["ecran_casse"],
         description: `Panne: ${issue}`,
-        entry_fee: entryFee,
-        entry_fee_paid: false,
+        entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
+        entry_fee_paid: !entryFeeConfig.enabled,
+        status: entryFeeConfig.enabled ? "en_attente_caissier_entree" : "en_attente_technicien",
         client_id: null,
         activity_type: "phone",
       });
 
       await assignTicketToLocation(ticket.id, selectedLocationId);
-      toast.success("Fiche créée. Envoyée à la caisse pour encaissement.");
+      toast.success(
+        entryFeeConfig.enabled
+          ? "Fiche créée. Envoyée à la caisse pour encaissement."
+          : "Fiche créée. Entrée gratuite, envoyée au technicien.",
+      );
       setOpenCreate(false);
       setStep(1);
       setPaymentPaid(false);
@@ -148,7 +182,6 @@ function ReceptionPage() {
       setDeviceImei("");
       setIssue("écran cassé");
       setSelectedLocationId(undefined);
-      setEntryFee(2000);
       clearStep();
       clearSelectedClient();
       clearClientName();
@@ -158,7 +191,6 @@ function ReceptionPage() {
       clearDeviceImei();
       clearIssue();
       clearSelectedLocationId();
-      clearEntryFee();
       clearPaymentPaid();
       clearPaymentMethod();
     } catch (error) {
@@ -178,13 +210,17 @@ function ReceptionPage() {
     clearDeviceImei();
     clearIssue();
     clearSelectedLocationId();
-    clearEntryFee();
     clearPaymentPaid();
     clearPaymentMethod();
     setPaymentPaid(false);
     setPaymentMethod("");
     setStep(1);
   }
+
+  const wizardSteps = entryFeeConfig?.enabled
+    ? ["Client", "Appareil", "Paiement", "Rangement"]
+    : ["Client", "Appareil", "Rangement"];
+  const finalStep = wizardSteps.length;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -199,7 +235,18 @@ function ReceptionPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatsCard title="Clients en attente" value={waitingCount} icon={CalendarClock} color="warning" />
         <StatsCard title="Appareils en casier" value={occupiedCount} icon={PackageCheck} color="success" />
-        <StatsCard title="Paiement d'entrée" value="2000 FCFA" icon={AlertCircle} color="blue" />
+        <StatsCard
+          title="Paiement d'entrée"
+          value={
+            entryFeeConfig
+              ? entryFeeConfig.enabled
+                ? `${new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA`
+                : "Gratuit"
+              : "—"
+          }
+          icon={AlertCircle}
+          color="blue"
+        />
       </div>
 
       <Card className="card-3d rounded-2xl">
@@ -239,7 +286,11 @@ function ReceptionPage() {
                     <p className="text-sm text-muted-foreground">{ticket.device_model ?? "Appareil"}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">En attente de caisse (entrée 2 000 F)</span>
+                    <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">
+                      {ticket.entry_fee_paid
+                        ? "Entrée réglée"
+                        : `En attente de caisse (entrée ${new Intl.NumberFormat("fr-FR").format(ticket.entry_fee ?? 0)} F)`}
+                    </span>
                     <span className="text-xs uppercase text-amber-700">{ticket.ticket_number}</span>
                     <Button size="sm" variant="outline" onClick={() => void navigate({ to: `/phone/atelier/${ticket.id}` as string })}>Voir</Button>
                   </div>
@@ -274,8 +325,8 @@ function ReceptionPage() {
             <DialogTitle>Nouveau client</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-4 gap-2 rounded-xl bg-slate-50 p-3">
-            {["Client", "Appareil", "Paiement", "Rangement"].map((label, index) => (
+          <div className={`grid ${wizardSteps.length === 4 ? "grid-cols-4" : "grid-cols-3"} gap-2 rounded-xl bg-slate-50 p-3`}>
+            {wizardSteps.map((label, index) => (
               <StepIndicator key={label} number={index + 1} label={label} active={step === index + 1} completed={step > index + 1} />
             ))}
           </div>
@@ -305,20 +356,23 @@ function ReceptionPage() {
             </div>
           ) : null}
 
-          {step === 3 ? (
+          {entryFeeConfig?.enabled && step === 3 ? (
             <div className="space-y-5 text-center">
               <AlertCircle className="mx-auto size-10 text-orange-500" />
-              <p className="font-semibold">Frais d&apos;entrée diagnostic : 2 000 FCFA (non remboursable)</p>
+              <p className="font-semibold">
+                Frais d&apos;entrée diagnostic : {new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA
+                {entryFeeConfig.refundable ? " (remboursable)" : " (non remboursable)"}
+              </p>
               {paymentPaid ? <p className="text-sm font-medium text-green-700">Paiement enregistré · {paymentMethod}</p> : null}
               <DialogFooter><Button variant="outline" onClick={() => setStep(2)}>Retour</Button><Button onClick={() => setStep(4)}>Envoyer à la caisse</Button></DialogFooter>
             </div>
           ) : null}
 
-          {step === 4 ? (
+          {step === finalStep ? (
             <div className="space-y-4">
               <div className="space-y-2"><Label>Rangement</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
-              <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> 2 000 FCFA</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
-              <DialogFooter><Button variant="outline" onClick={() => setStep(3)}>Retour</Button><Button disabled={!selectedLocationId || creating} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></DialogFooter>
+              <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> {entryFeeConfig?.enabled ? `${new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA` : "Gratuit"}</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(entryFeeConfig?.enabled ? 3 : 2)}>Retour</Button><Button disabled={!selectedLocationId || creating || !entryFeeConfig} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></DialogFooter>
             </div>
           ) : null}
           <div className="flex justify-end border-t pt-4">
@@ -330,11 +384,10 @@ function ReceptionPage() {
       <WorkshopPaymentModal
         open={paymentOpen}
         onClose={() => setPaymentOpen(false)}
-        amount={entryFee}
+        amount={entryFeeConfig?.amount ?? 0}
         title="Paiement d'entrée"
-        onSuccess={(method, amount) => {
+        onSuccess={(method) => {
           setPaymentMethod(method);
-          setEntryFee(amount);
           setPaymentPaid(true);
           setPaymentOpen(false);
         }}

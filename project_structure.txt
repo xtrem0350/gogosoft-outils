@@ -195,8 +195,7 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 client.server.ts
 │   │   │   ├── 📄 auth-middleware.ts
 │   │   │   └── 📄 auth-attacher.ts
-│   │   ├── 📄 supabase
-│   │   └── 📄 lovable
+│   │   └── 📄 supabase
 │   ├── 📁 hooks/
 │   │   ├── 📄 useUserRoles.ts
 │   │   ├── 📄 useUserRole.ts
