@@ -36,6 +36,7 @@ import { ShopSelector } from "@/components/ShopSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { UserMenu } from "@/components/UserMenu";
 import { WhatsNewModal } from "@/components/WhatsNewModal";
+import { MobileLayout } from "@/components/mobile/MobileLayout";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -60,6 +61,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
 import { usePendingItems } from "@/hooks/usePendingItems";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { hasNewVersion } from "@/lib/changelog";
 import {
   endDemo,
@@ -99,6 +101,7 @@ function requiredRoles(pathname: string): UserRole[] | null {
 /** Layout unique de l'application. */
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
+  const isMobile = useIsMobile();
   const pageScrollRef = useRef<HTMLDivElement>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [showNewBadge, setShowNewBadge] = useState(false);
@@ -166,7 +169,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     location.pathname,
   );
   useEffect(() => {
-    if (authLoading || user || location.pathname !== "/") return;
+    if (isMobile || authLoading || user || location.pathname !== "/") return;
     if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
 
     const timeout = window.setTimeout(() => {
@@ -175,7 +178,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }, 2000);
 
     return () => window.clearTimeout(timeout);
-  }, [authLoading, location.pathname, user]);
+  }, [authLoading, isMobile, location.pathname, user]);
   useEffect(() => {
     setShowNewBadge(Boolean(userId && !isAuthRoute && hasNewVersion()));
   }, [isAuthRoute, userId]);
@@ -221,6 +224,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/statistiques": "📊 Statistiques",
     "/equipe": "👥 Équipe",
     "/boutiques": "🏪 Mes ateliers",
+    "/documents": "📄 Documents",
     "/profil": "👤 Mon profil",
     "/abonnement": "💳 Mon abonnement",
     "/aide": "📚 Centre d'aide",
@@ -247,6 +251,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     "/clients": "Clients",
     "/personnel": "Personnel",
     "/boutiques": "Ateliers",
+    "/documents": "Documents",
     "/outils": "Outils",
     "/categories": "Catégories",
     "/historique": "Historique",
@@ -372,6 +377,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <RoleGuard allowedRoles={allowedRoles}>{baseContent}</RoleGuard>
   ) : baseContent;
 
+  const mobileLayoutActive =
+    isMobile && !["/auth", "/rejoindre", "/"].includes(location.pathname);
+
   const shellContent = (
     <>
       {demoInfo?.is_demo === true ? (
@@ -383,11 +391,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         />
       ) : null}
-      <div
-        className={`flex h-screen overflow-hidden bg-background ${
-          demoInfo?.is_demo === true ? "pt-10" : ""
-        }`}
-      >
+      {mobileLayoutActive ? (
+        <MobileLayout>{content}</MobileLayout>
+      ) : (
+        <div
+          className={`flex h-screen overflow-hidden bg-background ${
+            demoInfo?.is_demo === true ? "pt-10" : ""
+          }`}
+        >
       {isSuperAdmin ? <AdminSidebar /> : <Sidebar />}
       <main className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         <header className="flex min-h-20 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-sidebar px-4 text-sidebar-foreground shadow-lg dark:border-slate-700 sm:px-5 lg:px-8">
@@ -522,6 +533,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </footer>
         </div>
       </main>
+      </div>
+      )}
       {showWarning ? (
         <InactivityWarningModal
           open={showWarning}
@@ -545,12 +558,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           void navigate({ to: "/clients/$id", params: { id: client.id } });
         }}
       />
-      </div>
     </>
   );
 
   return user || isDemoMode() ? (
-    <OrientationGuard>{shellContent}</OrientationGuard>
+    mobileLayoutActive ? shellContent : <OrientationGuard>{shellContent}</OrientationGuard>
   ) : (
     shellContent
   );

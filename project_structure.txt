@@ -5,6 +5,7 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261105000000_account_pause_and_team_blocks.sql
 │   │   ├── 📄 20261104000001_fix_caisse_rls.sql
 │   │   ├── 📄 20261103000001_owner_gets_all_roles.sql
 │   │   ├── 📄 20261031000003_fix_accept_invitation_pseudo_safe.sql
@@ -283,6 +284,8 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 MemberSelect.tsx
 │   │   │   ├── 📄 DeviceSelect.tsx
 │   │   │   └── 📄 ClientSelect.tsx
+│   │   ├── 📁 documents/
+│   │   │   └── 📄 DocumentPrinter.tsx
 │   │   ├── 📁 dashboards/
 │   │   │   ├── 📄 TechnicianDashboard.tsx
 │   │   │   ├── 📄 StockDashboard.tsx
@@ -351,6 +354,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 HelpButton.tsx
 │   │   ├── 📄 EmptyState.tsx
 │   │   ├── 📄 EditDeviceModal.tsx
+│   │   ├── 📄 documents
 │   │   ├── 📄 DeviceSearchInput.tsx
 │   │   ├── 📄 DeviceCatalogPicker.tsx
 │   │   ├── 📄 DeviceCatalogPage.tsx

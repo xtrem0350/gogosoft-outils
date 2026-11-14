@@ -20,6 +20,7 @@ import { Route as CatalogueRouteImport } from './routes/catalogue'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as EquipeRouteImport } from './routes/equipe'
 import { Route as HistoriqueRouteImport } from './routes/historique'
 import { Route as MagasinRouteImport } from './routes/magasin'
@@ -148,6 +149,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DocumentsRoute = DocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EquipeRoute = EquipeRouteImport.update({
@@ -536,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
+  '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/magasin': typeof MagasinRoute
@@ -622,6 +629,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
+  '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/magasin': typeof MagasinRoute
@@ -709,6 +717,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/dashboard': typeof DashboardRoute
   '/demo': typeof DemoRoute
+  '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
   '/magasin': typeof MagasinRoute
@@ -798,6 +807,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/demo'
+    | '/documents'
     | '/equipe'
     | '/historique'
     | '/magasin'
@@ -884,6 +894,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/demo'
+    | '/documents'
     | '/equipe'
     | '/historique'
     | '/magasin'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/dashboard'
     | '/demo'
+    | '/documents'
     | '/equipe'
     | '/historique'
     | '/magasin'
@@ -1058,6 +1070,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   DashboardRoute: typeof DashboardRoute
   DemoRoute: typeof DemoRoute
+  DocumentsRoute: typeof DocumentsRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
   MagasinRoute: typeof MagasinRoute
@@ -1182,6 +1195,13 @@ declare module '@tanstack/react-router' {
       path: '/demo'
       fullPath: '/demo'
       preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/documents': {
+      id: '/documents'
+      path: '/documents'
+      fullPath: '/documents'
+      preLoaderRoute: typeof DocumentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/equipe': {
@@ -1866,6 +1886,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   DashboardRoute: DashboardRoute,
   DemoRoute: DemoRoute,
+  DocumentsRoute: DocumentsRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
   MagasinRoute: MagasinRoute,

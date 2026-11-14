@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { checkPasswordStrength } from "@/lib/passwordStrength";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import {
   calculateModulePrice,
@@ -114,6 +115,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { refresh: refreshShops } = useCurrentShop();
   const { mode } = Route.useSearch();
   const [activeTab, setActiveTab] = useState<"signin" | "signup">(() =>
@@ -134,6 +136,7 @@ function AuthPage() {
   const [paymentDomainIds, setPaymentDomainIds] = useState<WelcomeDomainId[]>([]);
   const [busy, setBusy] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const currentTab = isMobile ? "signin" : activeTab;
 
   useEffect(() => {
     const savedIdentifier = window.localStorage.getItem("gogosoft.rememberedIdentifier");
@@ -497,28 +500,36 @@ function AuthPage() {
                 </div>
 
                 <Tabs
-                  value={activeTab}
-                  onValueChange={(value) => setActiveTab(value as "signin" | "signup")}
+                  value={currentTab}
+                  onValueChange={(value) => {
+                    if (!isMobile) setActiveTab(value as "signin" | "signup");
+                  }}
                   className="w-full"
                 >
-                  <TabsList className="grid h-11 w-full grid-cols-2 bg-white/5">
-                    <TabsTrigger
-                      value="signin"
-                      className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
-                    >
-                      Connexion
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="signup"
-                      className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
-                    >
-                      Inscription
-                    </TabsTrigger>
-                  </TabsList>
+                  {isMobile ? (
+                    <p className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
+                      Créez votre compte via une invitation de votre responsable.
+                    </p>
+                  ) : (
+                    <TabsList className="grid h-11 w-full grid-cols-2 bg-white/5">
+                      <TabsTrigger
+                        value="signin"
+                        className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
+                      >
+                        Connexion
+                      </TabsTrigger>
+                      <TabsTrigger
+                        value="signup"
+                        className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
+                      >
+                        Inscription
+                      </TabsTrigger>
+                    </TabsList>
+                  )}
 
                   <form
                     onSubmit={(event) => {
-                      if (activeTab === "signin") {
+                      if (currentTab === "signin") {
                         void handleSignIn(event);
                       } else {
                         void handleSignUp(event);
@@ -531,11 +542,12 @@ function AuthPage() {
                           <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
                           <Input
                             id="signin-identifier"
-                            type="text"
+                            type={isMobile ? "email" : "text"}
                             value={identifier}
                             onChange={(event) => setIdentifier(event.target.value)}
-                            placeholder="Email, pseudo ou WhatsApp"
-                            autoComplete="username"
+                            placeholder={isMobile ? "Adresse e-mail" : "Email, pseudo ou WhatsApp"}
+                            autoComplete={isMobile ? "email" : "username"}
+                            inputMode={isMobile ? "email" : undefined}
                             className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                             required
                           />
@@ -580,6 +592,7 @@ function AuthPage() {
                       </Button>
                     </TabsContent>
 
+                    {!isMobile ? (
                     <TabsContent value="signup" className="space-y-4 pt-5">
                       <div className="space-y-4">
                         <div className="relative">
@@ -648,6 +661,7 @@ function AuthPage() {
                         <ArrowRight className="size-4" />
                       </Button>
                     </TabsContent>
+                    ) : null}
                   </form>
                 </Tabs>
               </div>
