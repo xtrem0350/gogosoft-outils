@@ -342,7 +342,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     shop?.shop_slug ?? null,
     Boolean(shop?.id),
     vocabulary,
-    activeRole || role,
+    activeRole,
   );
   const pendingCountFor = (to: string) => {
     if (activeRole === "caissier" || activeRole === "owner") {
