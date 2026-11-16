@@ -45,6 +45,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Link } from "@tanstack/react-router";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,6 +69,7 @@ import {
   generateDiagnosis,
   getTicketById,
   getTickets,
+  getTicketsByTechnician,
   COMPUTER_ISSUE_KEYS,
   ISSUES_DATABASE,
   type IssueKey,
@@ -113,6 +116,8 @@ export function ActivityListPage({
 }) {
   const navigate = useNavigate();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { user } = useAuth();
+  const { activeRole, loading: roleLoading } = useUserRoles();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -172,15 +177,44 @@ export function ActivityListPage({
   });
 
   useEffect(() => {
-    if (shopLoading) return;
+    if (shopLoading || roleLoading) {
+      setTickets([]);
+      setLoading(true);
+      setError(null);
+      return;
+    }
+    if (!shopId) {
+      setTickets([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
     setLoading(true);
-    void getTickets(shopId, activityType)
-      .then(setTickets)
-      .catch((reason: unknown) =>
-        setError(reason instanceof Error ? reason.message : "Chargement impossible."),
-      )
-      .finally(() => setLoading(false));
-  }, [activityType, shopId, shopLoading]);
+    setTickets([]);
+    setError(null);
+    const ticketRequest: Promise<WorkshopTicket[]> =
+      activeRole === "technicien"
+        ? user
+          ? getTicketsByTechnician(shopId, user.id, activityType)
+          : Promise.resolve([])
+        : getTickets(shopId, activityType);
+    let active = true;
+    void ticketRequest
+      .then((result) => {
+        if (active) setTickets(result);
+      })
+      .catch((reason: unknown) => {
+        if (active) {
+          setError(reason instanceof Error ? reason.message : "Chargement impossible.");
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [activeRole, activityType, roleLoading, shopId, shopLoading, user]);
 
   const statusOptions: Array<[string, string]> = [
     ["tous", "Toutes"],
