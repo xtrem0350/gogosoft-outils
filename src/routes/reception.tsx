@@ -23,7 +23,12 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { getOpenCashSession } from "@/services/cashService";
 import { isDemoMode } from "@/services/demoService";
-import { assignTicketToLocation, getLocationsByShop } from "@/services/storageService";
+import {
+  assignTicketToLocation,
+  freeLocation,
+  getLocationByTicketId,
+  getLocationsByShop,
+} from "@/services/storageService";
 import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
 import { usePersistedWizardState } from "@/hooks/usePersistedWizardState";
 
@@ -37,7 +42,11 @@ function ReceptionPage() {
   const { shopId } = useCurrentShop();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [ticketsToPlace, setTicketsToPlace] = useState<WorkshopTicket[]>([]);
+  const [ticketsToDeliver, setTicketsToDeliver] = useState<WorkshopTicket[]>([]);
   const [placeTicket, setPlaceTicket] = useState<{ ticket: WorkshopTicket } | null>(null);
+  const [deliveryTicket, setDeliveryTicket] = useState<WorkshopTicket | null>(null);
+  const [identityVerified, setIdentityVerified] = useState(false);
+  const [delivering, setDelivering] = useState(false);
   const [step, setStep, clearStep] = usePersistedWizardState("reception-step", 1);
   const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | undefined>("reception-selected-client", undefined);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
@@ -117,6 +126,95 @@ function ReceptionPage() {
   useEffect(() => {
     void loadTicketsToPlace();
   }, [shopId]);
+
+  async function loadTicketsToDeliver() {
+    if (!shopId) return;
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .select("*")
+      .eq("shop_id", shopId)
+      .eq("status", "en_attente_receptionniste")
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setTicketsToDeliver((data ?? []) as WorkshopTicket[]);
+  }
+
+  useEffect(() => {
+    void loadTicketsToDeliver();
+  }, [shopId]);
+
+  async function confirmDelivery() {
+    if (!deliveryTicket || !shopId || delivering) return;
+    if (!identityVerified) {
+      toast.error("Vérifiez l'identité du client avant la remise.");
+      return;
+    }
+
+    setDelivering(true);
+    try {
+      const location = isDemoMode()
+        ? await getLocationByTicketId(deliveryTicket.id)
+        : await (async () => {
+            const { data, error } = await supabase
+              .from("storage_locations")
+              .select("id, name")
+              .eq("shop_id", shopId)
+              .eq("current_ticket_id", deliveryTicket.id)
+              .maybeSingle();
+            if (error) throw error;
+            return data;
+          })();
+      const deliveredAt = new Date().toISOString();
+      const { data, error } = await supabase
+        .from("workshop_tickets")
+        .update({ status: "livre", delivered_at: deliveredAt, updated_at: deliveredAt } as never)
+        .eq("id", deliveryTicket.id)
+        .eq("shop_id", shopId)
+        .eq("status", "en_attente_receptionniste")
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Cette fiche n'est plus en attente de remise.");
+
+      if (location) {
+        const freedLocation = await freeLocation(location.id);
+        if (!freedLocation) {
+          const { data: restored, error: restoreError } = await supabase
+            .from("workshop_tickets")
+            .update({ status: "en_attente_receptionniste", delivered_at: null } as never)
+            .eq("id", deliveryTicket.id)
+            .eq("shop_id", shopId)
+            .eq("status", "livre")
+            .select("id")
+            .maybeSingle();
+          if (restoreError || !restored) {
+            throw new Error(
+              `Impossible de libérer le casier ${location.name} et de rétablir l'attente de remise.`,
+            );
+          }
+          throw new Error(`Impossible de libérer le casier ${location.name}. La remise n'a pas été finalisée.`);
+        }
+        setLocations((current) =>
+          current.map((item) =>
+            item.id === location.id ? { ...item, status: freedLocation.status } : item,
+          ),
+        );
+        toast.success(`Casier ${location.name} libéré.`);
+      }
+
+      setTicketsToDeliver((current) => current.filter((ticket) => ticket.id !== deliveryTicket.id));
+      setDeliveryTicket(null);
+      setIdentityVerified(false);
+      toast.success("Appareil remis au client. Fiche clôturée.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de confirmer la remise.");
+    } finally {
+      setDelivering(false);
+    }
+  }
 
   const waitingCount = tickets.length;
   const occupiedCount = useMemo(
@@ -289,6 +387,41 @@ function ReceptionPage() {
         </CardContent>
       </Card>
 
+      <Card className="card-3d rounded-2xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><PackageCheck className="size-4" /> Fiches à remettre</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {ticketsToDeliver.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucune fiche en attente de remise au client.</p>
+          ) : (
+            ticketsToDeliver.map((ticket) => (
+              <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3">
+                <div>
+                  <p className="font-medium">{ticket.ticket_number ?? ticket.id} · {ticket.client_name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {[ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "Appareil"}
+                  </p>
+                  <p className="text-sm font-medium text-green-700">
+                    Montant payé : {new Intl.NumberFormat("fr-FR").format(ticket.price_final ?? ticket.price_estimate ?? 0)} FCFA
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-green-700 text-white hover:bg-green-800"
+                  onClick={() => {
+                    setDeliveryTicket(ticket);
+                    setIdentityVerified(false);
+                  }}
+                >
+                  Remettre au client
+                </Button>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid gap-6 xl:grid-cols-2">
         <Card className="card-3d rounded-2xl">
           <CardHeader>
@@ -426,6 +559,58 @@ function ReceptionPage() {
         ticket={placeTicket?.ticket ?? null}
         onSuccess={() => void loadTicketsToPlace()}
       />
+      <Dialog
+        open={Boolean(deliveryTicket)}
+        onOpenChange={(open) => {
+          if (!open && !delivering) {
+            setDeliveryTicket(null);
+            setIdentityVerified(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmer la remise</DialogTitle>
+          </DialogHeader>
+          <p>Confirmer la remise de l&apos;appareil au client ?</p>
+          {deliveryTicket ? (
+            <div className="rounded-lg border p-3 text-sm">
+              <p className="font-medium">{deliveryTicket.ticket_number ?? deliveryTicket.id} · {deliveryTicket.client_name}</p>
+              <p>{[deliveryTicket.device_brand, deliveryTicket.device_model].filter(Boolean).join(" ") || "Appareil"}</p>
+            </div>
+          ) : null}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={identityVerified}
+              onChange={(event) => setIdentityVerified(event.target.checked)}
+              className="size-4 accent-green-700"
+            />
+            J&apos;ai vérifié l&apos;identité du client
+          </label>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={delivering}
+              onClick={() => {
+                setDeliveryTicket(null);
+                setIdentityVerified(false);
+              }}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              className="bg-green-700 text-white hover:bg-green-800"
+              disabled={!identityVerified || delivering}
+              onClick={() => void confirmDelivery()}
+            >
+              {delivering ? "Confirmation…" : "Confirmer la remise"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

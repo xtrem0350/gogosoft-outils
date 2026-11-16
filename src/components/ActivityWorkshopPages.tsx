@@ -50,8 +50,6 @@ import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 import { supabase } from "@/integrations/supabase/client";
 import {
   assignTicketToLocation,
-  freeLocation,
-  getLocationByTicketId,
   type StorageLocation,
 } from "@/services/storageService";
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
@@ -62,7 +60,7 @@ import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig } from "@/services/shopService";
 import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
 import { buildWhatsappLink } from "@/lib/whatsapp";
-import { getEvents, addEvent, createWorkshopPayment, updateWorkshopTicket } from "@/services/workshopService";
+import { getEvents, addEvent, updateWorkshopTicket } from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
 import {
   createTicket,
@@ -1533,7 +1531,6 @@ export function ActivityDetailsPage({
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
   const [tools, setTools] = useState("");
   const [partDialogOpen, setPartDialogOpen] = useState(false);
-  const [paymentOpen, setPaymentOpen] = useState(false);
   const [previewMode, setPreviewMode] = useState<WorkshopTicketPreviewMode | null>(null);
   const [previewAudience, setPreviewAudience] =
     useState<WorkshopTicketPreviewAudience>("internal");
@@ -1805,46 +1802,6 @@ export function ActivityDetailsPage({
   }
 
 
-  async function finishDelivery(method: string, amount: number) {
-    if (!ticket || !shopId) {
-      toast.error("Boutique introuvable.");
-      return;
-    }
-    setBusy(true);
-    try {
-      await createWorkshopPayment(shopId, ticket.id, amount, method, "final");
-      const deliveredAt = new Date().toISOString();
-      await updateWorkshopTicket(
-        ticket.id,
-        {
-          price_final: entryPaid + amount,
-          price_final_paid: true,
-          status: "livre",
-          delivered_at: deliveredAt,
-        },
-        activityType,
-      );
-      const location = await getLocationByTicketId(ticket.id);
-      if (location && !(await freeLocation(location.id))) {
-        throw new Error("Paiement enregistré, mais le casier n'a pas pu être libéré.");
-      }
-      await addEvent(ticket.id, "delivered", `Appareil livré. Paiement final : ${formatFcfa(amount)} (${method}).`);
-      const [refreshedTicket, refreshedEvents] = await Promise.all([
-        getTicketById(ticket.id, activityType),
-        getEvents(ticket.id),
-      ]);
-      if (!refreshedTicket) throw new Error("La fiche livrée est introuvable.");
-      setTicket(refreshedTicket);
-      setEvents(refreshedEvents);
-      setPaymentOpen(false);
-      toast.success("Appareil livré au client");
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Impossible de finaliser la livraison.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   if (error) return <p role="alert" className="p-6 text-destructive">{error}</p>;
   if (!ticket) return <p className="p-6 text-muted-foreground">Chargement…</p>;
   const isRepair = activityType !== "consumable";
@@ -2111,36 +2068,6 @@ export function ActivityDetailsPage({
       ) : null}
 
       {ticket.status === "livre" ? (
-        <Card className="bg-card text-card-foreground">
-          <CardHeader><CardTitle>Retrait &amp; Encaissement</CardTitle></CardHeader>
-          <CardContent className="space-y-4 text-card-foreground">
-            <dl className="grid gap-2 rounded-xl border border-border bg-card p-4 text-sm text-card-foreground sm:grid-cols-3">
-              <div><dt className="text-muted-foreground">Total dû</dt><dd className="font-bold">{formatFcfa(ticket.price_estimate ?? 0)}</dd></div>
-              <div><dt className="text-muted-foreground">Entrée déjà payée</dt><dd className="font-bold">{formatFcfa(entryPaid)}</dd></div>
-              <div><dt className="text-muted-foreground">Reste à payer</dt><dd className="font-bold">{formatFcfa(remainingAmount)}</dd></div>
-            </dl>
-            <Button type="button" disabled={busy} onClick={() => setPaymentOpen(true)} className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d">
-              Encaisser le reste
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openPreview("final", "internal")}
-            >
-              Reçu interne (archive)
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => openPreview("final", "client")}
-            >
-              Reçu client
-            </Button>
-          </CardContent>
-        </Card>
-      ) : null}
-
-      {ticket.status === "livre" ? (
         <Card className="border-green-300 bg-green-50">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
             <p className="font-semibold text-green-800">✅ Appareil livré le {deliveredDate}</p>
@@ -2173,13 +2100,6 @@ export function ActivityDetailsPage({
         open={partDialogOpen}
         onOpenChange={setPartDialogOpen}
         onAdd={addConsumedPart}
-      />
-      <WorkshopPaymentModal
-        open={paymentOpen}
-        onClose={() => setPaymentOpen(false)}
-        amount={remainingAmount}
-        title="Encaisser le solde de la réparation"
-        onSuccess={(method, amount) => void finishDelivery(method, amount)}
       />
       <Dialog open={previewMode !== null} onOpenChange={(open) => !open && setPreviewMode(null)}>
         <DialogContent className="max-w-4xl">
