@@ -28,7 +28,6 @@ import { HelpButton } from "@/components/HelpButton";
 import { InactivityWarningModal } from "@/components/InactivityWarningModal";
 import { DemoBanner } from "@/components/DemoBanner";
 import { OrientationGuard } from "@/components/OrientationGuard";
-import { PricingModal } from "@/components/PricingModal";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
@@ -105,7 +104,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pageScrollRef = useRef<HTMLDivElement>(null);
   const [whatsNewOpen, setWhatsNewOpen] = useState(false);
   const [showNewBadge, setShowNewBadge] = useState(false);
-  const [pricingPromptOpen, setPricingPromptOpen] = useState(false);
   const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
   const [demoInfo, setDemoInfo] = useState<Awaited<ReturnType<typeof getDemoInfo>>>(() => {
     const session = readDemoSession();
@@ -165,20 +163,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     pageScrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [location.pathname]);
-  const isAuthRoute = ["/auth", "/mot-de-passe-oublie", "/reinitialiser-mot-de-passe"].includes(
-    location.pathname,
-  );
+  const isAuthRoute = [
+    "/auth",
+    "/mot-de-passe-oublie",
+    "/reinitialiser-mot-de-passe",
+    "/rejoindre",
+  ].includes(location.pathname);
+  const shouldRedirectMobileHome =
+    isMobile && !authLoading && location.pathname === "/";
   useEffect(() => {
-    if (isMobile || authLoading || user || location.pathname !== "/") return;
-    if (window.localStorage.getItem("gogosoft_pricing_shown")) return;
-
-    const timeout = window.setTimeout(() => {
-      setPricingPromptOpen(true);
-      window.localStorage.setItem("gogosoft_pricing_shown", "true");
-    }, 2000);
-
-    return () => window.clearTimeout(timeout);
-  }, [authLoading, isMobile, location.pathname, user]);
+    if (!shouldRedirectMobileHome) return;
+    void navigate({ to: user ? "/dashboard" : "/auth" });
+  }, [navigate, shouldRedirectMobileHome, user]);
   useEffect(() => {
     setShowNewBadge(Boolean(userId && !isAuthRoute && hasNewVersion()));
   }, [isAuthRoute, userId]);
@@ -356,6 +352,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [location.pathname, mustLeaveSignedOut, mustPickShop, navigate, shops.length]);
 
   if (!loading && !user && !isAuthRoute && !isDemoMode()) {
+    return <LoadingShell />;
+  }
+
+  if (shouldRedirectMobileHome) {
     return <LoadingShell />;
   }
 
