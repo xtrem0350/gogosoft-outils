@@ -35,12 +35,15 @@ import { DocumentPrinter } from "@/components/documents/DocumentPrinter";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 import type { ClientRecord } from "@/services/clientService";
+import { isDemoMode } from "@/services/demoService";
 import {
   createSale,
   listSales,
   markAsDelivered,
   updateSale,
+  type CreateSaleData,
   type Sale,
 } from "@/services/salesService";
 import { getPublicProducts, type OnlineProduct } from "@/services/shopOnlineService";
@@ -535,7 +538,7 @@ export function NewSalePage() {
     }
     setSaving(true);
     try {
-      const sale = await createSale({
+      const saleData: CreateSaleData = {
         shop_id: shopId,
         activity_type: activityType,
         product_name: selectedProduct.name,
@@ -554,12 +557,51 @@ export function NewSalePage() {
         client_name: selectedClient.full_name,
         client_whatsapp: selectedClient.whatsapp,
         notes: null,
-      });
-      setSavedSale(sale);
-      if (shopId) {
-        setProducts(await getPublicProducts(shopId));
+      };
+      let sale: Sale;
+      if (isDemoMode()) {
+        sale = await createSale(saleData);
+      } else {
+        const { data, error } = await supabase.rpc("create_sale_with_stock", {
+          p_shop_id: shopId,
+          p_product_id: selectedProduct.id,
+          p_quantity: saleQuantity,
+          p_client_id: selectedClient.id,
+          p_client_name: selectedClient.full_name,
+          p_client_whatsapp: selectedClient.whatsapp,
+          p_payment_method: null,
+        });
+        if (error) throw new Error(error.message);
+        if (
+          !data ||
+          typeof data !== "object" ||
+          data.success !== true ||
+          typeof data.sale_id !== "string" ||
+          typeof data.total !== "number"
+        ) {
+          throw new Error("Réponse invalide lors de la création de la vente.");
+        }
+        const now = new Date().toISOString();
+        sale = {
+          ...saleData,
+          id: data.sale_id,
+          total_price: data.total,
+          created_by: null,
+          created_at: now,
+          updated_at: now,
+        };
       }
-      toast.success("✅ Vente enregistrée.");
+      setSavedSale(sale);
+      toast.success("Vente créée. Stock mis à jour.");
+      try {
+        setProducts(await getPublicProducts(shopId));
+      } catch (refreshError) {
+        toast.error(
+          `Vente créée, mais impossible d'actualiser le catalogue : ${
+            refreshError instanceof Error ? refreshError.message : "Erreur inconnue."
+          }`,
+        );
+      }
     } catch (error) {
       toast.error(`❌ ${error instanceof Error ? error.message : "Création impossible."}`);
     } finally {
