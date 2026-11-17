@@ -263,7 +263,16 @@ function AuthPage() {
   }
 
   async function submitSignUp() {
-    const normalizedPseudo = pseudoSchema.parse(pseudo);
+    if (!pseudo.trim()) {
+      toast.error("Le pseudo est obligatoire.");
+      return;
+    }
+    const pseudoResult = pseudoSchema.safeParse(pseudo);
+    if (!pseudoResult.success) {
+      toast.error(pseudoResult.error.issues[0]?.message ?? "Pseudo invalide.");
+      return;
+    }
+    const normalizedPseudo = pseudoResult.data;
     setBusy(true);
     console.info("[auth] sign-up:start", {
       email: email.trim(),
@@ -360,6 +369,10 @@ function AuthPage() {
       hasPhone: Boolean(phone.trim()),
       hasAvatar: Boolean(avatarFile),
     });
+    if (!pseudo.trim()) {
+      toast.error("Le pseudo est obligatoire.");
+      return;
+    }
     const strength = checkPasswordStrength(password);
     if (strength.score < 3) {
       toast.error(
@@ -508,7 +521,7 @@ function AuthPage() {
                 >
                   {isMobile ? (
                     <p className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
-                      Créez votre compte via une invitation de votre responsable.
+                      Pour créer un compte, demandez une invitation à votre responsable.
                     </p>
                   ) : (
                     <TabsList className="grid h-11 w-full grid-cols-2 bg-white/5">
@@ -542,12 +555,12 @@ function AuthPage() {
                           <Mail className="absolute left-3 top-2.5 size-4 text-slate-400" />
                           <Input
                             id="signin-identifier"
-                            type={isMobile ? "email" : "text"}
+                            type="text"
                             value={identifier}
                             onChange={(event) => setIdentifier(event.target.value)}
-                            placeholder={isMobile ? "Adresse e-mail" : "Email, pseudo ou WhatsApp"}
-                            autoComplete={isMobile ? "email" : "username"}
-                            inputMode={isMobile ? "email" : undefined}
+                            aria-label="Email ou Pseudo"
+                            placeholder="email@exemple.com ou votre pseudo"
+                            autoComplete="username"
                             className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
                             required
                           />
@@ -608,18 +621,6 @@ function AuthPage() {
                           />
                         </div>
 
-                        <div className="relative">
-                          <Input
-                            id="signup-pseudo"
-                            value={pseudo}
-                            onChange={(event) => setPseudo(event.target.value)}
-                            placeholder="Pseudo"
-                            autoComplete="username"
-                            className="h-11 min-h-11 border-white/10 bg-white/5 text-white placeholder:text-slate-400"
-                            required
-                          />
-                        </div>
-
                         <PhoneInput
                           value={phone}
                           onChange={setPhone}
@@ -638,6 +639,19 @@ function AuthPage() {
                             autoComplete="email"
                             inputMode="email"
                             className="h-11 min-h-11 border-white/10 bg-white/5 pl-9 text-white placeholder:text-slate-400"
+                            required
+                          />
+                        </div>
+
+                        <div className="relative">
+                          <Input
+                            id="signup-pseudo"
+                            value={pseudo}
+                            onChange={(event) => setPseudo(event.target.value)}
+                            placeholder="Pseudo"
+                            autoComplete="username"
+                            minLength={3}
+                            className="h-11 min-h-11 border-white/10 bg-white/5 text-white placeholder:text-slate-400"
                             required
                           />
                         </div>

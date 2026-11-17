@@ -84,17 +84,24 @@ function formatRelativeTime(value: string | null) {
 }
 
 function DashboardRouter() {
-  const { activeRole, loading, isSuperAdmin } = useUserRoles();
-  if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement du rôle…</p>;
-  if (isSuperAdmin) return <PlatformDashboard />;
+  const { activeRole, loading } = useUserRoles();
+  if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement...</p>;
+  const noRoleState = (
+    <EmptyState
+      icon={UserRound}
+      title="Rôle non attribué"
+      description="Contactez le propriétaire de la boutique pour obtenir un accès."
+    />
+  );
+  if (activeRole === "") return noRoleState;
+  if (activeRole === "owner") return <OwnerDashboard />;
   if (activeRole === "technicien") return <TechnicianDashboard />;
   if (activeRole === "caissier") return <CashierDashboard />;
   if (activeRole === "receptionniste") return <ReceptionDashboard />;
   if (activeRole === "magasinier") return <StockDashboard />;
   if (activeRole === "vendeur") return <SalesDashboard />;
   if (activeRole === "super_admin") return <PlatformDashboard />;
-  if (activeRole === "owner") return <OwnerDashboard />;
-  return <EmptyState icon={UserRound} title="Rôle non attribué" description="Contactez le propriétaire de la boutique pour obtenir un accès." />;
+  return noRoleState;
 }
 
 function OwnerDashboard() {

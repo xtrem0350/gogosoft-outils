@@ -61,17 +61,28 @@ export async function resolveEmailFromIdentifier(identifier: string): Promise<st
   return typeof data === "string" && data.length > 0 ? data : null;
 }
 
-/** Connexion par identifiant (email, pseudo ou WhatsApp). */
+/** Connexion par e-mail ou pseudo. */
 export async function signInWithIdentifier(identifier: string, password: string) {
-  const resolvedEmail = await resolveEmailFromIdentifier(identifier);
-  if (!resolvedEmail) {
-    return {
-      data: null,
-      error: { message: "Aucun compte trouvé avec cet identifiant", status: 400 },
-    };
+  const trimmedIdentifier = identifier.trim();
+  if (trimmedIdentifier.includes("@")) {
+    return supabase.auth.signInWithPassword({
+      email: trimmedIdentifier.toLowerCase(),
+      password,
+    });
   }
 
-  return supabase.auth.signInWithPassword({ email: resolvedEmail, password });
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("email")
+    .eq("pseudo", trimmedIdentifier)
+    .maybeSingle();
+  if (error) throw error;
+
+  if (!profile?.email) {
+    throw new Error("Pseudo ou mot de passe incorrect.");
+  }
+
+  return supabase.auth.signInWithPassword({ email: profile.email, password });
 }
 
 /** Télécharge un avatar utilisateur dans le bucket public avatars. */
