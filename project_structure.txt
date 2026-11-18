@@ -5,6 +5,8 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261110000002_create_sale_with_stock.sql
+│   │   ├── 📄 20261110000001_strict_workshop_rls.sql
 │   │   ├── 📄 20261105000000_account_pause_and_team_blocks.sql
 │   │   ├── 📄 20261104000001_fix_caisse_rls.sql
 │   │   ├── 📄 20261103000001_owner_gets_all_roles.sql
@@ -131,6 +133,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
+│   │   ├── 📄 documents.tsx
 │   │   ├── 📄 demo.tsx
 │   │   ├── 📄 dashboard.tsx
 │   │   ├── 📄 consumable
@@ -284,6 +287,8 @@ Structure du projet (avec glob)
 │   │   │   ├── 📄 MemberSelect.tsx
 │   │   │   ├── 📄 DeviceSelect.tsx
 │   │   │   └── 📄 ClientSelect.tsx
+│   │   ├── 📁 mobile/
+│   │   │   └── 📄 MobileLayout.tsx
 │   │   ├── 📁 documents/
 │   │   │   └── 📄 DocumentPrinter.tsx
 │   │   ├── 📁 dashboards/
@@ -349,6 +354,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 PageBreadcrumb.tsx
 │   │   ├── 📄 OrientationGuard.tsx
 │   │   ├── 📄 ModuleRouteGuard.tsx
+│   │   ├── 📄 mobile
 │   │   ├── 📄 InactivityWarningModal.tsx
 │   │   ├── 📄 IconBadge3D.tsx
 │   │   ├── 📄 HelpButton.tsx
@@ -418,7 +424,6 @@ Structure du projet (avec glob)
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json
 ├── 📄 tsconfig.json
-├── 📄 tsc
 ├── 📄 supabase
 ├── 📄 src
 ├── 📄 README.md
