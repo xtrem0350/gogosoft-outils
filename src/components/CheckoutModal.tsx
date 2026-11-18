@@ -236,7 +236,7 @@ export function CheckoutModal({
       open={open}
       onOpenChange={(nextOpen) => !nextOpen && !processing && !invoice && onClose()}
     >
-      <DialogContent className="h-[min(92vh,860px)] max-h-[92vh] max-w-6xl overflow-hidden border-0 bg-transparent p-0 shadow-2xl [&>button]:z-20 [&>button]:text-slate-700">
+      <DialogContent className="h-auto max-h-[90vh] w-full max-w-4xl overflow-hidden border-0 bg-transparent p-0 shadow-none sm:max-w-4xl [&>button]:z-20 [&>button]:text-slate-700">
         <style>{`
           @media print {
             body * { visibility: hidden !important; }
@@ -244,8 +244,8 @@ export function CheckoutModal({
             .invoice-print { position: fixed; inset: 0; overflow: visible; padding: 24px; background: white; }
           }
         `}</style>
-        <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl lg:grid-cols-[0.78fr_1.22fr] lg:grid-rows-1">
-          <aside className="flex min-h-0 flex-col justify-between gap-5 overflow-y-auto bg-slate-900 p-5 text-white sm:p-7 lg:p-9">
+        <div className="flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:h-auto sm:flex-row">
+          <aside className="flex w-full shrink-0 flex-col justify-between gap-5 bg-slate-900 p-6 text-white sm:w-1/3 sm:p-8">
             <div>
               <img src={authLogo} alt="GogoSoft" className="mb-5 size-16 rounded-full border-2 border-white/20 object-cover" />
               <p className="text-sm font-medium text-blue-300">Paiement simulé</p>
@@ -328,7 +328,7 @@ export function CheckoutModal({
             <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
           </aside>
 
-          <section className="min-h-0 overflow-y-auto bg-white p-5 sm:p-7 lg:p-9">
+          <section className="min-h-0 w-full overflow-y-auto overflow-x-hidden bg-white p-6 sm:w-2/3 sm:p-8">
             {pricingMode && step !== 4 && !invoice ? (
               <p className="mb-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm leading-6 text-green-900">
                 {INSTALLATION_NOTICE}
