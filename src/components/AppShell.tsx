@@ -172,9 +172,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const shouldRedirectMobileHome =
     isMobile && !authLoading && location.pathname === "/";
   useEffect(() => {
-    if (!shouldRedirectMobileHome) return;
+    if (!isMobile || authLoading || location.pathname !== "/") return;
     void navigate({ to: user ? "/dashboard" : "/auth" });
-  }, [navigate, shouldRedirectMobileHome, user]);
+  }, [authLoading, isMobile, location.pathname, navigate, user]);
   useEffect(() => {
     setShowNewBadge(Boolean(userId && !isAuthRoute && hasNewVersion()));
   }, [isAuthRoute, userId]);
