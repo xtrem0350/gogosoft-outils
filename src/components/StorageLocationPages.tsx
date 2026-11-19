@@ -33,8 +33,11 @@ const TYPE_ICONS: Record<
   ComponentType<{ className?: string }>
 > = {
   carton: Package,
+  cabinet: Archive,
   shelf: Layers,
+  locker: Box,
   drawer: Archive,
+  cashbox: ShoppingBag,
   bag: ShoppingBag,
   other: Box,
 };

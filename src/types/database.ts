@@ -66,6 +66,7 @@ export type WorkshopTicket = {
   notes: string | null;
   description?: string | null;
   ticket_number?: string | null;
+  storage_location_id?: string | null;
   entry_fee_method?: string | null;
   technicien_id?: string | null;
   outils_utilises?: string[] | null;

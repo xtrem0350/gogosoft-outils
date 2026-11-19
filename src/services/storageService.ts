@@ -4,7 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { DEMO_SHOP_ID, DEMO_STORAGE_LOCATIONS_KEY, isDemoMode } from "@/services/demoService";
 import type { Database } from "@/integrations/supabase/types";
 
-export type StorageLocationType = "carton" | "shelf" | "drawer" | "bag" | "other";
+export type StorageLocationType =
+  | "carton"
+  | "cabinet"
+  | "shelf"
+  | "locker"
+  | "drawer"
+  | "cashbox"
+  | "bag"
+  | "other";
 export type StorageLocationStatus = "available" | "occupied" | "maintenance";
 
 export interface StorageLocation {
@@ -60,7 +68,7 @@ function readDemoLocations(shopId: string): StorageLocation[] {
           typeof location.name === "string" &&
           "location_type" in location &&
           typeof location.location_type === "string" &&
-          ["carton", "shelf", "drawer", "bag", "other"].includes(location.location_type) &&
+          ["carton", "cabinet", "shelf", "locker", "drawer", "cashbox", "bag", "other"].includes(location.location_type) &&
           "description" in location &&
           (typeof location.description === "string" || location.description === null) &&
           "status" in location &&
@@ -147,6 +155,9 @@ export async function getAvailableLocations(shopId: string): Promise<StorageLoca
 }
 
 export async function getLocationById(id: string): Promise<StorageLocation | null> {
+  if (isDemoMode()) {
+    return readDemoLocations(DEMO_SHOP_ID).find((location) => location.id === id) ?? null;
+  }
   if (!(await hasSession("getLocationById"))) return null;
   try {
     const { data, error } = await storageClient
@@ -184,23 +195,23 @@ export async function getLocationByTicketId(ticketId: string): Promise<StorageLo
 export async function createLocation(
   data: CreateStorageLocationData,
 ): Promise<StorageLocation> {
+  if (isDemoMode()) {
+    const now = new Date().toISOString();
+    const location: StorageLocation = {
+      id: crypto.randomUUID(),
+      shop_id: data.shop_id,
+      name: data.name,
+      location_type: data.location_type,
+      description: data.description?.trim() || null,
+      status: "available",
+      current_ticket_id: null,
+      created_at: now,
+      updated_at: now,
+    };
+    saveDemoLocations([...readDemoLocations(data.shop_id), location]);
+    return location;
+  }
   if (!(await hasSession("createLocation"))) {
-    if (isDemoMode()) {
-      const now = new Date().toISOString();
-      const location: StorageLocation = {
-        id: crypto.randomUUID(),
-        shop_id: data.shop_id,
-        name: data.name,
-        location_type: data.location_type,
-        description: data.description?.trim() || null,
-        status: "available",
-        current_ticket_id: null,
-        created_at: now,
-        updated_at: now,
-      };
-      saveDemoLocations([...readDemoLocations(data.shop_id), location]);
-      return location;
-    }
     throw new Error("Connectez-vous pour créer un emplacement.");
   }
   try {
@@ -223,6 +234,14 @@ export async function updateLocation(
   id: string,
   data: Partial<StorageLocation>,
 ): Promise<StorageLocation | null> {
+  if (isDemoMode()) {
+    const locations = readDemoLocations(DEMO_SHOP_ID);
+    const existing = locations.find((location) => location.id === id);
+    if (!existing) return null;
+    const updated = { ...existing, ...data, updated_at: new Date().toISOString() };
+    saveDemoLocations(locations.map((location) => (location.id === id ? updated : location)));
+    return updated;
+  }
   if (!(await hasSession("updateLocation"))) return null;
   try {
     const { data: location, error } = await storageClient
@@ -240,6 +259,12 @@ export async function updateLocation(
 }
 
 export async function deleteLocation(id: string): Promise<boolean> {
+  if (isDemoMode()) {
+    const locations = readDemoLocations(DEMO_SHOP_ID);
+    if (!locations.some((location) => location.id === id)) return false;
+    saveDemoLocations(locations.filter((location) => location.id !== id));
+    return true;
+  }
   if (!(await hasSession("deleteLocation"))) return false;
   try {
     const { error } = await storageClient.from("storage_locations").delete().eq("id", id);
@@ -255,6 +280,23 @@ export async function assignTicketToLocation(
   ticketId: string,
   locationId: string,
 ): Promise<StorageLocation | null> {
+  if (isDemoMode()) {
+    const locations = readDemoLocations(DEMO_SHOP_ID);
+    const destination = locations.find((location) => location.id === locationId);
+    if (!destination || destination.status !== "available") return null;
+    const now = new Date().toISOString();
+    const assigned = locations.map((location) => {
+      if (location.id === locationId) {
+        return { ...location, status: "occupied" as const, current_ticket_id: ticketId, updated_at: now };
+      }
+      if (location.current_ticket_id === ticketId) {
+        return { ...location, status: "available" as const, current_ticket_id: null, updated_at: now };
+      }
+      return location;
+    });
+    saveDemoLocations(assigned);
+    return assigned.find((location) => location.id === locationId) ?? null;
+  }
   if (!(await hasSession("assignTicketToLocation"))) return null;
   try {
     const { data: destination, error: lookupError } = await storageClient

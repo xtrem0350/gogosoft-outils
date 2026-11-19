@@ -860,17 +860,48 @@ export async function placeTicketInStorage(
   ticketId: string,
   locationId: string,
 ): Promise<void> {
+  const existingLocation = await getLocationByTicketId(ticketId);
+  if (existingLocation?.id !== locationId) {
+    const assignedLocation = await assignTicketToLocation(ticketId, locationId);
+    if (!assignedLocation) {
+      throw new Error("Impossible d'attribuer cet emplacement à la fiche.");
+    }
+  }
+
+  if (isDemoMode()) {
+    let updated = false;
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== ticketId || ticket.status !== "en_attente_technicien") return ticket;
+        updated = true;
+        return {
+          ...ticket,
+          storage_location_id: locationId,
+          status: "en_cours",
+          updated_at: new Date().toISOString(),
+        };
+      }),
+    }));
+    if (!updated) throw new Error("Cette fiche n'est plus en attente de rangement.");
+    return;
+  }
+
   const { data: userData } = await supabase.auth.getUser();
   const userId = userData?.user?.id ?? null;
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("workshop_tickets")
     .update({
       storage_location_id: locationId,
       status: "en_cours",
       updated_at: new Date().toISOString(),
     })
-    .eq("id", ticketId);
+    .eq("id", ticketId)
+    .eq("status", "en_attente_technicien")
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("Cette fiche n'est plus en attente de rangement.");
 
   try {
     await supabase.from("audit_logs").insert({

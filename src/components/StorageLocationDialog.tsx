@@ -28,9 +28,12 @@ import {
 } from "@/services/storageService";
 
 const LOCATION_TYPES: { value: StorageLocationType; label: string }[] = [
-  { value: "carton", label: "Carton" },
+  { value: "cabinet", label: "Placard" },
   { value: "shelf", label: "Étagère" },
+  { value: "locker", label: "Casier" },
   { value: "drawer", label: "Tiroir" },
+  { value: "cashbox", label: "Caisse" },
+  { value: "carton", label: "Carton" },
   { value: "bag", label: "Sachet" },
   { value: "other", label: "Autre" },
 ];
@@ -105,7 +108,7 @@ export function StorageLocationDialog({
               id="storage-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="C1, Tiroir-A, Carton-1"
+              placeholder="Placard 01 / Étagère 01 / Casier 01 / Tiroir 01"
               required
               autoFocus
             />

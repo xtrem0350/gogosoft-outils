@@ -12,7 +12,7 @@ import {
 import { StorageLocationSelect } from "@/components/selects/StorageLocationSelect";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { placeTicketInStorage } from "@/services/workshopService";
-import type { StorageLocation } from "@/services/storageService";
+import { getLocationByTicketId, type StorageLocation } from "@/services/storageService";
 
 interface PlaceTicketModalProps {
   open: boolean;
@@ -35,10 +35,24 @@ export function PlaceTicketModal({
 }: PlaceTicketModalProps) {
   const { shopId } = useCurrentShop();
   const [location, setLocation] = useState<StorageLocation>();
+  const [checkingLocation, setCheckingLocation] = useState(false);
 
   useEffect(() => {
-    if (open) setLocation(undefined);
-  }, [open, ticket?.id]);
+    if (!open || !ticket) return;
+    let active = true;
+    setLocation(undefined);
+    setCheckingLocation(true);
+    void getLocationByTicketId(ticket.id)
+      .then((assignedLocation) => {
+        if (active) setLocation(assignedLocation ?? undefined);
+      })
+      .finally(() => {
+        if (active) setCheckingLocation(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open, ticket]);
 
   if (!ticket) return null;
 
@@ -65,14 +79,21 @@ export function PlaceTicketModal({
           <p><strong>Client :</strong> {ticket.client_name}</p>
           <p><strong>Appareil :</strong> {[ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "—"}</p>
         </div>
-        <StorageLocationSelect
-          shopId={shopId ?? null}
-          value={location?.id}
-          onSelect={setLocation}
-        />
+        {checkingLocation ? (
+          <p className="text-sm text-muted-foreground">Vérification du rangement…</p>
+        ) : location ? (
+          <p className="rounded-md border p-3 text-sm">
+            Emplacement réservé : <strong>{location.name}</strong>
+          </p>
+        ) : (
+          <StorageLocationSelect
+            shopId={shopId ?? null}
+            onSelect={setLocation}
+          />
+        )}
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>Fermer</Button>
-          <Button type="button" disabled={!location} className="bg-ivoirien bg-ivoirien-hover" onClick={() => void confirmPlacement()}>
+          <Button type="button" disabled={!location || checkingLocation} className="bg-ivoirien bg-ivoirien-hover" onClick={() => void confirmPlacement()}>
             Confirmer le rangement
           </Button>
         </DialogFooter>

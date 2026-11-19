@@ -12,7 +12,15 @@ function requiredModules(pathname: string): ModuleId[] | null {
     .map((module) => module.id);
   if (matches("/sales")) return ["vente-telephone", "vente-pc"];
   if (matches("/reception")) return ["reparation-telephone", "reparation-pc"];
-  if (matches("/magasin")) return ["consommables"];
+  if (matches("/magasin")) {
+    return [
+      "reparation-telephone",
+      "reparation-pc",
+      "vente-telephone",
+      "vente-pc",
+      "consommables",
+    ];
+  }
   if (matches("/atelier")) return ["reparation-telephone"];
   if (matches("/clients")) {
     return [

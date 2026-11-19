@@ -145,6 +145,9 @@ function getNavigationGroups(
   if (role === "receptionniste") {
     const receptionItems: NavigationItem[] = [
       { label: "Accueil réception", to: "/reception", icon: UserRound },
+      { label: "Clients", to: "/clients", icon: Users },
+      { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
+      { label: "Rangements", to: "/parametres/emplacements", icon: Package },
       ...(hasModule("reparation-telephone")
         ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
         : []),
@@ -303,6 +306,7 @@ function getNavigationGroups(
         { label: "Profil", to: "/profil", icon: User },
         { label: "Forfait", to: "/abonnement", icon: Settings },
         { label: "Mes domaines", to: "/parametres", icon: Package },
+        { label: "Emplacements", to: "/parametres/emplacements", icon: Package },
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
     });

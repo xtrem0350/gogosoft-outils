@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,8 +10,20 @@ import {
   getClientById,
   getClientPhotoUrl,
   type ClientRecord,
+  updateClient,
 } from "@/services/clientService";
 import { getTickets, type WorkshopTicket } from "@/services/workshopService";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ClientRepair {
   ticket: WorkshopTicket;
@@ -29,6 +41,8 @@ function ClientDetailsPage() {
   const [client, setClient] = useState<ClientRecord | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [repairs, setRepairs] = useState<ClientRepair[]>([]);
+  const [editOpen, setEditOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     void getClientById(id)
@@ -65,6 +79,29 @@ function ClientDetailsPage() {
       await navigate({ to: "/clients" });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Suppression impossible.");
+    }
+  }
+
+  async function handleUpdate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!client || saving) return;
+    const formData = new FormData(event.currentTarget);
+    setSaving(true);
+    try {
+      const updated = await updateClient(client.id, {
+        full_name: String(formData.get("full_name") ?? "").trim(),
+        whatsapp: String(formData.get("whatsapp") ?? "").trim(),
+        email: String(formData.get("email") ?? "").trim() || null,
+        address: String(formData.get("address") ?? "").trim() || null,
+        notes: String(formData.get("notes") ?? "").trim() || null,
+      });
+      setClient(updated);
+      setEditOpen(false);
+      toast.success("Client modifié.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de modifier le client.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -118,7 +155,7 @@ function ClientDetailsPage() {
               + Nouvelle fiche pour ce client
             </a>
           </Button>
-          <Button variant="outline" onClick={() => void navigate({ to: "/clients" })}>
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil className="size-4" />
             Modifier
           </Button>
@@ -190,6 +227,41 @@ function ClientDetailsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Modifier le client</DialogTitle>
+            <DialogDescription>Modifiez les coordonnées enregistrées du client.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(event) => void handleUpdate(event)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-client-name">Nom complet</Label>
+              <Input id="edit-client-name" name="full_name" defaultValue={client.full_name} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-client-whatsapp">WhatsApp</Label>
+              <Input id="edit-client-whatsapp" name="whatsapp" defaultValue={client.whatsapp} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-client-email">Email</Label>
+              <Input id="edit-client-email" name="email" type="email" defaultValue={client.email ?? ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-client-address">Adresse</Label>
+              <Input id="edit-client-address" name="address" defaultValue={client.address ?? ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-client-notes">Notes</Label>
+              <Textarea id="edit-client-notes" name="notes" defaultValue={client.notes ?? ""} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>Annuler</Button>
+              <Button type="submit" disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

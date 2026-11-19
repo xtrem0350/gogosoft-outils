@@ -277,16 +277,25 @@ function ReceptionPage() {
         entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
         entry_fee_paid: !entryFeeConfig.enabled,
         status: entryFeeConfig.enabled ? "en_attente_caissier_entree" : "en_attente_technicien",
-        client_id: null,
+        client_id: selectedClient?.id ?? null,
         activity_type: "phone",
       });
 
-      await assignTicketToLocation(ticket.id, selectedLocationId);
-      toast.success(
-        entryFeeConfig.enabled
-          ? "Fiche créée. Envoyée à la caisse pour encaissement."
-          : "Fiche créée (entrée gratuite). Réparateur notifié.",
-      );
+      const location = await assignTicketToLocation(ticket.id, selectedLocationId);
+      if (!location) {
+        toast.error(`Fiche ${ticket.ticket_number ?? ""} créée, mais le rangement n'a pas pu être attribué. Vérifiez la disponibilité de l'emplacement dans la réception.`);
+      } else {
+        setLocations((current) =>
+          current.map((item) =>
+            item.id === location.id ? { ...item, status: location.status } : item,
+          ),
+        );
+        toast.success(
+          entryFeeConfig.enabled
+            ? "Fiche créée. Envoyée à la caisse pour encaissement."
+            : "Fiche créée (entrée gratuite). Réparateur notifié.",
+        );
+      }
       setOpenCreate(false);
       setStep(1);
       setPaymentPaid(false);
