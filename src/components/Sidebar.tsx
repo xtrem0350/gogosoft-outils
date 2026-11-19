@@ -55,7 +55,11 @@ type NavigationItem = {
   label: string;
   to: string;
   icon: ComponentType<{ className?: string }>;
-  search?: { activityType?: "phone" | "computer"; category?: "phone" | "computer" };
+  search?: {
+    activityType?: "phone" | "computer";
+    category?: "phone" | "computer";
+    tab?: "profil" | "rangements";
+  };
 };
 type NavigationGroup = {
   label: string;
@@ -294,8 +298,8 @@ function getNavigationGroups(
             { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
             { label: "Équipe", to: "/equipe", icon: UserCog },
             { label: "Aide", to: "/aide", icon: CircleHelp },
-            { label: "Rangements", to: "/parametres/emplacements", icon: Package },
-            { label: "Paramètres", to: "/parametres", icon: Settings },
+            { label: "Rangements", to: "/parametres", icon: Package, search: { tab: "rangements" } },
+            { label: "Paramètres", to: "/parametres", icon: Settings, search: { tab: "profil" } },
             { label: "Catalogue", to: "/catalogue", icon: BookOpen },
           ],
     });
@@ -358,6 +362,8 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     group.items.some(
       (item) =>
         (pathname === item.to || pathname.startsWith(`${item.to}/`)) &&
+        (!item.search?.tab ||
+          ((routeSearch as { tab?: string }).tab ?? "profil") === item.search.tab) &&
         (!item.search ||
           (!item.search.activityType ||
             (routeSearch as { activityType?: string }).activityType === item.search.activityType) &&
@@ -430,50 +436,56 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               ) : null}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1 pt-1">
-              {filteredItems.map(({ label: itemLabel, to, icon: Icon, search: itemSearch }) => (
-                <Link
-                  key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
-                  to={to}
-                  search={to === "/caisse" ? { action: "validate", ticket: "" } : (itemSearch ?? {})}
-                  onClick={(event: MouseEvent<HTMLElement>) => {
-                    if (to === "/caisse" && pendingCountFor(to) > 0) {
-                      event.preventDefault();
-                      void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } });
-                    }
-                    setOpen(false);
-                  }}
-                  title={itemLabel}
-                  className={cn(
-                    "flex h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 pl-7 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-sidebar-foreground/65 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
-                    collapsed && "justify-center border-l-0 px-0",
-                    pathname === to &&
-                      "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
-                    pendingCountFor(to) > 0 && "animate-pulse",
-                  )}
-                >
-                  <div className="flex min-w-0 flex-1 items-center gap-2">
-                    <Icon
-                      className={cn(
-                        "size-4 shrink-0",
-                        pathname === to ? "text-orange-600" : "text-slate-500",
-                      )}
-                    />
-                    {!collapsed ? <span className="min-w-0 truncate">{itemLabel}</span> : null}
-                  </div>
-                  {!collapsed ? (
-                    <div className="ml-auto flex shrink-0 items-center gap-2">
-                      {pendingCountFor(to) > 0 ? (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
-                          {pendingCountFor(to)}
-                        </span>
-                      ) : null}
-                      {pathname === to ? (
-                        <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
-                      ) : null}
+              {filteredItems.map(({ label: itemLabel, to, icon: Icon, search: itemSearch }) => {
+                const isActive =
+                  pathname === to &&
+                  (!itemSearch?.tab ||
+                    ((routeSearch as { tab?: string }).tab ?? "profil") === itemSearch.tab);
+                return (
+                  <Link
+                    key={`${to}-${itemLabel}-${itemSearch?.category ?? itemSearch?.activityType ?? ""}`}
+                    to={to}
+                    search={to === "/caisse" ? { action: "validate", ticket: "" } : (itemSearch ?? {})}
+                    onClick={(event: MouseEvent<HTMLElement>) => {
+                      if (to === "/caisse" && pendingCountFor(to) > 0) {
+                        event.preventDefault();
+                        void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } });
+                      }
+                      setOpen(false);
+                    }}
+                    title={itemLabel}
+                    className={cn(
+                      "flex h-10 items-center gap-3 border-l-4 border-transparent px-3 py-2 pl-7 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-sidebar-foreground/65 dark:hover:bg-sidebar-accent dark:hover:text-sidebar-accent-foreground",
+                      collapsed && "justify-center border-l-0 px-0",
+                      isActive &&
+                        "border-orange-500 bg-orange-50 font-semibold text-orange-700 dark:bg-orange-950/30 dark:text-orange-200",
+                      pendingCountFor(to) > 0 && "animate-pulse",
+                    )}
+                  >
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0",
+                          isActive ? "text-orange-600" : "text-slate-500",
+                        )}
+                      />
+                      {!collapsed ? <span className="min-w-0 truncate">{itemLabel}</span> : null}
                     </div>
-                  ) : null}
-                </Link>
-              ))}
+                    {!collapsed ? (
+                      <div className="ml-auto flex shrink-0 items-center gap-2">
+                        {pendingCountFor(to) > 0 ? (
+                          <span className="flex size-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
+                            {pendingCountFor(to)}
+                          </span>
+                        ) : null}
+                        {isActive ? (
+                          <span className="size-2 rounded-full bg-orange-500 animate-pulse" />
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </Link>
+                );
+              })}
             </CollapsibleContent>
           </Collapsible>
         );

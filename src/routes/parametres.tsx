@@ -14,6 +14,7 @@ import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
 import { ShopModulesSection } from "@/components/ShopModulesSection";
+import { StorageLocationsPage } from "@/components/StorageLocationPages";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,13 +38,34 @@ import {
 } from "@/services/shopService";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/parametres")({ component: ParametresPage });
+const PARAMETER_TABS = [
+  "profil",
+  "boutique",
+  "modules",
+  "whatsapp",
+  "entry-fee",
+  "danger",
+  "rangements",
+] as const;
+type ParameterTab = (typeof PARAMETER_TABS)[number];
+
+function isParameterTab(value: unknown): value is ParameterTab {
+  return typeof value === "string" && PARAMETER_TABS.some((tab) => tab === value);
+}
+
+export const Route = createFileRoute("/parametres")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    tab: isParameterTab(search.tab) ? search.tab : undefined,
+  }),
+  component: ParametresPage,
+});
 
 function ParametresPage() {
   const router = useRouter();
+  const search = Route.useSearch();
   const { shop: currentShop, shopId } = useCurrentShop();
   const { isOwner } = useUserRoles();
-  const [tab, setTab] = useState("profil");
+  const [tab, setTab] = useState<ParameterTab>(search.tab ?? "profil");
   const [profile, setProfile] = useState<{
     nom: string | null;
     email: string | null;
@@ -62,6 +84,10 @@ function ParametresPage() {
   const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
   const [entryFeeEnabled, setEntryFeeEnabled] = useState(true);
   const [entryFeeRefundable, setEntryFeeRefundable] = useState(false);
+
+  useEffect(() => {
+    setTab(search.tab ?? "profil");
+  }, [search.tab]);
 
   useEffect(() => {
     if (!shopId || !isOwner) return;
@@ -173,6 +199,15 @@ function ParametresPage() {
     toast.info("La suppression du compte doit être traitée côté serveur / Supabase Admin.");
   }
 
+  function changeTab(value: string) {
+    if (!isParameterTab(value)) return;
+    setTab(value);
+    void router.navigate({
+      to: "/parametres",
+      search: (previous) => ({ ...previous, tab: value }),
+    });
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHero
@@ -183,11 +218,12 @@ function ParametresPage() {
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Paramètres" }]}
       />
 
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
+      <Tabs value={tab} onValueChange={changeTab} className="w-full">
         <TabsList className="flex h-auto w-full flex-nowrap justify-start overflow-x-auto">
           <TabsTrigger value="profil">Profil</TabsTrigger>
           <TabsTrigger value="boutique">Atelier</TabsTrigger>
           <TabsTrigger value="modules">Mes domaines</TabsTrigger>
+          {isOwner ? <TabsTrigger value="rangements">Rangements</TabsTrigger> : null}
           <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
           {isOwner ? <TabsTrigger value="entry-fee">Frais d'entrée</TabsTrigger> : null}
           <TabsTrigger value="danger">Danger</TabsTrigger>
@@ -330,6 +366,12 @@ function ParametresPage() {
         <TabsContent value="modules" className="mt-6">
           <ShopModulesSection shopId={shopId} />
         </TabsContent>
+
+        {isOwner ? (
+          <TabsContent value="rangements" className="mt-6">
+            <StorageLocationsPage plan={false} />
+          </TabsContent>
+        ) : null}
 
         <TabsContent value="whatsapp" className="mt-6">
           <Card>

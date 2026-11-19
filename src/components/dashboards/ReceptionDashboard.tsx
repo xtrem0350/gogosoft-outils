@@ -2,9 +2,16 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Inbox, Package, PackageCheck, Plus, UserRound } from "lucide-react";
 
+import { StorageLocationsPage } from "@/components/StorageLocationPages";
 import { StorageLocationDialog } from "@/components/StorageLocationDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +25,7 @@ export function ReceptionDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
+  const [isLocationsListOpen, setIsLocationsListOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -77,7 +85,7 @@ export function ReceptionDashboard() {
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm">En attente réception</CardTitle><Inbox className="size-4 text-slate-500" /></CardHeader><CardContent><div className="text-3xl font-bold">{waiting.length}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm">Clients enregistrés</CardTitle><UserRound className="size-4 text-green-800" /></CardHeader><CardContent><div className="text-3xl font-bold">{clients.length}</div><Button variant="link" className="px-0" asChild><Link to="/clients">Voir les clients</Link></Button></CardContent></Card>
       </div>
-      <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Fiches à ranger</CardTitle><Button variant="outline" asChild><Link to="/reception">Traiter les rangements</Link></Button></CardHeader><CardContent>{loading ? <p className="text-sm text-slate-500">Chargement…</p> : toStore.length === 0 ? <p className="text-sm text-slate-500">Aucune fiche à ranger.</p> : <div className="space-y-2">{toStore.slice(0, 10).map((ticket) => <div key={ticket.id} className="flex justify-between rounded-lg border p-3"><span className="font-medium">{ticket.ticket_number} · {ticket.client_name}</span><span className="text-sm text-slate-500">{ticket.device_brand} {ticket.device_model}</span></div>)}</div>}</CardContent></Card>
+      <Card><CardHeader className="flex flex-row items-center justify-between"><CardTitle>Fiches à ranger</CardTitle><Button type="button" variant="outline" onClick={() => setIsLocationsListOpen(true)}>Traiter les rangements</Button></CardHeader><CardContent>{loading ? <p className="text-sm text-slate-500">Chargement…</p> : toStore.length === 0 ? <p className="text-sm text-slate-500">Aucune fiche à ranger.</p> : <div className="space-y-2">{toStore.slice(0, 10).map((ticket) => <div key={ticket.id} className="flex justify-between rounded-lg border p-3"><span className="font-medium">{ticket.ticket_number} · {ticket.client_name}</span><span className="text-sm text-slate-500">{ticket.device_brand} {ticket.device_model}</span></div>)}</div>}</CardContent></Card>
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" asChild>
           <Link to="/catalogue">Ouvrir le catalogue</Link>
@@ -89,6 +97,15 @@ export function ReceptionDashboard() {
         shopId={shopId ?? ""}
         onSaved={() => setIsLocationDialogOpen(false)}
       />
+      <Dialog open={isLocationsListOpen} onOpenChange={setIsLocationsListOpen}>
+        <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-7xl overflow-y-auto">
+          <DialogTitle className="sr-only">Rangements</DialogTitle>
+          <DialogDescription className="sr-only">
+            Liste et gestion des emplacements de rangement.
+          </DialogDescription>
+          <StorageLocationsPage plan={false} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
