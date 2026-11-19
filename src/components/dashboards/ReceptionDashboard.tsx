@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Inbox, PackageCheck, Plus, UserRound } from "lucide-react";
+import { Inbox, Package, PackageCheck, Plus, UserRound } from "lucide-react";
 
+import { StorageLocationDialog } from "@/components/StorageLocationDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
@@ -16,6 +17,7 @@ export function ReceptionDashboard() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLocationDialogOpen, setIsLocationDialogOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -58,6 +60,14 @@ export function ReceptionDashboard() {
         <div><h1 className="text-2xl font-bold">Accueil réception</h1><p className="text-sm text-slate-500">Fiches clients et rangement</p></div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild><Link to="/clients/nouveau"><Plus className="mr-2 size-4" />Nouveau client</Link></Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!shopId}
+            onClick={() => setIsLocationDialogOpen(true)}
+          >
+            <Package className="mr-2 size-4" />Nouveau Rangement
+          </Button>
           <Button asChild><Link to="/reception">Nouvelle réception / Wizard</Link></Button>
         </div>
       </div>
@@ -72,8 +82,13 @@ export function ReceptionDashboard() {
         <Button variant="outline" asChild>
           <Link to="/catalogue">Ouvrir le catalogue</Link>
         </Button>
-        <Button variant="outline" asChild><Link to="/parametres/emplacements">Gérer les rangements</Link></Button>
       </div>
+      <StorageLocationDialog
+        open={isLocationDialogOpen}
+        onOpenChange={setIsLocationDialogOpen}
+        shopId={shopId ?? ""}
+        onSaved={() => setIsLocationDialogOpen(false)}
+      />
     </div>
   );
 }

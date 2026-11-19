@@ -146,7 +146,6 @@ function getNavigationGroups(
       { label: "Accueil réception", to: "/reception", icon: UserRound },
       { label: "Clients", to: "/clients", icon: Users },
       { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
-      { label: "Rangements", to: "/parametres/emplacements", icon: Package },
       { label: "Catalogue", to: "/catalogue", icon: BookOpen },
       ...(hasModule("reparation-telephone")
         ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
