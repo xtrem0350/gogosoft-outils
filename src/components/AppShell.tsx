@@ -535,6 +535,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       </div>
       )}
+      {mobileLayoutActive ? (
+        <div className="fixed right-16 top-3 z-50 [&>button]:!inline-flex">
+          <ThemeToggle />
+        </div>
+      ) : null}
       {showWarning ? (
         <InactivityWarningModal
           open={showWarning}
