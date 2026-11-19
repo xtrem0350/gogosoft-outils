@@ -55,7 +55,7 @@ function isParameterTab(value: unknown): value is ParameterTab {
 
 export const Route = createFileRoute("/parametres")({
   validateSearch: (search: Record<string, unknown>) => ({
-    tab: isParameterTab(search.tab) ? search.tab : undefined,
+    tab: isParameterTab(search["tab"]) ? search["tab"] : undefined,
   }),
   component: ParametresPage,
 });

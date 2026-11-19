@@ -107,14 +107,14 @@ export function UserMenu() {
             <DropdownMenuItem onClick={() => void navigate({ to: "/profil" })}>
               <User className="size-4" /> Mon profil
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
+            <DropdownMenuItem onClick={() => void navigate({ to: "/parametres", search: { tab: "modules" } })}>
               <Package className="size-4" /> Mes domaines
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void navigate({ to: "/abonnement" as any })}>
               <CreditCard className="size-4" /> Mon forfait
             </DropdownMenuItem>
             {isOwner ? (
-              <DropdownMenuItem onClick={() => void navigate({ to: "/parametres" })}>
+              <DropdownMenuItem onClick={() => void navigate({ to: "/parametres", search: { tab: "profil" } })}>
                 <Settings className="size-4" /> Paramètres
               </DropdownMenuItem>
             ) : null}
