@@ -76,9 +76,10 @@ export async function signInWithIdentifier(identifier: string, password: string)
     .select("email")
     .eq("pseudo", trimmedIdentifier)
     .maybeSingle();
-  if (error) throw error;
-
-  if (!profile?.email) {
+  if (error) {
+    console.error("[authService] signInWithIdentifier:pseudo-lookup", error);
+  }
+  if (error || !profile?.email) {
     throw new Error("Pseudo ou mot de passe incorrect.");
   }
 
