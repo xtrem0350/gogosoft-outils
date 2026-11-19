@@ -29,6 +29,7 @@ import {
   type PricingMode,
 } from "@/constants/pricing";
 import { useAuth } from "@/hooks/useAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   consumeDemoExpiredNotice,
   isDemoMode,
@@ -175,6 +176,30 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileRedirectGuard target="/auth" />;
+  }
+
+  return <DesktopHomePage />;
+}
+
+function MobileRedirectGuard({ target }: { target: "/auth" }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    void navigate({ to: target });
+  }, [navigate, target]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+      Chargement...
+    </div>
+  );
+}
+
+function DesktopHomePage() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { setActiveModules } = useActiveModules();

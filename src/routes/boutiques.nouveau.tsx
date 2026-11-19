@@ -17,6 +17,7 @@ import { completeSubscriptionCheckout } from "@/services/checkoutService";
 import { createShop } from "@/services/shopService";
 import { getMySubscription } from "@/services/subscriptionService";
 import { usePersistedFormState } from "@/hooks/usePersistedFormState";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const SELECTED_MODULES_KEY = "gogosoft.welcome.selectedModules";
 const SELECTED_PLAN_KEY = "gogosoft.welcome.selectedPlan";
@@ -51,6 +52,21 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 function NewShopPage() {
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isMobile) return;
+    toast.info("Cette page est disponible sur ordinateur.");
+    void navigate({ to: "/dashboard" });
+  }, [isMobile, navigate]);
+
+  if (isMobile) return null;
+
+  return <NewShopPageContent />;
+}
+
+function NewShopPageContent() {
   const navigate = useNavigate();
   const { shopId, loading: shopLoading, refresh: refreshShops } = useCurrentShop();
   const demo = isDemoMode();

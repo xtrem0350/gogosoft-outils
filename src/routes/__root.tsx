@@ -21,6 +21,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { CurrentShopProvider } from "@/hooks/useCurrentShop";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Toaster } from "@/components/ui/sonner";
 
 /** Ce fichier est le SEUL endroit où AppShell est monté. Ne jamais l'utiliser dans une route enfant. */
@@ -132,6 +133,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const publicRoutes = [
     "/",
     "/bienvenue",
@@ -144,6 +146,8 @@ function RootComponent() {
   ];
   const isStandalonePage = publicRoutes.includes(location.pathname);
   const isPublicShopRoute = location.pathname.startsWith("/shop/");
+  const isMobileDesktopOnlyRoute =
+    isMobile && ["/abonnement", "/boutiques/nouveau"].includes(location.pathname);
   const routeOutlet = (
     <div key={location.pathname} className="page-transition">
       <Outlet />
@@ -181,7 +185,7 @@ function RootComponent() {
           <CurrentShopProvider>
             <ActiveModulesProvider>
               <SuperAdminRedirect>
-                {isStandalonePage || isPublicShopRoute ? (
+                {isStandalonePage || isPublicShopRoute || isMobileDesktopOnlyRoute ? (
                   routeOutlet
                 ) : (
                   <ModuleRouteGuard>

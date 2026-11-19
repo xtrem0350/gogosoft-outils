@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { CreditCard, Globe, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BONUS_DAYS, DOMAIN_PRICE, WELCOME_PRICING } from "@/constants/pricing";
 import { isWelcomeDomainId, WELCOME_DOMAIN_LABELS } from "@/constants/welcomeDomains";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
 import { getCurrentDomainRequest, renewDomain, type DomainRequest } from "@/services/domainService";
@@ -31,6 +32,21 @@ export const Route = createFileRoute("/abonnement")({
 type RenewalMode = "subscription" | "domain" | null;
 
 function AbonnementPage() {
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isMobile) return;
+    toast.info("Cette page est disponible sur ordinateur.");
+    void navigate({ to: "/dashboard" });
+  }, [isMobile, navigate]);
+
+  if (isMobile) return null;
+
+  return <AbonnementContent />;
+}
+
+function AbonnementContent() {
   const { activate } = Route.useSearch();
   const demo = isDemoMode();
   const { shopId, loading: shopLoading } = useCurrentShop();
