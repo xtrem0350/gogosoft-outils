@@ -58,7 +58,13 @@ const STATUS_CLASSES: Record<StorageLocationStatus, string> = {
 
 type Filter = "all" | StorageLocationStatus;
 
-export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
+export function StorageLocationsPage({
+  plan = false,
+  embedded = false,
+}: {
+  plan?: boolean;
+  embedded?: boolean;
+}) {
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { role } = useUserRole();
   const canManageLocations = role === "owner" || role === "receptionniste";
@@ -152,26 +158,36 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHero
-        title={heading.title}
-        subtitle={heading.subtitle}
-        action={
-          canManageLocations ? (
+      {embedded ? (
+        canManageLocations ? (
+          <div className="flex justify-end">
             <Button type="button" onClick={createLocation} disabled={!shopId}>
               <Plus className="size-4" /> Ajouter un emplacement
             </Button>
-          ) : null
-        }
-        breadcrumb={
-          plan
-            ? [{ label: "Accueil", to: "/dashboard" }, { label: "Plan de l'atelier" }]
-            : [
-                { label: "Accueil", to: "/dashboard" },
-                { label: "Paramètres", to: "/parametres" },
-                { label: "Rangements" },
-              ]
-        }
-      />
+          </div>
+        ) : null
+      ) : (
+        <PageHero
+          title={heading.title}
+          subtitle={heading.subtitle}
+          action={
+            canManageLocations ? (
+              <Button type="button" onClick={createLocation} disabled={!shopId}>
+                <Plus className="size-4" /> Ajouter un emplacement
+              </Button>
+            ) : null
+          }
+          breadcrumb={
+            plan
+              ? [{ label: "Accueil", to: "/dashboard" }, { label: "Plan de l'atelier" }]
+              : [
+                  { label: "Accueil", to: "/dashboard" },
+                  { label: "Paramètres", to: "/parametres" },
+                  { label: "Rangements" },
+                ]
+          }
+        />
+      )}
       <div className="grid grid-cols-3 gap-3">
         <Card>
           <CardContent className="p-4">

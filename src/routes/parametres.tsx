@@ -369,7 +369,7 @@ function ParametresPage() {
 
         {isOwner ? (
           <TabsContent value="rangements" className="mt-6">
-            <StorageLocationsPage plan={false} />
+            <StorageLocationsPage plan={false} embedded />
           </TabsContent>
         ) : null}
 

@@ -98,12 +98,12 @@ export function ReceptionDashboard() {
         onSaved={() => setIsLocationDialogOpen(false)}
       />
       <Dialog open={isLocationsListOpen} onOpenChange={setIsLocationsListOpen}>
-        <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-7xl overflow-y-auto">
-          <DialogTitle className="sr-only">Rangements</DialogTitle>
+        <DialogContent className="max-h-[90vh] w-[calc(100%-2rem)] max-w-5xl overflow-y-auto">
+          <DialogTitle className="text-xl font-semibold">Rangements</DialogTitle>
           <DialogDescription className="sr-only">
             Liste et gestion des emplacements de rangement.
           </DialogDescription>
-          <StorageLocationsPage plan={false} />
+          <StorageLocationsPage plan={false} embedded />
         </DialogContent>
       </Dialog>
     </div>
