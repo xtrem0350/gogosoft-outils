@@ -121,8 +121,8 @@ function OwnerDashboard() {
   const createShopAction = (
     <Button
       type="button"
-      variant="outline"
-      className="border-white/70 bg-white/70 text-slate-900 hover:bg-white"
+      variant="default"
+      className="border-white/70"
       onClick={() => setCreateOpen(true)}
     >
       <Plus className="mr-2 size-4" />
