@@ -71,19 +71,31 @@ export async function signInWithIdentifier(identifier: string, password: string)
     });
   }
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("email")
-    .eq("pseudo", trimmedIdentifier)
-    .maybeSingle();
-  if (error) {
+  let email: string | null;
+  try {
+    const { data, error } = await supabase.rpc("get_email_by_pseudo", {
+      p_pseudo: trimmedIdentifier,
+    });
+    if (error) throw error;
+    email = data;
+  } catch (error) {
     console.error("[authService] signInWithIdentifier:pseudo-lookup", error);
-  }
-  if (error || !profile?.email) {
-    throw new Error("Pseudo ou mot de passe incorrect.");
+    throw new Error("Erreur de connexion. Réessayez.");
   }
 
-  return supabase.auth.signInWithPassword({ email: profile.email, password });
+  if (!email) {
+    throw new Error("Pseudo introuvable. Vérifiez l'orthographe.");
+  }
+
+  const result = await supabase.auth.signInWithPassword({ email, password });
+  if (result.error) {
+    console.error("[authService] signInWithIdentifier:pseudo-password", result.error);
+    if (result.error.message.toLowerCase().includes("invalid login credentials")) {
+      throw new Error("Mot de passe incorrect.");
+    }
+    throw new Error("Erreur de connexion. Réessayez.");
+  }
+  return result;
 }
 
 /** Télécharge un avatar utilisateur dans le bucket public avatars. */
