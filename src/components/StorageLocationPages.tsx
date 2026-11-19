@@ -139,7 +139,10 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
 
   const heading = plan
     ? { title: "🗄️ Plan de mon atelier", subtitle: "Visualisez tous vos emplacements" }
-    : { title: "📦 Mes emplacements", subtitle: "Organisez votre atelier comme vous voulez" };
+    : {
+        title: "📦 Rangements",
+        subtitle: "Organisez les emplacements physiques de votre atelier",
+      };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -157,7 +160,7 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
             : [
                 { label: "Accueil", to: "/dashboard" },
                 { label: "Paramètres", to: "/parametres" },
-                { label: "Emplacements" },
+                { label: "Rangements" },
               ]
         }
       />

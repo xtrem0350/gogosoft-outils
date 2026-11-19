@@ -148,6 +148,7 @@ function getNavigationGroups(
       { label: "Clients", to: "/clients", icon: Users },
       { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
       { label: "Rangements", to: "/parametres/emplacements", icon: Package },
+      { label: "Catalogue", to: "/catalogue", icon: BookOpen },
       ...(hasModule("reparation-telephone")
         ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
         : []),
@@ -194,7 +195,6 @@ function getNavigationGroups(
       items: [
         { label: "Fiches", to: "/phone/atelier", icon: Smartphone },
         { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
-        { label: "Plan de l'atelier", to: "/atelier/plan", icon: Package },
         { label: "Carnet d'expérience", to: "/phone/carnet", icon: History },
         { label: "Historique", to: "/phone/historique", icon: History },
       ],
@@ -293,6 +293,7 @@ function getNavigationGroups(
       icon: Settings,
       items: isDemo
         ? [
+            { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
             { label: "Équipe", to: "/equipe", icon: UserCog },
             { label: "Forfait", to: "/abonnement", icon: Settings },
             { label: "Paramètres", to: "/parametres", icon: Settings },
@@ -301,12 +302,13 @@ function getNavigationGroups(
         { label: "Outils", to: "/outils", icon: Wrench },
         { label: "Catégories", to: "/categories", icon: FolderTree },
         { label: "Mes ateliers", to: "/boutiques", icon: Store },
+        { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
         { label: "Équipe", to: "/equipe", icon: UserCog },
         { label: "Aide", to: "/aide", icon: CircleHelp },
         { label: "Profil", to: "/profil", icon: User },
         { label: "Forfait", to: "/abonnement", icon: Settings },
         { label: "Mes domaines", to: "/parametres", icon: Package },
-        { label: "Emplacements", to: "/parametres/emplacements", icon: Package },
+        { label: "Rangements", to: "/parametres/emplacements", icon: Package },
         { label: "Paramètres", to: "/parametres", icon: Settings },
       ],
     });
