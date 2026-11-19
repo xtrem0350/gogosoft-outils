@@ -16,7 +16,6 @@ import {
   ShoppingCart,
   Settings,
   Store,
-  User,
   UserCog,
   UserPlus,
   UserRound,
@@ -278,15 +277,6 @@ function getNavigationGroups(
     ],
   });
 
-  groups.push({
-    label: "OUTILS",
-    icon: Wrench,
-    items: [
-      { label: "Caisse", to: "/caisse", icon: Wallet },
-      { label: "Catalogue", to: "/catalogue", icon: BookOpen },
-    ],
-  });
-
   if (role === "owner") {
     groups.push({
       label: "MON COMPTE",
@@ -295,22 +285,20 @@ function getNavigationGroups(
         ? [
             { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
             { label: "Équipe", to: "/equipe", icon: UserCog },
-            { label: "Forfait", to: "/abonnement", icon: Settings },
             { label: "Paramètres", to: "/parametres", icon: Settings },
+            { label: "Catalogue", to: "/catalogue", icon: BookOpen },
           ]
         : [
-        { label: "Outils", to: "/outils", icon: Wrench },
-        { label: "Catégories", to: "/categories", icon: FolderTree },
-        { label: "Mes ateliers", to: "/boutiques", icon: Store },
-        { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
-        { label: "Équipe", to: "/equipe", icon: UserCog },
-        { label: "Aide", to: "/aide", icon: CircleHelp },
-        { label: "Profil", to: "/profil", icon: User },
-        { label: "Forfait", to: "/abonnement", icon: Settings },
-        { label: "Mes domaines", to: "/parametres", icon: Package },
-        { label: "Rangements", to: "/parametres/emplacements", icon: Package },
-        { label: "Paramètres", to: "/parametres", icon: Settings },
-      ],
+            { label: "Outils", to: "/outils", icon: Wrench },
+            { label: "Catégories", to: "/categories", icon: FolderTree },
+            { label: "Mes ateliers", to: "/boutiques", icon: Store },
+            { label: "Plan d'affectation des rôles", to: "/atelier/plan", icon: Users },
+            { label: "Équipe", to: "/equipe", icon: UserCog },
+            { label: "Aide", to: "/aide", icon: CircleHelp },
+            { label: "Rangements", to: "/parametres/emplacements", icon: Package },
+            { label: "Paramètres", to: "/parametres", icon: Settings },
+            { label: "Catalogue", to: "/catalogue", icon: BookOpen },
+          ],
     });
   }
 

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRole } from "@/hooks/useUserRole";
 import { getTickets, type WorkshopTicket } from "@/services/workshopService";
 import {
   deleteLocation,
@@ -59,6 +60,9 @@ type Filter = "all" | StorageLocationStatus;
 
 export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { role } = useUserRole();
+  const canManageLocations = role === "owner" || role === "receptionniste";
+  const canDeleteLocations = role === "owner";
   const [locations, setLocations] = useState<StorageLocation[]>([]);
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,17 +120,19 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
   );
 
   function editLocation(location: StorageLocation) {
+    if (!canManageLocations) return;
     setEditingLocation(location);
     setDialogOpen(true);
   }
 
   function createLocation() {
+    if (!canManageLocations || !shopId) return;
     setEditingLocation(null);
     setDialogOpen(true);
   }
 
   async function confirmDelete() {
-    if (!deletingLocation) return;
+    if (!canDeleteLocations || !deletingLocation) return;
     const deleted = await deleteLocation(deletingLocation.id);
     if (!deleted) {
       toast.error("Impossible de supprimer cet emplacement.");
@@ -150,9 +156,11 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
         title={heading.title}
         subtitle={heading.subtitle}
         action={
-          <Button type="button" onClick={createLocation} disabled={!shopId}>
-            <Plus className="size-4" /> Ajouter un emplacement
-          </Button>
+          canManageLocations ? (
+            <Button type="button" onClick={createLocation} disabled={!shopId}>
+              <Plus className="size-4" /> Ajouter un emplacement
+            </Button>
+          ) : null
         }
         breadcrumb={
           plan
@@ -234,36 +242,40 @@ export function StorageLocationsPage({ plan = false }: { plan?: boolean }) {
                       {ticket?.client_name ?? "Fiche en cours"}
                     </p>
                   ) : null}
-                  {!plan ? (
+                  {!plan && (canManageLocations || canDeleteLocations) ? (
                     <div className="flex justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Modifier ${location.name}`}
-                        title="Modifier"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          editLocation(location);
-                        }}
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        aria-label={`Supprimer ${location.name}`}
-                        title="Supprimer"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          setDeletingLocation(location);
-                        }}
-                      >
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
+                      {canManageLocations ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Modifier ${location.name}`}
+                          title="Modifier"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            editLocation(location);
+                          }}
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      ) : null}
+                      {canDeleteLocations ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Supprimer ${location.name}`}
+                          title="Supprimer"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setDeletingLocation(location);
+                          }}
+                        >
+                          <Trash2 className="size-4 text-destructive" />
+                        </Button>
+                      ) : null}
                     </div>
                   ) : null}
                 </CardContent>
