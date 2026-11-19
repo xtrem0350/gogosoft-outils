@@ -161,7 +161,17 @@ export function StorageLocationsPage({
       {embedded ? (
         canManageLocations ? (
           <div className="flex justify-end">
-            <Button type="button" onClick={createLocation} disabled={!shopId}>
+            <Button
+              type="button"
+              style={{
+                backgroundColor: shopId ? "#14532d" : "#9ca3af",
+                color: shopId ? "#ffffff" : "#000000",
+                borderColor: shopId ? "#14532d" : "#9ca3af",
+              }}
+              className="hover:bg-green-800 active:bg-green-950"
+              onClick={createLocation}
+              disabled={!shopId}
+            >
               <Plus className="size-4" /> Ajouter un emplacement
             </Button>
           </div>
@@ -172,7 +182,17 @@ export function StorageLocationsPage({
           subtitle={heading.subtitle}
           action={
             canManageLocations ? (
-              <Button type="button" onClick={createLocation} disabled={!shopId}>
+              <Button
+                type="button"
+                style={{
+                  backgroundColor: shopId ? "#14532d" : "#9ca3af",
+                  color: shopId ? "#ffffff" : "#000000",
+                  borderColor: shopId ? "#14532d" : "#9ca3af",
+                }}
+                className="hover:bg-green-800 active:bg-green-950"
+                onClick={createLocation}
+                disabled={!shopId}
+              >
                 <Plus className="size-4" /> Ajouter un emplacement
               </Button>
             ) : null

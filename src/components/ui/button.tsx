@@ -38,10 +38,25 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, style, disabled, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
+    const defaultVariantStyle =
+      variant == null || variant === "default"
+        ? {
+            backgroundColor: disabled ? "#9ca3af" : "#14532d",
+            color: disabled ? "#000000" : "#ffffff",
+            borderColor: disabled ? "#9ca3af" : "#14532d",
+          }
+        : undefined;
+
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled}
+        style={defaultVariantStyle ? { ...defaultVariantStyle, ...style } : style}
+        {...props}
+      />
     );
   },
 );
