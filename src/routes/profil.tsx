@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { signOut, updateProfile, uploadAvatar } from "@/services/authService";
 import { getUserShops, type Shop } from "@/services/shopService";
 import { useAuth } from "@/hooks/useAuth";
+import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
 import { useSubscription } from "@/hooks/useSubscription";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,6 +32,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 function ProfilPage() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, refresh } = useAuth();
+  const { activeRole, isSuperAdmin, loading: rolesLoading } = useUserRoles();
   const { subscription, loading: subscriptionLoading } = useSubscription();
   const [shops, setShops] = useState<Shop[]>([]);
   const [loadingShops, setLoadingShops] = useState(true);
@@ -117,6 +119,7 @@ function ProfilPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+  const profileRole = isSuperAdmin ? "super_admin" : activeRole || profile?.role;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -144,7 +147,7 @@ function ProfilPage() {
                   {profile?.phone ?? "Téléphone non renseigné"}
                 </p>
                 <p className="text-sm capitalize text-muted-foreground">
-                  Rôle : {profile?.role ?? "Réparateur"}
+                  Rôle : {rolesLoading ? "Chargement..." : getRoleLabel(profileRole)}
                 </p>
               </div>
               <div className="ml-auto">

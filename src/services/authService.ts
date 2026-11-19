@@ -182,6 +182,7 @@ export async function signUp(
           phone: fullPhone,
           phone_country_code: countryCode,
           pseudo: normalizedPseudo ?? null,
+          role: "owner",
         },
       },
     });
@@ -229,6 +230,7 @@ export async function signUp(
       id: userId,
       email,
       nom: fullName,
+      role: "owner",
       phone: fullPhone,
       phone_country_code: countryCode,
       pseudo: normalizedPseudo ?? null,

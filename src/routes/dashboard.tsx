@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { useUserRoles } from "@/hooks/useUserRoles";
+import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { isSimulationMode } from "@/services/simulationService";
@@ -210,7 +210,7 @@ function OwnerDashboard() {
   const currentHour = new Date().getHours();
   const greeting =
     currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
-  const roleLabel = profile?.role ?? "Réparateur";
+  const roleLabel = getRoleLabel("owner");
   const todayRevenue = tickets
     .filter((ticket) => ticket.created_at && new Date(ticket.created_at).toDateString() === new Date().toDateString())
     .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0) +

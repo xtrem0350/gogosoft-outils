@@ -16,6 +16,27 @@ export type ShopRole =
   | "vendeur"
   | "super_admin";
 
+export const ROLE_LABELS: Record<string, string> = {
+  owner: "Chef d'Atelier",
+  reparateur: "Réparateur",
+  technicien: "Technicien",
+  technicien_pc: "Technicien",
+  caissier: "Caissier",
+  receptionniste: "Réceptionniste",
+  magasinier: "Magasinier",
+  vendeur: "Vendeur",
+  super_admin: "Super Admin",
+  manager: "Chef d'Atelier",
+  admin: "Chef d'Atelier",
+};
+
+export function getRoleLabel(role: string | null | undefined): string {
+  const trimmedRole = role?.trim();
+  if (!trimmedRole) return "Non attribué";
+  const normalizedRole = trimmedRole.toLowerCase();
+  return ROLE_LABELS[normalizedRole] ?? trimmedRole;
+}
+
 export interface UseUserRolesResult {
   roles: string[];
   activeRole: string;
