@@ -48,6 +48,7 @@ import { useUserRole, type UserRole } from "@/hooks/useUserRole";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { usePendingItems } from "@/hooks/usePendingItems";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ModuleId } from "@/types/modules";
 import type { SectorVocabulary } from "@/types/sectors";
 
@@ -74,6 +75,7 @@ function getNavigationGroups(
   hasShop: boolean,
   vocabulary: SectorVocabulary,
   role: UserRole | string | null,
+  isMobile: boolean,
 ): NavigationGroup[] {
   const hasModule = (id: ModuleId) => activeModules.includes(id);
   const groups: NavigationGroup[] = [
@@ -101,7 +103,9 @@ function getNavigationGroups(
     if (hasModule("reparation-telephone")) {
       groups.push({ label: "TÉLÉPHONE", icon: Smartphone, items: [
         { label: "Mes fiches", to: "/phone/atelier", icon: Smartphone },
-        { label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle },
+        ...(!isMobile
+          ? [{ label: "Nouvelle fiche", to: "/phone/atelier/nouveau", icon: PlusCircle }]
+          : []),
         { label: "Historique", to: "/phone/historique", icon: History },
         { label: "Carnet", to: "/phone/carnet", icon: History },
       ] });
@@ -109,7 +113,9 @@ function getNavigationGroups(
     if (hasModule("reparation-pc")) {
       groups.push({ label: "ORDINATEUR", icon: Laptop, items: [
         { label: "Mes fiches", to: "/computer/atelier", icon: Laptop },
-        { label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle },
+        ...(!isMobile
+          ? [{ label: "Nouvelle fiche", to: "/computer/atelier/nouveau", icon: PlusCircle }]
+          : []),
         { label: "Historique", to: "/computer/historique", icon: History },
         { label: "Carnet", to: "/computer/carnet", icon: History },
       ] });
@@ -140,6 +146,9 @@ function getNavigationGroups(
           ...(hasModule("consommables")
             ? [{ label: "Stock consommables", to: "/consumable/stock", icon: Package }]
             : []),
+          ...(isMobile
+            ? [{ label: "Rangements", to: "/parametres/emplacements", icon: Package }]
+            : []),
         ],
       },
     ];
@@ -151,10 +160,10 @@ function getNavigationGroups(
       { label: "Clients", to: "/clients", icon: Users },
       { label: "Nouveau client", to: "/clients/nouveau", icon: UserPlus },
       { label: "Catalogue", to: "/catalogue", icon: BookOpen },
-      ...(hasModule("reparation-telephone")
+      ...(!isMobile && hasModule("reparation-telephone")
         ? [{ label: "Réception téléphone", to: "/phone/atelier/nouveau", icon: Smartphone }]
         : []),
-      ...(hasModule("reparation-pc")
+      ...(!isMobile && hasModule("reparation-pc")
         ? [{ label: "Réception ordinateur", to: "/computer/atelier/nouveau", icon: Laptop }]
         : []),
     ];
@@ -322,6 +331,7 @@ function getNavigationGroups(
 
 /** Navigation principale de l'espace de travail. */
 export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
+  const isMobile = useIsMobile();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const routeSearch = useRouterState({ select: (state) => state.location.search });
   const navigate = useNavigate();
@@ -340,6 +350,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
     Boolean(shop?.id),
     vocabulary,
     activeRole,
+    isMobile,
   );
   const pendingCountFor = (to: string) => {
     if (activeRole === "caissier" || activeRole === "owner") {

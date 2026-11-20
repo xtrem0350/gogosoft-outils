@@ -75,23 +75,34 @@ if (typeof window !== "undefined") {
   (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
 }
 
-function requiredRoles(pathname: string): UserRole[] | null {
+function requiredRoles(pathname: string, isMobile: boolean): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
   if (pathname === "/caisse" || pathname.startsWith("/caisse")) return ["owner", "caissier"];
   if (pathname === "/reception" || pathname.startsWith("/reception")) return ["owner", "receptionniste"];
   if (pathname === "/magasin" || pathname.startsWith("/magasin")) return ["owner", "magasinier"];
   if (pathname.startsWith("/sales")) return ["owner", "vendeur"];
+  if (pathname === "/atelier/plan") return ["owner"];
+  if (pathname === "/parametres/emplacements") {
+    return isMobile
+      ? ["owner", "receptionniste", "magasinier"]
+      : ["owner"];
+  }
   if (pathname.startsWith("/equipe") || pathname.startsWith("/parametres") || pathname.startsWith("/abonnement")) {
     return ["owner"];
   }
   if (
     pathname === "/phone/atelier/nouveau" ||
     pathname === "/computer/atelier/nouveau"
-  ) return ["owner", "technicien", "receptionniste"];
+  ) return isMobile ? [] : ["owner", "technicien", "receptionniste"];
   if (pathname.startsWith("/phone/atelier") || pathname.startsWith("/phone/historique") || pathname.startsWith("/phone/carnet") || pathname.startsWith("/computer/atelier") || pathname.startsWith("/computer/historique") || pathname.startsWith("/computer/carnet")) {
     return ["owner", "technicien"];
   }
   if (pathname.startsWith("/consumable/stock")) return ["owner", "magasinier"];
+  if (pathname === "/clients/nouveau") {
+    return isMobile
+      ? ["receptionniste"]
+      : ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
+  }
   if (pathname.startsWith("/clients")) return ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
   if (pathname.startsWith("/catalogue")) return ["owner", "technicien", "caissier", "magasinier", "receptionniste", "vendeur"];
   return null;
@@ -188,6 +199,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isExemptRoute =
     isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
   const loading = authLoading || roleLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
+  const routeRoles = requiredRoles(location.pathname, isMobile);
+  const mobileRoleDenied =
+    isMobile && routeRoles !== null && role !== null && !routeRoles.includes(role);
+  const mobileOwnerRouteDenied =
+    isMobile &&
+    role === "owner" &&
+    !["/dashboard", "/documents", "/profil"].includes(location.pathname);
+  const mobileAccessDenied = mobileRoleDenied || mobileOwnerRouteDenied;
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",
     "/atelier": "📋 Fiches d'atelier",
@@ -351,6 +370,12 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   }, [location.pathname, mustLeaveSignedOut, mustPickShop, navigate, shops.length]);
 
+  useEffect(() => {
+    if (loading || !mobileAccessDenied) return;
+    toast.info("Action non disponible sur mobile.");
+    void navigate({ to: "/dashboard" });
+  }, [loading, mobileAccessDenied, navigate]);
+
   if (!loading && !user && !isAuthRoute && !isDemoMode()) {
     return <LoadingShell />;
   }
@@ -364,6 +389,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   if (loading) return <LoadingShell />;
+  if (mobileAccessDenied) return <LoadingShell />;
 
   const baseContent = isExemptRoute ? (
     <>{children}</>
@@ -372,9 +398,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SubscriptionGuard>{children}</SubscriptionGuard>
     </ProtectedRoute>
   );
-  const allowedRoles = requiredRoles(location.pathname);
-  const content = allowedRoles ? (
-    <RoleGuard allowedRoles={allowedRoles}>{baseContent}</RoleGuard>
+  const content = routeRoles ? (
+    <RoleGuard allowedRoles={routeRoles}>{baseContent}</RoleGuard>
   ) : baseContent;
 
   const mobileLayoutActive =
@@ -536,8 +561,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       )}
       {mobileLayoutActive ? (
-        <div className="fixed right-16 top-3 z-50 [&>button]:!inline-flex">
-          <ThemeToggle />
+        <div className="fixed right-16 top-3 z-50">
+          <ThemeToggle className="inline-flex size-10 items-center justify-center rounded-full transition-colors hover:bg-orange-50" />
         </div>
       ) : null}
       {showWarning ? (

@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { FileText, Home, LogOut, UserRound } from "lucide-react";
+import { FileText, Home, LogOut, Package, UserRound } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import logo from "@/assets/images/leprofile.png";
 import { Button } from "@/components/ui/button";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { signOut } from "@/services/authService";
 import { endDemo, isDemoMode } from "@/services/demoService";
 
@@ -19,7 +20,12 @@ export function MobileLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { shop } = useCurrentShop();
+  const { activeRole } = useUserRoles();
   const [loggingOut, setLoggingOut] = useState(false);
+  const mobileNavigationItems =
+    activeRole === "magasinier" || activeRole === "receptionniste"
+      ? [...navigationItems, { label: "Rangements", to: "/parametres/emplacements" as const, icon: Package }]
+      : navigationItems;
 
   async function handleSignOut() {
     setLoggingOut(true);
@@ -76,7 +82,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
         aria-label="Navigation principale"
         className="fixed inset-x-0 bottom-0 z-40 flex h-16 justify-around border-t bg-background"
       >
-        {navigationItems.map(({ label, to, icon: Icon }) => {
+        {mobileNavigationItems.map(({ label, to, icon: Icon }) => {
           const isActive = pathname === to;
           return (
             <Link

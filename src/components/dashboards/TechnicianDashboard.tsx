@@ -8,10 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTicketsByTechnician, type WorkshopTicket } from "@/services/workshopService";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function TechnicianDashboard() {
   const { user } = useAuth();
   const { shopId } = useCurrentShop();
+  const isMobile = useIsMobile();
   const [assigned, setAssigned] = useState<WorkshopTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,12 +84,14 @@ export function TechnicianDashboard() {
           <Button variant="outline" asChild>
             <Link to="/computer/atelier">Réparations PC</Link>
           </Button>
-          <Button asChild>
-            <Link to="/phone/atelier/nouveau">
-              <Plus className="mr-2 size-4" />
-              Nouvelle fiche
-            </Link>
-          </Button>
+          {!isMobile ? (
+            <Button asChild>
+              <Link to="/phone/atelier/nouveau">
+                <Plus className="mr-2 size-4" />
+                Nouvelle fiche
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </div>
 

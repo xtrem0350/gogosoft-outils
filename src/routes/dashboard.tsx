@@ -32,6 +32,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -108,6 +109,7 @@ function OwnerDashboard() {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
   const { shop, shopId, loading: shopLoading, refresh } = useCurrentShop();
+  const isMobile = useIsMobile();
   const { activeModules: modules, isModuleActive: hasModule, loading: modulesLoading } = useActiveModules();
   const { subscription, daysRemaining, loading: subLoading } = useSubscription();
 
@@ -292,7 +294,8 @@ function OwnerDashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
+      {!isMobile ? (
+        <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
         <div className="relative flex flex-wrap items-center justify-between gap-6">
           <div className="min-w-0">
             <p className="text-xs font-bold uppercase tracking-wide text-slate-700/75">
@@ -314,15 +317,18 @@ function OwnerDashboard() {
             {createShopAction}
           </div>
         </div>
-      </div>
-      <CreateShopModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSuccess={(newShopId) => {
-          window.localStorage.setItem("gogosoft.currentShopId", newShopId);
-          void refresh(user?.id, true);
-        }}
-      />
+        </div>
+      ) : null}
+      {!isMobile ? (
+        <CreateShopModal
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          onSuccess={(newShopId) => {
+            window.localStorage.setItem("gogosoft.currentShopId", newShopId);
+            void refresh(user?.id, true);
+          }}
+        />
+      ) : null}
 
       {isSimulationMode() ? (
         <div className="mb-4 rounded-lg bg-orange-100 px-4 py-2 text-sm text-orange-800 dark:bg-orange-900/30 dark:text-orange-300">
@@ -330,7 +336,7 @@ function OwnerDashboard() {
         </div>
       ) : null}
 
-      {showRenewalBanner ? (
+      {!isMobile && showRenewalBanner ? (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5 text-orange-900 shadow-sm">
           <div className="flex items-center gap-3">
             <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700">
@@ -347,7 +353,7 @@ function OwnerDashboard() {
         </div>
       ) : null}
 
-      {error ? (
+      {!isMobile && error ? (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error}{" "}
           <button type="button" className="font-semibold underline" onClick={() => void load()}>
@@ -356,42 +362,44 @@ function OwnerDashboard() {
         </div>
       ) : null}
 
-      {modulesLoading ? (
-        <p className="text-sm text-muted-foreground">Chargement des domaines…</p>
-      ) : modules.length === 0 ? (
-        <EmptyState
-          icon={Package}
-          title="Aucun domaine activé"
-          description="Choisissez les domaines à découvrir pour afficher les outils de votre atelier."
-          actionLabel="Choisir mes domaines"
-          onAction={() => void navigate({ to: "/demo" })}
-        />
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {quickActions.map(({ to, icon, label, description, color }) => (
-            <Link key={to} to={to} className="group min-w-0">
-              <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
-                <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
-                  <IconBadge3D
-                    icon={icon}
-                    size="md"
-                    color={color}
-                    className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
-                  />
-                  <div className="min-w-0">
-                    <p className="font-semibold leading-snug text-slate-900 dark:text-slate-100 group-hover:text-orange-700">
-                      {label}
-                    </p>
-                    <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
-                      {description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
-        </div>
-      )}
+      {!isMobile ? (
+        modulesLoading ? (
+          <p className="text-sm text-muted-foreground">Chargement des domaines…</p>
+        ) : modules.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title="Aucun domaine activé"
+            description="Choisissez les domaines à découvrir pour afficher les outils de votre atelier."
+            actionLabel="Choisir mes domaines"
+            onAction={() => void navigate({ to: "/demo" })}
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {quickActions.map(({ to, icon, label, description, color }) => (
+              <Link key={to} to={to} className="group min-w-0">
+                <Card className="card-3d h-32 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
+                  <CardContent className="flex h-full items-center gap-3 p-4 sm:gap-4 sm:p-5">
+                    <IconBadge3D
+                      icon={icon}
+                      size="md"
+                      color={color}
+                      className="size-14 shrink-0 rounded-xl [&_svg]:size-7"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold leading-snug text-slate-900 dark:text-slate-100 group-hover:text-orange-700">
+                        {label}
+                      </p>
+                      <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-400 sm:text-sm">
+                        {description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {hasRepairModule ? <StatsCard
@@ -431,7 +439,8 @@ function OwnerDashboard() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      {!isMobile ? (
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="card-3d rounded-2xl border-0 transition-all duration-300 hover:-translate-y-1 hover:shadow-3d-hover">
           <CardHeader>
             <CardTitle>Activité récente</CardTitle>
@@ -606,7 +615,8 @@ function OwnerDashboard() {
             )}
           </CardContent>
         </Card> : null}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

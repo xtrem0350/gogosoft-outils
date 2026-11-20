@@ -21,6 +21,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getTickets, type WorkshopTicket } from "@/services/workshopService";
 import {
   deleteLocation,
@@ -67,7 +68,9 @@ export function StorageLocationsPage({
 }) {
   const { shopId, loading: shopLoading } = useCurrentShop();
   const { role } = useUserRole();
-  const canManageLocations = role === "owner" || role === "receptionniste";
+  const isMobile = useIsMobile();
+  const canManageLocations =
+    role === "owner" || role === "receptionniste" || (isMobile && role === "magasinier");
   const canDeleteLocations = role === "owner";
   const [locations, setLocations] = useState<StorageLocation[]>([]);
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
