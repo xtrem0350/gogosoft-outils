@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Banknote, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
+import { Banknote, CheckCircle2, ChevronLeft, ChevronRight, LoaderCircle, Smartphone, Waves } from "lucide-react";
 import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
@@ -31,19 +31,14 @@ import {
 } from "@/components/ui/dialog";
 import type { DomainChoice } from "@/services/domainService";
 import type { SubscriptionPaymentInvoice } from "@/services/subscriptionPaymentService";
-import {
-  notifySimulationChanged,
-  SIMULATION_ACTIVE_KEY,
-  SIMULATION_PAYMENT_KEY,
-  SIMULATION_SHOP_KEY,
-} from "@/services/simulationService";
 
 type PaymentMethod = "wave" | "orange_money" | "mtn_money" | "moov_money" | "cash";
-type CheckoutStep = 1 | 2 | 3 | 4;
+type CheckoutStep = 1 | 2 | 3;
 
 export interface CheckoutSubmission {
   domainName: string;
   choices: DomainChoice;
+  planPrice: number;
   subscriptionMonths: 1 | 3;
   paymentMethod: PaymentMethod;
   domainPrice: number;
@@ -61,7 +56,7 @@ interface CheckoutModalProps {
   clientName: string;
   clientEmail: string;
   onPay: (submission: CheckoutSubmission) => Promise<SubscriptionPaymentInvoice>;
-  onComplete: () => void;
+  onComplete: () => void | Promise<void>;
 }
 
 const PAYMENT_METHODS: Array<{
@@ -112,6 +107,8 @@ export function CheckoutModal({
   initialMonths = 1,
   clientName,
   clientEmail,
+  onPay,
+  onComplete,
 }: CheckoutModalProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<CheckoutStep>(domainRequired ? 1 : 2);
@@ -122,11 +119,6 @@ export function CheckoutModal({
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
   const [cashConfirmation, setCashConfirmation] = useState(false);
   const [smsPackChecked, setSmsPackChecked] = useState(false);
-  const [paymentResult, setPaymentResult] = useState<{
-    success: boolean;
-    invoiceNumber: string;
-    total: number;
-  } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -138,7 +130,6 @@ export function CheckoutModal({
     setInvoice(null);
     setCashConfirmation(false);
     setSmsPackChecked(false);
-    setPaymentResult(null);
   }, [domainRequired, initialDomain, initialMonths, open]);
 
   const storedPricing = readStoredPricingSelection();
@@ -179,49 +170,24 @@ export function CheckoutModal({
 
     setProcessing(true);
     try {
-      const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 99999)).padStart(5, "0")}`;
-      const paidAt = new Date().toISOString();
-      const simulationData = {
-        invoice_number: invoiceNumber,
-        plan_id: pricingMode ?? plan.id,
-        plan_price: planPrice,
-        modules: selectedDomainIds,
-        domain_name: assignedDomain,
-        domain_price: checkoutDomainPrice,
-        sms_pack: smsPackChecked,
-        sms_pack_price: smsPackChecked ? PRICING_RULES.smsPackPrice : 0,
-        subscription_months: billedMonths,
-        bonus_days: BONUS_DAYS,
-        total_amount: totalAmount,
-        payment_method: "cash",
-        payment_status: "paid",
-        paid_at: paidAt,
-        is_simulation: true,
+      const domainName = assignedDomain.trim();
+      const submission: CheckoutSubmission = {
+        domainName,
+        choices: {
+          choice_1: domainName,
+          choice_2: "",
+          choice_3: "",
+        },
+        planPrice,
+        subscriptionMonths: billedMonths,
+        paymentMethod: method,
+        domainPrice: checkoutDomainPrice,
       };
-      const shopData = {
-        id: `sim-shop-${Date.now()}`,
-        name: `${clientName || "Mon"} Atelier`,
-        owner_id: "sim-user",
-        modules: selectedDomainIds,
-        domain: assignedDomain,
-        created_at: paidAt,
-      };
-
-      window.sessionStorage.setItem(SIMULATION_PAYMENT_KEY, JSON.stringify(simulationData));
-      window.sessionStorage.setItem(SIMULATION_SHOP_KEY, JSON.stringify(shopData));
-      window.sessionStorage.setItem(SIMULATION_ACTIVE_KEY, "true");
-      window.sessionStorage.setItem("gogosoft.checkout.pricingMode", pricingMode ?? plan.id);
-      window.sessionStorage.setItem("gogosoft.checkout.selectedModules", JSON.stringify(storedPricing?.modules ?? selectedDomainIds));
-      window.sessionStorage.setItem("gogosoft.checkout.planPrice", String(planPrice));
-      window.sessionStorage.setItem("gogosoft.checkout.domainName", assignedDomain.trim());
-      window.sessionStorage.setItem("gogosoft.checkout.smsPack", String(smsPackChecked));
-      notifySimulationChanged();
-
-      setPaymentResult({ success: true, invoiceNumber, total: totalAmount });
-      setStep(4);
+      setInvoice(await onPay(submission));
+      await onComplete();
     } catch (error) {
-      console.error("[Checkout] Simulation error:", error);
-      toast.error("Erreur de simulation");
+      console.error("[Checkout] Payment error:", error);
+      toast.error(error instanceof Error ? error.message : "Le paiement n'a pas pu être finalisé.");
     } finally {
       setProcessing(false);
     }
@@ -255,9 +221,7 @@ export function CheckoutModal({
               </p>
             </div>
 
-            {paymentResult ? (
-              <p className="text-sm text-slate-300">Mode simulation activé.</p>
-            ) : invoice ? (
+            {invoice ? (
               cashConfirmation ? (
                 <div className="space-y-3">
                   <Button type="button" onClick={() => {
@@ -329,53 +293,12 @@ export function CheckoutModal({
           </aside>
 
           <section className="min-h-0 w-full overflow-y-auto overflow-x-hidden bg-white p-6 sm:w-2/3 sm:p-8">
-            {pricingMode && step !== 4 && !invoice ? (
+            {pricingMode && !invoice ? (
               <p className="mb-5 rounded-xl border border-green-200 bg-green-50 p-3 text-sm leading-6 text-green-900">
                 {INSTALLATION_NOTICE}
               </p>
             ) : null}
-            {step === 4 && paymentResult ? (
-              <div className="flex h-full min-h-[420px] flex-col items-center justify-center py-8 text-center">
-                <div className="mb-4 flex size-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                  <CheckCircle2 className="size-12 text-green-600 dark:text-green-300" />
-                </div>
-                <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  Merci d&apos;avoir participé au paiement simulé
-                </h2>
-                <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">
-                  Votre abonnement sera activé sous peu.
-                </p>
-                <div className="mb-6 w-full rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
-                  <p className="mb-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">
-                    Facture {paymentResult.invoiceNumber}
-                  </p>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">Facture</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                      {paymentResult.invoiceNumber}
-                    </span>
-                  </div>
-                  <div className="mt-2 flex justify-between text-sm">
-                    <span className="text-slate-600 dark:text-slate-400">Total payé</span>
-                    <span className="font-bold text-green-600 dark:text-green-300">
-                      {paymentResult.total.toLocaleString("fr-FR")} FCFA
-                    </span>
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  onClick={() => void navigate({ to: "/onboarding/shop" })}
-                  className="w-full bg-green-800 text-white hover:bg-green-700"
-                  size="lg"
-                >
-                  Continuer vers Dashboard
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
-                <p className="mt-4 text-xs text-slate-500 dark:text-slate-500">
-                  Mode simulation — Aucune donnée réelle n&apos;a été enregistrée
-                </p>
-              </div>
-            ) : cashConfirmation && invoice ? (
+            {cashConfirmation && invoice ? (
               <div className="flex h-full min-h-[420px] items-center justify-center text-center">
                 <div className="max-w-xl space-y-5">
                   <CheckCircle2 className="mx-auto size-20 text-green-600" />

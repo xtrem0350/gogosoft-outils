@@ -7,7 +7,13 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTicketsByTechnician, type WorkshopTicket } from "@/services/workshopService";
+import { toast } from "sonner";
+import {
+  assignTicketToTechnician,
+  getTicketsByTechnician,
+  getUnassignedTickets,
+  type WorkshopTicket,
+} from "@/services/workshopService";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function TechnicianDashboard() {
@@ -15,13 +21,17 @@ export function TechnicianDashboard() {
   const { shopId } = useCurrentShop();
   const isMobile = useIsMobile();
   const [assigned, setAssigned] = useState<WorkshopTicket[]>([]);
+  const [unassigned, setUnassigned] = useState<WorkshopTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [assigningTicketId, setAssigningTicketId] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     if (!user || !shopId) {
       setAssigned([]);
+      setUnassigned([]);
       setLoading(false);
       return () => {
         active = false;
@@ -33,8 +43,9 @@ export function TechnicianDashboard() {
     void Promise.all([
       getTicketsByTechnician(shopId, user.id, "phone"),
       getTicketsByTechnician(shopId, user.id, "computer"),
+      getUnassignedTickets(shopId),
     ])
-      .then(([phoneTickets, computerTickets]) => {
+      .then(([phoneTickets, computerTickets, unassignedTickets]) => {
         if (!active) return;
         setAssigned(
           [...phoneTickets, ...computerTickets]
@@ -43,6 +54,7 @@ export function TechnicianDashboard() {
             )
             .slice(0, 20),
         );
+        setUnassigned(unassignedTickets);
       })
       .catch((reason: unknown) => {
         if (active) {
@@ -60,7 +72,7 @@ export function TechnicianDashboard() {
     return () => {
       active = false;
     };
-  }, [shopId, user]);
+  }, [refreshKey, shopId, user]);
 
   const currentTickets = assigned.filter((ticket) => ticket.status !== "livre" && ticket.status !== "annule");
   const today = new Date().toISOString().slice(0, 10);
@@ -69,6 +81,23 @@ export function TechnicianDashboard() {
     ticket.status === "livre" &&
     (ticket.delivered_at ?? ticket.updated_at ?? "").slice(0, 10) === today,
   ).length;
+
+  async function takeTicket(ticket: WorkshopTicket) {
+    if (!user) {
+      toast.error("Connectez-vous pour prendre en charge cette fiche.");
+      return;
+    }
+    setAssigningTicketId(ticket.id);
+    try {
+      await assignTicketToTechnician(ticket.id, user.id);
+      toast.success("Fiche prise en charge.");
+      setRefreshKey((current) => current + 1);
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de prendre cette fiche.");
+    } finally {
+      setAssigningTicketId(null);
+    }
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6">
@@ -126,7 +155,7 @@ export function TechnicianDashboard() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle>Mes fiches en cours</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Mes fiches assignées</CardTitle></CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-sm text-slate-500">Chargement…</p>
@@ -153,6 +182,46 @@ export function TechnicianDashboard() {
                     {ticket.status}
                   </Badge>
                 </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Fiches non assignées</CardTitle></CardHeader>
+        <CardContent>
+          {loading ? (
+            <p className="text-sm text-slate-500">Chargement…</p>
+          ) : unassigned.length === 0 ? (
+            <p className="text-sm text-slate-500">Aucune fiche disponible à la prise en charge.</p>
+          ) : (
+            <div className="space-y-2">
+              {unassigned.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className="flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <Link
+                    to={ticket.activity_type === "computer" ? "/computer/atelier/$id" : "/phone/atelier/$id"}
+                    params={{ id: ticket.id }}
+                    className="min-w-0 flex-1 rounded-md transition-colors hover:text-orange-700"
+                  >
+                    <div className="font-medium">
+                      {ticket.ticket_number ?? "Sans numéro"} · {ticket.client_name}
+                    </div>
+                    <div className="text-sm text-slate-500">
+                      {ticket.device_brand} {ticket.device_model}
+                    </div>
+                  </Link>
+                  <Button
+                    type="button"
+                    disabled={assigningTicketId !== null}
+                    onClick={() => void takeTicket(ticket)}
+                  >
+                    {assigningTicketId === ticket.id ? "Prise en charge…" : "Prendre en charge"}
+                  </Button>
+                </div>
               ))}
             </div>
           )}

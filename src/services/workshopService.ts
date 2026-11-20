@@ -640,6 +640,66 @@ export async function getTicketsByTechnician(
   return (data ?? []) as WorkshopTicket[];
 }
 
+/** Récupère les fiches en attente qui ne sont assignées à aucun technicien. */
+export async function getUnassignedTickets(
+  shopId: string | null | undefined,
+): Promise<WorkshopTicket[]> {
+  if (isDemoMode()) {
+    return getDemoTickets().filter(
+      (ticket) => ticket.status === "en_attente_technicien" && !ticket.technicien_id,
+    );
+  }
+  if (!(await hasActiveSession()) || !shopId) return [];
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .select("*")
+    .eq("shop_id", requireShopId(shopId))
+    .eq("status", "en_attente_technicien")
+    .is("technicien_id", null)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as WorkshopTicket[];
+}
+
+/** Assigne atomiquement une fiche disponible au technicien qui la prend en charge. */
+export async function assignTicketToTechnician(
+  ticketId: string,
+  technicianId: string,
+): Promise<WorkshopTicket> {
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    const updatedAt = new Date().toISOString();
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (
+          ticket.id !== ticketId ||
+          ticket.technicien_id ||
+          ticket.status !== "en_attente_technicien"
+        ) {
+          return ticket;
+        }
+        updated = { ...ticket, technicien_id: technicianId, updated_at: updatedAt };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Cette fiche n'est plus disponible à la prise en charge.");
+    return updated;
+  }
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data, error } = await supabase
+    .from("workshop_tickets")
+    .update({ technicien_id: technicianId, updated_at: new Date().toISOString() })
+    .eq("id", ticketId)
+    .eq("status", "en_attente_technicien")
+    .is("technicien_id", null)
+    .select("*")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Cette fiche n'est plus disponible à la prise en charge.");
+  return data as WorkshopTicket;
+}
+
 /** Récupère une fiche par son identifiant. */
 export async function getTicketById(
   id: string,

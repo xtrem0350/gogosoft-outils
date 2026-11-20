@@ -39,7 +39,7 @@ export function usePendingItems(role: string): PendingItems {
         if (role === "caissier" || role === "owner") {
           const [tickets, sales] = await Promise.all([
             supabase.from("workshop_tickets").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("status", ["en_attente_caissier_entree", "en_attente_caissier_solde"]),
-            supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).eq("payment_status", "en_attente_caissier"),
+            supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("payment_status", ["pending", "awaiting_payment"]),
           ]);
           if (tickets.error) console.warn("[usePendingItems] caisse ateliers:", tickets.error);
           if (sales.error) console.warn("[usePendingItems] caisse ventes:", sales.error);
@@ -63,7 +63,7 @@ export function usePendingItems(role: string): PendingItems {
           next.pendingReparation = result.count ?? 0;
         }
         if (role === "vendeur" || role === "owner") {
-          const result = await supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("payment_status", ["en_attente_caissier", "payee"]);
+          const result = await supabase.from("sales").select("id", { count: "exact", head: true }).eq("shop_id", shopId).in("payment_status", ["pending", "awaiting_payment"]);
           if (result.error) console.warn("[usePendingItems] ventes:", result.error);
           next.pendingVentes = result.count ?? 0;
         }

@@ -62,7 +62,12 @@ import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig } from "@/services/shopService";
 import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
 import { buildWhatsappLink } from "@/lib/whatsapp";
-import { getEvents, addEvent, updateWorkshopTicket } from "@/services/workshopService";
+import {
+  addEvent,
+  assignTicketToTechnician,
+  getEvents,
+  updateWorkshopTicket,
+} from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
 import {
   createTicket,
@@ -1529,6 +1534,8 @@ export function ActivityDetailsPage({
   id: string;
 }) {
   const { shopId, shop } = useCurrentShop();
+  const { user } = useAuth();
+  const { activeRole } = useUserRoles();
   const [ticket, setTicket] = useState<WorkshopTicket | null>(null);
   const [events, setEvents] = useState<Awaited<ReturnType<typeof getEvents>>>([]);
   const [modelHistory, setModelHistory] = useState<
@@ -1713,6 +1720,20 @@ export function ActivityDetailsPage({
     }
   }
 
+  async function takeUnassignedTicket() {
+    if (!ticket || !user) return;
+    setBusy(true);
+    try {
+      const updatedTicket = await assignTicketToTechnician(ticket.id, user.id);
+      setTicket(updatedTicket);
+      toast.success("Fiche prise en charge.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de prendre cette fiche.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function openPreview(
     mode: WorkshopTicketPreviewMode,
     audience: WorkshopTicketPreviewAudience = "internal",
@@ -1891,6 +1912,18 @@ export function ActivityDetailsPage({
           ) : null}
           {ticket.notes ? <p className="whitespace-pre-wrap">{ticket.notes}</p> : null}
           <Badge className={statusStyles[ticket.status]}>{statusLabels[ticket.status]}</Badge>
+          {activeRole === "technicien" &&
+          user &&
+          ticket.status === "en_attente_technicien" &&
+          !ticket.technicien_id ? (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void takeUnassignedTicket()}
+            >
+              Prendre en charge
+            </Button>
+          ) : null}
           {ticket.status !== "livre" ? (
             <Button type="button" variant="outline" onClick={() => openPreview("reception")}>
               Aperçu / Imprimer la réception

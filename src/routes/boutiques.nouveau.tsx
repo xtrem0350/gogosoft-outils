@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -74,6 +74,7 @@ function NewShopPageContent() {
   const [plan] = useState(readSelectedPlan);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutShopId, setCheckoutShopId] = useState<string | null>(null);
+  const checkoutShopIdRef = useRef<string | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
@@ -91,10 +92,15 @@ function NewShopPageContent() {
       void navigate({ to: "/dashboard" });
       return;
     }
-    if (!shopId) return;
+    if (!shopId) {
+      checkoutShopIdRef.current = null;
+      setCheckoutShopId(null);
+      return;
+    }
 
     let active = true;
     setCheckingSubscription(true);
+    checkoutShopIdRef.current = shopId;
     setCheckoutShopId(shopId);
     void getMySubscription()
       .then((subscription) => {
@@ -135,7 +141,7 @@ function NewShopPageContent() {
     );
     setClientEmail(user.email ?? "");
 
-    let selectedShopId = checkoutShopId ?? shopId;
+    let selectedShopId = checkoutShopIdRef.current ?? checkoutShopId ?? shopId;
     if (!selectedShopId) {
       const shop = await createShop({
         name:
@@ -144,20 +150,21 @@ function NewShopPageContent() {
         phone: shopDetails.phone || null,
       });
       selectedShopId = shop.id;
+      checkoutShopIdRef.current = shop.id;
       setCheckoutShopId(shop.id);
     }
 
     return completeSubscriptionCheckout({
       shopId: selectedShopId,
       planId: plan.id,
-      planPrice: plan.price,
+      planPrice: submission.planPrice,
       domainIds,
       submission,
     });
   }
 
   async function finishCheckout() {
-    const selectedShopId = checkoutShopId ?? shopId;
+    const selectedShopId = checkoutShopIdRef.current ?? checkoutShopId ?? shopId;
     if (!selectedShopId) throw new Error("Atelier introuvable après le paiement.");
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
@@ -253,12 +260,14 @@ function NewShopPageContent() {
           clientName={clientName}
           clientEmail={clientEmail}
           onPay={handleCheckoutPayment}
-          onComplete={() => {
-            void finishCheckout().catch((error: unknown) => {
+          onComplete={async () => {
+            try {
+              await finishCheckout();
+            } catch (error: unknown) {
               toast.error(
                 error instanceof Error ? error.message : "Impossible de finaliser l’activation.",
               );
-            });
+            }
           }}
         />
       ) : null}

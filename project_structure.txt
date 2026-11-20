@@ -5,6 +5,8 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261119000001_reception_storage_locations.sql
+│   │   ├── 📄 20261118000001_add_is_blocked_to_roles.sql
 │   │   ├── 📄 20261110000002_create_sale_with_stock.sql
 │   │   ├── 📄 20261110000001_strict_workshop_rls.sql
 │   │   ├── 📄 20261105000000_account_pause_and_team_blocks.sql
@@ -339,6 +341,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 SalesPages.tsx
 │   │   ├── 📄 RoutePage.tsx
 │   │   ├── 📄 RoleGuard.tsx
+│   │   ├── 📄 RoleAssignmentPlanPage.tsx
 │   │   ├── 📄 QuickCreateStaffDialog.tsx
 │   │   ├── 📄 QuickCreateMemberDialog.tsx
 │   │   ├── 📄 QuickCreateClientDialog.tsx
