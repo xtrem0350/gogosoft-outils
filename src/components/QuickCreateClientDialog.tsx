@@ -3,6 +3,7 @@ import { Camera } from "lucide-react";
 import { toast } from "sonner";
 
 import { PhoneInput } from "@/components/PhoneInput";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -102,6 +103,7 @@ export function QuickCreateClientDialog({
           <DialogTitle>Nouveau client</DialogTitle>
           <DialogDescription>Ajoutez un client à cette boutique.</DialogDescription>
         </DialogHeader>
+        <ReadOnlyGuard>
         <form onSubmit={(event) => void submit(event)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="quick-client-name">Nom complet *</Label>
@@ -182,6 +184,7 @@ export function QuickCreateClientDialog({
             </Button>
           </DialogFooter>
         </form>
+        </ReadOnlyGuard>
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CashExit } from "@/services/cashService";
@@ -17,7 +18,7 @@ export function CaisseExitsTab({ exits, onAdd }: CaisseExitsTabProps) {
     <Card className="card-3d rounded-xl">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div><CardTitle>Sorties de caisse</CardTitle><p className="text-sm text-muted-foreground">Pièces et dépenses diverses de la période.</p></div>
-        <Button type="button" onClick={onAdd}><Plus className="size-4" /> Ajouter une sortie</Button>
+        <ReadOnlyGuard><Button type="button" onClick={onAdd}><Plus className="size-4" /> Ajouter une sortie</Button></ReadOnlyGuard>
       </CardHeader>
       <CardContent className="space-y-2">
         {exits.length ? exits.map((exit) => (

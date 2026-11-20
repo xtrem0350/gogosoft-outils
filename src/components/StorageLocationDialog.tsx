@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import {
   Dialog,
   DialogContent,
@@ -57,6 +58,7 @@ export function StorageLocationDialog({
   const [locationType, setLocationType] = useState<StorageLocationType>("carton");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const { isReadOnly } = useSubscriptionAccess();
 
   useEffect(() => {
     if (!open) return;
@@ -67,6 +69,10 @@ export function StorageLocationDialog({
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     const cleanName = name.trim();
     if (!cleanName) return;
     setSaving(true);
@@ -143,13 +149,15 @@ export function StorageLocationDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={saving || !name.trim()}
-              className="bg-ivoirien bg-ivoirien-hover shadow-3d"
-            >
-              {saving ? "Enregistrement…" : location ? "Enregistrer" : "Créer"}
-            </Button>
+            <ReadOnlyGuard>
+              <Button
+                type="submit"
+                disabled={saving || !name.trim()}
+                className="bg-ivoirien bg-ivoirien-hover shadow-3d"
+              >
+                {saving ? "Enregistrement…" : location ? "Enregistrer" : "Créer"}
+              </Button>
+            </ReadOnlyGuard>
           </DialogFooter>
         </form>
       </DialogContent>

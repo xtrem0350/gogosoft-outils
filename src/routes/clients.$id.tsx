@@ -4,6 +4,7 @@ import { MessageCircle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   deleteClient,
@@ -150,19 +151,25 @@ function ClientDetailsPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button asChild>
-            <a href={`/phone/atelier/nouveau?clientId=${encodeURIComponent(client.id)}`}>
-              + Nouvelle fiche pour ce client
-            </a>
-          </Button>
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="size-4" />
-            Modifier
-          </Button>
-          <Button variant="destructive" onClick={() => void handleDelete()}>
-            <Trash2 className="size-4" />
-            Supprimer
-          </Button>
+          <ReadOnlyGuard>
+            <Button asChild>
+              <a href={`/phone/atelier/nouveau?clientId=${encodeURIComponent(client.id)}`}>
+                + Nouvelle fiche pour ce client
+              </a>
+            </Button>
+          </ReadOnlyGuard>
+          <ReadOnlyGuard>
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="size-4" />
+              Modifier
+            </Button>
+          </ReadOnlyGuard>
+          <ReadOnlyGuard>
+            <Button variant="destructive" onClick={() => void handleDelete()}>
+              <Trash2 className="size-4" />
+              Supprimer
+            </Button>
+          </ReadOnlyGuard>
         </div>
       </div>
 
@@ -234,6 +241,7 @@ function ClientDetailsPage() {
             <DialogTitle>Modifier le client</DialogTitle>
             <DialogDescription>Modifiez les coordonnées enregistrées du client.</DialogDescription>
           </DialogHeader>
+          <ReadOnlyGuard>
           <form onSubmit={(event) => void handleUpdate(event)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="edit-client-name">Nom complet</Label>
@@ -260,6 +268,7 @@ function ClientDetailsPage() {
               <Button type="submit" disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer"}</Button>
             </DialogFooter>
           </form>
+          </ReadOnlyGuard>
         </DialogContent>
       </Dialog>
     </div>

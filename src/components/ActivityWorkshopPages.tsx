@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { DeviceCatalogPicker, type CatalogDevice } from "@/components/DeviceCatalogPicker";
 import { EmptyState } from "@/components/EmptyState";
 import { PageHero } from "@/components/PageHero";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { AddPartDialog, type ConsumedPart } from "@/components/AddPartDialog";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { DeviceSelect } from "@/components/selects/DeviceSelect";
@@ -540,6 +541,7 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
               ]
         }
       />
+      <ReadOnlyGuard>
       <form onSubmit={(event) => void submit(event)} className="grid gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
@@ -744,6 +746,7 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
           Enregistrer la fiche
         </Button>
       </form>
+      </ReadOnlyGuard>
       {shopId ? (
         <StorageLocationDialog
           open={createLocationOpen}
@@ -1346,16 +1349,18 @@ function NewWorkshopTicketPage({
                       onSelect={setLocation}
                     />
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    aria-label="Créer un emplacement"
-                    title="Ajouter un rangement"
-                    disabled={!shopId}
-                    onClick={() => setCreateLocationOpen(true)}
-                  >
-                    Ajouter un rangement
-                  </Button>
+                  <ReadOnlyGuard>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      aria-label="Créer un emplacement"
+                      title="Ajouter un rangement"
+                      disabled={!shopId}
+                      onClick={() => setCreateLocationOpen(true)}
+                    >
+                      Ajouter un rangement
+                    </Button>
+                  </ReadOnlyGuard>
                 </div>
               </div>
               <div className="grid gap-2">
@@ -1416,29 +1421,33 @@ function NewWorkshopTicketPage({
                 Suivant
               </Button>
             ) : (
-              <Button
-                type="button"
-                disabled={saving || !entryFeeConfigLoaded}
-                className="bg-ivoirien bg-ivoirien-hover shadow-3d"
-                onClick={() => void submitTicket()}
-              >
-                {saving ? "Création…" : "Créer la fiche et générer le ticket"}
-              </Button>
+              <ReadOnlyGuard>
+                <Button
+                  type="button"
+                  disabled={saving || !entryFeeConfigLoaded}
+                  className="bg-ivoirien bg-ivoirien-hover shadow-3d"
+                  onClick={() => void submitTicket()}
+                >
+                  {saving ? "Création…" : "Créer la fiche et générer le ticket"}
+                </Button>
+              </ReadOnlyGuard>
             )}
           </div>
         </CardContent>
       </Card>
 
       {shopId ? (
-        <StorageLocationDialog
-          open={createLocationOpen}
-          onOpenChange={setCreateLocationOpen}
-          shopId={shopId}
-          onSaved={(createdLocation) => {
-            setLocation(createdLocation);
-            setLocationRefreshKey((current) => current + 1);
-          }}
-        />
+        <ReadOnlyGuard>
+          <StorageLocationDialog
+            open={createLocationOpen}
+            onOpenChange={setCreateLocationOpen}
+            shopId={shopId}
+            onSaved={(createdLocation) => {
+              setLocation(createdLocation);
+              setLocationRefreshKey((current) => current + 1);
+            }}
+          />
+        </ReadOnlyGuard>
       ) : null}
       <WorkshopPaymentModal
         open={paymentOpen}
@@ -1916,13 +1925,15 @@ export function ActivityDetailsPage({
           user &&
           ticket.status === "en_attente_technicien" &&
           !ticket.technicien_id ? (
-            <Button
-              type="button"
-              disabled={busy}
-              onClick={() => void takeUnassignedTicket()}
-            >
-              Prendre en charge
-            </Button>
+            <ReadOnlyGuard>
+              <Button
+                type="button"
+                disabled={busy}
+                onClick={() => void takeUnassignedTicket()}
+              >
+                Prendre en charge
+              </Button>
+            </ReadOnlyGuard>
           ) : null}
           {ticket.status !== "livre" ? (
             <Button type="button" variant="outline" onClick={() => openPreview("reception")}>
@@ -1982,14 +1993,16 @@ export function ActivityDetailsPage({
                   <p className="text-sm text-muted-foreground">Aucune pièce ajoutée.</p>
                 )}
               </div>
-              <Button
-                type="button"
-                disabled={busy}
-                onClick={() => void saveTechnicianData()}
-                className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d"
-              >
-                Enregistrer le diagnostic
-              </Button>
+              <ReadOnlyGuard>
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void saveTechnicianData()}
+                  className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d"
+                >
+                  Enregistrer le diagnostic
+                </Button>
+              </ReadOnlyGuard>
             </CardContent>
           </Card>
 
@@ -2053,9 +2066,11 @@ export function ActivityDetailsPage({
               <Input type="date" value={pickupDate} onChange={(event) => setPickupDate(event.target.value)} />
             </label>
             <div className="flex flex-wrap gap-3">
-              <Button type="button" disabled={busy} onClick={() => void validateEstimate()} className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d">
-                Valider le devis
-              </Button>
+              <ReadOnlyGuard>
+                <Button type="button" disabled={busy} onClick={() => void validateEstimate()} className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d">
+                  Valider le devis
+                </Button>
+              </ReadOnlyGuard>
               <Button type="button" variant="outline" onClick={() => openPreview("diagnostic")}>
                 Aperçu / Imprimer
               </Button>
@@ -2122,13 +2137,17 @@ export function ActivityDetailsPage({
               ) : <p className="text-sm text-muted-foreground">Aucune pièce ajoutée.</p>}
             </div>
             {ticket.status !== "en_cours" ? (
-              <Button type="button" disabled={busy} onClick={() => void startRepair()} className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d">
-                Démarrer la réparation
-              </Button>
+              <ReadOnlyGuard>
+                <Button type="button" disabled={busy} onClick={() => void startRepair()} className="bg-ivoirien bg-ivoirien-hover text-white shadow-3d">
+                  Démarrer la réparation
+                </Button>
+              </ReadOnlyGuard>
             ) : (
-              <Button type="button" disabled={busy} onClick={() => void completeRepair()} className="bg-green-600 text-white hover:bg-green-700 shadow-3d">
-                Marquer terminé
-              </Button>
+              <ReadOnlyGuard>
+                <Button type="button" disabled={busy} onClick={() => void completeRepair()} className="bg-green-600 text-white hover:bg-green-700 shadow-3d">
+                  Marquer terminé
+                </Button>
+              </ReadOnlyGuard>
             )}
           </CardContent>
         </Card>

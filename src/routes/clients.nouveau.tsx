@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,6 +95,7 @@ function NewClientPage() {
           <CardTitle>Informations client</CardTitle>
         </CardHeader>
         <CardContent>
+          <ReadOnlyGuard>
           <form onSubmit={(event) => {
             event.preventDefault();
             void submit(values);
@@ -142,6 +144,7 @@ function NewClientPage() {
               </Button>
             </div>
           </form>
+          </ReadOnlyGuard>
         </CardContent>
       </Card>
     </div>

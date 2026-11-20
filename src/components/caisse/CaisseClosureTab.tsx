@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Wallet } from "lucide-react";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CashClosure, CashExit, CashSummary } from "@/services/cashService";
@@ -36,9 +37,11 @@ export function CaisseClosureTab({
   return (
     <div className="space-y-6">
       {!showHistory ? <div className="flex justify-end">
-          <Button type="button" disabled={loading || !summary || (summary.totalGeneral === 0 && totalExits === 0) || !shopId} onClick={onClosure} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
-            <Wallet className="size-4" /> Clôturer la caisse
-          </Button>
+          <ReadOnlyGuard>
+            <Button type="button" disabled={loading || !summary || (summary.totalGeneral === 0 && totalExits === 0) || !shopId} onClick={onClosure} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
+              <Wallet className="size-4" /> Clôturer la caisse
+            </Button>
+          </ReadOnlyGuard>
       </div> : null}
       {showHistory ? (
         <Card className="card-3d rounded-xl">

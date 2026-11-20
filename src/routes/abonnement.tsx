@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { CreditCard, Globe, RefreshCw } from "lucide-react";
+import { CreditCard, Globe, Plus, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 import { CheckoutModal, type CheckoutSubmission } from "@/components/CheckoutModal";
@@ -8,15 +8,37 @@ import { PageHero } from "@/components/PageHero";
 import { SubscriptionCard } from "@/components/SubscriptionCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { BONUS_DAYS, DOMAIN_PRICE, WELCOME_PRICING } from "@/constants/pricing";
 import { isWelcomeDomainId, WELCOME_DOMAIN_LABELS } from "@/constants/welcomeDomains";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentDomainRequest, renewDomain, type DomainRequest } from "@/services/domainService";
+import {
+  checkDomainAvailability,
+  createAdditionalDomainRequest,
+  getCurrentDomainRequest,
+  getDomainRequests,
+  renewDomain,
+  type DomainRequest,
+} from "@/services/domainService";
 import { isDemoMode } from "@/services/demoService";
-import { confirmPayment, createSubscriptionPayment, getPaymentInvoice } from "@/services/subscriptionPaymentService";
+import {
+  confirmPayment,
+  createSubscriptionPayment,
+  getPaymentInvoice,
+  type SubscriptionPaymentInvoice,
+} from "@/services/subscriptionPaymentService";
 import { getMySubscription, type SubscriptionSummary } from "@/services/subscriptionService";
 import { moduleIdsFromShopCodes } from "@/types/modules";
 import { enableShopModules, syncSubscriptionModules } from "@/services/moduleService";
@@ -53,12 +75,17 @@ function AbonnementContent() {
   const { isOwner } = useUserRoles();
   const [subscription, setSubscription] = useState<SubscriptionSummary | null>(null);
   const [domainRequest, setDomainRequest] = useState<DomainRequest | null>(null);
+  const [domainRequests, setDomainRequests] = useState<DomainRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [renewalMode, setRenewalMode] = useState<RenewalMode>(null);
+  const [addDomainOpen, setAddDomainOpen] = useState(false);
+  const [newDomainName, setNewDomainName] = useState("");
+  const [creatingDomainPayment, setCreatingDomainPayment] = useState(false);
+  const [pendingDomainPayment, setPendingDomainPayment] =
+    useState<SubscriptionPaymentInvoice | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [pendingModules, setPendingModules] = useState<string[]>([]);
-  const [updatingSubscriptionStatus, setUpdatingSubscriptionStatus] = useState(false);
 
   useEffect(() => {
     if (activate !== "1" || !shopId) return;
@@ -78,17 +105,20 @@ function AbonnementContent() {
     if (demo || !shopId) {
       setSubscription(await getMySubscription());
       setDomainRequest(null);
+      setDomainRequests([]);
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const [nextSubscription, nextDomain] = await Promise.all([
+      const [nextSubscription, nextDomain, nextDomains] = await Promise.all([
         getMySubscription(),
         getCurrentDomainRequest(shopId),
+        getDomainRequests(shopId),
       ]);
       setSubscription(nextSubscription);
       setDomainRequest(nextDomain);
+      setDomainRequests(nextDomains);
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       setClientName(
@@ -157,7 +187,20 @@ function AbonnementContent() {
       paymentMethod: submission.paymentMethod,
       domainPrice: renewalMode === "domain" ? DOMAIN_PRICE : 0,
       bonusDays: renewalMode === "domain" ? 0 : BONUS_DAYS,
+      ...(submission.paymentMethod === "cash"
+        ? { paymentStatus: "en_attente_paiement_espece" as const }
+        : {}),
     });
+    if (submission.paymentMethod === "cash") {
+      return {
+        success: true,
+        pending: true,
+        message: "Renouvellement en attente de validation.",
+        invoice: payment,
+      };
+    }
+
+    // TODO sprint 4 : remplacer cette simulation pour les paiements non-espèces.
     await new Promise((resolve) => window.setTimeout(resolve, 2000));
     await confirmPayment(payment.id, `simulated_${payment.id}`);
 
@@ -195,31 +238,53 @@ function AbonnementContent() {
     return getPaymentInvoice(payment.id);
   }
 
-  async function updateSubscriptionStatus(status: "active" | "paused") {
-    if (!isOwner || demo || !subscription) return;
-    setUpdatingSubscriptionStatus(true);
+  async function submitAdditionalDomain() {
+    if (!isOwner || demo || !shopId || !subscription?.isActive) {
+      toast.error("Un abonnement actif du propriétaire est requis pour ajouter un domaine.");
+      return;
+    }
+    const trimmedName = newDomainName.trim().toLowerCase();
+    if (!trimmedName) {
+      toast.error("Saisissez le nom du domaine souhaité.");
+      return;
+    }
+
+    setCreatingDomainPayment(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       if (!authData.user) throw new Error("Utilisateur non authentifié.");
 
-      const expectedStatus = status === "paused" ? "active" : "paused";
-      const { data, error } = await supabase
-        .from("subscriptions")
-        .update({ status })
-        .eq("user_id", authData.user.id)
-        .eq("status", expectedStatus)
-        .select("user_id")
-        .maybeSingle();
-      if (error) throw error;
-      if (!data) throw new Error("Aucun abonnement correspondant n'a été modifié.");
-
-      toast.success(status === "paused" ? "Abonnement mis en pause." : "Abonnement repris.");
+      const domain = trimmedName.endsWith(".ci") ? trimmedName : `${trimmedName}.ci`;
+      if (!(await checkDomainAvailability(domain))) {
+        throw new Error("Ce nom de domaine n'est pas disponible.");
+      }
+      const request = await createAdditionalDomainRequest(
+        authData.user.id,
+        shopId,
+        domain,
+      );
+      const payment = await createSubscriptionPayment({
+        shopId,
+        planId: "domain-additional",
+        planPrice: 0,
+        modules: [],
+        domainName: request.choice_1,
+        subscriptionMonths: 1,
+        paymentMethod: "cash",
+        domainPrice: DOMAIN_PRICE,
+        bonusDays: 0,
+        paymentStatus: "en_attente_paiement_espece",
+      });
+      setPendingDomainPayment(payment);
+      setAddDomainOpen(false);
+      setNewDomainName("");
+      toast.success("Demande créée. Le domaine sera ajouté après validation du paiement.");
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de modifier l'abonnement.");
+      toast.error(error instanceof Error ? error.message : "Impossible de créer la demande de domaine.");
     } finally {
-      setUpdatingSubscriptionStatus(false);
+      setCreatingDomainPayment(false);
     }
   }
 
@@ -261,43 +326,24 @@ function AbonnementContent() {
                   <p><strong>Expiration :</strong> {subscription?.expires_at
                     ? new Date(subscription.expires_at).toLocaleDateString("fr-FR")
                     : "Non définie"}</p>
-                  <p><strong>Statut :</strong> {String(subscription?.status) === "paused"
-                    ? "En pause"
-                    : subscription?.isActive
+                  <p><strong>Statut :</strong> {subscription?.status === "trial"
+                    ? "Essai"
+                    : subscription?.status === "active"
                       ? "Actif"
-                      : "Expiré"}</p>
-                  {String(subscription?.status) === "paused" ? (
-                    <p className="text-amber-700">
-                      La date d&apos;expiration continue de défiler pendant la pause.
-                    </p>
-                  ) : null}
-                  {isOwner && subscription && !demo ? (
-                    String(subscription.status) === "paused" ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="mt-2 w-full"
-                        disabled={updatingSubscriptionStatus}
-                        onClick={() => void updateSubscriptionStatus("active")}
-                      >
-                        {updatingSubscriptionStatus ? "Reprise…" : "Reprendre l'abonnement"}
-                      </Button>
-                    ) : subscription.status === "active" ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="mt-2 w-full"
-                        disabled={updatingSubscriptionStatus}
-                        onClick={() => void updateSubscriptionStatus("paused")}
-                      >
-                        {updatingSubscriptionStatus ? "Mise en pause…" : "Mettre en pause l'abonnement"}
-                      </Button>
-                    ) : null
-                  ) : null}
+                      : subscription?.status === "pending"
+                        ? "En attente"
+                        : subscription?.status === "inactive"
+                          ? "Inactif"
+                          : subscription?.status === "cancelled"
+                            ? "Annulé"
+                            : "Expiré"}</p>
                   {!demo ? (
-                    <Button onClick={() => setRenewalMode("subscription")} className="mt-2 w-full">
+                    <Button
+                      onClick={() => setRenewalMode("subscription")}
+                      className="mt-2 w-full"
+                    >
                       <RefreshCw className="size-4" />
-                      Renouveler l&apos;abonnement
+                      Confirmer le renouvellement
                     </Button>
                   ) : null}
                 </CardContent>
@@ -320,17 +366,45 @@ function AbonnementContent() {
                       : "Non définie"}
                   </p>
                 </div>
-                {!demo ? (
-                  <Button
-                    variant="outline"
-                    disabled={!domainRequest?.assigned_domain}
-                    onClick={() => setRenewalMode("domain")}
-                  >
-                    Renouveler le domaine · {DOMAIN_PRICE.toLocaleString("fr-FR")} FCFA
-                  </Button>
-                ) : null}
+                <div className="flex flex-wrap gap-2">
+                  {!demo ? (
+                    <Button
+                      variant="outline"
+                      disabled={!domainRequest?.assigned_domain}
+                      onClick={() => setRenewalMode("domain")}
+                    >
+                      Renouveler le domaine · {DOMAIN_PRICE.toLocaleString("fr-FR")} FCFA
+                    </Button>
+                  ) : null}
+                  {isOwner && subscription?.isActive && !demo ? (
+                    <Button type="button" onClick={() => setAddDomainOpen(true)}>
+                      <Plus className="size-4" />
+                      Ajouter un domaine
+                    </Button>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
+            {domainRequests.length > 0 ? (
+              <Card>
+                <CardHeader><CardTitle>Domaines de la boutique</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  {domainRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"
+                    >
+                      <span className="font-medium">
+                        {request.assigned_domain ?? request.choice_1}
+                      </span>
+                      <span className="capitalize text-muted-foreground">
+                        {request.status === "pending" ? "En attente de traitement" : request.status}
+                      </span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            ) : null}
           </section>
 
           <section className="space-y-4">
@@ -367,6 +441,13 @@ function AbonnementContent() {
           domainPrice={renewalMode === "domain" ? DOMAIN_PRICE : 0}
           clientName={clientName}
           clientEmail={clientEmail}
+          cashActionLabel="Confirmer le renouvellement"
+          cashConfirmationTitle={
+            renewalMode === "domain"
+              ? "Renouvellement du domaine en attente de validation"
+              : "Renouvellement en attente de validation"
+          }
+          cashConfirmationMessage="Le renouvellement sera appliqué après réception et validation du paiement en espèces. Contactez l'administrateur."
           onPay={processRenewal}
           onComplete={() => {
             setRenewalMode(null);
@@ -374,6 +455,87 @@ function AbonnementContent() {
           }}
         />
       ) : null}
+      <Dialog
+        open={addDomainOpen}
+        onOpenChange={(open) => {
+          if (!creatingDomainPayment) setAddDomainOpen(open);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajouter un domaine</DialogTitle>
+            <DialogDescription>
+              Le nouveau domaine sera activé après validation du paiement en espèces.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="additional-domain-name">Nom de domaine souhaité</Label>
+              <Input
+                id="additional-domain-name"
+                value={newDomainName}
+                onChange={(event) => setNewDomainName(event.target.value)}
+                placeholder="monatelier2"
+                autoComplete="off"
+                disabled={creatingDomainPayment}
+              />
+            </div>
+            <div className="rounded-lg border bg-muted/40 p-4 text-sm">
+              <p><strong>Durée :</strong> renouvellement 1 an</p>
+              <p className="mt-1">
+                <strong>Prix :</strong> {DOMAIN_PRICE.toLocaleString("fr-FR")} FCFA
+              </p>
+              <p className="mt-2 text-muted-foreground">Paiement à effectuer en espèces.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={creatingDomainPayment}
+              onClick={() => setAddDomainOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              disabled={creatingDomainPayment || !newDomainName.trim()}
+              onClick={() => void submitAdditionalDomain()}
+            >
+              {creatingDomainPayment ? "Création…" : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={pendingDomainPayment !== null}
+        onOpenChange={(open) => !open && setPendingDomainPayment(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajout du domaine en attente de validation</DialogTitle>
+            <DialogDescription>
+              Le domaine sera ajouté après réception et validation du paiement en espèces.
+            </DialogDescription>
+          </DialogHeader>
+          {pendingDomainPayment ? (
+            <div className="rounded-lg border bg-muted/40 p-4 text-sm">
+              <p>Facture : <strong>{pendingDomainPayment.invoice_number}</strong></p>
+              <p className="mt-1">
+                Montant :{" "}
+                <strong>
+                  {pendingDomainPayment.total_amount.toLocaleString("fr-FR")} FCFA
+                </strong>
+              </p>
+            </div>
+          ) : null}
+          <DialogFooter>
+            <Button type="button" onClick={() => setPendingDomainPayment(null)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -29,7 +29,11 @@ import { InactivityWarningModal } from "@/components/InactivityWarningModal";
 import { DemoBanner } from "@/components/DemoBanner";
 import { OrientationGuard } from "@/components/OrientationGuard";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
-import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import {
+  SubscriptionAccessProvider,
+  SubscriptionGuard,
+  SubscriptionStatusNotice,
+} from "@/components/SubscriptionGuard";
 import { Sidebar } from "@/components/Sidebar";
 import { ShopSelector } from "@/components/ShopSelector";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -140,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { activeRole } = useUserRoles();
   const pendingItems = usePendingItems(activeRole);
   const pendingCount = Object.values(pendingItems).reduce((total, count) => total + count, 0);
-  const { shopId, shops, loading: shopLoading } = useCurrentShop();
+  const { shop, shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
@@ -426,8 +430,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     </ProtectedRoute>
   );
   const content = routeRoles ? (
-    <RoleGuard allowedRoles={routeRoles}>{baseContent}</RoleGuard>
-  ) : baseContent;
+    <RoleGuard allowedRoles={routeRoles}>
+      <>
+        <SubscriptionStatusNotice />
+        {baseContent}
+      </>
+    </RoleGuard>
+  ) : (
+    <>
+      <SubscriptionStatusNotice />
+      {baseContent}
+    </>
+  );
 
   const mobileLayoutActive =
     isMobile && !["/auth", "/rejoindre", "/"].includes(location.pathname);
@@ -618,10 +632,19 @@ export function AppShell({ children }: { children: ReactNode }) {
     </>
   );
 
+  const accessContent = (
+    <SubscriptionAccessProvider
+      enabled={Boolean(user && !isSuperAdmin && !isDemoMode())}
+      userId={shop?.owner_id ?? user?.id}
+    >
+      {shellContent}
+    </SubscriptionAccessProvider>
+  );
+
   return user || isDemoMode() ? (
-    mobileLayoutActive ? shellContent : <OrientationGuard>{shellContent}</OrientationGuard>
+    mobileLayoutActive ? accessContent : <OrientationGuard>{accessContent}</OrientationGuard>
   ) : (
-    shellContent
+    accessContent
   );
 }
 

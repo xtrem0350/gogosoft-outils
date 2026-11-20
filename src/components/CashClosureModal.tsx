@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { closeCashPeriod, type CashPeriod, type CashSummary } from "@/services/cashService";
 
@@ -45,10 +46,15 @@ export function CashClosureModal({
   onSuccess,
 }: CashClosureModalProps) {
   const { shopId } = useCurrentShop();
+  const { isReadOnly } = useSubscriptionAccess();
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function confirmClosure() {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!shopId) {
       toast.error("Aucune boutique active.");
       return;
@@ -108,14 +114,16 @@ export function CashClosureModal({
           <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
             Annuler
           </Button>
-          <Button
-            type="button"
-            onClick={() => void confirmClosure()}
-            disabled={saving}
-            className="bg-ivoirien bg-ivoirien-hover shadow-3d"
-          >
-            {saving ? "Clôture…" : "Confirmer la clôture"}
-          </Button>
+          <ReadOnlyGuard>
+            <Button
+              type="button"
+              onClick={() => void confirmClosure()}
+              disabled={saving}
+              className="bg-ivoirien bg-ivoirien-hover shadow-3d"
+            >
+              {saving ? "Clôture…" : "Confirmer la clôture"}
+            </Button>
+          </ReadOnlyGuard>
         </DialogFooter>
       </DialogContent>
     </Dialog>

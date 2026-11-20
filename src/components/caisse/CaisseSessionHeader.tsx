@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import type { CashSession } from "@/services/cashService";
 
 interface CaisseSessionHeaderProps {
@@ -34,8 +36,13 @@ export function CaisseSessionHeader({
   const [closingAmount, setClosingAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const { isReadOnly } = useSubscriptionAccess();
 
   async function confirmOpen(): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     const amount = Number(openingAmount);
     if (!Number.isFinite(amount) || amount < 0) return;
     setSaving(true);
@@ -48,6 +55,10 @@ export function CaisseSessionHeader({
   }
 
   async function confirmClose(): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     const amount = Number(closingAmount);
     if (!Number.isFinite(amount) || amount < 0) return;
     setSaving(true);
@@ -70,9 +81,11 @@ export function CaisseSessionHeader({
               ? `🟢 Caisse ouverte depuis ${openedAt} par ${openedByName ?? session.opened_by}. Montant initial : ${formatMoney(session.opening_amount)}`
               : "🔴 Caisse fermée."}
           </p>
-          <Button type="button" variant={session ? "outline" : "default"} onClick={() => session ? setCloseModal(true) : setOpenModal(true)}>
-            {session ? "Fermer la caisse" : "Ouvrir la caisse"}
-          </Button>
+          <ReadOnlyGuard>
+            <Button type="button" variant={session ? "outline" : "default"} onClick={() => session ? setCloseModal(true) : setOpenModal(true)}>
+              {session ? "Fermer la caisse" : "Ouvrir la caisse"}
+            </Button>
+          </ReadOnlyGuard>
         </CardContent>
       </Card>
 
@@ -85,7 +98,7 @@ export function CaisseSessionHeader({
           </label>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setOpenModal(false)} disabled={saving}>Annuler</Button>
-            <Button type="button" onClick={() => void confirmOpen()} disabled={saving}>{saving ? "Ouverture…" : "Ouvrir"}</Button>
+            <ReadOnlyGuard><Button type="button" onClick={() => void confirmOpen()} disabled={saving}>{saving ? "Ouverture…" : "Ouvrir"}</Button></ReadOnlyGuard>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -105,7 +118,7 @@ export function CaisseSessionHeader({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setCloseModal(false)} disabled={saving}>Annuler</Button>
-            <Button type="button" onClick={() => void confirmClose()} disabled={saving}>{saving ? "Fermeture…" : "Fermer"}</Button>
+            <ReadOnlyGuard><Button type="button" onClick={() => void confirmClose()} disabled={saving}>{saving ? "Fermeture…" : "Fermer"}</Button></ReadOnlyGuard>
           </DialogFooter>
         </DialogContent>
       </Dialog>

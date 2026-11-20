@@ -4,6 +4,7 @@ import { Archive, Box, Layers, Package, Pencil, Plus, ShoppingBag, Trash2 } from
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { StorageLocationDialog } from "@/components/StorageLocationDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -164,27 +165,7 @@ export function StorageLocationsPage({
       {embedded ? (
         canManageLocations ? (
           <div className="flex justify-end">
-            <Button
-              type="button"
-              style={{
-                backgroundColor: shopId ? "#14532d" : "#9ca3af",
-                color: shopId ? "#ffffff" : "#000000",
-                borderColor: shopId ? "#14532d" : "#9ca3af",
-              }}
-              className="hover:bg-green-800 active:bg-green-950"
-              onClick={createLocation}
-              disabled={!shopId}
-            >
-              <Plus className="size-4" /> Ajouter un emplacement
-            </Button>
-          </div>
-        ) : null
-      ) : (
-        <PageHero
-          title={heading.title}
-          subtitle={heading.subtitle}
-          action={
-            canManageLocations ? (
+            <ReadOnlyGuard>
               <Button
                 type="button"
                 style={{
@@ -198,6 +179,30 @@ export function StorageLocationsPage({
               >
                 <Plus className="size-4" /> Ajouter un emplacement
               </Button>
+            </ReadOnlyGuard>
+          </div>
+        ) : null
+      ) : (
+        <PageHero
+          title={heading.title}
+          subtitle={heading.subtitle}
+          action={
+            canManageLocations ? (
+              <ReadOnlyGuard>
+                <Button
+                  type="button"
+                  style={{
+                    backgroundColor: shopId ? "#14532d" : "#9ca3af",
+                    color: shopId ? "#ffffff" : "#000000",
+                    borderColor: shopId ? "#14532d" : "#9ca3af",
+                  }}
+                  className="hover:bg-green-800 active:bg-green-950"
+                  onClick={createLocation}
+                  disabled={!shopId}
+                >
+                  <Plus className="size-4" /> Ajouter un emplacement
+                </Button>
+              </ReadOnlyGuard>
             ) : null
           }
           breadcrumb={
@@ -284,36 +289,40 @@ export function StorageLocationsPage({
                   {!plan && (canManageLocations || canDeleteLocations) ? (
                     <div className="flex justify-end gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                       {canManageLocations ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Modifier ${location.name}`}
-                          title="Modifier"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            editLocation(location);
-                          }}
-                        >
-                          <Pencil className="size-4" />
-                        </Button>
+                        <ReadOnlyGuard>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Modifier ${location.name}`}
+                            title="Modifier"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              editLocation(location);
+                            }}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        </ReadOnlyGuard>
                       ) : null}
                       {canDeleteLocations ? (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          aria-label={`Supprimer ${location.name}`}
-                          title="Supprimer"
-                          onClick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            setDeletingLocation(location);
-                          }}
-                        >
-                          <Trash2 className="size-4 text-destructive" />
-                        </Button>
+                        <ReadOnlyGuard>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label={`Supprimer ${location.name}`}
+                            title="Supprimer"
+                            onClick={(event) => {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setDeletingLocation(location);
+                            }}
+                          >
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </ReadOnlyGuard>
                       ) : null}
                     </div>
                   ) : null}
@@ -357,7 +366,9 @@ export function StorageLocationsPage({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => void confirmDelete()}>Supprimer</AlertDialogAction>
+            <ReadOnlyGuard>
+              <AlertDialogAction onClick={() => void confirmDelete()}>Supprimer</AlertDialogAction>
+            </ReadOnlyGuard>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

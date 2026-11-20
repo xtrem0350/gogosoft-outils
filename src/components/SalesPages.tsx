@@ -25,6 +25,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { PageHero } from "@/components/PageHero";
 import { PageIdentity } from "@/components/PageIdentity";
 import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { ClientSelect } from "@/components/selects/ClientSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -410,17 +411,19 @@ export function SalesListPage({
                   </Button>
                 ) : null}
                 {isOrders && sale.delivery_status !== "delivered" ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    disabled={busySaleId === sale.id}
-                    onClick={() => void deliverSale(sale.id)}
-                  >
-                    <Check aria-hidden="true" />{" "}
-                    {busySaleId === sale.id ? "En cours…" : "Marquer remise"}
-                  </Button>
+                  <ReadOnlyGuard>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      disabled={busySaleId === sale.id}
+                      onClick={() => void deliverSale(sale.id)}
+                    >
+                      <Check aria-hidden="true" />{" "}
+                      {busySaleId === sale.id ? "En cours…" : "Marquer remise"}
+                    </Button>
+                  </ReadOnlyGuard>
                 ) : null}
               </div>
             </div>
@@ -692,6 +695,7 @@ export function NewSalePage() {
           { label: "Nouvelle vente" },
         ]}
       />
+      <ReadOnlyGuard>
       <form onSubmit={(event) => void submit(event)} className="grid gap-6">
         <Card className="rounded-2xl shadow-sm">
           <CardContent className="grid gap-4 p-6">
@@ -800,12 +804,15 @@ export function NewSalePage() {
             <p className="text-sm">
               Vente enregistrée · {savedSale.total_price.toLocaleString("fr-FR")} FCFA · En attente de transmission
             </p>
-            <Button type="button" disabled={sendingToCashier} onClick={() => void sendToCashier()}>
-              {sendingToCashier ? "Transmission…" : "Envoyer au caissier"}
-            </Button>
+            <ReadOnlyGuard>
+              <Button type="button" disabled={sendingToCashier} onClick={() => void sendToCashier()}>
+                {sendingToCashier ? "Transmission…" : "Envoyer au caissier"}
+              </Button>
+            </ReadOnlyGuard>
           </div>
         )}
       </form>
+      </ReadOnlyGuard>
       <QuickCreateClientDialog
         open={createClientOpen}
         onOpenChange={setCreateClientOpen}

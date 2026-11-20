@@ -59,6 +59,9 @@ interface CheckoutModalProps {
   initialMonths?: 1 | 3;
   clientName: string;
   clientEmail: string;
+  cashActionLabel?: string;
+  cashConfirmationTitle?: string;
+  cashConfirmationMessage?: string;
   onPay: (submission: CheckoutSubmission) => Promise<CheckoutPaymentResult>;
   onComplete: () => void | Promise<void>;
 }
@@ -111,6 +114,9 @@ export function CheckoutModal({
   initialMonths = 1,
   clientName,
   clientEmail,
+  cashActionLabel = "Confirmer la commande",
+  cashConfirmationTitle = "Votre boutique est créée.",
+  cashConfirmationMessage = "Votre abonnement sera activé dès réception du paiement en espèces. Contactez l'administrateur.",
   onPay,
   onComplete,
 }: CheckoutModalProps) {
@@ -166,7 +172,7 @@ export function CheckoutModal({
   const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method) ?? PAYMENT_METHODS[0]!;
 
   async function submitPayment() {
-    if (!assignedDomain.trim()) {
+    if ((domainRequired || domainPrice > 0) && !assignedDomain.trim()) {
       toast.error("Saisissez le nom de domaine.");
       setStep(1);
       return;
@@ -308,7 +314,7 @@ export function CheckoutModal({
                         <>
                           <selectedMethod.icon className="size-4" />
                           {method === "cash"
-                            ? "Confirmer la commande"
+                            ? cashActionLabel
                             : `Payer ${totalAmount.toLocaleString("fr-FR")} FCFA`}
                         </>
                       )}
@@ -336,12 +342,9 @@ export function CheckoutModal({
                   <CheckCircle2 className="mx-auto size-20 text-green-600" />
                   <div className="space-y-2">
                     <h3 className="text-3xl font-bold text-slate-900">
-                      Votre boutique est créée.
+                      {cashConfirmationTitle}
                     </h3>
-                    <p className="text-lg text-slate-600">
-                      Votre abonnement sera activé dès réception du paiement en espèces.
-                      Contactez l&apos;administrateur.
-                    </p>
+                    <p className="text-lg text-slate-600">{cashConfirmationMessage}</p>
                     <p className="text-sm text-slate-600">
                       Facture : <strong>{invoice.invoice_number}</strong>
                       <br />

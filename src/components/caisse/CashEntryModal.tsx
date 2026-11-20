@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CashEntryModalProps {
@@ -26,8 +27,13 @@ export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryMo
   const [method, setMethod] = useState<CashMethod>("cash");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const { isReadOnly } = useSubscriptionAccess();
 
   async function handleSubmit(): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     const numericAmount = Number(amount);
     if (!shopId) {
       toast.error("Aucune boutique active.");
@@ -85,7 +91,7 @@ export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryMo
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Annuler</Button>
-          <Button type="button" onClick={() => void handleSubmit()} disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer l'entrée"}</Button>
+          <ReadOnlyGuard><Button type="button" onClick={() => void handleSubmit()} disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer l'entrée"}</Button></ReadOnlyGuard>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -89,6 +89,68 @@ export async function createDomainRequest(
   return data as DomainRequest;
 }
 
+export async function createAdditionalDomainRequest(
+  userId: string,
+  shopId: string,
+  domainName: string,
+): Promise<DomainRequest> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!userData.user || userData.user.id !== userId) {
+    throw new Error("Utilisateur non authentifié pour cette demande.");
+  }
+  if (!shopId) throw new Error("Atelier introuvable.");
+
+  const trimmedName = domainName.trim().toLowerCase();
+  const normalizedDomain = trimmedName.endsWith(".ci")
+    ? trimmedName
+    : `${trimmedName}.ci`;
+  if (!/^[a-z0-9-]+\.ci$/.test(normalizedDomain)) {
+    throw new Error("Le domaine doit respecter le format monatelier.ci.");
+  }
+  if (!(await checkDomainAvailability(normalizedDomain))) {
+    throw new Error("Ce nom de domaine n'est pas disponible.");
+  }
+
+  const { data: existing, error: existingError } = await domainTable()
+    .select("*")
+    .eq("shop_id", shopId)
+    .eq("choice_1", normalizedDomain)
+    .order("registered_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (existingError) throw existingError;
+  if (existing) {
+    const request = existing as DomainRequest;
+    if (request.status === "pending" || request.status === "checking") return request;
+    throw new Error("Ce domaine est déjà attribué ou fait déjà l'objet d'une demande.");
+  }
+
+  const { data, error } = await domainTable()
+    .insert({
+      shop_id: shopId,
+      user_id: userId,
+      choice_1: normalizedDomain,
+      choice_2: null,
+      choice_3: null,
+      status: "pending",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as DomainRequest;
+}
+
+export async function getDomainRequests(shopId: string): Promise<DomainRequest[]> {
+  if (!shopId) return [];
+  const { data, error } = await domainTable()
+    .select("*")
+    .eq("shop_id", shopId)
+    .order("registered_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as DomainRequest[];
+}
+
 export async function assignDomain(requestId: string, assignedDomain: string): Promise<void> {
   const { error } = await domainTable()
     .update({

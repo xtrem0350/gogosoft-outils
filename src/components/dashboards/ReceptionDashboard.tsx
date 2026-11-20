@@ -4,6 +4,7 @@ import { Inbox, Laptop, Package, PackageCheck, Plus, UserRound } from "lucide-re
 
 import { StorageLocationsPage } from "@/components/StorageLocationPages";
 import { StorageLocationDialog } from "@/components/StorageLocationDialog";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -67,22 +68,26 @@ export function ReceptionDashboard() {
       <div className="flex items-center justify-between gap-4">
         <div><h1 className="text-2xl font-bold">Accueil réception</h1><p className="text-sm text-slate-500">Fiches clients et rangement</p></div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild><Link to="/clients/nouveau"><Plus className="mr-2 size-4" />Nouveau client</Link></Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!shopId}
-            onClick={() => setIsLocationDialogOpen(true)}
-          >
-            <Package className="mr-2 size-4" />Nouveau Rangement
-          </Button>
-          <Button asChild><Link to="/reception">Nouvelle réception / Wizard</Link></Button>
-          <Button variant="outline" asChild>
-            <Link to="/computer/atelier/nouveau">
-              <Laptop className="mr-2 size-4" />
-              Nouvelle réception ordinateur
-            </Link>
-          </Button>
+          <ReadOnlyGuard><Button variant="outline" asChild><Link to="/clients/nouveau"><Plus className="mr-2 size-4" />Nouveau client</Link></Button></ReadOnlyGuard>
+          <ReadOnlyGuard>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!shopId}
+              onClick={() => setIsLocationDialogOpen(true)}
+            >
+              <Package className="mr-2 size-4" />Nouveau Rangement
+            </Button>
+          </ReadOnlyGuard>
+          <ReadOnlyGuard><Button asChild><Link to="/reception">Nouvelle réception / Wizard</Link></Button></ReadOnlyGuard>
+          <ReadOnlyGuard>
+            <Button variant="outline" asChild>
+              <Link to="/computer/atelier/nouveau">
+                <Laptop className="mr-2 size-4" />
+                Nouvelle réception ordinateur
+              </Link>
+            </Button>
+          </ReadOnlyGuard>
         </div>
       </div>
       {error ? <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}

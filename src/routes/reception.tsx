@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHero } from "@/components/PageHero";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import { StatsCard } from "@/components/StatsCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/reception")({
 function ReceptionPage() {
   const navigate = useNavigate();
   const { shopId } = useCurrentShop();
+  const { isReadOnly } = useSubscriptionAccess();
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [ticketsToPlace, setTicketsToPlace] = useState<WorkshopTicket[]>([]);
   const [ticketsToDeliver, setTicketsToDeliver] = useState<WorkshopTicket[]>([]);
@@ -148,6 +150,10 @@ function ReceptionPage() {
   }, [shopId]);
 
   async function confirmDelivery() {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!deliveryTicket || !shopId || delivering) return;
     if (!identityVerified) {
       toast.error("Vérifiez l'identité du client avant la remise.");
@@ -258,6 +264,10 @@ function ReceptionPage() {
   }
 
   async function handleCreateTicket() {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (creating) return;
     if (!shopId) {
       toast.error("Sélectionnez un atelier avant de créer la fiche.");
@@ -374,7 +384,13 @@ function ReceptionPage() {
         subtitle="Suivi des clients en attente et des appareils au casier"
         icon={UserRound}
         iconColor="blue"
-        action={<Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={() => setOpenCreate(true)}>Nouvelle réception</Button>}
+        action={
+          <ReadOnlyGuard>
+            <Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={() => setOpenCreate(true)}>
+              Nouvelle réception
+            </Button>
+          </ReadOnlyGuard>
+        }
       />
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -408,7 +424,11 @@ function ReceptionPage() {
                   <p className="font-medium">{ticket.ticket_number ?? ticket.id} · {ticket.client_name}</p>
                   <p className="text-sm text-muted-foreground">{[ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "Appareil"}</p>
                 </div>
-                <Button size="sm" onClick={() => setPlaceTicket({ ticket })}>Ranger dans le tiroir</Button>
+                <ReadOnlyGuard>
+                  <Button size="sm" onClick={() => setPlaceTicket({ ticket })}>
+                    Ranger dans le tiroir
+                  </Button>
+                </ReadOnlyGuard>
               </div>
             ))
           )}
@@ -434,16 +454,18 @@ function ReceptionPage() {
                     Montant payé : {new Intl.NumberFormat("fr-FR").format(ticket.price_final ?? ticket.price_estimate ?? 0)} FCFA
                   </p>
                 </div>
-                <Button
-                  size="sm"
-                  className="bg-green-700 text-white hover:bg-green-800"
-                  onClick={() => {
-                    setDeliveryTicket(ticket);
-                    setIdentityVerified(false);
-                  }}
-                >
-                  Remettre au client
-                </Button>
+                <ReadOnlyGuard>
+                  <Button
+                    size="sm"
+                    className="bg-green-700 text-white hover:bg-green-800"
+                    onClick={() => {
+                      setDeliveryTicket(ticket);
+                      setIdentityVerified(false);
+                    }}
+                  >
+                    Remettre au client
+                  </Button>
+                </ReadOnlyGuard>
               </div>
             ))
           )}
@@ -561,7 +583,7 @@ function ReceptionPage() {
             <div className="space-y-4">
               <div className="space-y-2"><Label>Rangement</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
               <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> {entryFeeConfig?.enabled ? `${new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA` : "Gratuit"}</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
-              <DialogFooter><Button variant="outline" onClick={() => setStep(entryFeeConfig?.enabled ? 3 : 2)}>Retour</Button><Button disabled={!selectedLocationId || creating || !entryFeeConfig} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></DialogFooter>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(entryFeeConfig?.enabled ? 3 : 2)}>Retour</Button><ReadOnlyGuard><Button disabled={!selectedLocationId || creating || !entryFeeConfig} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></ReadOnlyGuard></DialogFooter>
             </div>
           ) : null}
           <div className="flex justify-end border-t pt-4">
@@ -581,12 +603,14 @@ function ReceptionPage() {
           setPaymentOpen(false);
         }}
       />
-      <PlaceTicketModal
-        open={Boolean(placeTicket)}
-        onClose={() => setPlaceTicket(null)}
-        ticket={placeTicket?.ticket ?? null}
-        onSuccess={() => void loadTicketsToPlace()}
-      />
+      <ReadOnlyGuard>
+        <PlaceTicketModal
+          open={Boolean(placeTicket)}
+          onClose={() => setPlaceTicket(null)}
+          ticket={placeTicket?.ticket ?? null}
+          onSuccess={() => void loadTicketsToPlace()}
+        />
+      </ReadOnlyGuard>
       <Dialog
         open={Boolean(deliveryTicket)}
         onOpenChange={(open) => {
@@ -628,14 +652,16 @@ function ReceptionPage() {
             >
               Annuler
             </Button>
-            <Button
-              type="button"
-              className="bg-green-700 text-white hover:bg-green-800"
-              disabled={!identityVerified || delivering}
-              onClick={() => void confirmDelivery()}
-            >
-              {delivering ? "Confirmation…" : "Confirmer la remise"}
-            </Button>
+            <ReadOnlyGuard>
+              <Button
+                type="button"
+                className="bg-green-700 text-white hover:bg-green-800"
+                disabled={!identityVerified || delivering}
+                onClick={() => void confirmDelivery()}
+              >
+                {delivering ? "Confirmation…" : "Confirmer la remise"}
+              </Button>
+            </ReadOnlyGuard>
           </DialogFooter>
         </DialogContent>
       </Dialog>

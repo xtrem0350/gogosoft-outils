@@ -1,4 +1,5 @@
 import { Printer } from "lucide-react";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalePaymentMethod } from "@/services/salesService";
@@ -76,7 +77,7 @@ export function CaisseEntriesTab({
         <CardHeader>
           <CardTitle>Entrées en caisse</CardTitle>
           <p className="text-sm text-muted-foreground">Paiements de réparation et ventes encaissées.</p>
-          <Button type="button" onClick={onAddEntry} disabled={!sessionOpen}>Ajouter une entrée</Button>
+          <ReadOnlyGuard><Button type="button" onClick={onAddEntry} disabled={!sessionOpen}>Ajouter une entrée</Button></ReadOnlyGuard>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
@@ -120,7 +121,7 @@ export function CaisseEntriesTab({
                   <select aria-label={`Mode de paiement pour ${sale.product_name}`} value={paymentMethodsBySale[sale.id] ?? "cash"} onChange={(event) => onPaymentMethodChange(sale.id, event.target.value as SalePaymentMethod)} className="h-9 rounded-md border border-input bg-background px-2 text-sm">
                     {CASHIER_METHODS.map((method) => <option key={method.value} value={method.value}>{method.label}</option>)}
                   </select>
-                  <Button type="button" size="sm" onClick={() => onCollectSale(sale.id)}>Encaisser</Button>
+                  <ReadOnlyGuard><Button type="button" size="sm" onClick={() => onCollectSale(sale.id)}>Encaisser</Button></ReadOnlyGuard>
                 </div>
               </div>
             )) : <p className="text-sm text-muted-foreground">Aucun paiement vente en attente.</p>}
@@ -136,7 +137,7 @@ export function CaisseEntriesTab({
                 <Button type="button" variant="ghost" className="h-auto p-0 font-medium underline-offset-4 hover:underline" onClick={() => onTicketDetail(ticket, type)}>{ticket.ticket_number}</Button>
                 <p className="text-xs text-muted-foreground">{ticket.client_name} · {type === "entry" ? "Entrée" : "Solde"} · {formatMoney(amount)}</p>
               </div>
-              <Button size="sm" onClick={() => onCollectTicket(ticket, type)}>{type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}</Button>
+              <ReadOnlyGuard><Button size="sm" onClick={() => onCollectTicket(ticket, type)}>{type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}</Button></ReadOnlyGuard>
             </div>
           ))}
           {entryTickets.length === 0 && finalTickets.length === 0 ? <p className="text-sm text-muted-foreground">Aucune fiche atelier en attente.</p> : null}

@@ -23,6 +23,7 @@ import { CaisseStatsCards } from "@/components/caisse/CaisseStatsCards";
 import { CashEntryModal } from "@/components/caisse/CashEntryModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useUserRole } from "@/hooks/useUserRole";
+import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import { supabase } from "@/integrations/supabase/client";
 import {
   closeWorkshopTicketPayment,
@@ -125,6 +126,7 @@ interface WorkshopTicketRow {
 function CashPage() {
   const { action, ticket: requestedTicketId } = Route.useSearch();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { isReadOnly } = useSubscriptionAccess();
   const { isOwner, isCaissier } = useUserRole();
   const demo = isDemoMode();
   const [preset, setPreset] = useState<PeriodPreset>("today");
@@ -233,6 +235,7 @@ function CashPage() {
 
   useEffect(() => {
     if (action !== "validate" || loading) return;
+    if (isReadOnly) return;
     const pendingTickets = [...entryTickets, ...finalTickets];
     if (pendingTickets.length === 0) {
       toast.info("Aucun paiement en attente.");
@@ -254,13 +257,17 @@ function CashPage() {
       ticket: targetTicket,
       type: targetIsEntry ? "entry" : "final",
     });
-  }, [action, entryFeeConfig.enabled, entryTickets, finalTickets, loading, requestedTicketId]);
+  }, [action, entryFeeConfig.enabled, entryTickets, finalTickets, isReadOnly, loading, requestedTicketId]);
 
   const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
   const canManageCash = isOwner || isCaissier;
 
   async function saveExit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!shopId) {
       toast.error("Aucun atelier actif.");
       return;
@@ -286,6 +293,10 @@ function CashPage() {
   }
 
   async function collectTicketPayment(method: string, amount: number): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!cashSession) {
       toast.error("Ouvrez la caisse avant d'encaisser.");
       return;
@@ -314,6 +325,10 @@ function CashPage() {
   }
 
   async function collectSale(saleId: string) {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!cashSession) {
       toast.error("Ouvrez la caisse avant d'encaisser.");
       return;
@@ -328,6 +343,10 @@ function CashPage() {
   }
 
   async function handleOpenSession(openingAmount: number): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!shopId) return;
     try {
       await openCashSession(shopId, openingAmount);
@@ -339,6 +358,10 @@ function CashPage() {
   }
 
   async function handleCloseSession(closingAmount: number, notes?: string): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
     if (!cashSession) return;
     try {
       await closeCashSession(cashSession.id, closingAmount, notes);
@@ -377,7 +400,7 @@ function CashPage() {
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="encaissements">
-          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} entryFeeConfig={entryFeeConfig} onCollectTicket={(ticket, type) => { if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
+          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} entryFeeConfig={entryFeeConfig}           onCollectTicket={(ticket, type) => { if (isReadOnly) { toast.error("Votre abonnement a expiré. Cette action est désactivée."); return; } if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
         </TabsContent>
         <TabsContent value="decaissements">
           {!demo && canManageCash ? <CaisseExitsTab exits={exits} onAdd={() => setExitOpen(true)} onReceipt={() => undefined} /> : null}
@@ -397,6 +420,10 @@ function CashPage() {
         ticketType={ticketDetail?.type ?? "entry"}
         entryFeeConfig={entryFeeConfig}
         onValidate={() => {
+          if (isReadOnly) {
+            toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+            return;
+          }
           if (!ticketDetail) return;
           if (!cashSession) {
             toast.error("Ouvrez la caisse avant d'encaisser.");
@@ -418,7 +445,7 @@ function CashPage() {
             </label>
             <label className="grid gap-2 text-sm font-medium">Montant<Input type="number" min="1" step="1" value={exitAmount} onChange={(event) => setExitAmount(event.target.value)} required /></label>
             <label className="grid gap-2 text-sm font-medium">Description<Input value={exitDescription} onChange={(event) => setExitDescription(event.target.value)} maxLength={240} placeholder="Commande fournisseur, électricité, internet…" /></label>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setExitOpen(false)} disabled={savingExit}>Annuler</Button><Button type="submit" disabled={savingExit}>{savingExit ? "Enregistrement…" : "Enregistrer"}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="outline" onClick={() => setExitOpen(false)} disabled={savingExit}>Annuler</Button><ReadOnlyGuard><Button type="submit" disabled={savingExit}>{savingExit ? "Enregistrement…" : "Enregistrer"}</Button></ReadOnlyGuard></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

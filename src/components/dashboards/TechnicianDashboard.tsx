@@ -7,6 +7,7 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ReadOnlyGuard } from "@/components/SubscriptionGuard";
 import { toast } from "sonner";
 import {
   assignTicketToTechnician,
@@ -214,13 +215,15 @@ export function TechnicianDashboard() {
                       {ticket.device_brand} {ticket.device_model}
                     </div>
                   </Link>
-                  <Button
-                    type="button"
-                    disabled={assigningTicketId !== null}
-                    onClick={() => void takeTicket(ticket)}
-                  >
-                    {assigningTicketId === ticket.id ? "Prise en charge…" : "Prendre en charge"}
-                  </Button>
+                  <ReadOnlyGuard>
+                    <Button
+                      type="button"
+                      disabled={assigningTicketId !== null}
+                      onClick={() => void takeTicket(ticket)}
+                    >
+                      {assigningTicketId === ticket.id ? "Prise en charge…" : "Prendre en charge"}
+                    </Button>
+                  </ReadOnlyGuard>
                 </div>
               ))}
             </div>

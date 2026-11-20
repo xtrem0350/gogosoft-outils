@@ -423,9 +423,10 @@ export async function applyModuleSelection(
   );
   await Promise.all(removedCodes.map((code) => disableShopModule(shop.id, code)));
 
+  const startedAt = new Date();
   const expiresAt = selection.trial
-    ? new Date(Date.now() + 24 * 60 * 60 * 1000)
-    : new Date(Date.now() + selection.durationMonths * 30 * 24 * 60 * 60 * 1000);
+    ? new Date(startedAt.getTime() + 7 * 24 * 60 * 60 * 1000)
+    : new Date(startedAt.getTime() + selection.durationMonths * 30 * 24 * 60 * 60 * 1000);
   const { error } = await supabase.from("subscriptions").upsert(
     {
       user_id: userId,
@@ -434,7 +435,8 @@ export async function applyModuleSelection(
       domain_included: selection.domainCode !== null,
       price_fcfa: selection.trial ? 0 : selection.priceFcfa,
       plan: selection.trial ? "trial" : "mensuel",
-      status: "active",
+      status: selection.trial ? "trial" : "active",
+      started_at: startedAt.toISOString(),
       expires_at: expiresAt.toISOString(),
     },
     { onConflict: "user_id" },
