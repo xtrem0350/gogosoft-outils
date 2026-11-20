@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { BONUS_DAYS, DOMAIN_PRICE } from "@/constants/pricing";
 
+export type SubscriptionPaymentType =
+  | "new"
+  | "renewal"
+  | "domain-additional"
+  | "domain-renewal";
+
 export interface CheckoutData {
   shopId: string;
   planId: string;
@@ -13,7 +19,7 @@ export interface CheckoutData {
   domainPrice?: number;
   bonusDays?: number;
   paymentStatus?: SubscriptionPaymentStatus;
-  paymentType?: "new" | "renewal" | "domain-additional";
+  paymentType?: SubscriptionPaymentType;
 }
 
 export type SubscriptionPaymentStatus =
@@ -40,7 +46,7 @@ export interface SubscriptionPaymentInvoice {
   payment_status: SubscriptionPaymentStatus;
   payment_reference?: string | null;
   paid_at?: string | null;
-  payment_type?: "new" | "renewal" | "domain-additional";
+  payment_type?: SubscriptionPaymentType;
 }
 
 export interface PendingCashCheckoutResult {
@@ -59,6 +65,25 @@ export type CheckoutPaymentResult =
 function subscriptionPaymentTable(): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabase as unknown as { from: (name: string) => any }).from("subscription_payments");
+}
+
+async function resolvePaymentType(
+  data: CheckoutData,
+  userId: string,
+): Promise<SubscriptionPaymentType> {
+  if (data.paymentType) return data.paymentType;
+  if (data.planId === "domain-additional") return "domain-additional";
+  if (data.planId === "domain-renewal") return "domain-renewal";
+  if (data.planId === "renewal") return "renewal";
+
+  const { data: subscription, error } = await supabase
+    .from("subscriptions")
+    .select("status")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+
+  return subscription && subscription.status !== "pending" ? "renewal" : "new";
 }
 
 export async function createSubscriptionPayment(
@@ -81,6 +106,7 @@ export async function createSubscriptionPayment(
   }
   const totalAmount =
     data.planPrice * data.subscriptionMonths + domainPrice + additionalAmount;
+  const paymentType = await resolvePaymentType(data, userData.user.id);
 
   const { data: payment, error } = await subscriptionPaymentTable()
     .insert({
@@ -97,7 +123,7 @@ export async function createSubscriptionPayment(
       total_amount: totalAmount,
       payment_method: data.paymentMethod,
       payment_status: data.paymentStatus ?? "pending",
-      payment_type: data.paymentType ?? "new",
+      payment_type: paymentType,
       payment_reference: null,
       paid_at: null,
     })

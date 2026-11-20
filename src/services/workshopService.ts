@@ -885,4 +885,5 @@ export async function getTodayWorkshopPayments(
   if (!(await hasActiveSession()) || !shopId) return [];
   const start = new Date();
   start.setHours(0, 0, 0, 0);
-  const
+  const end = new Date(start);
+  end
