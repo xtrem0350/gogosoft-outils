@@ -336,7 +336,7 @@ function DesktopHomePage() {
                       className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => void handleGoAuth("signup")}
                     >
-                      Créer un compte · 7 jours gratuits · {totalPrice.toLocaleString("fr-FR")} FCFA/mois
+                      Créer votre compte · 0 FCFA/mois
                       <Check className="size-4" />
                     </Button>
                   </TooltipTrigger>

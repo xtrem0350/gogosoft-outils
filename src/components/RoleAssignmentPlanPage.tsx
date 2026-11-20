@@ -72,20 +72,22 @@ export function RoleAssignmentPlanPage() {
       ) : loading || shopLoading ? (
         <p className="text-sm text-muted-foreground">Chargement des rôles de l'équipe…</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {POSTES.map((poste) => {
             const assignedMembers = members.filter((member) => member.role === poste.key);
             return (
-              <Card key={poste.key}>
-                <CardHeader className="flex flex-row items-center gap-3">
-                  <span aria-hidden="true" className="text-2xl">{poste.icon}</span>
+              <Card key={poste.key} className="border-slate-200 shadow-sm transition-shadow hover:shadow-md">
+                <CardHeader className="flex flex-row items-center gap-4 p-5">
+                  <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-3xl">
+                    {poste.icon}
+                  </span>
                   <CardTitle className="text-base">{poste.label}</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="px-5 pb-5">
                   {assignedMembers.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {assignedMembers.map((member) => (
-                        <Badge key={member.id} variant="secondary">
+                        <Badge key={member.id} className="bg-green-100 px-3 py-1 text-green-800 hover:bg-green-100">
                           {member.full_name || member.email || "Membre"}
                         </Badge>
                       ))}

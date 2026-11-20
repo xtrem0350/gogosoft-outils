@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { getProfile, updateProfile } from "@/services/authService";
 import {
   getShopEntryFeeConfig,
@@ -64,7 +65,10 @@ function ParametresPage() {
   const router = useRouter();
   const search = Route.useSearch();
   const { shop: currentShop, shopId } = useCurrentShop();
-  const { isOwner } = useUserRoles();
+  const { isOwner, isMagasinier, isReceptionniste } = useUserRoles();
+  const isMobile = useIsMobile();
+  const canAccessRangements =
+    isOwner || (isMobile && (isMagasinier || isReceptionniste));
   const [tab, setTab] = useState<ParameterTab>(search.tab ?? "profil");
   const [profile, setProfile] = useState<{
     nom: string | null;
@@ -201,6 +205,7 @@ function ParametresPage() {
 
   function changeTab(value: string) {
     if (!isParameterTab(value)) return;
+    if (!isOwner && value !== "rangements") return;
     setTab(value);
     void router.navigate({
       to: "/parametres",
@@ -220,13 +225,17 @@ function ParametresPage() {
 
       <Tabs value={tab} onValueChange={changeTab} className="w-full">
         <TabsList className="flex h-auto w-full flex-nowrap justify-start overflow-x-auto">
-          <TabsTrigger value="profil">Profil</TabsTrigger>
-          <TabsTrigger value="boutique">Atelier</TabsTrigger>
-          <TabsTrigger value="modules">Mes domaines</TabsTrigger>
-          {isOwner ? <TabsTrigger value="rangements">Rangements</TabsTrigger> : null}
-          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
+          {isOwner ? (
+            <>
+              <TabsTrigger value="profil">Profil</TabsTrigger>
+              <TabsTrigger value="boutique">Atelier</TabsTrigger>
+              <TabsTrigger value="modules">Mes domaines</TabsTrigger>
+            </>
+          ) : null}
+          {canAccessRangements ? <TabsTrigger value="rangements">Rangements</TabsTrigger> : null}
+          {isOwner ? <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger> : null}
           {isOwner ? <TabsTrigger value="entry-fee">Frais d'entrée</TabsTrigger> : null}
-          <TabsTrigger value="danger">Danger</TabsTrigger>
+          {isOwner ? <TabsTrigger value="danger">Danger</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent value="profil" className="mt-6 space-y-4">
@@ -367,7 +376,7 @@ function ParametresPage() {
           <ShopModulesSection shopId={shopId} />
         </TabsContent>
 
-        {isOwner ? (
+        {canAccessRangements ? (
           <TabsContent value="rangements" className="mt-6">
             <StorageLocationsPage plan={false} embedded />
           </TabsContent>

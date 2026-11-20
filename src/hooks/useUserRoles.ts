@@ -54,6 +54,14 @@ export interface UseUserRolesResult {
 }
 
 const STORAGE_KEY = "gogosoft.activeRole";
+const OWNER_SWITCHABLE_ROLES = [
+  "owner",
+  "technicien",
+  "caissier",
+  "magasinier",
+  "receptionniste",
+  "vendeur",
+] as const;
 
 export function useUserRoles(): UseUserRolesResult {
   const { user, profile, loading: authLoading } = useAuth();
@@ -120,12 +128,31 @@ export function useUserRoles(): UseUserRolesResult {
     window.sessionStorage.setItem(STORAGE_KEY, activeRole);
   }, [activeRole]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const handleRoleChange = () => {
+      const selectedRole = window.sessionStorage.getItem(STORAGE_KEY);
+      if (!selectedRole) return;
+      const canSelectRole =
+        roles.includes(selectedRole) ||
+        (roles.includes("owner") && OWNER_SWITCHABLE_ROLES.some((role) => role === selectedRole));
+      if (canSelectRole) setActiveRoleState(selectedRole);
+    };
+    window.addEventListener("gogosoft:role-changed", handleRoleChange);
+    return () => window.removeEventListener("gogosoft:role-changed", handleRoleChange);
+  }, [roles]);
+
   const setActiveRole = useCallback((role: string) => {
     if (!role) return;
-    setActiveRoleState((current) => {
-      if (roles.includes(role)) return role;
-      return current;
-    });
+    const canSelectRole =
+      roles.includes(role) ||
+      (roles.includes("owner") && OWNER_SWITCHABLE_ROLES.some((availableRole) => availableRole === role));
+    if (!canSelectRole) return;
+    setActiveRoleState(role);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(STORAGE_KEY, role);
+      window.dispatchEvent(new Event("gogosoft:role-changed"));
+    }
   }, [roles]);
 
   useEffect(() => {

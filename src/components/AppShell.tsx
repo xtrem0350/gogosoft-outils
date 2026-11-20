@@ -75,7 +75,11 @@ if (typeof window !== "undefined") {
   (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
 }
 
-function requiredRoles(pathname: string, isMobile: boolean): UserRole[] | null {
+function requiredRoles(
+  pathname: string,
+  isMobile: boolean,
+  search: Record<string, unknown>,
+): UserRole[] | null {
   if (pathname.startsWith("/admin")) return ["super_admin"];
   if (pathname === "/caisse" || pathname.startsWith("/caisse")) return ["owner", "caissier"];
   if (pathname === "/reception" || pathname.startsWith("/reception")) return ["owner", "receptionniste"];
@@ -87,6 +91,11 @@ function requiredRoles(pathname: string, isMobile: boolean): UserRole[] | null {
       ? ["owner", "receptionniste", "magasinier"]
       : ["owner"];
   }
+  if (
+    pathname === "/parametres" &&
+    isMobile &&
+    search["tab"] === "rangements"
+  ) return ["owner", "receptionniste", "magasinier"];
   if (pathname.startsWith("/equipe") || pathname.startsWith("/parametres") || pathname.startsWith("/abonnement")) {
     return ["owner"];
   }
@@ -199,13 +208,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const isExemptRoute =
     isAuthRoute || location.pathname === "/abonnement" || isSuperAdmin || isDemoMode();
   const loading = authLoading || roleLoading || (!isAuthRoute && !isSuperAdmin && shopLoading);
-  const routeRoles = requiredRoles(location.pathname, isMobile);
+  const routeRoles = requiredRoles(
+    location.pathname,
+    isMobile,
+    location.search as Record<string, unknown>,
+  );
   const mobileRoleDenied =
     isMobile && routeRoles !== null && role !== null && !routeRoles.includes(role);
   const mobileOwnerRouteDenied =
     isMobile &&
-    role === "owner" &&
-    !["/dashboard", "/documents", "/profil"].includes(location.pathname);
+    activeRole === "owner" &&
+    !["/dashboard", "/documents", "/profil", "/atelier/plan"].includes(location.pathname);
   const mobileAccessDenied = mobileRoleDenied || mobileOwnerRouteDenied;
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",

@@ -147,7 +147,7 @@ function getNavigationGroups(
             ? [{ label: "Stock consommables", to: "/consumable/stock", icon: Package }]
             : []),
           ...(isMobile
-            ? [{ label: "Rangements", to: "/parametres/emplacements", icon: Package }]
+            ? [{ label: "Rangements", to: "/parametres", icon: Package, search: { tab: "rangements" as const } }]
             : []),
         ],
       },
@@ -575,8 +575,6 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
               key={item}
               onSelect={() => {
                 setActiveRole(item);
-                window.sessionStorage.setItem("gogosoft.activeRole", item);
-                window.dispatchEvent(new Event("gogosoft:role-changed"));
                 void navigate({ to: roleRouteMap[item] ?? "/dashboard" });
               }}
               className={cn(item === activeRole && "bg-orange-50 text-orange-700")}

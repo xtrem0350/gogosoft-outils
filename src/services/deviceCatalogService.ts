@@ -66,6 +66,22 @@ export async function addDeviceToCatalog(input: AddDeviceCatalogInput): Promise<
   return normalizeDevice(data as DeviceCatalogItem);
 }
 
+export async function uploadCatalogDeviceImage(file: File): Promise<string> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Le fichier sélectionné doit être une image.");
+  }
+
+  const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+  const path = `${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage.from("catalogue").upload(path, file, {
+    contentType: file.type,
+    cacheControl: "3600",
+    upsert: false,
+  });
+  if (error) throw error;
+  return supabase.storage.from("catalogue").getPublicUrl(path).data.publicUrl;
+}
+
 export async function updateDeviceInCatalog(
   id: string,
   updates: Partial<Omit<DeviceCatalogItem, "id" | "created_at">>,

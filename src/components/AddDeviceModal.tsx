@@ -1,4 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Camera, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,7 @@ import {
   type DeviceCatalogCategory,
   type DeviceCatalogItem,
   type DeviceCatalogType,
+  uploadCatalogDeviceImage,
 } from "@/services/deviceCatalogService";
 import {
   Select,
@@ -70,7 +72,12 @@ export function AddDeviceModal({
   const [os, setOs] = useState("");
   const [releaseYear, setReleaseYear] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [saving, setSaving] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -86,20 +93,35 @@ export function AddDeviceModal({
     setOs("");
     setReleaseYear("");
     setImageUrl("");
+    setDescription("");
+    setImageFile(null);
   }, [categories, effectiveDefaultCategory, open]);
+
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview("");
+      return;
+    }
+    const previewUrl = URL.createObjectURL(imageFile);
+    setImagePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [imageFile]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     try {
+      const uploadedImageUrl = imageFile
+        ? await uploadCatalogDeviceImage(imageFile)
+        : imageUrl.trim() || null;
       const device = await addDeviceToCatalog({
         brand: brand.trim(),
         model: model.trim(),
         category: categories.length === 1 ? categories[0]! : category,
         os: os.trim() || null,
         release_year: releaseYear ? Number.parseInt(releaseYear, 10) : null,
-        image_url: imageUrl.trim() || null,
-        specs: {},
+        image_url: uploadedImageUrl,
+        specs: description.trim() ? { description: description.trim() } : {},
         popularity_ci: 5,
       });
       toast.success("Appareil ajouté au catalogue.");
@@ -120,7 +142,7 @@ export function AddDeviceModal({
         <form onSubmit={(event) => void submit(event)} className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="grid gap-2 text-sm font-medium">
-              Marque
+              Nom de l&apos;appareil (marque)
               <Input value={brand} onChange={(event) => setBrand(event.target.value)} required maxLength={80} />
             </label>
             <label className="grid gap-2 text-sm font-medium">
@@ -148,6 +170,14 @@ export function AddDeviceModal({
             <Input value={os} onChange={(event) => setOs(event.target.value)} maxLength={100} />
           </label>
           <label className="grid gap-2 text-sm font-medium">
+            Description (optionnel)
+            <Input
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              maxLength={500}
+            />
+          </label>
+          <label className="grid gap-2 text-sm font-medium">
             Année de sortie (optionnel)
             <Input
               type="number"
@@ -161,13 +191,58 @@ export function AddDeviceModal({
           </label>
           <label className="grid gap-2 text-sm font-medium">
             URL de l&apos;image (optionnel)
-            <Input type="url" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} />
+            <Input
+              type="url"
+              value={imageUrl}
+              onChange={(event) => setImageUrl(event.target.value)}
+              disabled={Boolean(imageFile)}
+            />
           </label>
-          {imageUrl.trim() ? (
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Ajouter une image</p>
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (file) {
+                  setImageFile(file);
+                  setImageUrl("");
+                }
+                event.currentTarget.value = "";
+              }}
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                if (file) {
+                  setImageFile(file);
+                  setImageUrl("");
+                }
+                event.currentTarget.value = "";
+              }}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button type="button" variant="outline" onClick={() => cameraInputRef.current?.click()}>
+                <Camera className="size-4" /> Prendre une photo
+              </Button>
+              <Button type="button" variant="outline" onClick={() => galleryInputRef.current?.click()}>
+                <ImagePlus className="size-4" /> Galerie
+              </Button>
+            </div>
+          </div>
+          {imagePreview || imageUrl.trim() ? (
             <img
-              src={imageUrl.trim()}
+              src={imagePreview || imageUrl.trim()}
               alt="Aperçu de l'appareil"
-              className="size-24 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+              className="size-32 rounded-xl border border-slate-200 object-cover shadow-sm dark:border-slate-700"
             />
           ) : null}
           <DialogFooter>
