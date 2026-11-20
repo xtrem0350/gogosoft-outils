@@ -13,6 +13,7 @@ export interface CheckoutData {
   domainPrice?: number;
   bonusDays?: number;
   paymentStatus?: SubscriptionPaymentStatus;
+  paymentType?: "new" | "renewal" | "domain-additional";
 }
 
 export type SubscriptionPaymentStatus =
@@ -39,6 +40,7 @@ export interface SubscriptionPaymentInvoice {
   payment_status: SubscriptionPaymentStatus;
   payment_reference?: string | null;
   paid_at?: string | null;
+  payment_type?: "new" | "renewal" | "domain-additional";
 }
 
 export interface PendingCashCheckoutResult {
@@ -95,6 +97,7 @@ export async function createSubscriptionPayment(
       total_amount: totalAmount,
       payment_method: data.paymentMethod,
       payment_status: data.paymentStatus ?? "pending",
+      payment_type: data.paymentType ?? "new",
       payment_reference: null,
       paid_at: null,
     })
