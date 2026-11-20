@@ -30,7 +30,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { DomainChoice } from "@/services/domainService";
-import type { SubscriptionPaymentInvoice } from "@/services/subscriptionPaymentService";
+import type {
+  CheckoutPaymentResult,
+  SubscriptionPaymentInvoice,
+} from "@/services/subscriptionPaymentService";
 
 type PaymentMethod = "wave" | "orange_money" | "mtn_money" | "moov_money" | "cash";
 type CheckoutStep = 1 | 2 | 3;
@@ -39,6 +42,7 @@ export interface CheckoutSubmission {
   domainName: string;
   choices: DomainChoice;
   planPrice: number;
+  additionalAmount: number;
   subscriptionMonths: 1 | 3;
   paymentMethod: PaymentMethod;
   domainPrice: number;
@@ -55,7 +59,7 @@ interface CheckoutModalProps {
   initialMonths?: 1 | 3;
   clientName: string;
   clientEmail: string;
-  onPay: (submission: CheckoutSubmission) => Promise<SubscriptionPaymentInvoice>;
+  onPay: (submission: CheckoutSubmission) => Promise<CheckoutPaymentResult>;
   onComplete: () => void | Promise<void>;
 }
 
@@ -179,15 +183,36 @@ export function CheckoutModal({
           choice_3: "",
         },
         planPrice,
+        additionalAmount: smsPackChecked ? PRICING_RULES.smsPackPrice : 0,
         subscriptionMonths: billedMonths,
         paymentMethod: method,
         domainPrice: checkoutDomainPrice,
       };
-      setInvoice(await onPay(submission));
+      const result = await onPay(submission);
+      if ("pending" in result && result.pending) {
+        setInvoice(result.invoice);
+        setCashConfirmation(true);
+        return;
+      }
+      setInvoice(result);
       await onComplete();
     } catch (error) {
       console.error("[Checkout] Payment error:", error);
       toast.error(error instanceof Error ? error.message : "Le paiement n'a pas pu être finalisé.");
+    } finally {
+      setProcessing(false);
+    }
+  }
+
+  async function continueAfterCashOrder() {
+    setProcessing(true);
+    try {
+      await onComplete();
+    } catch (error) {
+      console.error("[Checkout] Completion error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Impossible de terminer la commande.",
+      );
     } finally {
       setProcessing(false);
     }
@@ -214,7 +239,9 @@ export function CheckoutModal({
           <aside className="flex w-full shrink-0 flex-col justify-between gap-5 bg-slate-900 p-6 text-white sm:w-1/3 sm:p-8">
             <div>
               <img src={authLogo} alt="GogoSoft" className="mb-5 size-16 rounded-full border-2 border-white/20 object-cover" />
-              <p className="text-sm font-medium text-blue-300">Paiement simulé</p>
+              <p className="text-sm font-medium text-blue-300">
+                {method === "cash" ? "Paiement en espèces" : "Paiement simulé"}
+              </p>
               <h2 className="mt-2 text-3xl font-bold">Finalisez votre abonnement</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
                 Votre espace et vos domaines seront activés après confirmation du paiement.
@@ -224,9 +251,12 @@ export function CheckoutModal({
             {invoice ? (
               cashConfirmation ? (
                 <div className="space-y-3">
-                  <Button type="button" onClick={() => {
-                    void navigate({ to: "/dashboard" });
-                  }} className="min-h-12 w-full">
+                  <Button
+                    type="button"
+                    onClick={() => void continueAfterCashOrder()}
+                    disabled={processing}
+                    className="min-h-12 w-full"
+                  >
                     Continuer vers Dashboard
                     <ChevronRight className="size-4" />
                   </Button>
@@ -277,7 +307,9 @@ export function CheckoutModal({
                       ) : (
                         <>
                           <selectedMethod.icon className="size-4" />
-                          Payer {totalAmount.toLocaleString("fr-FR")} FCFA
+                          {method === "cash"
+                            ? "Confirmer la commande"
+                            : `Payer ${totalAmount.toLocaleString("fr-FR")} FCFA`}
                         </>
                       )}
                     </Button>
@@ -303,14 +335,23 @@ export function CheckoutModal({
                 <div className="max-w-xl space-y-5">
                   <CheckCircle2 className="mx-auto size-20 text-green-600" />
                   <div className="space-y-2">
-                    <h3 className="text-3xl font-bold text-slate-900">Merci d&apos;avoir participé au paiement simulé</h3>
+                    <h3 className="text-3xl font-bold text-slate-900">
+                      Votre boutique est créée.
+                    </h3>
                     <p className="text-lg text-slate-600">
-                      Votre abonnement sera activé sous peu. Facture : {invoice.invoice_number}
+                      Votre abonnement sera activé dès réception du paiement en espèces.
+                      Contactez l&apos;administrateur.
+                    </p>
+                    <p className="text-sm text-slate-600">
+                      Facture : <strong>{invoice.invoice_number}</strong>
+                      <br />
+                      Montant : <strong>{invoice.total_amount.toLocaleString("fr-FR")} FCFA</strong>
                     </p>
                   </div>
                   <Button
                     type="button"
-                    onClick={() => void navigate({ to: "/dashboard" })}
+                    onClick={() => void continueAfterCashOrder()}
+                    disabled={processing}
                     className="min-h-12 w-full"
                   >
                     Continuer vers Dashboard

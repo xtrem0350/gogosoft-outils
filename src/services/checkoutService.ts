@@ -3,6 +3,8 @@ import { notifyShopModulesChanged } from "@/hooks/useShopModules";
 import { supabase } from "@/integrations/supabase/client";
 import { assignDomain, createDomainRequest } from "@/services/domainService";
 import {
+  type CheckoutPaymentResult,
+  type PendingCashCheckoutResult,
   confirmPayment,
   createSubscriptionPayment,
   getPaymentInvoice,
@@ -26,7 +28,7 @@ export async function completeSubscriptionCheckout({
   planPrice,
   domainIds,
   submission,
-}: CompleteSubscriptionCheckoutData) {
+}: CompleteSubscriptionCheckoutData): Promise<CheckoutPaymentResult> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError) throw userError;
   if (!userData.user) throw new Error("Utilisateur non authentifié.");
@@ -40,14 +42,45 @@ export async function completeSubscriptionCheckout({
     subscriptionMonths: submission.subscriptionMonths,
     paymentMethod: submission.paymentMethod,
     domainPrice: submission.domainPrice,
-    simulatePayment: submission.paymentMethod === "cash",
+    additionalAmount: submission.additionalAmount,
+    paymentStatus:
+      submission.paymentMethod === "cash"
+        ? "en_attente_paiement_espece"
+        : "pending",
   });
   console.info("[Checkout] createSubscriptionPayment result:", { id: payment.id });
-  if (submission.paymentMethod !== "cash") {
-    await new Promise((resolve) => window.setTimeout(resolve, 2000));
-    console.info("[Checkout] confirmPayment with id:", payment.id);
-    await confirmPayment(payment.id, `simulated_${payment.id}`);
+
+  if (submission.paymentMethod === "cash") {
+    const moduleCodes = shopCodesFromModuleIds(domainIds);
+    const appCodes = moduleCodes.filter((code) => !code.startsWith("shop_"));
+    const storefrontCodes = moduleCodes.filter((code) => code.startsWith("shop_"));
+    const { error: subscriptionError } = await supabase.from("subscriptions").upsert(
+      {
+        user_id: userData.user.id,
+        plan: "mensuel",
+        status: "pending",
+        expires_at: new Date().toISOString(),
+        selected_modules: appCodes,
+        storefront_modules: storefrontCodes,
+        price_fcfa: planPrice,
+      },
+      { onConflict: "user_id" },
+    );
+    if (subscriptionError) throw subscriptionError;
+
+    const result: PendingCashCheckoutResult = {
+      success: true,
+      pending: true,
+      message: "En attente de validation",
+      invoice: payment,
+    };
+    return result;
   }
+
+  // TODO sprint 4: remplacer la confirmation simulée par un retour du prestataire.
+  await new Promise((resolve) => window.setTimeout(resolve, 2000));
+  console.info("[Checkout] confirmPayment with id:", payment.id);
+  await confirmPayment(payment.id, `simulated_${payment.id}`);
 
   if (submission.domainPrice > 0) {
     const domainRequest = await createDomainRequest(shopId, submission.choices);

@@ -5,14 +5,21 @@ export interface CheckoutData {
   shopId: string;
   planId: string;
   planPrice: number;
+  additionalAmount?: number;
   modules: string[];
   domainName: string;
   subscriptionMonths: 1 | 3;
   paymentMethod: string;
   domainPrice?: number;
   bonusDays?: number;
-  simulatePayment?: boolean;
+  paymentStatus?: SubscriptionPaymentStatus;
 }
+
+export type SubscriptionPaymentStatus =
+  | "pending"
+  | "paid"
+  | "failed"
+  | "en_attente_paiement_espece";
 
 export interface SubscriptionPaymentInvoice {
   id: string;
@@ -29,10 +36,21 @@ export interface SubscriptionPaymentInvoice {
   bonus_days: number;
   total_amount: number;
   payment_method: string;
-  payment_status: string;
+  payment_status: SubscriptionPaymentStatus;
   payment_reference?: string | null;
   paid_at?: string | null;
 }
+
+export interface PendingCashCheckoutResult {
+  success: true;
+  pending: true;
+  message: string;
+  invoice: SubscriptionPaymentInvoice;
+}
+
+export type CheckoutPaymentResult =
+  | SubscriptionPaymentInvoice
+  | PendingCashCheckoutResult;
 
 // The payment table is not yet represented in the generated Supabase types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,7 +73,12 @@ export async function createSubscriptionPayment(
     throw new Error("La durée doit être d'un ou trois mois.");
   }
   const domainPrice = data.domainPrice ?? DOMAIN_PRICE;
-  const totalAmount = data.planPrice * data.subscriptionMonths + domainPrice;
+  const additionalAmount = data.additionalAmount ?? 0;
+  if (!Number.isInteger(additionalAmount) || additionalAmount < 0) {
+    throw new Error("Le montant additionnel est invalide.");
+  }
+  const totalAmount =
+    data.planPrice * data.subscriptionMonths + domainPrice + additionalAmount;
 
   const { data: payment, error } = await subscriptionPaymentTable()
     .insert({
@@ -71,9 +94,9 @@ export async function createSubscriptionPayment(
       bonus_days: data.bonusDays ?? BONUS_DAYS,
       total_amount: totalAmount,
       payment_method: data.paymentMethod,
-      payment_status: data.simulatePayment ? "paid" : "pending",
-      payment_reference: data.simulatePayment ? "simulated_cash" : null,
-      paid_at: data.simulatePayment ? new Date().toISOString() : null,
+      payment_status: data.paymentStatus ?? "pending",
+      payment_reference: null,
+      paid_at: null,
     })
     .select()
     .single();
@@ -92,7 +115,7 @@ export async function confirmPayment(paymentId: string, reference: string): Prom
   if (error) throw error;
 }
 
-export async function getPaymentInvoice(
+export async function getSubscriptionPayment(
   paymentId: string,
 ): Promise<SubscriptionPaymentInvoice> {
   const { data, error } = await subscriptionPaymentTable()
@@ -101,4 +124,10 @@ export async function getPaymentInvoice(
     .single();
   if (error) throw error;
   return data as SubscriptionPaymentInvoice;
+}
+
+export async function getPaymentInvoice(
+  paymentId: string,
+): Promise<SubscriptionPaymentInvoice> {
+  return getSubscriptionPayment(paymentId);
 }

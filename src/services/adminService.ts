@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { updatePricing as savePricing, type ActivityModule } from "@/services/moduleService";
+import { moduleIdsFromShopCodes, shopCodesFromModuleIds } from "@/types/modules";
 
 export interface AdminTenant {
   id: string;
@@ -39,11 +40,69 @@ export interface AdminPayment {
   user_id: string;
 }
 
+export interface AdminSubscriptionPayment {
+  id: string;
+  shop_id: string;
+  shop_name: string;
+  owner_name: string;
+  amount: number;
+  payment_status: string;
+  payment_method: string;
+  created_at: string;
+}
+
+export interface SuperAdminCashEntry {
+  id: string;
+  amount: number;
+  currency: string;
+  source: string;
+  reference: string | null;
+  description: string | null;
+  created_at: string;
+  owner_name: string | null;
+}
+
+export interface SuperAdminCashStats {
+  today: number;
+  month: number;
+  pending: number;
+}
+
+export interface CashValidatedSubscription {
+  user_id: string;
+  plan: string;
+  status: string;
+  started_at: string;
+  expires_at: string;
+}
+
 export interface AdminSubscription {
   user_id: string;
   plan: string;
   status: string;
   expires_at: string;
+}
+
+// These tables and the transaction RPC are not in the generated Supabase types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function adminTable(table: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (supabase as unknown as { from: (name: string) => any }).from(table);
+}
+
+interface SubscriptionPaymentRow {
+  id: string;
+  shop_id: string;
+  user_id: string;
+  plan_id: string;
+  plan_price: number | string;
+  modules: unknown;
+  domain_name: string | null;
+  domain_price: number | string;
+  total_amount: number | string;
+  payment_status: string;
+  payment_method: string;
+  created_at: string;
 }
 
 async function loadAdminData() {
@@ -128,6 +187,237 @@ export async function getAllPayments(limit = 20): Promise<AdminPayment[]> {
     .limit(limit);
   if (error) throw error;
   return (data ?? []) as AdminPayment[];
+}
+
+export async function getAllSubscriptionPayments(): Promise<AdminSubscriptionPayment[]> {
+  const { data, error } = await adminTable("subscription_payments")
+    .select(
+      "id, shop_id, user_id, total_amount, payment_status, payment_method, created_at",
+    )
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+
+  const payments = (data ?? []) as Array<
+    Pick<
+      SubscriptionPaymentRow,
+      | "id"
+      | "shop_id"
+      | "user_id"
+      | "total_amount"
+      | "payment_status"
+      | "payment_method"
+      | "created_at"
+    >
+  >;
+  if (payments.length === 0) return [];
+
+  const shopIds = [...new Set(payments.map((payment) => payment.shop_id))];
+  const ownerIds = [...new Set(payments.map((payment) => payment.user_id))];
+  const [
+    { data: shops, error: shopsError },
+    { data: profiles, error: profilesError },
+  ] = await Promise.all([
+    supabase.from("shops").select("id, name").in("id", shopIds),
+    supabase.from("profiles").select("id, full_name, email").in("id", ownerIds),
+  ]);
+  if (shopsError) throw shopsError;
+  if (profilesError) throw profilesError;
+
+  const shopNames = new Map((shops ?? []).map((shop) => [shop.id, shop.name]));
+  const ownerNames = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      profile.full_name ?? profile.email ?? profile.id,
+    ]),
+  );
+
+  return payments.map((payment) => {
+    const amount = Number(payment.total_amount);
+    if (!Number.isFinite(amount)) {
+      throw new Error(`Montant invalide pour le paiement ${payment.id}.`);
+    }
+    return {
+      id: payment.id,
+      shop_id: payment.shop_id,
+      shop_name: shopNames.get(payment.shop_id) ?? payment.shop_id,
+      owner_name: ownerNames.get(payment.user_id) ?? payment.user_id,
+      amount,
+      payment_status: payment.payment_status,
+      payment_method: payment.payment_method,
+      created_at: payment.created_at,
+    };
+  });
+}
+
+export async function validateCashPayment(
+  paymentId: string,
+  validatedBy: string,
+): Promise<{ success: true; subscription: CashValidatedSubscription }> {
+  if (!paymentId || !validatedBy) throw new Error("Paiement ou administrateur manquant.");
+
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user || authData.user.id !== validatedBy) {
+    throw new Error("L'administrateur validateur ne correspond pas à la session active.");
+  }
+
+  const { data, error } = await adminTable("subscription_payments")
+    .select("id, shop_id, user_id, plan_id, plan_price, modules, domain_name, domain_price, total_amount, payment_status, payment_method, created_at")
+    .eq("id", paymentId)
+    .single();
+  if (error) throw error;
+
+  const payment = data as SubscriptionPaymentRow;
+  if (payment.payment_status !== "en_attente_paiement_espece") {
+    throw new Error("Ce paiement n'est pas en attente de validation en espèces.");
+  }
+  if (!Array.isArray(payment.modules) || !payment.modules.every((code) => typeof code === "string")) {
+    throw new Error("La liste des modules du paiement est invalide.");
+  }
+  const moduleIds = moduleIdsFromShopCodes(payment.modules);
+  if (moduleIds.length !== payment.modules.length) {
+    throw new Error("Le paiement contient un module non reconnu.");
+  }
+  const moduleCodes = shopCodesFromModuleIds(moduleIds);
+  const selectedModules = moduleCodes.filter((code) => !code.startsWith("shop_"));
+  const storefrontModules = moduleCodes.filter((code) => code.startsWith("shop_"));
+  const { data: result, error: validationError } = await (supabase.rpc(
+    "validate_subscription_cash_payment" as never,
+    {
+      p_payment_id: paymentId,
+      p_validated_by: validatedBy,
+      p_module_codes: moduleCodes,
+      p_selected_modules: selectedModules,
+      p_storefront_modules: storefrontModules,
+    } as never,
+  ) as unknown as Promise<{
+    data: unknown;
+    error: { message: string } | null;
+  }>);
+  if (validationError) throw new Error(validationError.message);
+
+  const response = result as
+    | { success?: unknown; subscription?: unknown }
+    | null;
+  if (
+    response?.success !== true ||
+    typeof response.subscription !== "object" ||
+    response.subscription === null
+  ) {
+    throw new Error("La validation du paiement n'a pas retourné l'abonnement activé.");
+  }
+  return {
+    success: true,
+    subscription: response.subscription as CashValidatedSubscription,
+  };
+}
+
+export async function getSuperAdminCashEntries(filters?: {
+  from?: Date;
+  to?: Date;
+}): Promise<SuperAdminCashEntry[]> {
+  let query = adminTable("super_admin_cash_entries")
+    .select("id, amount, currency, source, reference, description, created_at")
+    .order("created_at", { ascending: false });
+  if (filters?.from) query = query.gte("created_at", filters.from.toISOString());
+  if (filters?.to) query = query.lte("created_at", filters.to.toISOString());
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const entries = (data ?? []) as Array<
+    Omit<SuperAdminCashEntry, "owner_name" | "amount"> & {
+      amount: number | string;
+    }
+  >;
+  const paymentIds = [
+    ...new Set(
+      entries
+        .map((entry) => entry.reference)
+        .filter((reference): reference is string => Boolean(reference)),
+    ),
+  ];
+  if (entries.length === 0 || paymentIds.length === 0) {
+    return entries.map((entry) => {
+      const amount = Number(entry.amount);
+      if (!Number.isFinite(amount)) {
+        throw new Error(`Montant invalide pour l'entrée de caisse ${entry.id}.`);
+      }
+      return { ...entry, amount, owner_name: null };
+    });
+  }
+
+  const { data: payments, error: paymentsError } = await adminTable("subscription_payments")
+    .select("id, user_id")
+    .in("id", paymentIds);
+  if (paymentsError) throw paymentsError;
+  const paymentRows = (payments ?? []) as Array<{ id: string; user_id: string }>;
+  const ownerIds = [...new Set(paymentRows.map((payment) => payment.user_id))];
+  const { data: profiles, error: profilesError } = ownerIds.length
+    ? await supabase.from("profiles").select("id, full_name, email").in("id", ownerIds)
+    : { data: [], error: null };
+  if (profilesError) throw profilesError;
+
+  const paymentOwners = new Map(paymentRows.map((payment) => [payment.id, payment.user_id]));
+  const ownerNames = new Map(
+    (profiles ?? []).map((profile) => [
+      profile.id,
+      profile.full_name ?? profile.email ?? profile.id,
+    ]),
+  );
+  return entries.map((entry) => {
+    const amount = Number(entry.amount);
+    if (!Number.isFinite(amount)) {
+      throw new Error(`Montant invalide pour l'entrée de caisse ${entry.id}.`);
+    }
+    const ownerId = entry.reference ? paymentOwners.get(entry.reference) : undefined;
+    return {
+      ...entry,
+      amount,
+      owner_name: ownerId ? ownerNames.get(ownerId) ?? ownerId : null,
+    };
+  });
+}
+
+export async function getSuperAdminCashStats(): Promise<SuperAdminCashStats> {
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const [
+    { data: entries, error: entriesError },
+    { data: pendingPayments, error: pendingError },
+  ] = await Promise.all([
+    adminTable("super_admin_cash_entries")
+      .select("amount, created_at")
+      .gte("created_at", monthStart.toISOString()),
+    adminTable("subscription_payments")
+      .select("total_amount")
+      .in("payment_status", ["pending", "en_attente_paiement_espece"]),
+  ]);
+  if (entriesError) throw entriesError;
+  if (pendingError) throw pendingError;
+
+  const entryRows = (entries ?? []) as Array<{
+    amount: number | string;
+    created_at: string;
+  }>;
+  const pendingRows = (pendingPayments ?? []) as Array<{ total_amount: number | string }>;
+  const sumAmounts = <T,>(rows: T[], readAmount: (row: T) => number | string) =>
+    rows.reduce((total, row) => {
+      const amount = Number(readAmount(row));
+      if (!Number.isFinite(amount)) throw new Error("Un montant de caisse est invalide.");
+      return total + amount;
+    }, 0);
+
+  return {
+    today: sumAmounts(
+      entryRows.filter((entry) => new Date(entry.created_at) >= todayStart),
+      (entry) => entry.amount,
+    ),
+    month: sumAmounts(entryRows, (entry) => entry.amount),
+    pending: sumAmounts(pendingRows, (payment) => payment.total_amount),
+  };
 }
 
 export async function getAllModules(): Promise<AdminModule[]> {
