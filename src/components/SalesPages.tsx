@@ -48,6 +48,7 @@ import {
 } from "@/services/salesService";
 import { getPublicProducts, type OnlineProduct } from "@/services/shopOnlineService";
 import { getTodayWorkshopPayments, type ActivityType, type WorkshopPaymentRecord } from "@/services/workshopService";
+import { buildWhatsappLink, normalizeWhatsapp } from "@/lib/whatsapp";
 
 export function SalesListPage({
   view = "all",
@@ -163,6 +164,41 @@ export function SalesListPage({
     } finally {
       setBusySaleId(null);
     }
+  }
+
+  function sendSaleReceipt(sale: Sale) {
+    if (sale.payment_status !== "paid") {
+      toast.error("Le reçu est disponible après confirmation du paiement.");
+      return;
+    }
+
+    const receipt = [
+      "REÇU DE PAIEMENT",
+      `Atelier : ${shop?.name ?? "GogoSoft Tools Manager"}`,
+      `Vente : ${sale.id}`,
+      `Date : ${new Date(sale.created_at).toLocaleString("fr-FR")}`,
+      `Client : ${sale.client_name ?? "—"}`,
+      `Article : ${sale.product_name}`,
+      `Quantité : ${sale.quantity}`,
+      `Prix unitaire : ${sale.unit_price.toLocaleString("fr-FR")} FCFA`,
+      `Total payé : ${sale.total_price.toLocaleString("fr-FR")} FCFA`,
+      `Mode de paiement : ${sale.payment_method ?? "—"}`,
+      shop?.phone ? `Atelier - téléphone : ${shop.phone}` : "",
+    ].filter(Boolean).join("\n");
+    const whatsappNumber = normalizeWhatsapp(sale.client_whatsapp ?? "");
+
+    if (whatsappNumber) {
+      window.open(buildWhatsappLink(whatsappNumber, receipt), "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const fileUrl = URL.createObjectURL(new Blob([receipt], { type: "text/plain;charset=utf-8" }));
+    const downloadLink = document.createElement("a");
+    downloadLink.href = fileUrl;
+    downloadLink.download = `recu-${sale.id}.txt`;
+    downloadLink.click();
+    window.setTimeout(() => URL.revokeObjectURL(fileUrl), 0);
+    toast.info("Aucun numéro WhatsApp valide : le reçu a été téléchargé en fichier texte.");
   }
 
   return (
@@ -362,6 +398,17 @@ export function SalesListPage({
                 >
                   Facture
                 </Button>
+                {sale.payment_status === "paid" ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => sendSaleReceipt(sale)}
+                  >
+                    Envoyer le reçu au client
+                  </Button>
+                ) : null}
                 {isOrders && sale.delivery_status !== "delivered" ? (
                   <Button
                     type="button"

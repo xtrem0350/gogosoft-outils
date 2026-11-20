@@ -102,7 +102,12 @@ function requiredRoles(
   if (
     pathname === "/phone/atelier/nouveau" ||
     pathname === "/computer/atelier/nouveau"
-  ) return isMobile ? [] : ["owner", "technicien", "receptionniste"];
+  ) return ["owner", "technicien", "receptionniste"];
+  if (pathname === "/phone/atelier" || pathname === "/computer/atelier") {
+    return isMobile
+      ? ["owner", "technicien", "receptionniste"]
+      : ["owner", "technicien"];
+  }
   if (pathname.startsWith("/phone/atelier") || pathname.startsWith("/phone/historique") || pathname.startsWith("/phone/carnet") || pathname.startsWith("/computer/atelier") || pathname.startsWith("/computer/historique") || pathname.startsWith("/computer/carnet")) {
     return ["owner", "technicien"];
   }
@@ -218,7 +223,16 @@ export function AppShell({ children }: { children: ReactNode }) {
   const mobileOwnerRouteDenied =
     isMobile &&
     activeRole === "owner" &&
-    !["/dashboard", "/documents", "/profil", "/atelier/plan"].includes(location.pathname);
+    ![
+      "/dashboard",
+      "/documents",
+      "/profil",
+      "/atelier/plan",
+      "/phone/atelier",
+      "/phone/atelier/nouveau",
+      "/computer/atelier",
+      "/computer/atelier/nouveau",
+    ].includes(location.pathname);
   const mobileAccessDenied = mobileRoleDenied || mobileOwnerRouteDenied;
   const pageTitles: Record<string, string> = {
     "/": "🏠 Tableau de bord",

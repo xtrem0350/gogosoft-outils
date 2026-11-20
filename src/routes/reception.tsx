@@ -20,7 +20,7 @@ import type { ClientRecord } from "@/services/clientService";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { PlaceTicketModal } from "@/components/caisse/PlaceTicketModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { createTicket, type WorkshopTicket } from "@/services/workshopService";
+import { addEvent, createTicket, type WorkshopTicket } from "@/services/workshopService";
 import { getOpenCashSession } from "@/services/cashService";
 import { isDemoMode } from "@/services/demoService";
 import {
@@ -115,6 +115,7 @@ function ReceptionPage() {
       .eq("shop_id", shopId)
       .eq("status", "en_attente_technicien")
       .eq("entry_fee_paid", true)
+      .is("storage_location_id", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error(error.message);
@@ -205,10 +206,28 @@ function ReceptionPage() {
         toast.success(`Casier ${location.name} libéré.`);
       }
 
+      let eventError: unknown = null;
+      try {
+        await addEvent(
+          deliveryTicket.id,
+          "delivered",
+          "Appareil remis au client après vérification de son identité.",
+        );
+      } catch (error) {
+        eventError = error;
+        console.error("[Reception] Impossible d'ajouter l'événement delivered.", error);
+      }
+
       setTicketsToDeliver((current) => current.filter((ticket) => ticket.id !== deliveryTicket.id));
       setDeliveryTicket(null);
       setIdentityVerified(false);
-      toast.success("Appareil remis au client. Fiche clôturée.");
+      if (eventError) {
+        const detail =
+          eventError instanceof Error ? eventError.message : "Erreur inconnue.";
+        toast.error(`Remise confirmée, mais la chronologie n'a pas pu être mise à jour : ${detail}`);
+      } else {
+        toast.success("Appareil remis au client. Fiche clôturée.");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de confirmer la remise.");
     } finally {

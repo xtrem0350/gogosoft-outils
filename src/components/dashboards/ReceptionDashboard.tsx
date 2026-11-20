@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Inbox, Package, PackageCheck, Plus, UserRound } from "lucide-react";
+import { Inbox, Laptop, Package, PackageCheck, Plus, UserRound } from "lucide-react";
 
 import { StorageLocationsPage } from "@/components/StorageLocationPages";
 import { StorageLocationDialog } from "@/components/StorageLocationDialog";
@@ -41,7 +41,7 @@ export function ReceptionDashboard() {
     setLoading(true);
     setError(null);
     void Promise.all([
-      supabase.from("workshop_tickets").select("*").eq("shop_id", shopId).eq("status", "en_attente_technicien").eq("entry_fee_paid", true),
+      supabase.from("workshop_tickets").select("*").eq("shop_id", shopId).eq("status", "en_attente_technicien").eq("entry_fee_paid", true).is("storage_location_id", null),
       supabase.from("workshop_tickets").select("*").eq("shop_id", shopId).eq("status", "en_attente_receptionniste"),
       getClientsByShop(shopId),
     ]).then(([storageResult, waitingResult, clientList]) => {
@@ -77,6 +77,12 @@ export function ReceptionDashboard() {
             <Package className="mr-2 size-4" />Nouveau Rangement
           </Button>
           <Button asChild><Link to="/reception">Nouvelle réception / Wizard</Link></Button>
+          <Button variant="outline" asChild>
+            <Link to="/computer/atelier/nouveau">
+              <Laptop className="mr-2 size-4" />
+              Nouvelle réception ordinateur
+            </Link>
+          </Button>
         </div>
       </div>
       {error ? <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</p> : null}
