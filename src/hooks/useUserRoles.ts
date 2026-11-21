@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { isDemoMode } from "@/services/demoService";
 import { getUserShopRoles } from "@/services/roleService";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export type ShopRole =
   | "owner"
@@ -64,13 +65,13 @@ const OWNER_SWITCHABLE_ROLES = [
 ] as const;
 
 export function useUserRoles(): UseUserRolesResult {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const { isSuperAdmin, isSuperAdminAccount } = useUserRole();
   const [roles, setRoles] = useState<string[]>([]);
   const [activeRole, setActiveRoleState] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const isSuperAdminAccount = profile?.is_super_admin === true;
   const isDemo = isDemoMode();
 
   useEffect(() => {
@@ -80,6 +81,13 @@ export function useUserRoles(): UseUserRolesResult {
       const stored = typeof window !== "undefined" ? window.sessionStorage.getItem(STORAGE_KEY) : null;
       const nextRole = demoRoles.includes(stored ?? "") ? stored! : "owner";
       setActiveRoleState(nextRole);
+      setLoading(false);
+      return;
+    }
+
+    if (isSuperAdmin) {
+      setRoles(["super_admin"]);
+      setActiveRoleState("super_admin");
       setLoading(false);
       return;
     }
@@ -117,7 +125,7 @@ export function useUserRoles(): UseUserRolesResult {
     return () => {
       active = false;
     };
-  }, [authLoading, isDemo, shopId, shopLoading, user]);
+  }, [authLoading, isDemo, isSuperAdmin, shopId, shopLoading, user]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -171,11 +179,6 @@ export function useUserRoles(): UseUserRolesResult {
   const isOwner = roles.includes("owner");
 
   const hasRole = useCallback((role: string) => roles.includes(role), [roles]);
-
-  const isSuperAdmin =
-    isSuperAdminAccount &&
-    typeof window !== "undefined" &&
-    window.sessionStorage.getItem("gogosoft.viewMode") === "admin";
 
   const value = useMemo<UseUserRolesResult>(
     () => ({

@@ -213,7 +213,8 @@ function SuperAdminRedirect({ children }: { children: ReactNode }) {
     const allowedPrefixes = viewMode === "admin"
       ? ["/admin", "/profil", "/aide", "/nouveautes"]
       : ["/", "/dashboard", "/auth", "/boutiques", "/profil", "/aide", "/parametres", "/shop", "/demo", "/caisse", "/catalogue"];
-    const isAllowed = allowedPrefixes.some(
+    const isAdminRoute = location.pathname.startsWith("/admin");
+    const isAllowed = isAdminRoute || allowedPrefixes.some(
       (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
     );
     if (!isAllowed) void navigate({ to: viewMode === "admin" ? "/admin" : "/dashboard" });

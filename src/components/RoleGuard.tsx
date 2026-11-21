@@ -10,9 +10,11 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
-  const { role, loading } = useUserRole();
+  const { role, isSuperAdminAccount, loading } = useUserRole();
   const isSimulation = typeof window !== "undefined" && sessionStorage.getItem("gogosoft.simulation.active") === "true";
-  const allowed = role !== null && allowedRoles.includes(role);
+  const allowed =
+    (role !== null && allowedRoles.includes(role)) ||
+    (isSuperAdminAccount && allowedRoles.includes("super_admin"));
 
   if (isSimulation) return <>{children}</>;
   if (loading) return <div className="p-8 text-center">Chargement...</div>;

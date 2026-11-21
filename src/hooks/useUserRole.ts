@@ -1,6 +1,7 @@
 //  src/hooks/useUserRole.ts
 
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "@tanstack/react-router";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
@@ -53,13 +54,19 @@ function normalizeRole(role: string | null | undefined): UserRole {
 }
 
 export function useUserRole(): UserRoleInfo {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, roles: authRoles, loading: authLoading } = useAuth();
   const { shopId, loading: shopLoading } = useCurrentShop();
+  const location = useLocation();
   const [shopRole, setShopRole] = useState<UserRole>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewModeState] = useState<ViewMode>(getInitialViewMode);
   const [roleRevision, setRoleRevision] = useState(0);
-  const isSuperAdminAccount = profile?.is_super_admin === true;
+  const isSuperAdminAccount =
+    profile?.is_super_admin === true || authRoles.includes("admin");
+  const isAdminRoute = location.pathname.startsWith("/admin");
+  const isSuperAdmin =
+    isSuperAdminAccount &&
+    (viewMode === "admin" || isAdminRoute || !shopId || (!loading && !shopRole));
   const isDemo = isDemoMode();
   const isSimulation = isSimulationMode();
 
@@ -67,12 +74,18 @@ export function useUserRole(): UserRoleInfo {
     const handleRoleChange = () => setRoleRevision((current) => current + 1);
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === "gogosoft.activeRole") handleRoleChange();
+      if (event.key === "gogosoft.viewMode") {
+        setViewModeState(getInitialViewMode());
+      }
     };
+    const handleViewModeChange = () => setViewModeState(getInitialViewMode());
 
     window.addEventListener("gogosoft:role-changed", handleRoleChange);
+    window.addEventListener("gogosoft:view-mode-changed", handleViewModeChange);
     window.addEventListener("storage", handleStorageChange);
     return () => {
       window.removeEventListener("gogosoft:role-changed", handleRoleChange);
+      window.removeEventListener("gogosoft:view-mode-changed", handleViewModeChange);
       window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
@@ -157,6 +170,9 @@ export function useUserRole(): UserRoleInfo {
   const setViewMode = useCallback((mode: ViewMode) => {
     if (typeof window !== "undefined") window.sessionStorage.setItem("gogosoft.viewMode", mode);
     setViewModeState(mode);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("gogosoft:view-mode-changed"));
+    }
   }, []);
 
   if (isDemo) {
@@ -193,7 +209,7 @@ export function useUserRole(): UserRoleInfo {
     };
   }
 
-  const role: UserRole = isSuperAdminAccount && viewMode === "admin" ? "super_admin" : shopRole;
+  const role: UserRole = isSuperAdmin ? "super_admin" : shopRole;
   return {
     role,
     isOwner: role === "owner",
@@ -202,7 +218,7 @@ export function useUserRole(): UserRoleInfo {
     isMagasinier: role === "magasinier",
     isReceptionniste: role === "receptionniste",
     isVendeur: role === "vendeur",
-    isSuperAdmin: role === "super_admin",
+    isSuperAdmin,
     isSuperAdminAccount,
     viewMode,
     setViewMode,

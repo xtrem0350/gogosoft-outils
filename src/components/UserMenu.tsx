@@ -23,12 +23,12 @@ import { toast } from "sonner";
 
 import { signOut } from "@/services/authService";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRoles } from "@/hooks/useUserRoles";
+import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
 
 export function UserMenu() {
   const navigate = useNavigate();
-  const { profile, user, loading, isSuperAdmin } = useAuth();
-  const { activeRole, isOwner } = useUserRoles();
+  const { profile, user, loading } = useAuth();
+  const { activeRole, isOwner, isSuperAdminAccount } = useUserRoles();
 
   if (loading || !user) return null;
 
@@ -76,7 +76,7 @@ export function UserMenu() {
           <div className="hidden min-w-0 text-left md:block">
             <p className="truncate text-sm font-medium leading-none">{resolvedName}</p>
             <span className="mt-1 inline-flex rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-semibold text-orange-800">
-              {activeRole ? activeRole.charAt(0).toUpperCase() + activeRole.slice(1) : "Équipier"}
+              {activeRole ? getRoleLabel(activeRole) : "Équipier"}
             </span>
           </div>
         </Button>
@@ -87,7 +87,7 @@ export function UserMenu() {
           <p className="truncate text-xs text-muted-foreground">{user.email}</p>
         </div>
         <DropdownMenuSeparator />
-        {isSuperAdmin ? (
+        {isSuperAdminAccount ? (
           <>
             <DropdownMenuItem onClick={() => void navigate({ to: "/admin" as any })}>
               <Shield className="size-4" /> Vue d'ensemble
