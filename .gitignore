@@ -17,6 +17,9 @@ dist-ssr
 .nitro
 *.local
 
+# Sauvegarde 
+backup_manuel.sql
+
 # Environment files
 .env
 .env.local

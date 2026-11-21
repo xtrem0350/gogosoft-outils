@@ -1,7 +1,7 @@
 /** Services de gestion des paiements de démonstration pour l'abonnement. */
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession } from "@/lib/supabaseGuard";
-import { upgradePlan, type SubscriptionPlan } from "@/services/subscriptionService";
+import type { SubscriptionPlan } from "@/services/subscriptionService";
 
 export interface PaymentRecord {
   id: string;
@@ -37,45 +37,6 @@ export async function createPayment(
 
   if (error) throw error;
   return data as PaymentRecord;
-}
-
-/** Simule le paiement réussi et active le plan correspondant. */
-export async function simulatePaymentSuccess(paymentId: string): Promise<PaymentRecord> {
-  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
-  const { data: payment, error: paymentError } = await supabase
-    .from("payments")
-    .select("*")
-    .eq("id", paymentId)
-    .maybeSingle();
-
-  if (paymentError) throw paymentError;
-  if (!payment) throw new Error("Paiement introuvable.");
-
-  const { data: updated, error: updateError } = await supabase
-    .from("payments")
-    .update({
-      status: "success",
-      transaction_id: `demo_${paymentId.slice(0, 8)}`,
-    })
-    .eq("id", paymentId)
-    .select()
-    .single();
-
-  if (updateError) throw updateError;
-
-  const durationMap: Record<string, number> = {
-    trial: 1,
-    mensuel: 30,
-    annuel: 365,
-  };
-
-  await upgradePlan(
-    payment.user_id as string,
-    payment.plan as SubscriptionPlan,
-    durationMap[payment.plan as string] ?? 30,
-  );
-
-  return updated as PaymentRecord;
 }
 
 /** Récupère les paiements de l'utilisateur courant. */

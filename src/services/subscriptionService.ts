@@ -289,7 +289,7 @@ function normalizeSubscription(data: Record<string, unknown>): SubscriptionSumma
     status,
     expires_at: expiresAt,
     started_at: typeof data["started_at"] === "string" ? data["started_at"] : null,
-    user_id: typeof data["user_id"] === "string" ? data["user_id"] : undefined,
+    ...(typeof data["user_id"] === "string" ? { user_id: data["user_id"] } : {}),
     isActive,
     daysRemaining,
     price_fcfa: typeof data["price_fcfa"] === "number" ? data["price_fcfa"] : 0,

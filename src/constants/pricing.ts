@@ -59,6 +59,15 @@ export function isAllInOne(ids: readonly string[]): boolean {
   );
 }
 
+export function calculateTotalPrice(ids: readonly string[]): number {
+  if (ids.length === 0) return 0;
+  if (isAllInOne(ids)) return PRICING_RULES.allInOne.price;
+  return (
+    calculateModulePrice(countRepairModules(ids)) +
+    calculateModulePrice(countSaleModules(ids))
+  );
+}
+
 export const WELCOME_PRICING: readonly PricingPlan[] = [
   {
     id: "app_1",

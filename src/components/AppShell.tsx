@@ -18,7 +18,6 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
@@ -73,11 +72,6 @@ import {
   isDemoMode,
   readDemoSession,
 } from "@/services/demoService";
-import { savePendingModuleSelection } from "@/services/moduleService";
-// TEMPORAIRE - DIAGNOSTIC UNIQUEMENT, a retirer apres
-if (typeof window !== "undefined") {
-  (window as unknown as { supabase?: typeof supabase }).supabase = supabase;
-}
 
 function requiredRoles(
   pathname: string,
@@ -632,10 +626,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     </>
   );
 
+  const subscriptionOwnerId = shop?.owner_id ?? user?.id;
   const accessContent = (
     <SubscriptionAccessProvider
       enabled={Boolean(user && !isSuperAdmin && !isDemoMode())}
-      userId={shop?.owner_id ?? user?.id}
+      {...(subscriptionOwnerId ? { userId: subscriptionOwnerId } : {})}
     >
       {shellContent}
     </SubscriptionAccessProvider>

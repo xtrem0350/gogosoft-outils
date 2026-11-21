@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Check,
@@ -22,6 +22,7 @@ import {
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import {
   calculateModulePrice,
+  calculateTotalPrice,
   countRepairModules,
   countSaleModules,
   isAllInOne,
@@ -290,9 +291,10 @@ function DesktopHomePage() {
   const isAllInOneActive = isAllInOne(selectedDomains);
   const areRepairModulesActive = repairModuleCount > 0 && !isAllInOneActive;
   const areSaleModulesActive = saleModuleCount > 0 && !isAllInOneActive;
-  const totalPrice = isAllInOneActive
-    ? PRICING_RULES.allInOne.price
-    : calculateModulePrice(repairModuleCount) + calculateModulePrice(saleModuleCount);
+  const totalPrice = useMemo(
+    () => calculateTotalPrice(selectedDomains),
+    [selectedDomains],
+  );
   const hasSelection = selectedDomains.length > 0;
   const canDemo = hasSelection;
   const canSignup = isAllInOneActive
@@ -336,7 +338,7 @@ function DesktopHomePage() {
                       className="min-h-11 w-full bg-ivoirien text-white shadow-3d hover:bg-ivoirien-hover disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={() => void handleGoAuth("signup")}
                     >
-                      Créer votre compte · 0 FCFA/mois
+                      Créer votre compte · {totalPrice.toLocaleString("fr-FR")} FCFA/mois
                       <Check className="size-4" />
                     </Button>
                   </TooltipTrigger>

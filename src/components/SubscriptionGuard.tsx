@@ -41,13 +41,20 @@ export function SubscriptionAccessProvider({
   enabled?: boolean;
   userId?: string;
 }) {
-  const subscription = useSubscription({ enabled, userId });
+  const subscription = useSubscription({
+    enabled,
+    ...(userId ? { userId } : {}),
+  });
   const value: SubscriptionAccess = {
     ...subscription,
     isReadOnly:
       enabled &&
       !subscription.loading &&
-      (subscription.isExpired || Boolean(subscription.error)),
+      (
+        subscription.subscription?.status !== "active" ||
+        subscription.isExpired ||
+        Boolean(subscription.error)
+      ),
   };
   return (
     <SubscriptionAccessContext.Provider value={value}>
@@ -80,13 +87,13 @@ export function ReadOnlyGuard({ children }: { children: ReactNode }) {
     }
     event.preventDefault();
     event.stopPropagation();
-    toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+    toast.error("Abonnement expiré. Contactez l'administrateur.");
   }
 
   function blockSubmit(event: SyntheticEvent<HTMLElement>) {
     event.preventDefault();
     event.stopPropagation();
-    toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+    toast.error("Abonnement expiré. Contactez l'administrateur.");
   }
 
   function blockKeyboardAction(event: KeyboardEvent<HTMLElement>) {
@@ -148,7 +155,6 @@ export function SubscriptionStatusNotice() {
         className="mb-4 rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900"
       >
         Votre abonnement a expiré le {expiry}. Contactez l&apos;administrateur pour renouveler.
-        Les actions de création/modification sont désactivées.
       </div>
     );
   }
@@ -158,8 +164,8 @@ export function SubscriptionStatusNotice() {
       role="status"
       className="mb-4 rounded-lg border border-orange-300 bg-orange-50 p-4 text-sm text-orange-900"
     >
-      Votre abonnement expire dans {daysRemaining} jour{daysRemaining === 1 ? "" : "s"}. Pensez à
-      renouveler.
+      Votre abonnement expire dans {daysRemaining} jour{daysRemaining === 1 ? "" : "s"}.
+      Pensez à renouveler.
     </div>
   );
 }
@@ -207,6 +213,10 @@ export function SubscriptionGuard({ children }: { children: ReactNode }) {
         </Button>
       </div>
     );
+  }
+
+  if (isExpired) {
+    return <ReadOnlyGuard>{children}</ReadOnlyGuard>;
   }
 
   if (!isActive && !isExpired) {

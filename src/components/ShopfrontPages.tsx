@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import brandLogo from "@/assets/images/leprofile.png";
 import { useCart } from "@/hooks/useCart";
+import { useShopPaused } from "@/hooks/useShopPaused";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -77,6 +78,17 @@ function useOnlineShop(slug: string) {
   }, [slug]);
 
   return { shop, loading, error };
+}
+
+function ShopPausedBanner() {
+  return (
+    <div
+      role="alert"
+      className="sticky top-0 z-50 w-full bg-red-700 px-4 py-3 text-center text-sm font-semibold text-white"
+    >
+      Boutique en pause — l&apos;administrateur n&apos;a pas renouvelé son abonnement.
+    </div>
+  );
 }
 
 function ShopHeader({ shop }: { shop: OnlineShop }) {
@@ -157,9 +169,23 @@ function PublicState({ message, loading = false }: { message: string; loading?: 
   );
 }
 
-function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProduct }) {
+function ProductCard({
+  shop,
+  product,
+  isPaused,
+  isPauseLoading,
+}: {
+  shop: OnlineShop;
+  product: OnlineProduct;
+  isPaused: boolean;
+  isPauseLoading: boolean;
+}) {
   const { addItem } = useCart(shop["id"]);
   function addToCart() {
+    if (isPaused) {
+      toast.error("Boutique en pause.");
+      return;
+    }
     addItem({
       product_id: product.id,
       name: product.name,
@@ -204,7 +230,7 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
       <div className="px-4 pb-4">
         <Button
           type="button"
-          disabled={product.stock < 1}
+          disabled={isPaused || isPauseLoading || product.stock < 1}
           onClick={addToCart}
           className="w-full bg-ivoirien font-semibold text-white shadow-3d hover:bg-ivoirien-hover"
         >
@@ -224,9 +250,13 @@ function ProductCard({ shop, product }: { shop: OnlineShop; product: OnlineProdu
 export function PublicShopPage({
   slug,
   category: initialCategory,
+  isPaused = false,
+  isPauseLoading = false,
 }: {
   slug: string;
   category?: ProductCategory | undefined;
+  isPaused?: boolean;
+  isPauseLoading?: boolean;
 }) {
   const { shop, loading, error } = useOnlineShop(slug);
   const [products, setProducts] = useState<OnlineProduct[]>([]);
@@ -270,6 +300,7 @@ export function PublicShopPage({
   const whatsapp = shop["shop_whatsapp"]?.replace(/\D/g, "");
   return (
     <ShopFrame shop={shop}>
+      {isPaused ? <ShopPausedBanner /> : null}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <section className="relative flex min-h-56 items-end overflow-hidden rounded-lg bg-slate-900 p-6 text-white sm:min-h-72 sm:p-10">
           {shop["shop_banner_url"] ? (
@@ -348,7 +379,13 @@ export function PublicShopPage({
           ) : null}
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {products.map((product) => (
-              <ProductCard key={product.id} shop={shop} product={product} />
+              <ProductCard
+                key={product.id}
+                shop={shop}
+                product={product}
+                isPaused={isPaused}
+                isPauseLoading={isPauseLoading}
+              />
             ))}
           </div>
         </section>
@@ -359,6 +396,7 @@ export function PublicShopPage({
 
 export function PublicProductPage({ slug, productId }: { slug: string; productId: string }) {
   const { shop, loading, error } = useOnlineShop(slug);
+  const { isPaused, isPauseLoading } = useShopPaused(slug);
   const [product, setProduct] = useState<OnlineProduct | null>(null);
   const [productLoading, setProductLoading] = useState(true);
   const [productError, setProductError] = useState<string | null>(null);
@@ -396,6 +434,10 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
   const selectedProduct = product;
   const contactNumber = shop["shop_whatsapp"]?.replace(/\D/g, "");
   function addToCart() {
+    if (isPaused) {
+      toast.error("Boutique en pause.");
+      return;
+    }
     addItem({
       product_id: selectedProduct.id,
       name: selectedProduct.name,
@@ -414,6 +456,7 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
 
   return (
     <ShopFrame shop={shop}>
+      {isPaused ? <ShopPausedBanner /> : null}
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Link
           to="/shop/$slug"
@@ -462,7 +505,7 @@ export function PublicProductPage({ slug, productId }: { slug: string; productId
             </p>
             <Button
               type="button"
-              disabled={product.stock < 1}
+              disabled={isPaused || isPauseLoading || product.stock < 1}
               onClick={addToCart}
               className="mt-5 h-11 bg-ivoirien px-5 font-semibold text-white shadow-3d hover:bg-ivoirien-hover"
             >

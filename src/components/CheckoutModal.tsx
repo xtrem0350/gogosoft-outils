@@ -5,7 +5,6 @@ import { toast } from "sonner";
 
 import authLogo from "@/assets/images/leprofile.png";
 import {
-  BONUS_DAYS,
   calculateModulePrice,
   countRepairModules,
   countSaleModules,
@@ -35,7 +34,7 @@ import type {
   SubscriptionPaymentInvoice,
 } from "@/services/subscriptionPaymentService";
 
-type PaymentMethod = "wave" | "orange_money" | "mtn_money" | "moov_money" | "cash";
+type PaymentMethod = "cash" | "wave" | "orange_money" | "mtn_momo";
 type CheckoutStep = 1 | 2 | 3;
 
 export interface CheckoutSubmission {
@@ -45,6 +44,7 @@ export interface CheckoutSubmission {
   additionalAmount: number;
   subscriptionMonths: 1 | 3;
   paymentMethod: PaymentMethod;
+  paymentReference?: string | null;
   domainPrice: number;
 }
 
@@ -74,8 +74,7 @@ const PAYMENT_METHODS: Array<{
   { id: "cash", label: "Espèces", icon: Banknote },
   { id: "wave", label: "Wave", icon: Waves },
   { id: "orange_money", label: "Orange Money", icon: Smartphone },
-  { id: "mtn_money", label: "MTN Money", icon: Smartphone },
-  { id: "moov_money", label: "Moov Money", icon: Smartphone },
+  { id: "mtn_momo", label: "MTN MoMo", icon: Smartphone },
 ];
 
 const PRICING_MODE_STORAGE_KEY = "gogosoft.welcome.pricingMode";
@@ -116,7 +115,7 @@ export function CheckoutModal({
   clientEmail,
   cashActionLabel = "Confirmer la commande",
   cashConfirmationTitle = "Votre boutique est créée.",
-  cashConfirmationMessage = "Votre abonnement sera activé dès réception du paiement en espèces. Contactez l'administrateur.",
+  cashConfirmationMessage = "Votre abonnement sera activé après réception et validation de votre paiement. Contactez l'administrateur si nécessaire.",
   onPay,
   onComplete,
 }: CheckoutModalProps) {
@@ -129,6 +128,7 @@ export function CheckoutModal({
   const [invoice, setInvoice] = useState<SubscriptionPaymentInvoice | null>(null);
   const [cashConfirmation, setCashConfirmation] = useState(false);
   const [smsPackChecked, setSmsPackChecked] = useState(false);
+  const [paymentReference, setPaymentReference] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -140,6 +140,7 @@ export function CheckoutModal({
     setInvoice(null);
     setCashConfirmation(false);
     setSmsPackChecked(false);
+    setPaymentReference("");
   }, [domainRequired, initialDomain, initialMonths, open]);
 
   const storedPricing = readStoredPricingSelection();
@@ -172,6 +173,10 @@ export function CheckoutModal({
   const selectedMethod = PAYMENT_METHODS.find((item) => item.id === method) ?? PAYMENT_METHODS[0]!;
 
   async function submitPayment() {
+    if (method !== "cash" && !paymentReference.trim()) {
+      toast.error("La référence de transaction est obligatoire.");
+      return;
+    }
     if ((domainRequired || domainPrice > 0) && !assignedDomain.trim()) {
       toast.error("Saisissez le nom de domaine.");
       setStep(1);
@@ -192,10 +197,11 @@ export function CheckoutModal({
         additionalAmount: smsPackChecked ? PRICING_RULES.smsPackPrice : 0,
         subscriptionMonths: billedMonths,
         paymentMethod: method,
+        paymentReference: method === "cash" ? null : paymentReference.trim(),
         domainPrice: checkoutDomainPrice,
       };
       const result = await onPay(submission);
-      if ("pending" in result && result.pending) {
+      if ("invoice" in result) {
         setInvoice(result.invoice);
         setCashConfirmation(true);
         return;
@@ -246,7 +252,7 @@ export function CheckoutModal({
             <div>
               <img src={authLogo} alt="GogoSoft" className="mb-5 size-16 rounded-full border-2 border-white/20 object-cover" />
               <p className="text-sm font-medium text-blue-300">
-                {method === "cash" ? "Paiement en espèces" : "Paiement simulé"}
+                {method === "cash" ? "Paiement en espèces" : "Paiement mobile manuel"}
               </p>
               <h2 className="mt-2 text-3xl font-bold">Finalisez votre abonnement</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
@@ -315,7 +321,7 @@ export function CheckoutModal({
                           <selectedMethod.icon className="size-4" />
                           {method === "cash"
                             ? cashActionLabel
-                            : `Payer ${totalAmount.toLocaleString("fr-FR")} FCFA`}
+                            : `Confirmer la commande — ${totalAmount.toLocaleString("fr-FR")} FCFA`}
                         </>
                       )}
                     </Button>
@@ -344,7 +350,9 @@ export function CheckoutModal({
                     <h3 className="text-3xl font-bold text-slate-900">
                       {cashConfirmationTitle}
                     </h3>
-                    <p className="text-lg text-slate-600">{cashConfirmationMessage}</p>
+                    <p className="text-lg text-slate-600">
+                      {cashConfirmationMessage}
+                    </p>
                     <p className="text-sm text-slate-600">
                       Facture : <strong>{invoice.invoice_number}</strong>
                       <br />
@@ -378,26 +386,34 @@ export function CheckoutModal({
                   <dl className="mt-5 space-y-3">
                     <div className="flex justify-between gap-4 border-t pt-3">
                       <dt>Plan : {checkoutPlanTitle}</dt>
-                      <dd>{invoice.plan_price.toLocaleString("fr-FR")} FCFA × {invoice.subscription_months}</dd>
+                      <dd>
+                        {invoice.lines.plan_price.toLocaleString("fr-FR")} FCFA ×{" "}
+                        {invoice.plan_id === "domain-renewal" ||
+                        invoice.plan_id === "domain-additional"
+                          ? "1 an"
+                          : `${invoice.duration_days / 30} mois`}
+                      </dd>
                     </div>
                     <div className="border-t pt-3">
                       <dt className="font-medium">Domaines</dt>
                       <dd className="mt-1 text-slate-600">
-                        {selectedDomainIds.map((id) => WELCOME_DOMAIN_LABELS[id]).join(", ") || invoice.modules.join(", ")}
+                        {selectedDomainIds.map((id) => WELCOME_DOMAIN_LABELS[id]).join(", ") ||
+                          invoice.lines.modules.join(", ")}
                       </dd>
                     </div>
-                    {invoice.domain_name ? (
+                    {invoice.lines.domain_name ? (
                       <div className="flex justify-between gap-4 border-t pt-3">
-                        <dt>Domaine : {invoice.domain_name}</dt>
-                        <dd>{invoice.domain_price.toLocaleString("fr-FR")} FCFA</dd>
+                        <dt>Domaine : {invoice.lines.domain_name}</dt>
+                        <dd>{invoice.lines.domain_price.toLocaleString("fr-FR")} FCFA</dd>
                       </div>
                     ) : null}
                     <div className="flex justify-between gap-4 border-t pt-3">
                       <dt>Durée</dt>
                       <dd>
-                        {invoice.plan_id === "domain-renewal"
+                        {invoice.plan_id === "domain-renewal" ||
+                        invoice.plan_id === "domain-additional"
                           ? "1 an"
-                          : `${invoice.subscription_months} mois + ${invoice.bonus_days} jours`}
+                          : `${invoice.duration_days / 30} mois (${invoice.duration_days} jours)`}
                       </dd>
                     </div>
                     <div className="flex justify-between gap-4 border-t pt-3 font-semibold">
@@ -546,9 +562,6 @@ export function CheckoutModal({
                           </select>
                         </div>
                       ) : null}
-                      {!pricingMode && plan.id !== "domain-renewal" ? (
-                        <p className="border-t pt-3">Bonus : +{BONUS_DAYS} jours offerts</p>
-                      ) : null}
                       <div className="flex justify-between gap-4 border-t pt-4 text-lg font-bold">
                         <span>TOTAL</span>
                         <span>{totalAmount.toLocaleString("fr-FR")} FCFA</span>
@@ -594,12 +607,18 @@ export function CheckoutModal({
                       <p className="mt-4 rounded-xl bg-green-50 p-3 text-sm text-green-800">
                         Paiement en espèces à l&apos;atelier.
                       </p>
-                    ) : null}
-                    {!pricingMode && plan.id !== "domain-renewal" ? (
-                      <p className="mt-5 text-sm text-slate-600">
-                        Bonus inclus : {BONUS_DAYS} jours d&apos;abonnement offerts après le paiement.
-                      </p>
-                    ) : null}
+                    ) : (
+                      <label className="mt-4 block space-y-2 text-sm font-medium text-slate-800">
+                        Référence de transaction
+                        <input
+                          value={paymentReference}
+                          onChange={(event) => setPaymentReference(event.target.value)}
+                          required
+                          placeholder="Ex. TX-123456"
+                          className="h-11 w-full rounded-lg border border-slate-300 px-3"
+                        />
+                      </label>
+                    )}
                   </>
                 ) : null}
               </>

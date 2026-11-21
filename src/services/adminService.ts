@@ -42,7 +42,7 @@ export interface AdminPayment {
 
 export interface AdminSubscriptionPayment {
   id: string;
-  shop_id: string;
+  shop_id: string | null;
   shop_name: string;
   owner_name: string;
   amount: number;
@@ -88,21 +88,6 @@ export interface AdminSubscription {
 function adminTable(table: string): any {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (supabase as unknown as { from: (name: string) => any }).from(table);
-}
-
-interface SubscriptionPaymentRow {
-  id: string;
-  shop_id: string;
-  user_id: string;
-  plan_id: string;
-  plan_price: number | string;
-  modules: unknown;
-  domain_name: string | null;
-  domain_price: number | string;
-  total_amount: number | string;
-  payment_status: string;
-  payment_method: string;
-  created_at: string;
 }
 
 async function loadAdminData() {
@@ -190,34 +175,39 @@ export async function getAllPayments(limit = 20): Promise<AdminPayment[]> {
 }
 
 export async function getAllSubscriptionPayments(): Promise<AdminSubscriptionPayment[]> {
-  const { data, error } = await adminTable("subscription_payments")
+  const { data, error } = await adminTable("subscription_invoices")
     .select(
       "id, shop_id, user_id, total_amount, payment_status, payment_method, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw error;
 
-  const payments = (data ?? []) as Array<
-    Pick<
-      SubscriptionPaymentRow,
-      | "id"
-      | "shop_id"
-      | "user_id"
-      | "total_amount"
-      | "payment_status"
-      | "payment_method"
-      | "created_at"
-    >
-  >;
+  const payments = (data ?? []) as Array<{
+    id: string;
+    shop_id: string | null;
+    user_id: string;
+    total_amount: number | string;
+    payment_status: string;
+    payment_method: string;
+    created_at: string;
+  }>;
   if (payments.length === 0) return [];
 
-  const shopIds = [...new Set(payments.map((payment) => payment.shop_id))];
+  const shopIds = [
+    ...new Set(
+      payments
+        .map((payment) => payment.shop_id)
+        .filter((shopId): shopId is string => shopId !== null),
+    ),
+  ];
   const ownerIds = [...new Set(payments.map((payment) => payment.user_id))];
   const [
     { data: shops, error: shopsError },
     { data: profiles, error: profilesError },
   ] = await Promise.all([
-    supabase.from("shops").select("id, name").in("id", shopIds),
+    shopIds.length
+      ? supabase.from("shops").select("id, name").in("id", shopIds)
+      : Promise.resolve({ data: [], error: null }),
     supabase.from("profiles").select("id, full_name, email").in("id", ownerIds),
   ]);
   if (shopsError) throw shopsError;
@@ -239,7 +229,9 @@ export async function getAllSubscriptionPayments(): Promise<AdminSubscriptionPay
     return {
       id: payment.id,
       shop_id: payment.shop_id,
-      shop_name: shopNames.get(payment.shop_id) ?? payment.shop_id,
+      shop_name: payment.shop_id
+        ? shopNames.get(payment.shop_id) ?? payment.shop_id
+        : "—",
       owner_name: ownerNames.get(payment.user_id) ?? payment.user_id,
       amount,
       payment_status: payment.payment_status,
@@ -250,65 +242,36 @@ export async function getAllSubscriptionPayments(): Promise<AdminSubscriptionPay
 }
 
 export async function validateCashPayment(
-  paymentId: string,
-  validatedBy: string,
-): Promise<{ success: true; subscription: CashValidatedSubscription }> {
-  if (!paymentId || !validatedBy) throw new Error("Paiement ou administrateur manquant.");
-
-  const { data: authData, error: authError } = await supabase.auth.getUser();
-  if (authError) throw authError;
-  if (!authData.user || authData.user.id !== validatedBy) {
-    throw new Error("L'administrateur validateur ne correspond pas à la session active.");
+  invoiceId: string,
+  paymentMethod: "cash" | "wave" | "orange_money" | "mtn_momo",
+  paymentReference: string | null,
+): Promise<{ success: true; subscription_id: string; expires_at: string }> {
+  if (!invoiceId) throw new Error("Facture manquante.");
+  if (paymentMethod !== "cash" && !paymentReference?.trim()) {
+    throw new Error("La référence de transaction est obligatoire.");
   }
 
-  const { data, error } = await adminTable("subscription_payments")
-    .select("id, shop_id, user_id, plan_id, plan_price, modules, domain_name, domain_price, total_amount, payment_status, payment_method, created_at")
-    .eq("id", paymentId)
-    .single();
-  if (error) throw error;
+  const { data, error } = await supabase.rpc("validate_cash_payment" as never, {
+    p_invoice_id: invoiceId,
+    p_payment_method: paymentMethod,
+    p_payment_reference: paymentReference?.trim() || null,
+  } as never);
+  if (error) {
+    throw new Error(error.message || "Impossible de valider la facture.");
+  }
 
-  const payment = data as SubscriptionPaymentRow;
-  if (payment.payment_status !== "en_attente_paiement_espece") {
-    throw new Error("Ce paiement n'est pas en attente de validation en espèces.");
-  }
-  if (!Array.isArray(payment.modules) || !payment.modules.every((code) => typeof code === "string")) {
-    throw new Error("La liste des modules du paiement est invalide.");
-  }
-  const moduleIds = moduleIdsFromShopCodes(payment.modules);
-  if (moduleIds.length !== payment.modules.length) {
-    throw new Error("Le paiement contient un module non reconnu.");
-  }
-  const moduleCodes = shopCodesFromModuleIds(moduleIds);
-  const selectedModules = moduleCodes.filter((code) => !code.startsWith("shop_"));
-  const storefrontModules = moduleCodes.filter((code) => code.startsWith("shop_"));
-  const { data: result, error: validationError } = await (supabase.rpc(
-    "validate_subscription_cash_payment" as never,
-    {
-      p_payment_id: paymentId,
-      p_validated_by: validatedBy,
-      p_module_codes: moduleCodes,
-      p_selected_modules: selectedModules,
-      p_storefront_modules: storefrontModules,
-    } as never,
-  ) as unknown as Promise<{
-    data: unknown;
-    error: { message: string } | null;
-  }>);
-  if (validationError) throw new Error(validationError.message);
-
-  const response = result as
-    | { success?: unknown; subscription?: unknown }
+  const response = data as
+    | { success?: unknown; subscription_id?: unknown; expires_at?: unknown }
     | null;
-  if (
-    response?.success !== true ||
-    typeof response.subscription !== "object" ||
-    response.subscription === null
-  ) {
-    throw new Error("La validation du paiement n'a pas retourné l'abonnement activé.");
+  if (response?.success !== true ||
+      typeof response.subscription_id !== "string" ||
+      typeof response.expires_at !== "string") {
+    throw new Error("La validation n'a pas activé l'abonnement.");
   }
   return {
     success: true,
-    subscription: response.subscription as CashValidatedSubscription,
+    subscription_id: response.subscription_id,
+    expires_at: response.expires_at,
   };
 }
 
@@ -347,7 +310,7 @@ export async function getSuperAdminCashEntries(filters?: {
     });
   }
 
-  const { data: payments, error: paymentsError } = await adminTable("subscription_payments")
+  const { data: payments, error: paymentsError } = await adminTable("subscription_invoices")
     .select("id, user_id")
     .in("id", paymentIds);
   if (paymentsError) throw paymentsError;
@@ -391,7 +354,7 @@ export async function getSuperAdminCashStats(): Promise<SuperAdminCashStats> {
     adminTable("super_admin_cash_entries")
       .select("amount, created_at")
       .gte("created_at", monthStart.toISOString()),
-    adminTable("subscription_payments")
+    adminTable("subscription_invoices")
       .select("total_amount")
       .in("payment_status", ["pending", "en_attente_paiement_espece"]),
   ]);

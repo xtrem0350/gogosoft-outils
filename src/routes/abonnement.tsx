@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BONUS_DAYS, DOMAIN_PRICE, WELCOME_PRICING } from "@/constants/pricing";
+import { DOMAIN_PRICE, WELCOME_PRICING } from "@/constants/pricing";
 import { isWelcomeDomainId, WELCOME_DOMAIN_LABELS } from "@/constants/welcomeDomains";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -29,20 +29,15 @@ import {
   createAdditionalDomainRequest,
   getCurrentDomainRequest,
   getDomainRequests,
-  renewDomain,
   type DomainRequest,
 } from "@/services/domainService";
 import { isDemoMode } from "@/services/demoService";
-import {
-  confirmPayment,
-  createSubscriptionPayment,
-  getPaymentInvoice,
-  type SubscriptionPaymentInvoice,
+import type {
+  PendingCashCheckoutResult,
+  SubscriptionPaymentInvoice,
 } from "@/services/subscriptionPaymentService";
 import { getMySubscription, type SubscriptionSummary } from "@/services/subscriptionService";
-import { moduleIdsFromShopCodes } from "@/types/modules";
-import { enableShopModules, syncSubscriptionModules } from "@/services/moduleService";
-import { notifyShopModulesChanged } from "@/hooks/useShopModules";
+import { moduleIdsFromShopCodes, shopCodesFromModuleIds, type ModuleId } from "@/types/modules";
 
 export const Route = createFileRoute("/abonnement")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -85,7 +80,7 @@ function AbonnementContent() {
     useState<SubscriptionPaymentInvoice | null>(null);
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
-  const [pendingModules, setPendingModules] = useState<string[]>([]);
+  const [pendingModules, setPendingModules] = useState<ModuleId[]>([]);
 
   useEffect(() => {
     if (activate !== "1" || !shopId) return;
@@ -94,7 +89,7 @@ function AbonnementContent() {
       if (!stored) return;
       const selection = JSON.parse(stored) as { shopId?: string; modules?: string[] };
       if (selection.shopId !== shopId || !Array.isArray(selection.modules)) return;
-      setPendingModules(selection.modules);
+      setPendingModules(selection.modules.filter(isWelcomeDomainId) as ModuleId[]);
       setRenewalMode("subscription");
     } catch {
       sessionStorage.removeItem("gogosoft.pendingModuleSelection");
@@ -164,10 +159,10 @@ function AbonnementContent() {
     };
   }, [subscription]);
 
-  async function processRenewal(submission: CheckoutSubmission) {
-    if (!shopId || !subscription || !renewalMode) {
-      throw new Error("Atelier ou abonnement introuvable.");
-    }
+  async function processRenewal(
+    submission: CheckoutSubmission,
+  ): Promise<PendingCashCheckoutResult> {
+    if (!shopId || !renewalMode) throw new Error("Atelier introuvable.");
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
     const user = authData.user;
@@ -176,66 +171,95 @@ function AbonnementContent() {
     const plan = renewalMode === "domain"
       ? { id: "domain-renewal", price: 0 }
       : { id: renewalPlan.id, price: renewalPlan.price };
-    const modules = pendingModules.length > 0 ? pendingModules : [...subscription.selected_modules, ...subscription.storefront_modules];
-    const payment = await createSubscriptionPayment({
-      shopId,
-      planId: plan.id,
-      planPrice: plan.price,
-      modules: renewalMode === "domain" ? [] : modules,
-      domainName: domainRequest?.assigned_domain ?? "",
-      subscriptionMonths: submission.subscriptionMonths,
-      paymentMethod: submission.paymentMethod,
-      domainPrice: renewalMode === "domain" ? DOMAIN_PRICE : 0,
-      bonusDays: renewalMode === "domain" ? 0 : BONUS_DAYS,
-      ...(submission.paymentMethod === "cash"
-        ? { paymentStatus: "en_attente_paiement_espece" as const }
-        : {}),
-    });
-    if (submission.paymentMethod === "cash") {
-      return {
-        success: true,
-        pending: true,
-        message: "Renouvellement en attente de validation.",
-        invoice: payment,
-      };
+
+    const modules: ModuleId[] =
+      pendingModules.length > 0
+        ? pendingModules
+        : [
+            ...moduleIdsFromShopCodes(subscription?.selected_modules ?? []),
+            ...moduleIdsFromShopCodes(subscription?.storefront_modules ?? []),
+          ].filter(isWelcomeDomainId);
+
+    if (submission.paymentMethod !== "cash" && !submission.paymentReference?.trim()) {
+      throw new Error("La référence de transaction est obligatoire.");
     }
 
-    // TODO sprint 4 : remplacer cette simulation pour les paiements non-espèces.
-    await new Promise((resolve) => window.setTimeout(resolve, 2000));
-    await confirmPayment(payment.id, `simulated_${payment.id}`);
+    const totalAmount =
+      plan.price * submission.subscriptionMonths +
+      (renewalMode === "domain" ? DOMAIN_PRICE : 0) +
+      submission.additionalAmount;
+    const durationDays =
+      renewalMode === "domain" ? 365 : submission.subscriptionMonths * 30;
+    const paymentType =
+      renewalMode === "domain"
+        ? "renouvellement"
+        : pendingModules.length > 0 && subscription?.isActive
+          ? "ajout_module"
+          : subscription
+            ? "renouvellement"
+            : "souscription";
+    const moduleCodes: string[] =
+      renewalMode === "domain"
+        ? []
+        : pendingModules.length > 0
+          ? shopCodesFromModuleIds(pendingModules.filter(isWelcomeDomainId))
+          : shopCodesFromModuleIds(modules);
 
-    if (renewalMode === "domain") {
-      if (!domainRequest) throw new Error("Aucun domaine à renouveler.");
-      await renewDomain(domainRequest.id);
-    } else {
-      const currentExpiry = subscription.expires_at ? new Date(subscription.expires_at) : new Date();
-      const now = new Date();
-      const renewalStart = currentExpiry > now ? currentExpiry : now;
-      renewalStart.setDate(renewalStart.getDate() + submission.subscriptionMonths * 30 + BONUS_DAYS);
-      const appCodes = modules.filter((code) => !code.startsWith("shop_"));
-      const storefrontCodes = modules.filter((code) => code.startsWith("shop_"));
-      const { error } = await supabase.from("subscriptions").upsert(
-        {
-          user_id: user.id,
-          plan: "mensuel",
-          status: "active",
-          expires_at: renewalStart.toISOString(),
-          selected_modules: appCodes,
-          storefront_modules: storefrontCodes,
-          domain_included: subscription.domain_included,
-          price_fcfa: renewalPlan.price,
+    const { data: invoice, error: invoiceError } = await supabase
+      .from("subscription_invoices")
+      .insert({
+        user_id: user.id,
+        shop_id: shopId,
+        plan_id: plan.id,
+        lines: {
+          modules: renewalMode === "domain" ? [] : modules,
+          module_codes: moduleCodes,
+          domain_name: domainRequest?.assigned_domain ?? submission.domainName,
+          plan_price: plan.price,
+          domain_price: renewalMode === "domain" ? DOMAIN_PRICE : 0,
+          additional_amount: submission.additionalAmount,
+          duration_days: durationDays,
         },
-        { onConflict: "user_id" },
-      );
-      if (error) throw error;
-      if (pendingModules.length > 0) {
-        await enableShopModules(shopId, pendingModules);
-        await syncSubscriptionModules(pendingModules);
-        notifyShopModulesChanged(shopId);
-        sessionStorage.removeItem("gogosoft.pendingModuleSelection");
-      }
-    }
-    return getPaymentInvoice(payment.id);
+        total_amount: totalAmount,
+        payment_method: submission.paymentMethod,
+        payment_status: "en_attente_paiement_espece",
+        payment_reference: submission.paymentReference?.trim() || null,
+        payment_type: paymentType,
+        duration_days: durationDays,
+      })
+      .select("*")
+      .single();
+    if (invoiceError) throw invoiceError;
+
+    const payment: SubscriptionPaymentInvoice = {
+      id: invoice.id,
+      invoice_number: invoice.id,
+      shop_id: invoice.shop_id,
+      user_id: invoice.user_id,
+      plan_id: invoice.plan_id,
+      lines: {
+        modules: renewalMode === "domain" ? [] : modules,
+        module_codes: moduleCodes,
+        plan_price: plan.price,
+        domain_name: domainRequest?.assigned_domain ?? (submission.domainName || null),
+        domain_price: renewalMode === "domain" ? DOMAIN_PRICE : 0,
+        additional_amount: submission.additionalAmount,
+        duration_days: durationDays,
+      },
+      duration_days: durationDays,
+      total_amount: invoice.total_amount,
+      payment_method: invoice.payment_method,
+      payment_status: "en_attente_paiement_espece",
+      payment_reference: invoice.payment_reference,
+      paid_at: null,
+      payment_type: paymentType,
+    };
+    return {
+      success: true,
+      pending: true,
+      message: "Facture créée. En attente de validation.",
+      invoice: payment,
+    };
   }
 
   async function submitAdditionalDomain() {
@@ -264,19 +288,55 @@ function AbonnementContent() {
         shopId,
         domain,
       );
-      const payment = await createSubscriptionPayment({
-        shopId,
-        planId: "domain-additional",
-        planPrice: 0,
-        modules: [],
-        domainName: request.choice_1,
-        subscriptionMonths: 1,
-        paymentMethod: "cash",
-        domainPrice: DOMAIN_PRICE,
-        bonusDays: 0,
-        paymentStatus: "en_attente_paiement_espece",
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("subscription_invoices")
+        .insert({
+          user_id: authData.user.id,
+          shop_id: shopId,
+          plan_id: "domain-additional",
+          lines: {
+            modules: [],
+            module_codes: [],
+            domain_name: request.choice_1,
+            plan_price: 0,
+            domain_price: DOMAIN_PRICE,
+            additional_amount: 0,
+            duration_days: 365,
+          },
+          total_amount: DOMAIN_PRICE,
+          payment_method: "cash",
+          payment_status: "en_attente_paiement_espece",
+          payment_reference: null,
+          payment_type: "ajout_module",
+          duration_days: 365,
+        })
+        .select("*")
+        .single();
+      if (invoiceError) throw invoiceError;
+
+      setPendingDomainPayment({
+        id: invoice.id,
+        invoice_number: invoice.id,
+        shop_id: shopId,
+        user_id: authData.user.id,
+        plan_id: "domain-additional",
+        lines: {
+          modules: [],
+          module_codes: [],
+          plan_price: 0,
+          domain_name: request.choice_1,
+          domain_price: DOMAIN_PRICE,
+          additional_amount: 0,
+          duration_days: 365,
+        },
+        duration_days: 365,
+        total_amount: DOMAIN_PRICE,
+        payment_method: "cash",
+        payment_status: "en_attente_paiement_espece",
+        payment_reference: null,
+        paid_at: null,
+        payment_type: "ajout_module",
       });
-      setPendingDomainPayment(payment);
       setAddDomainOpen(false);
       setNewDomainName("");
       toast.success("Demande créée. Le domaine sera ajouté après validation du paiement.");
@@ -343,7 +403,7 @@ function AbonnementContent() {
                       className="mt-2 w-full"
                     >
                       <RefreshCw className="size-4" />
-                      Confirmer le renouvellement
+                      {subscription ? "Confirmer le renouvellement" : "Souscrire"}
                     </Button>
                   ) : null}
                 </CardContent>
@@ -412,7 +472,7 @@ function AbonnementContent() {
             <Card>
               <CardContent className="space-y-3 p-5">
                 <p className="text-sm text-muted-foreground">
-                  Choisissez 1 ou 3 mois lors du paiement. Chaque renouvellement inclut {BONUS_DAYS} jours offerts.
+                  Choisissez 1 ou 3 mois lors du paiement. Chaque mois correspond à 30 jours d&apos;abonnement.
                 </p>
                 {!demo ? (
                   <Button onClick={() => setRenewalMode("subscription")}>
@@ -427,7 +487,7 @@ function AbonnementContent() {
         </>
       )}
 
-      {renewalMode && subscription ? (
+      {renewalMode ? (
         <CheckoutModal
           open={renewalMode !== null}
           onClose={() => {
@@ -441,13 +501,15 @@ function AbonnementContent() {
           domainPrice={renewalMode === "domain" ? DOMAIN_PRICE : 0}
           clientName={clientName}
           clientEmail={clientEmail}
-          cashActionLabel="Confirmer le renouvellement"
+          cashActionLabel={subscription ? "Confirmer le renouvellement" : "Confirmer la souscription"}
           cashConfirmationTitle={
             renewalMode === "domain"
               ? "Renouvellement du domaine en attente de validation"
-              : "Renouvellement en attente de validation"
+              : subscription
+                ? "Renouvellement en attente de validation"
+                : "Souscription en attente de validation"
           }
-          cashConfirmationMessage="Le renouvellement sera appliqué après réception et validation du paiement en espèces. Contactez l'administrateur."
+          cashConfirmationMessage="Votre accès sera activé après réception et validation du paiement. Contactez l'administrateur si nécessaire."
           onPay={processRenewal}
           onComplete={() => {
             setRenewalMode(null);

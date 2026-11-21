@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { PublicShopPage } from "@/components/ShopfrontPages";
+import { useShopPaused } from "@/hooks/useShopPaused";
 import type { ProductCategory } from "@/services/shopOnlineService";
 
 export const Route = createFileRoute("/shop/$slug")({
@@ -12,5 +13,13 @@ export const Route = createFileRoute("/shop/$slug")({
 function ShopRoute() {
   const { slug } = Route.useParams();
   const { category } = Route.useSearch();
-  return <PublicShopPage slug={slug} category={category as ProductCategory | undefined} />;
+  const { isPaused, isPauseLoading } = useShopPaused(slug);
+  return (
+    <PublicShopPage
+      slug={slug}
+      category={category as ProductCategory | undefined}
+      isPaused={isPaused}
+      isPauseLoading={isPauseLoading}
+    />
+  );
 }

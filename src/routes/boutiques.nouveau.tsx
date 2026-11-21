@@ -14,7 +14,6 @@ import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { supabase } from "@/integrations/supabase/client";
 import { isDemoMode } from "@/services/demoService";
 import { completeSubscriptionCheckout } from "@/services/checkoutService";
-import { createShop } from "@/services/shopService";
 import { getMySubscription } from "@/services/subscriptionService";
 import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -79,6 +78,7 @@ function NewShopPageContent() {
   const [clientEmail, setClientEmail] = useState("");
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutAwaitingValidation, setCheckoutAwaitingValidation] = useState(false);
   const [shopDetailsError, setShopDetailsError] = useState("");
   const { values: shopDetails, setField, clear } = usePersistedFormState<FormValues>("boutiques-nouveau", {
     name: "",
@@ -141,21 +141,10 @@ function NewShopPageContent() {
     );
     setClientEmail(user.email ?? "");
 
-    let selectedShopId = checkoutShopIdRef.current ?? checkoutShopId ?? shopId;
-    if (!selectedShopId) {
-      const shop = await createShop({
-        name:
-          shopDetails.name.trim() || `Atelier ${user.email?.split("@")[0] ?? "GogoSoft"}`,
-        address: shopDetails.address || null,
-        phone: shopDetails.phone || null,
-      });
-      selectedShopId = shop.id;
-      checkoutShopIdRef.current = shop.id;
-      setCheckoutShopId(shop.id);
-    }
+    const selectedShopId = checkoutShopIdRef.current ?? checkoutShopId ?? shopId;
 
     return completeSubscriptionCheckout({
-      shopId: selectedShopId,
+      shopId: selectedShopId ?? null,
       planId: plan.id,
       planPrice: submission.planPrice,
       domainIds,
@@ -165,7 +154,12 @@ function NewShopPageContent() {
 
   async function finishCheckout() {
     const selectedShopId = checkoutShopIdRef.current ?? checkoutShopId ?? shopId;
-    if (!selectedShopId) throw new Error("Atelier introuvable après le paiement.");
+    if (!selectedShopId) {
+      setCheckoutAwaitingValidation(true);
+      setCheckoutOpen(false);
+      return;
+    }
+
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) throw userError;
     const user = userData.user;
@@ -178,6 +172,27 @@ function NewShopPageContent() {
     setCheckoutOpen(false);
     clear();
     await navigate({ to: "/dashboard" });
+  }
+
+  if (checkoutAwaitingValidation) {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Paiement en attente de validation</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p>
+              Votre paiement est en attente de validation. Vous pourrez créer votre boutique dès
+              que le SuperAdmin aura validé votre abonnement. Vous recevrez une notification.
+            </p>
+            <Button type="button" onClick={() => void navigate({ to: "/dashboard" })}>
+              Retour au dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
