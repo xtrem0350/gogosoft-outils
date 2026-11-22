@@ -18,8 +18,16 @@ export interface CashPeriod {
 export interface CashSummary {
   totalWorkshop: number;
   totalSales: number;
+  totalManualEntries: number;
   totalGeneral: number;
   breakdown: Record<string, number>;
+  manualEntries: Array<{
+    id: string;
+    amount: number;
+    method: string;
+    description: string | null;
+    created_at: string;
+  }>;
   workshopPayments: Array<{
     id: string;
     amount: number;
@@ -84,6 +92,53 @@ export interface CashSession {
   notes: string | null;
 }
 
+export interface CashReceiptRecord {
+  shop_id: string;
+  receipt_number: string;
+  source_id: string;
+  reference: string;
+  clientName: string;
+  device: string;
+  amount: number;
+  paymentMethod: string;
+  date: string;
+  shop_name: string;
+}
+
+export function createCashReceiptNumber(shopId: string, sourceId: string, date: string): string {
+  const timestamp = Date.parse(date);
+  if (!Number.isFinite(timestamp)) throw new Error("La date du reçu est invalide.");
+  const shopPart = shopId.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase();
+  const sourcePart = sourceId.replace(/[^a-z0-9]/gi, "").slice(-8).toUpperCase();
+  return `REC-${shopPart}-${timestamp.toString(36).toUpperCase()}-${sourcePart || "PAIEMENT"}`;
+}
+
+export function archiveCashReceipt(receipt: CashReceiptRecord): void {
+  const key = `gogosoft.cash-receipts.${receipt.shop_id}`;
+  const stored = window.localStorage.getItem(key);
+  const parsed: unknown = stored ? JSON.parse(stored) : [];
+  if (!Array.isArray(parsed)) throw new Error("L'archive des reçus est invalide.");
+  const receipts = parsed as CashReceiptRecord[];
+  const nextReceipts = [
+    ...receipts.filter((item) => item.receipt_number !== receipt.receipt_number),
+    receipt,
+  ];
+  window.localStorage.setItem(key, JSON.stringify(nextReceipts));
+}
+
+export async function assertSessionOpen(shopId: string): Promise<void> {
+  if (isDemoMode()) return;
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data, error } = await supabase
+    .from("cash_sessions" as never)
+    .select("id")
+    .eq("shop_id", requireShopId(shopId))
+    .is("closed_at", null)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Ouvrez une session de caisse pour effectuer des opérations.");
+}
+
 export async function getOpenCashSession(shopId: string): Promise<CashSession | null> {
   const { data, error } = await supabase
     .from("cash_sessions" as never)
@@ -123,6 +178,7 @@ export async function createCashEntry(shopId: string, input: {
   method: "cash" | "wave" | "orange_money" | "mtn" | "moov";
   description?: string;
 }): Promise<{ entry_id: string }> {
+  await assertSessionOpen(shopId);
   const { data, error } = await supabase.rpc("create_cash_entry" as never, {
     p_shop_id: shopId,
     p_amount: input.amount,
@@ -136,12 +192,14 @@ export async function createCashEntry(shopId: string, input: {
 export type WorkshopPaymentMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";
 
 export async function closeWorkshopTicketPayment(input: {
+  shopId: string;
   ticketId: string;
   amount: number;
   paymentType: "entry" | "balance";
   paymentMethod: WorkshopPaymentMethod;
   notes?: string;
 }): Promise<{ success: boolean; payment_id: string; new_status: string; amount: number }> {
+  await assertSessionOpen(input.shopId);
   const { data, error } = await (supabase.rpc("close_workshop_ticket_payment" as never, {
     p_ticket_id: input.ticketId,
     p_amount: input.amount,
@@ -163,6 +221,8 @@ type WorkshopPaymentRow = {
   created_at: string;
 };
 
+type CashManualEntryRow = CashSummary["manualEntries"][number];
+
 function emptyBreakdown(): Record<string, number> {
   return { cash: 0, wave: 0, orange_money: 0, mtn: 0, moov: 0 };
 }
@@ -170,9 +230,11 @@ function emptyBreakdown(): Record<string, number> {
 function summarize(
   workshopPayments: CashSummary["workshopPayments"],
   sales: CashSummary["sales"],
+  manualEntries: CashSummary["manualEntries"] = [],
 ): CashSummary {
   const totalWorkshop = workshopPayments.reduce((total, payment) => total + payment.amount, 0);
   const totalSales = sales.reduce((total, sale) => total + sale.total_price, 0);
+  const totalManualEntries = manualEntries.reduce((total, entry) => total + entry.amount, 0);
   const breakdown = emptyBreakdown();
   for (const payment of workshopPayments) {
     breakdown[payment.method] = (breakdown[payment.method] ?? 0) + payment.amount;
@@ -181,11 +243,16 @@ function summarize(
     const method = sale.payment_method ?? "unknown";
     breakdown[method] = (breakdown[method] ?? 0) + sale.total_price;
   }
+  for (const entry of manualEntries) {
+    breakdown[entry.method] = (breakdown[entry.method] ?? 0) + entry.amount;
+  }
   return {
     totalWorkshop,
     totalSales,
-    totalGeneral: totalWorkshop + totalSales,
+    totalManualEntries,
+    totalGeneral: totalWorkshop + totalSales + totalManualEntries,
     breakdown,
+    manualEntries,
     workshopPayments,
     sales,
   };
@@ -233,7 +300,11 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
   const validShopId = requireShopId(shopId);
   const start = period.start.toISOString();
   const end = period.end.toISOString();
-  const [{ data: paymentRows, error: paymentError }, { data: salesRows, error: salesError }] =
+  const [
+    { data: paymentRows, error: paymentError },
+    { data: salesRows, error: salesError },
+    { data: manualEntryRows, error: manualEntryError },
+  ] =
     await Promise.all([
       (supabase.from("workshop_payments" as any) as any)
         .select("id, amount, method, ticket_id, received_by, payment_type, created_at")
@@ -247,9 +318,15 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
         .eq("payment_status", "paid")
         .gte("created_at", start)
         .lte("created_at", end),
+      (supabase.from("cash_entries" as any) as any)
+        .select("id, amount, method, description, created_at")
+        .eq("shop_id", validShopId)
+        .gte("created_at", start)
+        .lte("created_at", end),
     ]);
   if (paymentError) throw paymentError;
   if (salesError) throw salesError;
+  if (manualEntryError) throw manualEntryError;
 
   const payments = (paymentRows ?? []) as WorkshopPaymentRow[];
   const ticketIds = [...new Set(payments.map((payment) => payment.ticket_id))];
@@ -282,7 +359,8 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
     received_by: payment.received_by,
   }));
   const sales = (salesRows ?? []) as CashSummary["sales"];
-  return summarize(workshopPayments, sales);
+  const manualEntries = (manualEntryRows ?? []) as CashManualEntryRow[];
+  return summarize(workshopPayments, sales, manualEntries);
 }
 
 export async function closeCashPeriod(
@@ -291,6 +369,9 @@ export async function closeCashPeriod(
   notes?: string,
   totalExits = 0,
 ): Promise<void> {
+  if (!isDemoMode() && (await getOpenCashSession(shopId))) {
+    throw new Error("Fermez d'abord la session de caisse.");
+  }
   const summary = await getCashSummary(shopId, period);
   if (isDemoMode()) {
     const session = readDemoSession();
@@ -354,6 +435,7 @@ export async function createCashExit(
 ): Promise<CashExit> {
   if (isDemoMode()) throw new Error("Les sorties de caisse ne sont pas disponibles en mode démo.");
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  await assertSessionOpen(shopId);
   if (!Number.isFinite(input.amount) || input.amount <= 0) {
     throw new Error("Le montant doit être supérieur à zéro.");
   }

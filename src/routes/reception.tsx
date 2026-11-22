@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageHero } from "@/components/PageHero";
 import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import { StatsCard } from "@/components/StatsCard";
+import { QuickCreateClientDialog } from "@/components/QuickCreateClientDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,10 +19,9 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import type { ClientRecord } from "@/services/clientService";
-import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { PlaceTicketModal } from "@/components/caisse/PlaceTicketModal";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { addEvent, createTicket, type WorkshopTicket } from "@/services/workshopService";
+import { addEvent, createTicket, type IssueKey, type WorkshopTicket } from "@/services/workshopService";
 import { getOpenCashSession } from "@/services/cashService";
 import { isDemoMode } from "@/services/demoService";
 import {
@@ -52,20 +52,41 @@ function ReceptionPage() {
   const [step, setStep, clearStep] = usePersistedWizardState("reception-step", 1);
   const [selectedClient, setSelectedClient, clearSelectedClient] = usePersistedWizardState<ClientRecord | undefined>("reception-selected-client", undefined);
   const [clientRefreshKey, setClientRefreshKey] = useState(0);
-  const [paymentPaid, setPaymentPaid, clearPaymentPaid] = usePersistedWizardState("reception-payment-paid", false);
-  const [paymentMethod, setPaymentMethod, clearPaymentMethod] = usePersistedWizardState("reception-payment-method", "");
   const [locations, setLocations] = useState<Array<{ id: string; name: string; status: string }>>([]);
   const [openCreate, setOpenCreate] = useState(false);
-  const [paymentOpen, setPaymentOpen] = useState(false);
   const [clientName, setClientName, clearClientName] = usePersistedWizardState("reception-client-name", "");
   const [clientPhone, setClientPhone, clearClientPhone] = usePersistedWizardState("reception-client-phone", "");
+  const [quickCreateClientOpen, setQuickCreateClientOpen] = useState(false);
   const [deviceBrand, setDeviceBrand, clearDeviceBrand] = usePersistedWizardState("reception-device-brand", "");
   const [deviceModel, setDeviceModel, clearDeviceModel] = usePersistedWizardState("reception-device-model", "");
   const [deviceImei, setDeviceImei, clearDeviceImei] = usePersistedWizardState("reception-device-imei", "");
   const [issue, setIssue, clearIssue] = usePersistedWizardState("reception-issue", "écran cassé");
+  const [isUnderWarranty, setIsUnderWarranty, clearIsUnderWarranty] =
+    usePersistedWizardState("reception-under-warranty", false);
   const [selectedLocationId, setSelectedLocationId, clearSelectedLocationId] = usePersistedWizardState<string | undefined>("reception-location", undefined);
   const [entryFeeConfig, setEntryFeeConfig] = useState<ShopEntryFeeConfig | null>(null);
   const [creating, setCreating] = useState(false);
+  const currentShopClient =
+    shopId && selectedClient?.shop_id === shopId ? selectedClient : undefined;
+
+  useEffect(() => {
+    if (!shopId || !selectedClient || selectedClient.shop_id === shopId) return;
+    setSelectedClient(undefined);
+    setClientName("");
+    setClientPhone("");
+    clearSelectedClient();
+    clearClientName();
+    clearClientPhone();
+  }, [
+    shopId,
+    selectedClient,
+    setSelectedClient,
+    setClientName,
+    setClientPhone,
+    clearSelectedClient,
+    clearClientName,
+    clearClientPhone,
+  ]);
 
   useEffect(() => {
     let active = true;
@@ -293,7 +314,7 @@ function ReceptionPage() {
 
     setCreating(true);
     try {
-      if (entryFeeConfig.enabled && !(await ensureCashSessionIsOpen())) return;
+      if (entryFeeConfig.enabled && !isUnderWarranty && !(await ensureCashSessionIsOpen())) return;
       const ticket = await createTicket({
         shop_id: shopId,
         client_name: trimmedName,
@@ -301,12 +322,12 @@ function ReceptionPage() {
         device_brand: deviceBrand.trim() || "Autre",
         device_model: deviceModel.trim(),
         ...(deviceImei.trim() ? { device_imei: deviceImei.trim() } : {}),
-        issues: ["ecran_casse"],
-        description: `Panne: ${issue}`,
-        entry_fee: entryFeeConfig.enabled ? entryFeeConfig.amount : 0,
-        entry_fee_paid: !entryFeeConfig.enabled,
-        status: entryFeeConfig.enabled ? "en_attente_caissier_entree" : "en_attente_technicien",
-        client_id: selectedClient?.id ?? null,
+        issues: [(issue.trim() || "Non précisée") as IssueKey],
+        description: `${isUnderWarranty ? "[SOUS_GARANTIE] Réparation sous garantie (gratuite pour le client). " : ""}Panne: ${issue}`,
+        entry_fee: entryFeeConfig.enabled && !isUnderWarranty ? entryFeeConfig.amount : 0,
+        entry_fee_paid: isUnderWarranty || !entryFeeConfig.enabled,
+        status: entryFeeConfig.enabled && !isUnderWarranty ? "en_attente_caissier_entree" : "en_attente_technicien",
+        client_id: currentShopClient?.id ?? null,
         activity_type: "phone",
       });
 
@@ -320,15 +341,15 @@ function ReceptionPage() {
           ),
         );
         toast.success(
-          entryFeeConfig.enabled
+          isUnderWarranty
+            ? "Fiche créée sous garantie. Réparateur notifié."
+            : entryFeeConfig.enabled
             ? "Fiche créée. Envoyée à la caisse pour encaissement."
             : "Fiche créée (entrée gratuite). Réparateur notifié.",
         );
       }
       setOpenCreate(false);
       setStep(1);
-      setPaymentPaid(false);
-      setPaymentMethod("");
       setSelectedClient(undefined);
       setClientName("");
       setClientPhone("");
@@ -336,6 +357,7 @@ function ReceptionPage() {
       setDeviceModel("");
       setDeviceImei("");
       setIssue("écran cassé");
+      setIsUnderWarranty(false);
       setSelectedLocationId(undefined);
       clearStep();
       clearSelectedClient();
@@ -345,9 +367,8 @@ function ReceptionPage() {
       clearDeviceModel();
       clearDeviceImei();
       clearIssue();
+      clearIsUnderWarranty();
       clearSelectedLocationId();
-      clearPaymentPaid();
-      clearPaymentMethod();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible de créer la fiche.");
     } finally {
@@ -364,16 +385,13 @@ function ReceptionPage() {
     clearDeviceModel();
     clearDeviceImei();
     clearIssue();
+    clearIsUnderWarranty();
     clearSelectedLocationId();
-    clearPaymentPaid();
-    clearPaymentMethod();
-    setPaymentPaid(false);
-    setPaymentMethod("");
     setStep(1);
   }
 
-  const wizardSteps = entryFeeConfig?.enabled
-    ? ["Client", "Appareil", "Paiement", "Rangement"]
+  const wizardSteps = entryFeeConfig?.enabled && !isUnderWarranty
+    ? ["Client", "Appareil", "Caisse", "Rangement"]
     : ["Client", "Appareil", "Rangement"];
   const finalStep = wizardSteps.length;
 
@@ -451,7 +469,9 @@ function ReceptionPage() {
                     {[ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "Appareil"}
                   </p>
                   <p className="text-sm font-medium text-green-700">
-                    Montant payé : {new Intl.NumberFormat("fr-FR").format(ticket.price_final ?? ticket.price_estimate ?? 0)} FCFA
+                    {ticket.description?.startsWith("[SOUS_GARANTIE]")
+                      ? "Prise en charge sous garantie · 0 FCFA"
+                      : `Montant payé : ${new Intl.NumberFormat("fr-FR").format(ticket.price_final ?? ticket.price_estimate ?? 0)} FCFA`}
                   </p>
                 </div>
                 <ReadOnlyGuard>
@@ -524,7 +544,7 @@ function ReceptionPage() {
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Nouveau client</DialogTitle>
+            <DialogTitle>Nouvelle fiche atelier</DialogTitle>
           </DialogHeader>
 
           <div className={`grid ${wizardSteps.length === 4 ? "grid-cols-4" : "grid-cols-3"} gap-2 rounded-xl bg-slate-50 p-3`}>
@@ -536,10 +556,47 @@ function ReceptionPage() {
           {step === 1 ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Client</Label>
-                <ClientSelect shopId={shopId ?? null} value={selectedClient?.id} refreshKey={clientRefreshKey} selectedClient={selectedClient} onSelect={(client) => { setSelectedClient(client); setClientName(client.full_name); setClientPhone(client.whatsapp ?? ""); }} />
-                <Input value={clientName} onChange={(event) => setClientName(event.target.value)} placeholder="Nom du client" />
-                <Input value={clientPhone} onChange={(event) => setClientPhone(event.target.value)} placeholder="WhatsApp" />
+                <div className="flex items-center justify-between gap-2">
+                  <Label>Client</Label>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!shopId}
+                    onClick={() => setQuickCreateClientOpen(true)}
+                  >
+                    Créer un client
+                  </Button>
+                </div>
+                <ClientSelect
+                  shopId={shopId ?? null}
+                  value={currentShopClient?.id}
+                  refreshKey={clientRefreshKey}
+                  selectedClient={currentShopClient}
+                  onSelect={(client) => {
+                    setSelectedClient(client);
+                    setClientName(client.full_name);
+                    setClientPhone(client.whatsapp ?? "");
+                  }}
+                />
+                <Input
+                  value={clientName}
+                  onChange={(event) => {
+                    setClientName(event.target.value);
+                    setSelectedClient(undefined);
+                    clearSelectedClient();
+                  }}
+                  placeholder="Nom du client"
+                />
+                <Input
+                  value={clientPhone}
+                  onChange={(event) => {
+                    setClientPhone(event.target.value);
+                    setSelectedClient(undefined);
+                    clearSelectedClient();
+                  }}
+                  placeholder="WhatsApp"
+                />
               </div>
               <DialogFooter><Button disabled={!clientName.trim()} onClick={() => setStep(2)}>Suivant</Button></DialogFooter>
             </div>
@@ -554,18 +611,39 @@ function ReceptionPage() {
               </div>
               <div className="space-y-2"><Label>IMEI (optionnel)</Label><Input value={deviceImei} onChange={(event) => setDeviceImei(event.target.value)} /></div>
               <div className="space-y-2"><Label>Description de la panne</Label><Textarea value={issue} onChange={(event) => setIssue(event.target.value)} /></div>
+              <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
+                <input
+                  type="checkbox"
+                  checked={isUnderWarranty}
+                  onChange={(event) => setIsUnderWarranty(event.target.checked)}
+                  className="mt-1 size-4 accent-orange-600"
+                />
+                <span>
+                  <span className="block font-medium">Réparation sous garantie (gratuite pour le client)</span>
+                  <span className="block text-muted-foreground">
+                    Les frais d&apos;entrée seront désactivés et le dossier transmis sans encaissement.
+                  </span>
+                </span>
+              </label>
+              {isUnderWarranty ? (
+                <p role="status" className="rounded-md bg-green-50 p-2 text-sm font-medium text-green-800">
+                  Garantie activée : frais d&apos;entrée à 0 FCFA.
+                </p>
+              ) : null}
               <DialogFooter><Button variant="outline" onClick={() => setStep(1)}>Retour</Button><Button disabled={!deviceModel.trim()} onClick={() => setStep(3)}>Suivant</Button></DialogFooter>
             </div>
           ) : null}
 
-          {entryFeeConfig?.enabled && step === 3 ? (
+          {entryFeeConfig?.enabled && !isUnderWarranty && step === 3 ? (
             <div className="space-y-5 text-center">
               <AlertCircle className="mx-auto size-10 text-orange-500" />
               <p className="font-semibold">
                 Frais d&apos;entrée diagnostic : {new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA
                 {entryFeeConfig.refundable ? " (remboursable)" : " (non remboursable)"}
               </p>
-              {paymentPaid ? <p className="text-sm font-medium text-green-700">Paiement enregistré · {paymentMethod}</p> : null}
+              <p className="text-sm text-muted-foreground">
+                Après la création de la fiche, elle apparaîtra à la caisse pour encaissement.
+              </p>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setStep(2)}>Retour</Button>
                 <Button
@@ -573,7 +651,7 @@ function ReceptionPage() {
                     if (isOpen) setStep(4);
                   })}
                 >
-                  Envoyer à la caisse
+                  Continuer vers le rangement
                 </Button>
               </DialogFooter>
             </div>
@@ -582,8 +660,8 @@ function ReceptionPage() {
           {step === finalStep ? (
             <div className="space-y-4">
               <div className="space-y-2"><Label>Rangement</Label><StorageLocationSelect shopId={shopId ?? null} value={selectedLocationId} onSelect={(location) => setSelectedLocationId(location.id)} /></div>
-              <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> {entryFeeConfig?.enabled ? `${new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA` : "Gratuit"}</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
-              <DialogFooter><Button variant="outline" onClick={() => setStep(entryFeeConfig?.enabled ? 3 : 2)}>Retour</Button><ReadOnlyGuard><Button disabled={!selectedLocationId || creating || !entryFeeConfig} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></ReadOnlyGuard></DialogFooter>
+              <Card><CardContent className="grid gap-2 p-4 text-sm"><p><b>Client :</b> {clientName}</p><p><b>Appareil :</b> {deviceBrand} {deviceModel}</p><p><b>Montant :</b> {isUnderWarranty ? "0 FCFA (sous garantie)" : entryFeeConfig?.enabled ? `${new Intl.NumberFormat("fr-FR").format(entryFeeConfig.amount)} FCFA` : "Gratuit"}</p><p><b>Casier :</b> {locations.find((location) => location.id === selectedLocationId)?.name ?? "Non choisi"}</p></CardContent></Card>
+              <DialogFooter><Button variant="outline" onClick={() => setStep(entryFeeConfig?.enabled && !isUnderWarranty ? 3 : 2)}>Retour</Button><ReadOnlyGuard><Button disabled={!selectedLocationId || creating || !entryFeeConfig} onClick={() => void handleCreateTicket()}>{creating ? "Création…" : "Créer la fiche"}</Button></ReadOnlyGuard></DialogFooter>
             </div>
           ) : null}
           <div className="flex justify-end border-t pt-4">
@@ -592,17 +670,20 @@ function ReceptionPage() {
         </DialogContent>
       </Dialog>
 
-      <WorkshopPaymentModal
-        open={paymentOpen}
-        onClose={() => setPaymentOpen(false)}
-        amount={entryFeeConfig?.amount ?? 0}
-        title="Paiement d'entrée"
-        onSuccess={(method) => {
-          setPaymentMethod(method);
-          setPaymentPaid(true);
-          setPaymentOpen(false);
-        }}
-      />
+      {shopId ? (
+        <QuickCreateClientDialog
+          open={quickCreateClientOpen}
+          onOpenChange={setQuickCreateClientOpen}
+          shopId={shopId}
+          onCreated={(client) => {
+            setClientRefreshKey((current) => current + 1);
+            setSelectedClient(client);
+            setClientName(client.full_name);
+            setClientPhone(client.whatsapp ?? "");
+          }}
+        />
+      ) : null}
+
       <ReadOnlyGuard>
         <PlaceTicketModal
           open={Boolean(placeTicket)}

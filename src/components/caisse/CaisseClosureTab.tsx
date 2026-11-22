@@ -13,6 +13,7 @@ interface CaisseClosureTabProps {
   loading?: boolean;
   shopId?: string | null;
   showHistory?: boolean;
+  sessionOpen: boolean;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -30,6 +31,7 @@ export function CaisseClosureTab({
   loading = false,
   shopId = null,
   showHistory = true,
+  sessionOpen,
 }: CaisseClosureTabProps) {
   const [expandedClosureId, setExpandedClosureId] = useState<string | null>(null);
   const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
@@ -38,11 +40,16 @@ export function CaisseClosureTab({
     <div className="space-y-6">
       {!showHistory ? <div className="flex justify-end">
           <ReadOnlyGuard>
-            <Button type="button" disabled={loading || !summary || (summary.totalGeneral === 0 && totalExits === 0) || !shopId} onClick={onClosure} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
-              <Wallet className="size-4" /> Clôturer la caisse
+            <Button type="button" disabled={loading || sessionOpen || !summary || (summary.totalGeneral === 0 && totalExits === 0) || !shopId} onClick={onClosure} className="bg-ivoirien bg-ivoirien-hover shadow-3d">
+              <Wallet className="size-4" /> Récapitulatif comptable
             </Button>
           </ReadOnlyGuard>
       </div> : null}
+      {!showHistory && sessionOpen ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Fermez d&apos;abord la session de caisse.
+        </p>
+      ) : null}
       {showHistory ? (
         <Card className="card-3d rounded-xl">
           <CardHeader><CardTitle>Historique des clôtures</CardTitle></CardHeader>

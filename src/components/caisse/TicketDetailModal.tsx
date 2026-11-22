@@ -21,7 +21,7 @@ interface TicketDetailModalProps {
     device_brand?: string;
     device_model?: string;
     device_imei?: string;
-    description?: string;
+    description?: string | null;
     technicien_name?: string;
     quote_amount?: number;
     entry_fee?: number;

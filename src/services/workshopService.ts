@@ -21,6 +21,10 @@ import { getShopEntryFeeConfig } from "@/services/shopService";
 export type { WorkshopTicket } from "@/types/database";
 export type ActivityType = "phone" | "computer" | "consumable";
 
+export function isWarrantyTicket(ticket: Pick<WorkshopTicket, "description">): boolean {
+  return ticket.description?.startsWith("[SOUS_GARANTIE]") ?? false;
+}
+
 /** Identifiants des pannes prises en charge par l'atelier. */
 export type IssueKey =
   | "ecran_casse"

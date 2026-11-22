@@ -8,17 +8,32 @@ interface CaisseExitsTabProps {
   exits: CashExit[];
   onAdd: () => void;
   onReceipt: (exit: CashExit) => void;
+  sessionOpen: boolean;
 }
 
 const formatMoney = (amount: number) => `${new Intl.NumberFormat("fr-FR").format(amount)} FCFA`;
 const formatDate = (value: string) => new Date(value).toLocaleString("fr-FR");
 
-export function CaisseExitsTab({ exits, onAdd }: CaisseExitsTabProps) {
+export function CaisseExitsTab({ exits, onAdd, sessionOpen }: CaisseExitsTabProps) {
   return (
     <Card className="card-3d rounded-xl">
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <div><CardTitle>Sorties de caisse</CardTitle><p className="text-sm text-muted-foreground">Pièces et dépenses diverses de la période.</p></div>
-        <ReadOnlyGuard><Button type="button" onClick={onAdd}><Plus className="size-4" /> Ajouter une sortie</Button></ReadOnlyGuard>
+        <ReadOnlyGuard>
+          <Button
+            type="button"
+            onClick={onAdd}
+            disabled={!sessionOpen}
+            title={!sessionOpen ? "Ouvrez une session de caisse pour effectuer des opérations." : undefined}
+          >
+            <Plus className="size-4" /> Ajouter une sortie
+          </Button>
+        </ReadOnlyGuard>
+        {!sessionOpen ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            Ouvrez une session de caisse pour effectuer des opérations.
+          </p>
+        ) : null}
       </CardHeader>
       <CardContent className="space-y-2">
         {exits.length ? exits.map((exit) => (

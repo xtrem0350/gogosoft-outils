@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { SalePaymentMethod } from "@/services/salesService";
 import type { CashSummary } from "@/services/cashService";
-import type { CashReceipt } from "@/components/CashReceiptModal";
+import type { CashReceiptDraft } from "@/components/CashReceiptModal";
 import type { ShopEntryFeeConfig } from "@/services/shopService";
 
 const METHOD_LABELS: Record<string, string> = {
@@ -36,6 +36,8 @@ interface WorkshopTicket {
   id: string;
   ticket_number: string;
   client_name: string;
+  description?: string | null;
+  is_warranty?: boolean;
   quote_amount?: number;
   entry_fee?: number;
 }
@@ -46,11 +48,15 @@ interface CaisseEntriesTabProps {
   paymentMethodsBySale: Record<string, SalePaymentMethod>;
   onPaymentMethodChange: (saleId: string, method: SalePaymentMethod) => void;
   onCollectSale: (saleId: string) => void;
-  onReceipt: (receipt: CashReceipt) => void;
+  onRefundSale: (saleId: string) => void;
+  canRefundSale: boolean;
+  onReceipt: (receipt: CashReceiptDraft) => void;
   entryTickets: WorkshopTicket[];
   finalTickets: WorkshopTicket[];
   entryFeeConfig: ShopEntryFeeConfig;
   onCollectTicket: (ticket: WorkshopTicket, type: "entry" | "final") => void;
+  canCloseWithoutPayment: boolean;
+  onCloseWithoutPayment: (ticket: WorkshopTicket) => void;
   onTicketDetail: (ticket: WorkshopTicket, type: "entry" | "final") => void;
   sessionOpen: boolean;
   onAddEntry: () => void;
@@ -62,11 +68,15 @@ export function CaisseEntriesTab({
   paymentMethodsBySale,
   onPaymentMethodChange,
   onCollectSale,
+  onRefundSale,
+  canRefundSale,
   onReceipt,
   entryTickets,
   finalTickets,
   entryFeeConfig,
   onCollectTicket,
+  canCloseWithoutPayment,
+  onCloseWithoutPayment,
   onTicketDetail,
   sessionOpen,
   onAddEntry,
@@ -90,7 +100,7 @@ export function CaisseEntriesTab({
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold">{formatMoney(payment.amount)}</span>
-                  <Button type="button" size="sm" variant="outline" onClick={() => onReceipt({ reference: payment.ticket_number ?? payment.id, clientName: payment.client_name ?? "", device: payment.device_model ?? "", amount: payment.amount, date: payment.created_at })}>
+                  <Button type="button" size="sm" variant="outline" onClick={() => onReceipt({ reference: payment.ticket_number ?? payment.id, source_id: payment.id, clientName: payment.client_name ?? "", device: payment.device_model ?? "", amount: payment.amount, date: payment.created_at, paymentMethod: payment.method })}>
                     <Printer className="size-4" /> Émettre reçu
                   </Button>
                 </div>
@@ -104,9 +114,16 @@ export function CaisseEntriesTab({
                 <div><p className="font-medium">{sale.product_name}</p><p className="text-sm text-muted-foreground">{sale.client_name ?? "Client —"} · Vente encaissée</p></div>
                 <div className="flex items-center gap-3">
                   <span className="font-bold">{formatMoney(sale.total_price)}</span>
-                  <Button type="button" size="sm" variant="outline" onClick={() => onReceipt({ reference: sale.id, clientName: sale.client_name ?? "", device: sale.product_name, amount: sale.total_price, date: sale.created_at })}>
+                  <Button type="button" size="sm" variant="outline" onClick={() => onReceipt({ reference: sale.id, source_id: sale.id, clientName: sale.client_name ?? "", device: sale.product_name, amount: sale.total_price, date: sale.created_at, paymentMethod: sale.payment_method ?? "Non renseigné" })}>
                     <Printer className="size-4" /> Émettre reçu
                   </Button>
+                  {canRefundSale ? (
+                    <ReadOnlyGuard>
+                      <Button type="button" size="sm" variant="destructive" disabled={!sessionOpen} onClick={() => onRefundSale(sale.id)}>
+                        Rembourser
+                      </Button>
+                    </ReadOnlyGuard>
+                  ) : null}
                 </div>
               </div>
             )) : <p className="text-sm text-muted-foreground">Aucune vente encaissée sur cette période.</p>}
@@ -131,15 +148,43 @@ export function CaisseEntriesTab({
       <Card className="card-3d rounded-xl">
         <CardHeader><CardTitle>Fiches atelier à encaisser</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          {[...(entryFeeConfig.enabled ? entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: entryFeeConfig.amount })) : []), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - (entryFeeConfig.enabled ? Number(ticket.entry_fee ?? entryFeeConfig.amount) : 0)) }))].map(({ ticket, type, amount }) => (
-            <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-              <div>
-                <Button type="button" variant="ghost" className="h-auto p-0 font-medium underline-offset-4 hover:underline" onClick={() => onTicketDetail(ticket, type)}>{ticket.ticket_number}</Button>
-                <p className="text-xs text-muted-foreground">{ticket.client_name} · {type === "entry" ? "Entrée" : "Solde"} · {formatMoney(amount)}</p>
+          {[...(entryFeeConfig.enabled ? entryTickets.map((ticket) => ({ ticket, type: "entry" as const, amount: entryFeeConfig.amount })) : []), ...finalTickets.map((ticket) => ({ ticket, type: "final" as const, amount: Math.max(0, Number(ticket.quote_amount ?? 0) - (entryFeeConfig.enabled ? Number(ticket.entry_fee ?? entryFeeConfig.amount) : 0)) }))].map(({ ticket, type, amount }) => {
+            const isWarranty = type === "final" && (ticket.is_warranty ?? ticket.description?.startsWith("[SOUS_GARANTIE]") ?? false);
+            const noPaymentRequired = type === "final" && (isWarranty || amount <= 0);
+
+            return (
+              <div key={ticket.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
+                <div>
+                  <Button type="button" variant="ghost" className="h-auto p-0 font-medium underline-offset-4 hover:underline" onClick={() => onTicketDetail(ticket, type)}>{ticket.ticket_number}</Button>
+                  <p className="text-xs text-muted-foreground">
+                    {ticket.client_name} · {isWarranty ? "Garantie" : type === "entry" ? "Entrée" : "Solde"} · {formatMoney(isWarranty ? 0 : amount)}
+                  </p>
+                  {isWarranty ? (
+                    <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900">
+                      Garantie
+                    </span>
+                  ) : null}
+                </div>
+                <ReadOnlyGuard>
+                  <Button
+                    size="sm"
+                    disabled={noPaymentRequired && !canCloseWithoutPayment}
+                    onClick={() => {
+                      if (noPaymentRequired) {
+                        onCloseWithoutPayment(ticket);
+                      } else {
+                        onCollectTicket(ticket, type);
+                      }
+                    }}
+                  >
+                    {noPaymentRequired
+                      ? isWarranty ? "Clôturer la garantie" : "Restituer sans encaissement"
+                      : type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}
+                  </Button>
+                </ReadOnlyGuard>
               </div>
-              <ReadOnlyGuard><Button size="sm" onClick={() => onCollectTicket(ticket, type)}>{type === "entry" ? "Encaisser l'entrée" : "Encaisser le solde"}</Button></ReadOnlyGuard>
-            </div>
-          ))}
+            );
+          })}
           {entryTickets.length === 0 && finalTickets.length === 0 ? <p className="text-sm text-muted-foreground">Aucune fiche atelier en attente.</p> : null}
         </CardContent>
       </Card>

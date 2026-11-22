@@ -4,7 +4,7 @@ import { Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosureModal } from "@/components/CashClosureModal";
-import { CashReceiptModal, type CashReceipt } from "@/components/CashReceiptModal";
+import { CashReceiptModal, type CashReceipt, type CashReceiptDraft } from "@/components/CashReceiptModal";
 import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { TicketDetailModal } from "@/components/caisse/TicketDetailModal";
 import { PageHero } from "@/components/PageHero";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CaisseClosureTab } from "@/components/caisse/CaisseClosureTab";
 import { CaisseEntriesTab } from "@/components/caisse/CaisseEntriesTab";
@@ -28,6 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   closeWorkshopTicketPayment,
   closeCashSession,
+  createCashReceiptNumber,
   createCashExit,
   getOpenCashSession,
   getCashClosures,
@@ -41,7 +43,8 @@ import {
   openCashSession,
 } from "@/services/cashService";
 import { isDemoMode } from "@/services/demoService";
-import { listSales, markAsPaid, type SalePaymentMethod } from "@/services/salesService";
+import { listSales, markAsPaid, updateSale, type SalePaymentMethod } from "@/services/salesService";
+import { addEvent, isWarrantyTicket } from "@/services/workshopService";
 import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
 
@@ -97,7 +100,8 @@ interface WorkshopTicket {
   device_brand?: string;
   device_model?: string;
   device_imei?: string;
-  description?: string;
+  description?: string | null;
+  is_warranty?: boolean;
   technicien_id?: string;
   technicien_name?: string;
   quote_amount?: number;
@@ -113,7 +117,8 @@ interface WorkshopTicketRow {
   device_brand?: string;
   device_model?: string;
   device_imei?: string;
-  description?: string;
+  description?: string | null;
+  is_warranty?: boolean;
   technicien_id?: string;
   status?: string;
   price_estimate?: number | null;
@@ -125,7 +130,7 @@ interface WorkshopTicketRow {
 
 function CashPage() {
   const { action, ticket: requestedTicketId } = Route.useSearch();
-  const { shopId, loading: shopLoading } = useCurrentShop();
+  const { shopId, shop, loading: shopLoading } = useCurrentShop();
   const { isReadOnly } = useSubscriptionAccess();
   const { isOwner, isCaissier } = useUserRole();
   const demo = isDemoMode();
@@ -152,6 +157,10 @@ function CashPage() {
   const [savingExit, setSavingExit] = useState(false);
   const [receipt, setReceipt] = useState<CashReceipt | null>(null);
   const [cashSession, setCashSession] = useState<CashSession | null>(null);
+  const [closedSessionSummary, setClosedSessionSummary] = useState<Awaited<ReturnType<typeof closeCashSession>> | null>(null);
+  const [refundSale, setRefundSale] = useState<CashSummary["sales"][number] | null>(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [savingRefund, setSavingRefund] = useState(false);
   const [entryModalOpen, setEntryModalOpen] = useState(false);
   const [entryFeeConfig, setEntryFeeConfig] = useState<ShopEntryFeeConfig>({
     amount: 0,
@@ -205,6 +214,7 @@ function CashPage() {
           device_model: ticket.device_model,
           device_imei: ticket.device_imei,
           description: ticket.description,
+          is_warranty: ticket.is_warranty ?? isWarrantyTicket(ticket),
           technicien_id: ticket.technicien_id,
           status: ticket.status,
           entry_fee: ticket.entry_fee ?? 0,
@@ -272,6 +282,10 @@ function CashPage() {
       toast.error("Aucun atelier actif.");
       return;
     }
+    if (!cashSession) {
+      toast.error("Ouvrez une session de caisse pour effectuer des opérations.");
+      return;
+    }
     const amount = Number(exitAmount);
     if (!Number.isFinite(amount) || amount <= 0) {
       toast.error("Saisissez un montant supérieur à zéro.");
@@ -315,12 +329,99 @@ function CashPage() {
       return;
     }
     try {
-      await closeWorkshopTicketPayment({ ticketId: ticketPayment.ticket.id, amount, paymentType: ticketPayment.type === "entry" ? "entry" : "balance", paymentMethod });
+      await closeWorkshopTicketPayment({ shopId, ticketId: ticketPayment.ticket.id, amount, paymentType: ticketPayment.type === "entry" ? "entry" : "balance", paymentMethod });
       setTicketPayment(null);
       await load();
       toast.success("Paiement enregistré.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'encaisser le ticket.");
+    }
+  }
+
+  async function closeTicketWithoutPayment(ticket: WorkshopTicket): Promise<void> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return;
+    }
+    if (!canManageCash) {
+      toast.error("Seul le propriétaire ou le caissier peut clôturer cette fiche en caisse.");
+      return;
+    }
+    if (!shopId) {
+      toast.error("Aucun atelier actif.");
+      return;
+    }
+    if (!cashSession) {
+      toast.error("Ouvrez une session de caisse pour effectuer des opérations.");
+      return;
+    }
+
+    const isWarranty = ticket.is_warranty ?? isWarrantyTicket(ticket);
+    const remainingBalance = Math.max(
+      0,
+      Number(ticket.quote_amount ?? 0) -
+        (entryFeeConfig.enabled ? Number(ticket.entry_fee ?? entryFeeConfig.amount) : 0),
+    );
+    if (!isWarranty && remainingBalance > 0) {
+      toast.error("Ce ticket a un solde à encaisser.");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("workshop_tickets")
+        .update({
+          status: "en_attente_receptionniste",
+          updated_at: new Date().toISOString(),
+        } as never)
+        .eq("id", ticket.id)
+        .eq("shop_id", shopId)
+        .eq("status", "en_attente_caissier_solde")
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("Cette fiche n'est plus en attente de clôture caisse.");
+
+      try {
+        await addEvent(
+          ticket.id,
+          "completed",
+          isWarranty
+            ? "Réparation sous garantie - aucun paiement"
+            : "Solde nul confirmé - aucun paiement",
+        );
+      } catch (eventError) {
+        const { data: restored, error: restoreError } = await supabase
+          .from("workshop_tickets")
+          .update({
+            status: "en_attente_caissier_solde",
+            updated_at: new Date().toISOString(),
+          } as never)
+          .eq("id", ticket.id)
+          .eq("shop_id", shopId)
+          .eq("status", "en_attente_receptionniste")
+          .select("id")
+          .maybeSingle();
+        if (restoreError || !restored) {
+          throw new Error(
+            "La fiche est transmise à la réception, mais l'événement de clôture et le rétablissement du statut ont échoué.",
+          );
+        }
+        throw new Error(
+          eventError instanceof Error
+            ? `Clôture annulée : impossible d'enregistrer l'événement (${eventError.message}).`
+            : "Clôture annulée : impossible d'enregistrer l'événement.",
+        );
+      }
+
+      await load();
+      toast.success(
+        isWarranty
+          ? "Garantie clôturée sans encaissement. Fiche transmise à la réception."
+          : "Solde nul confirmé. Fiche transmise à la réception.",
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de clôturer cette fiche.");
     }
   }
 
@@ -342,42 +443,117 @@ function CashPage() {
     }
   }
 
-  async function handleOpenSession(openingAmount: number): Promise<void> {
+  async function handleOpenSession(openingAmount: number): Promise<boolean> {
     if (isReadOnly) {
       toast.error("Votre abonnement a expiré. Cette action est désactivée.");
-      return;
+      return false;
     }
-    if (!shopId) return;
+    if (!shopId) return false;
     try {
       await openCashSession(shopId, openingAmount);
+      setClosedSessionSummary(null);
       toast.success("Caisse ouverte.");
       await load();
+      return true;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Impossible d'ouvrir la caisse.");
+      return false;
     }
   }
 
-  async function handleCloseSession(closingAmount: number, notes?: string): Promise<void> {
+  async function handleCloseSession(closingAmount: number, notes?: string): Promise<boolean> {
+    if (isReadOnly) {
+      toast.error("Votre abonnement a expiré. Cette action est désactivée.");
+      return false;
+    }
+    if (!cashSession) return false;
+    try {
+      const closure = await closeCashSession(cashSession.id, closingAmount, notes);
+      setClosedSessionSummary(closure);
+      setCashSession(null);
+      toast.success("Caisse fermée.");
+      await load();
+      return true;
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de fermer la caisse.");
+      return false;
+    }
+  }
+
+  function openPeriodClosure() {
+    if (cashSession) {
+      toast.error("Fermez d'abord la session de caisse.");
+      return;
+    }
+    setClosureOpen(true);
+  }
+
+  async function submitRefund(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
     if (isReadOnly) {
       toast.error("Votre abonnement a expiré. Cette action est désactivée.");
       return;
     }
-    if (!cashSession) return;
-    try {
-      await closeCashSession(cashSession.id, closingAmount, notes);
-      toast.success("Caisse fermée.");
-      await load();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible de fermer la caisse.");
+    if (!canManageCash) {
+      toast.error("Seul le propriétaire ou le caissier peut rembourser une vente.");
+      return;
     }
+    if (!shopId || !cashSession || !refundSale) {
+      toast.error("Ouvrez une session de caisse avant de rembourser.");
+      return;
+    }
+    const reason = refundReason.trim();
+    if (!reason) {
+      toast.error("Saisissez le motif du remboursement.");
+      return;
+    }
+
+    setSavingRefund(true);
+    try {
+      await createCashExit(shopId, {
+        type: "expense",
+        amount: refundSale.total_price,
+        description: `[REMBOURSEMENT] Vente ${refundSale.id} — ${reason}`,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer la sortie de remboursement.");
+      setSavingRefund(false);
+      return;
+    }
+
+    try {
+      await updateSale(refundSale.id, { payment_status: "refunded" });
+    } catch (error) {
+      setRefundSale(null);
+      setRefundReason("");
+      toast.error(
+        `La sortie de remboursement est enregistrée, mais la vente reste marquée payée : ${
+          error instanceof Error ? error.message : "mise à jour impossible."
+        }`,
+      );
+      await load();
+      setSavingRefund(false);
+      return;
+    }
+
+    setRefundSale(null);
+    setRefundReason("");
+    toast.success("Remboursement enregistré et vente marquée comme remboursée.");
+    await load();
+    setSavingRefund(false);
   }
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHero title="Caisse" subtitle="Suivi des encaissements" icon={Wallet} iconColor="green" />
-      <CaisseSessionHeader shopId={shopId} session={cashSession} openedByName={cashSession?.opened_by ? memberNames[cashSession.opened_by] : undefined} onOpen={(openingAmount) => handleOpenSession(openingAmount)} onClose={(closingAmount, notes) => handleCloseSession(closingAmount, notes)} />
+      <CaisseSessionHeader shopId={shopId} session={cashSession} closedSummary={closedSessionSummary} openedByName={cashSession?.opened_by ? memberNames[cashSession.opened_by] : undefined} onOpen={(openingAmount) => handleOpenSession(openingAmount)} onClose={(closingAmount, notes) => handleCloseSession(closingAmount, notes)} />
+      {!cashSession ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          Ouvrez une session de caisse pour effectuer des opérations.
+        </p>
+      ) : null}
       <CaissePeriodSelector preset={preset} onPresetChange={setPreset} customStart={customStart} customEnd={customEnd} onCustomChange={(start, end) => { setCustomStart(start); setCustomEnd(end); }} period={period} />
-      <CaisseStatsCards summary={summary} totalExits={totalExits} loading={loading} />
+      <CaisseStatsCards summary={summary} totalExits={totalExits} loading={loading} period={period} session={cashSession} />
       {!demo ? (
         <Card className="card-3d rounded-xl">
           <CardHeader><CardTitle>Détail par mode de paiement</CardTitle></CardHeader>
@@ -395,24 +571,35 @@ function CashPage() {
         <TabsList className="grid h-auto w-full grid-cols-2 md:grid-cols-5">
           <TabsTrigger value="encaissements">Encaissements</TabsTrigger>
           <TabsTrigger value="decaissements">Décaissements</TabsTrigger>
-          <TabsTrigger value="recap">Récap</TabsTrigger>
-          <TabsTrigger value="cloture">Clôture</TabsTrigger>
+          <TabsTrigger value="recap">Récapitulatif</TabsTrigger>
+          <TabsTrigger value="cloture">Récapitulatif comptable</TabsTrigger>
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="encaissements">
-          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onReceipt={setReceipt} entryTickets={entryTickets} finalTickets={finalTickets} entryFeeConfig={entryFeeConfig}           onCollectTicket={(ticket, type) => { if (isReadOnly) { toast.error("Votre abonnement a expiré. Cette action est désactivée."); return; } if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
+          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onRefundSale={(saleId) => setRefundSale(summary?.sales.find((sale) => sale.id === saleId) ?? null)} canRefundSale={canManageCash} onReceipt={(draft: CashReceiptDraft) => {
+            if (!shopId) {
+              toast.error("Aucune boutique active pour émettre le reçu.");
+              return;
+            }
+            setReceipt({
+              ...draft,
+              shop_id: shopId,
+              shop_name: shop?.name ?? "Boutique",
+              receipt_number: createCashReceiptNumber(shopId, draft.source_id, draft.date),
+            });
+          }} entryTickets={entryTickets} finalTickets={finalTickets} entryFeeConfig={entryFeeConfig} onCollectTicket={(ticket, type) => { if (isReadOnly) { toast.error("Votre abonnement a expiré. Cette action est désactivée."); return; } if (!cashSession) { toast.error("Ouvrez la caisse avant d'encaisser."); return; } setTicketPayment({ ticket, type }); }} canCloseWithoutPayment={canManageCash} onCloseWithoutPayment={(ticket) => void closeTicketWithoutPayment(ticket)} onTicketDetail={(ticket, type) => setTicketDetail({ ticket, type })} sessionOpen={Boolean(cashSession)} onAddEntry={() => setEntryModalOpen(true)} /> : null}
         </TabsContent>
         <TabsContent value="decaissements">
-          {!demo && canManageCash ? <CaisseExitsTab exits={exits} onAdd={() => setExitOpen(true)} onReceipt={() => undefined} /> : null}
+          {!demo && canManageCash ? <CaisseExitsTab exits={exits} onAdd={() => setExitOpen(true)} onReceipt={() => undefined} sessionOpen={Boolean(cashSession)} /> : null}
         </TabsContent>
         <TabsContent value="recap"><CaisseRecapTab summary={summary} memberAvatars={memberAvatars} /></TabsContent>
-        <TabsContent value="cloture"><CaisseClosureTab summary={summary} exits={exits} closures={closures} onClosure={() => setClosureOpen(true)} loading={loading} shopId={shopId} showHistory={false} /></TabsContent>
-        <TabsContent value="historique"><CaisseClosureTab summary={summary} exits={exits} closures={closures} onClosure={() => setClosureOpen(true)} loading={loading} shopId={shopId} showHistory /></TabsContent>
+        <TabsContent value="cloture"><CaisseClosureTab summary={summary} exits={exits} closures={closures} onClosure={openPeriodClosure} loading={loading} shopId={shopId} showHistory={false} sessionOpen={Boolean(cashSession)} /></TabsContent>
+        <TabsContent value="historique"><CaisseClosureTab summary={summary} exits={exits} closures={closures} onClosure={openPeriodClosure} loading={loading} shopId={shopId} showHistory sessionOpen={Boolean(cashSession)} /></TabsContent>
       </Tabs>
 
       {summary ? <CashClosureModal open={closureOpen} onClose={() => setClosureOpen(false)} summary={summary} period={period} exitsTotal={totalExits} onSuccess={() => void load()} /> : null}
       <CashReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />
-      <CashEntryModal open={entryModalOpen} onClose={() => setEntryModalOpen(false)} onSuccess={() => void load()} shopId={shopId} />
+      <CashEntryModal open={entryModalOpen} onClose={() => setEntryModalOpen(false)} onSuccess={() => void load()} shopId={shopId} sessionOpen={Boolean(cashSession)} />
       <TicketDetailModal
         open={Boolean(ticketDetail)}
         onClose={() => setTicketDetail(null)}
@@ -447,6 +634,55 @@ function CashPage() {
             <label className="grid gap-2 text-sm font-medium">Description<Input value={exitDescription} onChange={(event) => setExitDescription(event.target.value)} maxLength={240} placeholder="Commande fournisseur, électricité, internet…" /></label>
             <DialogFooter><Button type="button" variant="outline" onClick={() => setExitOpen(false)} disabled={savingExit}>Annuler</Button><ReadOnlyGuard><Button type="submit" disabled={savingExit}>{savingExit ? "Enregistrement…" : "Enregistrer"}</Button></ReadOnlyGuard></DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={Boolean(refundSale)}
+        onOpenChange={(open) => {
+          if (!open && !savingRefund) {
+            setRefundSale(null);
+            setRefundReason("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rembourser la vente</DialogTitle>
+          </DialogHeader>
+          {refundSale ? (
+            <form onSubmit={(event) => void submitRefund(event)} className="grid gap-4">
+              <p>
+                {refundSale.product_name} · {formatMoney(refundSale.total_price)}
+              </p>
+              <label className="grid gap-2 text-sm font-medium">
+                Motif du remboursement
+                <Textarea
+                  value={refundReason}
+                  onChange={(event) => setRefundReason(event.target.value)}
+                  maxLength={240}
+                  required
+                />
+              </label>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setRefundSale(null);
+                    setRefundReason("");
+                  }}
+                  disabled={savingRefund}
+                >
+                  Annuler
+                </Button>
+                <ReadOnlyGuard>
+                  <Button type="submit" disabled={savingRefund || !cashSession}>
+                    {savingRefund ? "Remboursement…" : "Confirmer le remboursement"}
+                  </Button>
+                </ReadOnlyGuard>
+              </DialogFooter>
+            </form>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

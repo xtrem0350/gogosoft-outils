@@ -48,6 +48,29 @@ export function CaisseRecapTab({ summary, memberAvatars }: CaisseRecapTabProps) 
           </table>
         </CardContent>
       </Card>
+      <Card className="card-3d min-w-0 rounded-xl xl:col-span-2">
+        <CardHeader>
+          <CardTitle>
+            Entrées manuelles · {formatMoney(summary?.totalManualEntries ?? 0)}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full min-w-[580px] text-left text-sm">
+            <thead><tr className="border-b text-muted-foreground"><th className="p-2">Description</th><th className="p-2">Mode</th><th className="p-2">Montant</th><th className="p-2">Date</th></tr></thead>
+            <tbody>
+              {(summary?.manualEntries ?? []).map((entry) => (
+                <tr key={entry.id} className="border-b last:border-0">
+                  <td className="p-2 font-medium">{entry.description || "Entrée manuelle"}</td>
+                  <td className="p-2">{METHOD_LABELS[entry.method] ?? entry.method}</td>
+                  <td className="p-2 font-semibold">{formatMoney(entry.amount)}</td>
+                  <td className="p-2 text-muted-foreground">{formatDate(entry.created_at)}</td>
+                </tr>
+              ))}
+              {!summary?.manualEntries.length ? <tr><td className="p-4 text-center text-muted-foreground" colSpan={4}>Aucune entrée manuelle sur cette période.</td></tr> : null}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

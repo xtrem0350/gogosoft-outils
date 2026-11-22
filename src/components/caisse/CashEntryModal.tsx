@@ -11,18 +11,19 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
-import { supabase } from "@/integrations/supabase/client";
+import { createCashEntry } from "@/services/cashService";
 
 interface CashEntryModalProps {
   open: boolean;
   onClose: () => void;
   onSuccess: () => void;
   shopId: string | null;
+  sessionOpen: boolean;
 }
 
 type CashMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";
 
-export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryModalProps) {
+export function CashEntryModal({ open, onClose, onSuccess, shopId, sessionOpen }: CashEntryModalProps) {
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState<CashMethod>("cash");
   const [description, setDescription] = useState("");
@@ -39,19 +40,22 @@ export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryMo
       toast.error("Aucune boutique active.");
       return;
     }
+    if (!sessionOpen) {
+      toast.error("Ouvrez une session de caisse pour effectuer des opérations.");
+      return;
+    }
     if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
       toast.error("Saisissez un montant supérieur à zéro.");
       return;
     }
     setSaving(true);
     try {
-      const { error } = await supabase.rpc("create_cash_entry" as never, {
-        p_shop_id: shopId,
-        p_amount: numericAmount,
-        p_method: method,
-        p_description: description.trim() || null,
-      } as never);
-      if (error) throw new Error(error.message);
+      const trimmed = description.trim();
+      await createCashEntry(shopId, {
+        amount: numericAmount,
+        method,
+        ...(trimmed ? { description: trimmed } : {}),
+      });
       toast.success("Entrée de caisse enregistrée.");
       setAmount("");
       setMethod("cash");
@@ -69,6 +73,11 @@ export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryMo
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !saving && onClose()}>
       <DialogContent>
         <DialogHeader><DialogTitle>Ajouter une entrée</DialogTitle></DialogHeader>
+        {!sessionOpen ? (
+          <p role="status" className="text-sm text-muted-foreground">
+            Ouvrez une session de caisse pour effectuer des opérations.
+          </p>
+        ) : null}
         <div className="grid gap-4">
           <label className="grid gap-2 text-sm font-medium">
             Montant
@@ -91,7 +100,7 @@ export function CashEntryModal({ open, onClose, onSuccess, shopId }: CashEntryMo
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={saving}>Annuler</Button>
-          <ReadOnlyGuard><Button type="button" onClick={() => void handleSubmit()} disabled={saving}>{saving ? "Enregistrement…" : "Enregistrer l'entrée"}</Button></ReadOnlyGuard>
+          <ReadOnlyGuard><Button type="button" onClick={() => void handleSubmit()} disabled={saving || !sessionOpen}>{saving ? "Enregistrement…" : "Enregistrer l'entrée"}</Button></ReadOnlyGuard>
         </DialogFooter>
       </DialogContent>
     </Dialog>

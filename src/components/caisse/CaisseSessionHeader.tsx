@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -14,18 +14,26 @@ import { Textarea } from "@/components/ui/textarea";
 import { ReadOnlyGuard, useSubscriptionAccess } from "@/components/SubscriptionGuard";
 import type { CashSession } from "@/services/cashService";
 
+interface CashSessionClosureSummary {
+  theoretical_amount: number;
+  closing_amount: number;
+  difference: number;
+}
+
 interface CaisseSessionHeaderProps {
   shopId: string | null;
   session: CashSession | null;
+  closedSummary: CashSessionClosureSummary | null;
   openedByName: string | undefined;
-  onOpen: (openingAmount: number) => void | Promise<void>;
-  onClose: (closingAmount: number, notes?: string) => void | Promise<void>;
+  onOpen: (openingAmount: number) => void | boolean | Promise<void | boolean>;
+  onClose: (closingAmount: number, notes?: string) => void | boolean | Promise<void | boolean>;
 }
 
 const formatMoney = (amount: number) => `${new Intl.NumberFormat("fr-FR").format(amount)} FCFA`;
 
 export function CaisseSessionHeader({
   session,
+  closedSummary,
   openedByName,
   onOpen,
   onClose,
@@ -47,7 +55,8 @@ export function CaisseSessionHeader({
     if (!Number.isFinite(amount) || amount < 0) return;
     setSaving(true);
     try {
-      await onOpen(amount);
+      const opened = await onOpen(amount);
+      if (opened === false) return;
       setOpenModal(false);
     } finally {
       setSaving(false);
@@ -63,7 +72,9 @@ export function CaisseSessionHeader({
     if (!Number.isFinite(amount) || amount < 0) return;
     setSaving(true);
     try {
-      await onClose(amount, notes.trim() || undefined);
+      const trimmedNotes = notes.trim();
+      const closed = await onClose(amount, trimmedNotes ? trimmedNotes : undefined);
+      if (closed === false) return;
       setCloseModal(false);
     } finally {
       setSaving(false);
@@ -71,6 +82,11 @@ export function CaisseSessionHeader({
   }
 
   const openedAt = session ? new Date(session.opened_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) : null;
+
+  function openSessionModal() {
+    if (closedSummary) setOpeningAmount(String(closedSummary.closing_amount));
+    setOpenModal(true);
+  }
 
   return (
     <>
@@ -82,16 +98,29 @@ export function CaisseSessionHeader({
               : "🔴 Caisse fermée."}
           </p>
           <ReadOnlyGuard>
-            <Button type="button" variant={session ? "outline" : "default"} onClick={() => session ? setCloseModal(true) : setOpenModal(true)}>
-              {session ? "Fermer la caisse" : "Ouvrir la caisse"}
+            <Button type="button" variant={session ? "outline" : "default"} onClick={() => session ? setCloseModal(true) : openSessionModal()}>
+              {session ? "Fermer la caisse (fin de journée)" : closedSummary ? "Rouvrir une session" : "Ouvrir une session"}
             </Button>
           </ReadOnlyGuard>
         </CardContent>
       </Card>
+      {!session && closedSummary ? (
+        <Card aria-live="polite" className="card-3d rounded-xl">
+          <CardHeader><CardTitle>Récapitulatif de la session fermée</CardTitle></CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            <p>Montant théorique : <strong>{formatMoney(closedSummary.theoretical_amount)}</strong></p>
+            <p>Montant compté : <strong>{formatMoney(closedSummary.closing_amount)}</strong></p>
+            <p>Écart : <strong>{formatMoney(closedSummary.difference)}</strong></p>
+            <ReadOnlyGuard>
+              <Button type="button" onClick={openSessionModal}>Rouvrir une session</Button>
+            </ReadOnlyGuard>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Dialog open={openModal} onOpenChange={(open) => !saving && setOpenModal(open)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Ouvrir la caisse</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Ouvrir une session de caisse</DialogTitle></DialogHeader>
           <label className="grid gap-2 text-sm font-medium">
             Montant initial
             <Input type="number" min="0" step="1" value={openingAmount} onChange={(event) => setOpeningAmount(event.target.value)} />
@@ -105,7 +134,7 @@ export function CaisseSessionHeader({
 
       <Dialog open={closeModal} onOpenChange={(open) => !saving && setCloseModal(open)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Fermer la caisse</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Fermer la caisse (fin de journée)</DialogTitle></DialogHeader>
           <div className="grid gap-4">
             <label className="grid gap-2 text-sm font-medium">
               Montant réel
