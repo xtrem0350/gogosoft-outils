@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as AbonnementRouteImport } from './routes/abonnement'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AideRouteImport } from './routes/aide'
@@ -99,6 +100,11 @@ import { Route as ShopSlugProduitIdRouteImport } from './routes/shop.$slug.produ
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AbonnementRoute = AbonnementRouteImport.update({
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/legal': typeof LegalRoute
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
@@ -632,6 +639,7 @@ export interface FileRoutesByTo {
   '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/legal': typeof LegalRoute
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
@@ -720,6 +728,7 @@ export interface FileRoutesById {
   '/documents': typeof DocumentsRoute
   '/equipe': typeof EquipeRoute
   '/historique': typeof HistoriqueRoute
+  '/legal': typeof LegalRoute
   '/magasin': typeof MagasinRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/nouveautes': typeof NouveautesRoute
@@ -810,6 +819,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/equipe'
     | '/historique'
+    | '/legal'
     | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
@@ -897,6 +907,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/equipe'
     | '/historique'
+    | '/legal'
     | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
@@ -984,6 +995,7 @@ export interface FileRouteTypes {
     | '/documents'
     | '/equipe'
     | '/historique'
+    | '/legal'
     | '/magasin'
     | '/mot-de-passe-oublie'
     | '/nouveautes'
@@ -1073,6 +1085,7 @@ export interface RootRouteChildren {
   DocumentsRoute: typeof DocumentsRoute
   EquipeRoute: typeof EquipeRoute
   HistoriqueRoute: typeof HistoriqueRoute
+  LegalRoute: typeof LegalRoute
   MagasinRoute: typeof MagasinRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   NouveautesRoute: typeof NouveautesRoute
@@ -1216,6 +1229,13 @@ declare module '@tanstack/react-router' {
       path: '/historique'
       fullPath: '/historique'
       preLoaderRoute: typeof HistoriqueRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/magasin': {
@@ -1889,6 +1909,7 @@ const rootRouteChildren: RootRouteChildren = {
   DocumentsRoute: DocumentsRoute,
   EquipeRoute: EquipeRoute,
   HistoriqueRoute: HistoriqueRoute,
+  LegalRoute: LegalRoute,
   MagasinRoute: MagasinRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
   NouveautesRoute: NouveautesRoute,

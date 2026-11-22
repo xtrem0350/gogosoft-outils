@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Check,
   Gift,
@@ -379,7 +379,12 @@ function DesktopHomePage() {
               ) : null}
             </section>
 
-            <p className="text-xs text-slate-400">© 2026 GogoSoft · Solution ivoirienne</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+              <span>© 2026 GogoSoft · Solution ivoirienne</span>
+              <Link to="/legal" className="hover:underline">
+                Informations légales
+              </Link>
+            </div>
           </section>
 
           <section className="min-w-0 space-y-6 overflow-y-auto bg-white/95 p-4 sm:p-7 lg:min-h-0 lg:p-8">

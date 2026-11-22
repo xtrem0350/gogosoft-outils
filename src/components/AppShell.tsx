@@ -588,8 +588,11 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Breadcrumb>
           ) : null}
           {content}
-          <footer className="mt-8 hidden border-t border-border px-5 py-4 text-xs text-muted-foreground lg:block lg:px-8">
+          <footer className="mt-8 hidden items-center justify-between border-t border-border px-5 py-4 text-xs text-muted-foreground lg:flex lg:px-8">
             Développé par Thierry Gogo &amp; Co
+            <Link to="/legal" className="hover:underline">
+              Informations légales
+            </Link>
           </footer>
         </div>
       </main>

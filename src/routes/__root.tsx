@@ -143,6 +143,7 @@ function RootComponent() {
     "/rejoindre",
     "/onboarding/shop",
     "/demo",
+    "/legal",
   ];
   const isStandalonePage = publicRoutes.includes(location.pathname);
   const isPublicShopRoute = location.pathname.startsWith("/shop/");
@@ -211,8 +212,8 @@ function SuperAdminRedirect({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (loading || !user || !isSuperAdminAccount) return;
     const allowedPrefixes = viewMode === "admin"
-      ? ["/admin", "/profil", "/aide", "/nouveautes"]
-      : ["/", "/dashboard", "/auth", "/boutiques", "/profil", "/aide", "/parametres", "/shop", "/demo", "/caisse", "/catalogue"];
+      ? ["/admin", "/profil", "/aide", "/nouveautes", "/legal"]
+      : ["/", "/dashboard", "/auth", "/boutiques", "/profil", "/aide", "/parametres", "/shop", "/demo", "/caisse", "/catalogue", "/legal"];
     const isAdminRoute = location.pathname.startsWith("/admin");
     const isAllowed = isAdminRoute || allowedPrefixes.some(
       (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`),
