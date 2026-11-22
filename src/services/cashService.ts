@@ -72,7 +72,7 @@ export interface CashExit {
 export interface CashSession {
   id: string;
   shop_id: string;
-  opened_by: string;
+  opened_by: string | null;
   opened_at: string;
   opening_amount: number;
   closed_by: string | null;

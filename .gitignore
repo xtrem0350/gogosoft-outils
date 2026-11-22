@@ -17,6 +17,9 @@ dist-ssr
 .nitro
 *.local
 
+# Supabase CLI temp files
+supabase/.temp/
+
 # Sauvegarde 
 backup_manuel.sql
 

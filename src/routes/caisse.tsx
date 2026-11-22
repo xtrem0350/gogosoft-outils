@@ -375,7 +375,7 @@ function CashPage() {
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <PageHero title="Caisse" subtitle="Suivi des encaissements" icon={Wallet} iconColor="green" />
-      <CaisseSessionHeader shopId={shopId} session={cashSession} openedByName={cashSession ? memberNames[cashSession.opened_by] : undefined} onOpen={(openingAmount) => handleOpenSession(openingAmount)} onClose={(closingAmount, notes) => handleCloseSession(closingAmount, notes)} />
+      <CaisseSessionHeader shopId={shopId} session={cashSession} openedByName={cashSession?.opened_by ? memberNames[cashSession.opened_by] : undefined} onOpen={(openingAmount) => handleOpenSession(openingAmount)} onClose={(closingAmount, notes) => handleCloseSession(closingAmount, notes)} />
       <CaissePeriodSelector preset={preset} onPresetChange={setPreset} customStart={customStart} customEnd={customEnd} onCustomChange={(start, end) => { setCustomStart(start); setCustomEnd(end); }} period={period} />
       <CaisseStatsCards summary={summary} totalExits={totalExits} loading={loading} />
       {!demo ? (

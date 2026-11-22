@@ -5,6 +5,7 @@ Structure du projet (avec glob)
 │   ├── 📁 migrations/
 │   │   ├── 📄 project_structure.txt
 │   │   ├── 📄 liste.mjs
+│   │   ├── 📄 20261122000000_admin_user_deletion_fk_safety.sql
 │   │   ├── 📄 20261119000001_reception_storage_locations.sql
 │   │   ├── 📄 20261118000001_add_is_blocked_to_roles.sql
 │   │   ├── 📄 20261110000002_create_sale_with_stock.sql
@@ -41,7 +42,18 @@ Structure du projet (avec glob)
 │   │   ├── 📄 20260920000000_workshop.sql
 │   │   ├── 📄 20260918115927_f851f768-05d7-4c81-b27a-65464ac28174.sql
 │   │   └── 📄 20260918115915_542c7e2f-3dd2-423a-8297-a19d9393464f.sql
+│   ├── 📁 functions/
+│   │   ├── 📁 _shared/
+│   │   │   └── 📄 superadmin.ts
+│   │   ├── 📁 reset-saas/
+│   │   │   └── 📄 index.ts
+│   │   ├── 📁 delete-user/
+│   │   │   └── 📄 index.ts
+│   │   ├── 📄 _shared
+│   │   ├── 📄 reset-saas
+│   │   └── 📄 delete-user
 │   ├── 📄 migrations
+│   ├── 📄 functions
 │   └── 📄 config.toml
 ├── 📁 src/
 │   ├── 📁 types/
@@ -209,6 +221,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 useTheme.tsx
 │   │   ├── 📄 useSubscription.ts
 │   │   ├── 📄 useStats.ts
+│   │   ├── 📄 useShopPaused.ts
 │   │   ├── 📄 useShopModules.ts
 │   │   ├── 📄 useSectorVocabulary.ts
 │   │   ├── 📄 usePersistedWizardState.ts
@@ -437,6 +450,7 @@ Structure du projet (avec glob)
 ├── 📄 eslint.config.js
 ├── 📄 docs
 ├── 📄 components.json
+├── 📄 backup_manuel.sql
 ├── 📄 aliases.mac.txt
 ├── 📄 AGENTS.md
 └── 📄 $PROFILE.txt

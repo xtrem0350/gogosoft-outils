@@ -6,11 +6,30 @@ import { toast } from "sonner";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { getAllTenants, revokeTenant, type AdminTenant } from "@/services/adminService";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  deleteSubscriber,
+  getAllTenants,
+  isProtectedSubscriberId,
+  revokeTenant,
+  type AdminTenant,
+} from "@/services/adminService";
 
 export const Route = createFileRoute("/admin/tenants")({ component: AdminTenantsPage });
 
 function AdminTenantsPage() {
+  const { profile } = useAuth();
+  const isSuperAdmin = profile?.is_super_admin === true;
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const search = useRouterState({
@@ -18,6 +37,8 @@ function AdminTenantsPage() {
   });
   const [tenants, setTenants] = useState<AdminTenant[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminTenant | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const status =
@@ -44,6 +65,21 @@ function AdminTenantsPage() {
       setTenants(await getAllTenants(status ? { status } : {}));
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Révocation impossible.");
+    }
+  }
+
+  async function confirmDeleteSubscriber() {
+    if (!deleteTarget || !isSuperAdmin) return;
+    setDeleting(true);
+    try {
+      await deleteSubscriber(deleteTarget.id);
+      setTenants((current) => current.filter((tenant) => tenant.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      toast.success("Compte et données associés supprimés.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Suppression impossible.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -117,6 +153,17 @@ function AdminTenantsPage() {
                       <Button size="sm" variant="ghost" onClick={() => void revoke(tenant)}>
                         Révoquer
                       </Button>
+                      {isSuperAdmin &&
+                      !tenant.isSuperAdmin &&
+                      !isProtectedSubscriberId(tenant.id) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => setDeleteTarget(tenant)}
+                        >
+                          Supprimer
+                        </Button>
+                      ) : null}
                       <a
                         className="inline-flex h-8 items-center rounded-md px-2 text-xs hover:bg-muted"
                         href={`mailto:${tenant.email ?? ""}`}
@@ -138,6 +185,36 @@ function AdminTenantsPage() {
           </table>
         </CardContent>
       </Card>
+      <AlertDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!deleting && !open) setDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce souscripteur ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action supprimera définitivement le compte, ses boutiques, ses abonnements et
+              ses factures. Irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <p className="text-sm font-medium">{deleteTarget?.name}</p>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDeleteSubscriber();
+              }}
+            >
+              {deleting ? "Suppression…" : "Supprimer définitivement"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -6,6 +6,7 @@ export interface AdminTenant {
   id: string;
   name: string;
   email: string | null;
+  isSuperAdmin: boolean;
   plan: string | null;
   expiresAt: string | null;
   shops: number;
@@ -83,6 +84,17 @@ export interface AdminSubscription {
   expires_at: string;
 }
 
+const PROTECTED_SUBSCRIBER_IDS = new Set([
+  "c86f8569-bbcd-4207-be36-9cce86b654cd",
+  "ec3f5f29-e0c1-4c2a-b94f-55057f40b730",
+  "3e314d77-3bd0-42f4-b96e-3ef845526f46",
+  "627d76b2-54bb-491f-a8f3-00054e07630f",
+]);
+
+export function isProtectedSubscriberId(userId: string): boolean {
+  return PROTECTED_SUBSCRIBER_IDS.has(userId);
+}
+
 // These tables and the transaction RPC are not in the generated Supabase types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function adminTable(table: string): any {
@@ -92,7 +104,7 @@ function adminTable(table: string): any {
 
 async function loadAdminData() {
   const [profilesResult, subscriptionsResult, shopsResult] = await Promise.all([
-    supabase.from("profiles").select("id, email, full_name, created_at"),
+    supabase.from("profiles").select("id, email, full_name, is_super_admin, created_at"),
     supabase
       .from("subscriptions")
       .select(
@@ -123,6 +135,7 @@ export async function getAllTenants(filters: TenantFilters = {}): Promise<AdminT
       id: profile.id,
       name: profile.full_name ?? profile.email ?? "Utilisateur",
       email: profile.email,
+      isSuperAdmin: profile.is_super_admin === true,
       plan: subscription?.plan ?? null,
       expiresAt,
       shops: tenantShops.length,
@@ -142,6 +155,36 @@ export async function getAllTenants(filters: TenantFilters = {}): Promise<AdminT
 
 export async function getTenantById(id: string): Promise<AdminTenant | null> {
   return (await getAllTenants()).find((tenant) => tenant.id === id) ?? null;
+}
+
+export async function deleteSubscriber(userId: string): Promise<void> {
+  const targetId = userId.trim();
+  if (!targetId) throw new Error("Compte à supprimer manquant.");
+  if (isProtectedSubscriberId(targetId)) {
+    throw new Error("Ce compte est protégé et ne peut pas être supprimé.");
+  }
+
+  const { data, error } = await supabase.functions.invoke<{ success: boolean }>("delete-user", {
+    body: { userId: targetId },
+  });
+  if (error) throw new Error(error.message || "Impossible de supprimer ce compte.");
+  if (data?.success !== true) throw new Error("La suppression du compte n'a pas été confirmée.");
+}
+
+export async function resetSaas(): Promise<number> {
+  const { data, error } = await supabase.functions.invoke<{
+    success: boolean;
+    deletedUsers: number;
+  }>("reset-saas", { body: { confirmation: "RESET" } });
+  if (error) throw new Error(error.message || "Impossible de réinitialiser le SaaS.");
+  if (
+    data?.success !== true ||
+    !Number.isInteger(data.deletedUsers) ||
+    data.deletedUsers < 0
+  ) {
+    throw new Error("La réinitialisation du SaaS n'a pas été confirmée.");
+  }
+  return data.deletedUsers;
 }
 
 export async function getGlobalStats(): Promise<AdminStats> {

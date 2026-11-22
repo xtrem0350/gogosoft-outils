@@ -78,7 +78,7 @@ export function CaisseSessionHeader({
         <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
           <p className="font-medium">
             {session
-              ? `🟢 Caisse ouverte depuis ${openedAt} par ${openedByName ?? session.opened_by}. Montant initial : ${formatMoney(session.opening_amount)}`
+              ? `🟢 Caisse ouverte depuis ${openedAt} par ${openedByName ?? session.opened_by ?? "Utilisateur supprimé"}. Montant initial : ${formatMoney(session.opening_amount)}`
               : "🔴 Caisse fermée."}
           </p>
           <ReadOnlyGuard>
