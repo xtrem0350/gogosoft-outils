@@ -46,7 +46,18 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   role?: AppRole | null;
   is_super_admin?: boolean | null;
 };
-export type WorkshopStatus = "en_attente_caissier_entree" | "en_attente_technicien" | "en_cours" | "en_attente_caissier_solde" | "en_attente_receptionniste" | "livre" | "annule";
+export type WorkshopStatus =
+  | "en_attente_caissier_entree"
+  | "en_attente_technicien"
+  | "en_cours"
+  | "devis_envoye"
+  | "devis_accepte"
+  | "devis_refuse"
+  | "en_attente_pieces"
+  | "en_attente_caissier_solde"
+  | "en_attente_receptionniste"
+  | "livre"
+  | "annule";
 export type WorkshopTicket = {
   id: string;
   shop_id: string | null;
@@ -71,6 +82,7 @@ export type WorkshopTicket = {
   technicien_id?: string | null;
   outils_utilises?: string[] | null;
   pieces_consommees?: Array<{ name: string; qty: number; unit_price?: number }> | null;
+  pieces_en_attente?: Array<{ name: string; qty?: number }> | string[] | null;
   price_estimate: number | null;
   price_final: number | null;
   price_final_paid?: boolean | null;

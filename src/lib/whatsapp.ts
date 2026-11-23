@@ -38,3 +38,21 @@ export function buildStatusMessage(options: {
   const atelier = options.shopName ? ` — ${options.shopName}` : "";
   return `Bonjour ${options.clientName}, votre ${options.deviceModel} ${etat}. Merci de votre confiance${atelier}.`;
 }
+
+export function buildWorkshopStatusMessage(
+  status: "en_cours" | "en_attente_caissier_solde",
+  ticket: {
+    client_name?: string | null;
+    device_model?: string | null;
+    device_brand?: string | null;
+  },
+  shopName?: string | null,
+): string {
+  const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "appareil";
+  const ready = status === "en_attente_caissier_solde";
+  const message = ready
+    ? `Votre ${device} est réparé et prêt pour la remise. Merci de passer à l'atelier pour le règlement et la récupération.`
+    : `Votre ${device} est actuellement en cours de réparation dans notre atelier.`;
+  const atelier = shopName ? ` — ${shopName}` : "";
+  return `Bonjour ${ticket.client_name ?? ""}, ${message}${atelier}`;
+}

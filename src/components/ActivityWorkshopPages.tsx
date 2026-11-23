@@ -62,11 +62,17 @@ import { isDemoMode } from "@/services/demoService";
 import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig } from "@/services/shopService";
 import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
-import { buildWhatsappLink } from "@/lib/whatsapp";
+import { buildWhatsappLink, buildWorkshopStatusMessage } from "@/lib/whatsapp";
 import {
   addEvent,
+  acceptEstimate,
   assignTicketToTechnician,
+  finalizeRepair,
   getEvents,
+  markAsWaitingParts,
+  receiveParts,
+  rejectEstimate,
+  sendEstimateToClient,
   updateWorkshopTicket,
 } from "@/services/workshopService";
 import { WorkshopTimeline } from "@/components/WorkshopTimeline";
@@ -97,6 +103,10 @@ const statusLabels: Record<WorkshopTicket["status"], string> = {
   en_attente_caissier_entree: "⏳ Entrée en caisse",
   en_attente_technicien: "🔧 En attente technicien",
   en_cours: "⚙️ En cours",
+  devis_envoye: "📨 Devis envoyé",
+  devis_accepte: "✅ Devis accepté",
+  devis_refuse: "❌ Devis refusé",
+  en_attente_pieces: "📦 En attente de pièces",
   en_attente_caissier_solde: "💰 Solde en attente",
   en_attente_receptionniste: "📥 En attente réception",
   livre: "📦 Livré",
@@ -107,6 +117,10 @@ const statusStyles: Record<WorkshopTicket["status"], string> = {
   en_attente_caissier_entree: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
   en_attente_technicien: "bg-violet-100 text-violet-800 hover:bg-violet-100",
   en_cours: "bg-orange-100 text-orange-800 hover:bg-orange-100",
+  devis_envoye: "bg-violet-100 text-violet-800 hover:bg-violet-100",
+  devis_accepte: "bg-green-100 text-green-800 hover:bg-green-100",
+  devis_refuse: "bg-red-100 text-red-800 hover:bg-red-100",
+  en_attente_pieces: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
   en_attente_caissier_solde: "bg-orange-100 text-orange-800 hover:bg-orange-100",
   en_attente_receptionniste: "bg-cyan-100 text-cyan-800 hover:bg-cyan-100",
   livre: "bg-green-900 text-white hover:bg-green-800",
@@ -227,6 +241,10 @@ export function ActivityListPage({
     ["en_attente_caissier_entree", "Entrée en caisse"],
     ["en_attente_technicien", "En attente technicien"],
     ["en_cours", "En cours"],
+    ["devis_envoye", "Devis envoyé"],
+    ["devis_accepte", "Devis accepté"],
+    ["devis_refuse", "Devis refusé"],
+    ["en_attente_pieces", "En attente de pièces"],
     ["en_attente_caissier_solde", "Solde en attente"],
     ["en_attente_receptionniste", "En attente réception"],
     ["livre", "Livré"],
@@ -1576,6 +1594,9 @@ export function ActivityDetailsPage({
   const [laborCost, setLaborCost] = useState("");
   const [partsCost, setPartsCost] = useState("");
   const [otherCost, setOtherCost] = useState("");
+  const [finalPrice, setFinalPrice] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
+  const [waitingParts, setWaitingParts] = useState("");
   const [pickupDate, setPickupDate] = useState(defaultPickupDate);
   const [technician, setTechnician] = useState<MemberOption | null>(null);
   const [technicianAvatarUrl, setTechnicianAvatarUrl] = useState<string | null>(null);
@@ -1711,7 +1732,7 @@ export function ActivityDetailsPage({
   ) {
     setBusy(true);
     try {
-      await updateWorkshopTicket(id, updates, activityType);
+      await updateWorkshopTicket(id, updates, activityType, ticket?.updated_at ?? undefined);
       await addEvent(id, eventType, eventDescription);
       const [refreshedTicket, refreshedEvents] = await Promise.all([
         getTicketById(id, activityType),
@@ -1723,7 +1744,11 @@ export function ActivityDetailsPage({
       if (eventType === "diagnosed") setDiagnosticEventDescription(eventDescription);
       toast.success(successMessage);
     } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Mise à jour impossible.");
+      if (reason instanceof Error && reason.message === "CONFLICT") {
+        toast.error("Cette fiche a été modifiée par un autre utilisateur. Rechargez la page.");
+      } else {
+        toast.error(reason instanceof Error ? reason.message : "Mise à jour impossible.");
+      }
     } finally {
       setBusy(false);
     }
@@ -1749,6 +1774,24 @@ export function ActivityDetailsPage({
   ) {
     setPreviewAudience(audience);
     setPreviewMode(mode);
+  }
+
+  async function reloadTicket() {
+    setBusy(true);
+    try {
+      const [refreshedTicket, refreshedEvents] = await Promise.all([
+        getTicketById(id, activityType),
+        getEvents(id),
+      ]);
+      if (!refreshedTicket) throw new Error("Fiche atelier introuvable.");
+      setTicket(refreshedTicket);
+      setEvents(refreshedEvents);
+      toast.success("Fiche rechargée.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Rechargement impossible.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function validateEstimate() {
@@ -1780,17 +1823,35 @@ export function ActivityDetailsPage({
     );
   }
 
-  function sendEstimateByWhatsapp() {
+  async function sendEstimateByWhatsapp() {
     if (!ticket) return;
     const dateLabel = pickupDate
       ? new Date(`${pickupDate}T12:00:00`).toLocaleDateString("fr-FR")
       : "à confirmer";
     const device = [ticket.device_brand, ticket.device_model].filter(Boolean).join(" ");
     const message = `Bonjour ${ticket.client_name ?? ""}, votre ${device} est diagnostiqué. Devis : ${formatFcfa(estimateTotal)}. Retrait estimé : ${dateLabel}. — ${shop?.name ?? "notre atelier"}`;
-    window.open(buildWhatsappLink(ticket.client_whatsapp ?? "", message), "_blank", "noopener,noreferrer");
+    if (!ticket.client_whatsapp) {
+      toast.error("Ajoutez un numéro WhatsApp au client.");
+      return;
+    }
+    try {
+      await sendEstimateToClient(ticket.id, "whatsapp");
+      await addEvent(ticket.id, "whatsapp_sent", "WhatsApp : devis envoyé au client.");
+      window.open(buildWhatsappLink(ticket.client_whatsapp, message), "_blank", "noopener,noreferrer");
+      const refreshed = await getTicketById(ticket.id, activityType);
+      if (refreshed) setTicket(refreshed);
+      toast.success("Devis envoyé au client.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible d'envoyer le devis.");
+    }
   }
 
   async function startRepair() {
+    if (!ticket) return;
+    if (ticket.status !== "en_attente_technicien") {
+      toast.error("Le devis doit être accepté avant de démarrer la réparation.");
+      return;
+    }
     if (!technician) {
       toast.error("Sélectionnez le technicien responsable.");
       return;
@@ -1809,25 +1870,26 @@ export function ActivityDetailsPage({
   }
 
   async function completeRepair() {
-    const finalPrice = Math.max(0, Math.round(Number.isFinite(estimateTotal) ? estimateTotal : 0));
+    if (!ticket) return;
+    const isWarranty = ticket.description?.startsWith("[SOUS_GARANTIE]") === true;
+    const finalPriceNumber = Number(finalPrice);
+    if (!isWarranty && (!Number.isFinite(finalPriceNumber) || finalPriceNumber <= 0)) {
+      toast.error("Saisissez le prix final réel supérieur à zéro.");
+      return;
+    }
     setBusy(true);
     try {
-      const { error: saveError } = await supabase
-        .from("workshop_tickets")
-        .update({
-          diagnostic_notes: diagnostic.trim(),
-          pieces_utilisees: pieces,
-          status: "en_attente_caissier_solde",
-          price_final: finalPrice,
-        })
-        .eq("id", id);
-      if (saveError) throw saveError;
-      await addEvent(id, "completed", "Réparation marquée comme terminée.");
+      const completed = await finalizeRepair(
+        id,
+        isWarranty ? 0 : Math.round(finalPriceNumber),
+        diagnostic.trim(),
+      );
       const [refreshedTicket, refreshedEvents] = await Promise.all([
         getTicketById(id, activityType),
         getEvents(id),
       ]);
       if (!refreshedTicket) throw new Error("La fiche mise à jour est introuvable.");
+      setTicket(completed.status ? completed : refreshedTicket);
       setTicket(refreshedTicket);
       setEvents(refreshedEvents);
       clearTechnicianForm();

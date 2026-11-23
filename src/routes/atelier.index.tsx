@@ -38,6 +38,10 @@ const STATUS_LABEL: Record<WorkshopStatus, string> = {
   en_attente_caissier_entree: "Entrée en caisse",
   en_attente_technicien: "En attente technicien",
   en_cours: "En cours",
+  devis_envoye: "Devis envoyé",
+  devis_accepte: "Devis accepté",
+  devis_refuse: "Devis refusé",
+  en_attente_pieces: "En attente de pièces",
   en_attente_caissier_solde: "Solde en attente",
   en_attente_receptionniste: "En attente réception",
   livre: "Livré",
@@ -48,6 +52,10 @@ const STATUS_CLASS: Record<WorkshopStatus, string> = {
   en_attente_caissier_entree: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
   en_attente_technicien: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200",
   en_cours: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+  devis_envoye: "bg-violet-100 text-violet-800 dark:bg-violet-950 dark:text-violet-200",
+  devis_accepte: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
+  devis_refuse: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  en_attente_pieces: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-200",
   en_attente_caissier_solde: "bg-orange-100 text-orange-800 dark:bg-orange-950 dark:text-orange-200",
   en_attente_receptionniste: "bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-200",
   livre: "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-200",
@@ -99,6 +107,10 @@ function WorkshopListPage() {
       en_attente_caissier_entree: 0,
       en_attente_technicien: 0,
       en_cours: 0,
+      devis_envoye: 0,
+      devis_accepte: 0,
+      devis_refuse: 0,
+      en_attente_pieces: 0,
       en_attente_caissier_solde: 0,
       en_attente_receptionniste: 0,
       livre: 0,
@@ -167,6 +179,10 @@ function WorkshopListPage() {
           <TabsTrigger value="en_attente_caissier_entree">Entrée caisse ({statusCounts.en_attente_caissier_entree})</TabsTrigger>
           <TabsTrigger value="en_attente_technicien">Technicien ({statusCounts.en_attente_technicien})</TabsTrigger>
           <TabsTrigger value="en_cours">En cours ({statusCounts.en_cours})</TabsTrigger>
+          <TabsTrigger value="devis_envoye">Devis envoyé ({statusCounts.devis_envoye})</TabsTrigger>
+          <TabsTrigger value="devis_accepte">Devis accepté ({statusCounts.devis_accepte})</TabsTrigger>
+          <TabsTrigger value="devis_refuse">Devis refusé ({statusCounts.devis_refuse})</TabsTrigger>
+          <TabsTrigger value="en_attente_pieces">En attente de pièces ({statusCounts.en_attente_pieces})</TabsTrigger>
           <TabsTrigger value="en_attente_caissier_solde">Solde caisse ({statusCounts.en_attente_caissier_solde})</TabsTrigger>
           <TabsTrigger value="en_attente_receptionniste">Réception ({statusCounts.en_attente_receptionniste})</TabsTrigger>
           <TabsTrigger value="livre">Livré ({statusCounts.livre})</TabsTrigger>

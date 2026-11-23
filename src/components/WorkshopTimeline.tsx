@@ -1,6 +1,7 @@
 import {
   CheckCircle,
   Inbox,
+  MessageCircle,
   MessageSquare,
   Package,
   Search,
@@ -19,10 +20,16 @@ const EVENT_META: Record<WorkshopEventType, { icon: LucideIcon; label: string; c
   diagnosed: { icon: Search, label: "Diagnostic effectué", color: "text-violet-600" },
   in_progress: { icon: Wrench, label: "Réparation en cours", color: "text-orange-500" },
   waiting_parts: { icon: Package, label: "En attente de pièces", color: "text-yellow-500" },
+  parts_received: { icon: Package, label: "Pièces reçues", color: "text-green-600" },
   completed: { icon: CheckCircle, label: "Réparation terminée", color: "text-green-600" },
   delivered: { icon: Truck, label: "Appareil livré", color: "text-blue-900 dark:text-blue-300" },
   cancelled: { icon: XCircle, label: "Intervention annulée", color: "text-red-600" },
   note: { icon: MessageSquare, label: "Note", color: "text-slate-500" },
+  estimate_sent: { icon: MessageSquare, label: "Devis envoyé", color: "text-violet-600" },
+  estimate_accepted: { icon: CheckCircle, label: "Devis accepté", color: "text-green-600" },
+  estimate_rejected: { icon: XCircle, label: "Devis refusé", color: "text-red-600" },
+  whatsapp_sent: { icon: MessageCircle, label: "📱 WhatsApp envoyé", color: "text-green-600" },
+  repair_completed: { icon: CheckCircle, label: "Réparation finalisée", color: "text-green-700" },
 };
 
 /** Libellés lisibles des types d'événements d'atelier. */

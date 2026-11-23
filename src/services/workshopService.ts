@@ -178,10 +178,16 @@ export type WorkshopEventType =
   | "diagnosed"
   | "in_progress"
   | "waiting_parts"
+  | "parts_received"
   | "completed"
   | "delivered"
   | "cancelled"
-  | "note";
+  | "note"
+  | "estimate_sent"
+  | "estimate_accepted"
+  | "estimate_rejected"
+  | "whatsapp_sent"
+  | "repair_completed";
 
 /** Événement de l'historique d'une fiche d'atelier. */
 export interface WorkshopEvent {
@@ -737,6 +743,7 @@ export async function updateTicketStatus(
   id: string,
   status: WorkshopStatus,
   activityType: ActivityType = "phone",
+  expectedUpdatedAt?: string,
 ): Promise<WorkshopTicket> {
   if (isDemoMode()) {
     let updated: WorkshopTicket | undefined;
@@ -753,6 +760,18 @@ export async function updateTicketStatus(
   }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
   try {
+    if (expectedUpdatedAt) {
+      const { data: current, error: currentError } = await supabase
+        .from("workshop_tickets")
+        .select("updated_at")
+        .eq("id", id)
+        .eq("activity_type", activityType)
+        .maybeSingle();
+      if (currentError) throw currentError;
+      if (!current || current.updated_at !== expectedUpdatedAt) {
+        throw new Error("CONFLICT");
+      }
+    }
     const { data, error } = await supabase
       .from("workshop_tickets")
       .update({ status, updated_at: new Date().toISOString() })
@@ -774,6 +793,7 @@ export async function updateWorkshopTicket(
   id: string,
   updates: WorkshopTicketUpdate,
   activityType: ActivityType = "phone",
+  expectedUpdatedAt?: string,
 ): Promise<WorkshopTicket> {
   const updatedAt = new Date().toISOString();
   if (isDemoMode()) {
@@ -790,6 +810,18 @@ export async function updateWorkshopTicket(
     return updated;
   }
   if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  if (expectedUpdatedAt) {
+    const { data: current, error: currentError } = await supabase
+      .from("workshop_tickets")
+      .select("updated_at")
+      .eq("id", id)
+      .eq("activity_type", activityType)
+      .maybeSingle();
+    if (currentError) throw currentError;
+    if (!current || current.updated_at !== expectedUpdatedAt) {
+      throw new Error("CONFLICT");
+    }
+  }
   const { data, error } = await (supabase.from("workshop_tickets") as any)
     .update({ ...updates, updated_at: updatedAt })
     .eq("id", id)
@@ -799,6 +831,186 @@ export async function updateWorkshopTicket(
   if (error) throw error;
   if (!data) throw new Error("Fiche atelier introuvable.");
   return data as WorkshopTicket;
+}
+
+export async function sendEstimateToClient(
+  ticketId: string,
+  method: "whatsapp" | "print",
+): Promise<WorkshopTicket> {
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== ticketId) return ticket;
+        updated = { ...ticket, status: "devis_envoye", updated_at: updatedAt };
+        return updated;
+      }),
+    }));
+    if (!updated) throw new Error("Fiche atelier introuvable.");
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { data, error } = await supabase
+      .from("workshop_tickets")
+      .update({ status: "devis_envoye", updated_at: updatedAt } as never)
+      .eq("id", ticketId)
+      .select("*")
+      .single();
+    if (error) throw error;
+  }
+  await addEvent(ticketId, "estimate_sent", `Devis envoyé au client par ${method}.`);
+  return (await getTicketById(ticketId)) as WorkshopTicket;
+}
+
+export async function acceptEstimate(
+  ticketId: string,
+  acceptedBy: string,
+): Promise<WorkshopTicket> {
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    let updated: WorkshopTicket | undefined;
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) => {
+        if (ticket.id !== ticketId) return ticket;
+        updated = { ...ticket, status: "en_attente_technicien", updated_at: updatedAt };
+        return updated;
+      }),
+    }));
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .update({ status: "en_attente_technicien", updated_at: updatedAt } as never)
+      .eq("id", ticketId)
+      .eq("status", "devis_envoye");
+    if (error) throw error;
+  }
+  await addEvent(ticketId, "estimate_accepted", `Devis accepté par ${acceptedBy}.`);
+  return (await getTicketById(ticketId)) as WorkshopTicket;
+}
+
+export async function rejectEstimate(ticketId: string, reason: string): Promise<WorkshopTicket> {
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, status: "devis_refuse", updated_at: updatedAt }
+          : ticket,
+      ),
+    }));
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .update({ status: "devis_refuse", updated_at: updatedAt } as never)
+      .eq("id", ticketId)
+      .eq("status", "devis_envoye");
+    if (error) throw error;
+  }
+  await addEvent(ticketId, "estimate_rejected", `Devis refusé : ${reason.trim() || "Motif non renseigné"}.`);
+  return (await getTicketById(ticketId)) as WorkshopTicket;
+}
+
+export async function markAsWaitingParts(
+  ticketId: string,
+  partsNeeded: Array<{ name: string; qty?: number }>,
+): Promise<WorkshopTicket> {
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, status: "en_attente_pieces", pieces_en_attente: partsNeeded, updated_at: updatedAt }
+          : ticket,
+      ),
+    }));
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .update({
+        status: "en_attente_pieces",
+        pieces_en_attente: partsNeeded,
+        updated_at: updatedAt,
+      } as never)
+      .eq("id", ticketId)
+      .eq("status", "en_cours");
+    if (error) throw error;
+  }
+  const description = partsNeeded.map((part) => `${part.name}${part.qty ? ` × ${part.qty}` : ""}`).join(", ");
+  await addEvent(ticketId, "waiting_parts", `Pièces nécessaires : ${description || "liste non renseignée"}.`);
+  return (await getTicketById(ticketId)) as WorkshopTicket;
+}
+
+export async function receiveParts(ticketId: string): Promise<WorkshopTicket> {
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? { ...ticket, status: "en_cours", pieces_en_attente: null, updated_at: updatedAt }
+          : ticket,
+      ),
+    }));
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .update({ status: "en_cours", pieces_en_attente: null, updated_at: updatedAt } as never)
+      .eq("id", ticketId)
+      .eq("status", "en_attente_pieces");
+    if (error) throw error;
+  }
+  await addEvent(ticketId, "parts_received", "Pièces reçues. Réparation reprise.");
+  return (await getTicketById(ticketId)) as WorkshopTicket;
+}
+
+export async function finalizeRepair(
+  ticketId: string,
+  finalPrice: number,
+  notes?: string,
+): Promise<WorkshopTicket> {
+  if (!Number.isFinite(finalPrice) || finalPrice < 0) {
+    throw new Error("Le prix final doit être supérieur ou égal à zéro.");
+  }
+  const updatedAt = new Date().toISOString();
+  if (isDemoMode()) {
+    updateDemoSession((session) => ({
+      ...session,
+      tickets: session.tickets.map((ticket) =>
+        ticket.id === ticketId
+          ? {
+              ...ticket,
+              status: "en_attente_caissier_solde",
+              price_final: finalPrice,
+              notes: notes?.trim() || ticket.notes,
+              updated_at: updatedAt,
+            }
+          : ticket,
+      ),
+    }));
+  } else {
+    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+    const { error } = await supabase
+      .from("workshop_tickets")
+      .update({
+        status: "en_attente_caissier_solde",
+        price_final: finalPrice,
+        notes: notes?.trim() || undefined,
+        updated_at: updatedAt,
+      } as never)
+      .eq("id", ticketId)
+      .eq("status", "en_cours");
+    if (error) throw error;
+  }
+  await addEvent(ticketId, "repair_completed", `Réparation terminée. Prix final : ${finalPrice} FCFA.`);
+  return (await getTicketById(ticketId)) as WorkshopTicket;
 }
 
 /** Enregistre un paiement d'atelier. */
