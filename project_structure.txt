@@ -144,6 +144,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 nouveautes.tsx
 │   │   ├── 📄 mot-de-passe-oublie.tsx
 │   │   ├── 📄 magasin.tsx
+│   │   ├── 📄 legal.tsx
 │   │   ├── 📄 index.tsx
 │   │   ├── 📄 historique.tsx
 │   │   ├── 📄 equipe.tsx
@@ -327,6 +328,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 WorkshopTimeline.tsx
 │   │   ├── 📄 WorkshopTicketPreview.tsx
 │   │   ├── 📄 WorkshopPaymentModal.tsx
+│   │   ├── 📄 WorkshopActionsPanel.tsx
 │   │   ├── 📄 WhatsNewModal.tsx
 │   │   ├── 📄 UserMenu.tsx
 │   │   ├── 📄 ui

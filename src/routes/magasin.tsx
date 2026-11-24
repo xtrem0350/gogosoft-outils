@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Archive, History, Package, Pencil, Plus, Truck, Users, Warehouse } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Archive, ClipboardList, History, Package, Pencil, Plus, Truck, Users, Warehouse } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 
 import { PageHero } from "@/components/PageHero";
 import { StatsCard } from "@/components/StatsCard";
@@ -23,13 +23,20 @@ import {
   createStockItem,
   createSupplier,
   createSupplierOrder,
+  createInventory,
+  getInventories,
+  getInventoryDetails,
   getStockItems,
   getSupplierOrders,
   getSuppliers,
   listStockItems,
   receiveSupplierOrder,
+  updateInventoryLine,
   updateStockItem,
   updateSupplier,
+  validateInventory,
+  type Inventory,
+  type InventoryDetails,
   type StockItem,
   type Supplier,
   type SupplierOrder,
@@ -62,7 +69,11 @@ function MagasinPage() {
   const [items, setItems] = useState<StockItem[]>([]);
   const [orders, setOrders] = useState<SupplierOrder[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [tab, setTab] = useState<"stock" | "suppliers">("stock");
+  const [tab, setTab] = useState<"stock" | "suppliers" | "inventories">("stock");
+  const [inventories, setInventories] = useState<Inventory[]>([]);
+  const [inventoryDetails, setInventoryDetails] = useState<InventoryDetails | null>(null);
+  const [inventoryQuantities, setInventoryQuantities] = useState<Record<string, string>>({});
+  const [inventoryToValidate, setInventoryToValidate] = useState<InventoryDetails | null>(null);
   const [supplierArchived, setSupplierArchived] = useState(false);
   const [supplierDialogOpen, setSupplierDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -105,10 +116,73 @@ function MagasinPage() {
     void refresh();
   }, [shopId, supplierArchived]);
 
+  const refreshInventories = useCallback(async () => {
+    if (!shopId) return;
+    try {
+      setInventories(await getInventories(shopId));
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de charger les inventaires.");
+    }
+  }, [shopId]);
+
+  useEffect(() => {
+    if (tab === "inventories") void refreshInventories();
+  }, [refreshInventories, tab]);
+
   const lowStockCount = items.filter((item) => item.quantity <= item.min_quantity).length;
   const pendingOrders = orders.filter((order) => order.status !== "received").length;
   const orderTotal = orderLines.reduce((sum, line) => sum + line.quantity * line.unit_price, 0);
   const selectedSupplier = suppliers.find((supplier) => supplier.id === selectedSupplierId);
+
+  async function openInventory(inventoryId: string) {
+    try {
+      const details = await getInventoryDetails(inventoryId);
+      setInventoryDetails(details);
+      setInventoryQuantities(
+        Object.fromEntries(details.lines.map((line) => [line.id, String(line.real_qty ?? 0)])),
+      );
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de charger cet inventaire.");
+    }
+  }
+
+  async function startInventory() {
+    if (!shopId) return;
+    setBusy(true);
+    try {
+      const created = await createInventory(shopId);
+      await refreshInventories();
+      await openInventory(created.id);
+      toast.success("Inventaire brouillon créé.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de créer l'inventaire.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmInventoryValidation() {
+    if (!inventoryToValidate) return;
+    setBusy(true);
+    try {
+      for (const line of inventoryToValidate.lines) {
+        const quantity = Number(inventoryQuantities[line.id] ?? line.real_qty ?? 0);
+        if (!Number.isFinite(quantity) || quantity < 0) {
+          throw new Error(`Quantité réelle invalide pour ${line.stock_item?.name ?? "un article"}.`);
+        }
+        await updateInventoryLine(line.id, quantity);
+      }
+      const validated = await validateInventory(inventoryToValidate.id);
+      setInventoryDetails(validated);
+      setInventoryToValidate(null);
+      await refreshInventories();
+      toast.success("Inventaire validé et stock ajusté.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de valider l'inventaire.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   function openSupplierDialog(supplier?: Supplier) {
     setEditingSupplier(supplier ?? null);
@@ -336,9 +410,126 @@ function MagasinPage() {
           <Users className="mr-2 size-4" />
           Fournisseurs
         </Button>
+        <Button
+          type="button"
+          variant={tab === "inventories" ? "default" : "outline"}
+          onClick={() => setTab("inventories")}
+        >
+          <ClipboardList className="mr-2 size-4" />
+          Inventaires
+        </Button>
       </div>
 
-      {tab === "stock" ? (
+      {tab === "inventories" ? (
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <CardTitle>Historique des inventaires</CardTitle>
+              <Button type="button" disabled={busy || !shopId} onClick={() => void startInventory()}>
+                <Plus className="mr-1 size-4" />
+                Nouvel inventaire
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {inventories.map((inventory) => (
+                <button
+                  type="button"
+                  key={inventory.id}
+                  onClick={() => void openInventory(inventory.id)}
+                  className={`w-full rounded-lg border p-3 text-left ${inventoryDetails?.id === inventory.id ? "border-orange-500" : ""}`}
+                >
+                  <span className="font-medium">
+                    {inventory.status === "draft" ? "Brouillon" : "Validé"}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {new Date(inventory.created_at).toLocaleString("fr-FR")}
+                    {inventory.validated_at
+                      ? ` · Validé le ${new Date(inventory.validated_at).toLocaleString("fr-FR")}`
+                      : ""}
+                  </span>
+                </button>
+              ))}
+              {inventories.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucun inventaire enregistré.</p>
+              ) : null}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {inventoryDetails
+                  ? `Inventaire · ${inventoryDetails.status === "draft" ? "Brouillon" : "Validé"}`
+                  : "Détail de l'inventaire"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!inventoryDetails ? (
+                <p className="text-sm text-muted-foreground">Sélectionnez un inventaire.</p>
+              ) : inventoryDetails.lines.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucun article en stock lors de la création.</p>
+              ) : (
+                <>
+                  {inventoryDetails.lines.map((line) => {
+                    const realQty = Number(inventoryQuantities[line.id] ?? line.real_qty ?? 0);
+                    return (
+                      <div
+                        key={line.id}
+                        className="grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_110px_110px_110px] sm:items-center"
+                      >
+                        <div>
+                          <p className="font-medium">{line.stock_item?.name ?? line.stock_item_id}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Théorique : {line.theoretical_qty}
+                          </p>
+                        </div>
+                        <Label className="grid gap-1 text-xs">
+                          Réel
+                          <Input
+                            type="number"
+                            min="0"
+                            step="any"
+                            value={inventoryQuantities[line.id] ?? String(line.real_qty ?? 0)}
+                            disabled={inventoryDetails.status !== "draft" || busy}
+                            onChange={(event) =>
+                              setInventoryQuantities((current) => ({
+                                ...current,
+                                [line.id]: event.target.value,
+                              }))
+                            }
+                            onBlur={() => {
+                              const quantity = Number(inventoryQuantities[line.id] ?? line.real_qty ?? 0);
+                              if (!Number.isFinite(quantity) || quantity < 0) return;
+                              void updateInventoryLine(line.id, quantity).catch((reason: unknown) =>
+                                toast.error(
+                                  reason instanceof Error
+                                    ? reason.message
+                                    : "Impossible d'enregistrer la quantité réelle.",
+                                ),
+                              );
+                            }}
+                          />
+                        </Label>
+                        <div className="text-sm">
+                          Écart : {Number.isFinite(realQty) ? realQty - line.theoretical_qty : "—"}
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {inventoryDetails.status === "draft" ? (
+                    <Button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => setInventoryToValidate(inventoryDetails)}
+                    >
+                      Valider l'inventaire
+                    </Button>
+                  ) : null}
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      ) : tab === "stock" ? (
         <div className="space-y-6">
           <StockItemsManager />
           <Card className="card-3d rounded-2xl">
@@ -561,6 +752,37 @@ function MagasinPage() {
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setReceivingOrder(null)}>Annuler</Button>
             <Button type="button" disabled={busy} onClick={() => void submitReceipt()}>Valider la réception</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(inventoryToValidate)}
+        onOpenChange={(open) => !open && !busy && setInventoryToValidate(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Valider cet inventaire ?</DialogTitle>
+          </DialogHeader>
+          <p>
+            Les écarts seront appliqués au stock et l'inventaire ne pourra plus être modifié.
+          </p>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={busy}
+              onClick={() => setInventoryToValidate(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => void confirmInventoryValidation()}
+            >
+              {busy ? "Validation…" : "Confirmer la validation"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

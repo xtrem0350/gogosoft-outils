@@ -136,33 +136,21 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
   const { activeRole } = useUserRoles();
-  const pendingItems = usePendingItems(activeRole);
-  const pendingCount = Object.values(pendingItems).reduce((total, count) => total + count, 0);
+  usePendingItems(activeRole, ({ table, pendingCount, pendingSalesCount }) => {
+    if (table === "sales") {
+      toast.info(
+        pendingSalesCount === 1
+          ? "1 nouvelle vente en attente."
+          : `${pendingSalesCount} nouvelles ventes en attente.`,
+      );
+      return;
+    }
+    toast.info(`${pendingCount} élément(s) en attente après actualisation.`);
+  });
   const { shop, shopId, shops, loading: shopLoading } = useCurrentShop();
   const { activeModules } = useActiveModules();
   const sectorVocabulary = useSectorVocabulary();
   const userId = user?.id;
-  useEffect(() => {
-    if (pendingCount <= 0) return;
-    const interval = window.setInterval(() => {
-      toast.info(`Vous avez ${pendingCount} élément(s) en attente`, {
-        action: { label: "Voir", onClick: () => void navigate({ to: "/caisse", search: { action: "validate", ticket: "" } }) },
-        duration: 5000,
-      });
-    }, 5 * 60 * 1000);
-    return () => window.clearInterval(interval);
-  }, [navigate, pendingCount]);
-  useEffect(() => {
-    const pendingReception = pendingItems.pendingReception;
-    if (pendingReception <= 0) return;
-    const interval = window.setInterval(() => {
-      toast.info(`${pendingReception} fiche(s) à ranger en réception.`, {
-        action: { label: "Voir", onClick: () => void navigate({ to: "/reception" }) },
-        duration: 5000,
-      });
-    }, 5 * 60 * 1000);
-    return () => window.clearInterval(interval);
-  }, [navigate, pendingItems.pendingReception]);
   useEffect(() => {
     let active = true;
     if (!userId) {

@@ -1,4 +1,7 @@
 import { FileDown, Printer } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -13,6 +16,7 @@ interface DocumentPrinterProps {
 
 interface DocumentPrintActionsProps {
   onClose?: (() => void) | undefined;
+  reference?: string;
 }
 
 const documentTitles: Record<PrintableDocumentType, string> = {
@@ -64,7 +68,70 @@ function displayValue(key: string, value: unknown): string {
   return String(value);
 }
 
-export function DocumentPrintActions({ onClose }: DocumentPrintActionsProps) {
+async function downloadDocumentPdf(reference: string, trigger: HTMLButtonElement): Promise<void> {
+  const element =
+    document.getElementById("document-content") ??
+    trigger.closest<HTMLElement>(".workshop-ticket-preview, .workshop-print-ticket") ??
+    document.querySelector<HTMLElement>(".workshop-ticket-preview, .workshop-print-ticket");
+  if (!element) {
+    toast.error("Aucun document à convertir en PDF.");
+    return;
+  }
+  try {
+    const canvas = await html2canvas(element, {
+      backgroundColor: "#ffffff",
+      scale: 2,
+      useCORS: true,
+      ignoreElements: (candidate) =>
+        candidate.classList.contains("no-print") ||
+        candidate.classList.contains("document-printer-actions"),
+    });
+    const pdf = new jsPDF("p", "mm", "a4");
+    const margin = 10;
+    const contentWidth = 190;
+    const contentHeight = 277;
+    const maxSliceHeight = (canvas.width * contentHeight) / contentWidth;
+    let offset = 0;
+
+    while (offset < canvas.height) {
+      const sliceHeight = Math.min(maxSliceHeight, canvas.height - offset);
+      const pageCanvas = document.createElement("canvas");
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = sliceHeight;
+      const context = pageCanvas.getContext("2d");
+      if (!context) throw new Error("Impossible de préparer la page PDF.");
+      context.drawImage(
+        canvas,
+        0,
+        offset,
+        canvas.width,
+        sliceHeight,
+        0,
+        0,
+        canvas.width,
+        sliceHeight,
+      );
+      if (offset > 0) pdf.addPage();
+      pdf.addImage(
+        pageCanvas.toDataURL("image/png"),
+        "PNG",
+        margin,
+        margin,
+        contentWidth,
+        (sliceHeight * contentWidth) / canvas.width,
+      );
+      offset += sliceHeight;
+    }
+
+    const safeReference = reference.replace(/[<>:"/\\|?*\x00-\x1f]/g, "-");
+    pdf.save(`recu-${safeReference || "document"}.pdf`);
+  } catch (error) {
+    console.error("[DocumentPrinter] PDF generation failed:", error);
+    toast.error("Impossible de générer le PDF. Réessayez ou utilisez Imprimer.");
+  }
+}
+
+export function DocumentPrintActions({ onClose, reference = "document" }: DocumentPrintActionsProps) {
   return (
     <div className="document-printer-actions flex flex-wrap justify-end gap-2">
       {onClose ? (
@@ -79,7 +146,7 @@ export function DocumentPrintActions({ onClose }: DocumentPrintActionsProps) {
       <Button
         type="button"
         className="bg-ivoirien bg-ivoirien-hover"
-        onClick={() => window.print()}
+        onClick={(event) => void downloadDocumentPdf(reference, event.currentTarget)}
       >
         <FileDown className="size-4" />
         Télécharger PDF
@@ -96,6 +163,7 @@ export function DocumentPrinter({
 }: DocumentPrinterProps) {
   const fields = Object.entries(data).filter(([, value]) => value !== undefined);
   const hasReference = fields.some(([key]) => key === "reference" || key === "id");
+  const reference = String(data["reference"] ?? data["id"] ?? documentId);
 
   return (
     <>
@@ -117,7 +185,7 @@ export function DocumentPrinter({
           }
         }
       `}</style>
-      <article className="document-printer-page space-y-6 rounded-xl bg-white p-6 text-slate-950">
+      <article id="document-content" className="document-printer-page space-y-6 rounded-xl bg-white p-6 text-slate-950">
         <header className="border-b pb-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.2em]">GogoSoft</p>
           <h2 className="mt-2 text-2xl font-bold">{documentTitles[documentType]}</h2>
@@ -139,7 +207,7 @@ export function DocumentPrinter({
             <p className="border-t pt-2">Signature de la boutique</p>
           </div>
         ) : null}
-        <DocumentPrintActions onClose={onClose} />
+        <DocumentPrintActions onClose={onClose} reference={reference} />
       </article>
     </>
   );

@@ -1,5 +1,8 @@
 // src/services/cashService.ts
 
+import { jsPDF } from "jspdf";
+import * as XLSX from "xlsx";
+
 import { supabase } from "@/integrations/supabase/client";
 import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import {
@@ -361,6 +364,211 @@ export async function getCashSummary(shopId: string, period: CashPeriod): Promis
   const sales = (salesRows ?? []) as CashSummary["sales"];
   const manualEntries = (manualEntryRows ?? []) as CashManualEntryRow[];
   return summarize(workshopPayments, sales, manualEntries);
+}
+
+interface CashExportRow {
+  date: string;
+  type: string;
+  amount: number;
+  method: string;
+  description: string;
+}
+
+interface CashExportData {
+  shopName: string;
+  rows: CashExportRow[];
+  totalEntries: number;
+  totalExits: number;
+  balance: number;
+}
+
+function formatExportMoney(amount: number): string {
+  return new Intl.NumberFormat("fr-FR").format(amount);
+}
+
+async function getCashExportData(shopId: string, period: CashPeriod): Promise<CashExportData> {
+  if (!Number.isFinite(period.start.getTime()) || !Number.isFinite(period.end.getTime())) {
+    throw new Error("La période d'export est invalide.");
+  }
+  if (period.start > period.end) throw new Error("La date de début doit précéder la date de fin.");
+  const [summary, exits] = await Promise.all([
+    getCashSummary(shopId, period),
+    getCashExits(shopId, period),
+  ]);
+  let shopName = "Boutique démo";
+  if (!isDemoMode()) {
+    const { data: shop, error } = await supabase
+      .from("shops")
+      .select("name")
+      .eq("id", requireShopId(shopId))
+      .maybeSingle();
+    if (error) throw error;
+    if (!shop) throw new Error("Boutique introuvable.");
+    shopName = shop.name;
+  }
+
+  const rows: CashExportRow[] = [
+    ...summary.workshopPayments.map((payment) => ({
+      date: payment.created_at,
+      type: payment.payment_type === "entry" ? "Entrée atelier" : "Solde atelier",
+      amount: payment.amount,
+      method: payment.method,
+      description: [
+        payment.ticket_number ? `Fiche ${payment.ticket_number}` : "Réparation",
+        payment.client_name,
+        payment.device_model,
+      ].filter(Boolean).join(" · "),
+    })),
+    ...summary.sales.map((sale) => ({
+      date: sale.created_at,
+      type: "Vente",
+      amount: sale.total_price,
+      method: sale.payment_method ?? "—",
+      description: [sale.product_name, sale.client_name].filter(Boolean).join(" · "),
+    })),
+    ...summary.manualEntries.map((entry) => ({
+      date: entry.created_at,
+      type: "Entrée manuelle",
+      amount: entry.amount,
+      method: entry.method,
+      description: entry.description ?? "",
+    })),
+    ...exits.map((exit) => ({
+      date: exit.created_at,
+      type: exit.type === "parts" ? "Sortie pièces" : "Sortie dépense",
+      amount: -exit.amount,
+      method: "—",
+      description: exit.description ?? "",
+    })),
+  ].sort((first, second) => first.date.localeCompare(second.date));
+  const totalEntries = summary.totalGeneral;
+  const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
+  return { shopName, rows, totalEntries, totalExits, balance: totalEntries - totalExits };
+}
+
+function downloadExportFile(filename: string, blob: Blob): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function exportFilename(extension: string, period: CashPeriod): string {
+  const start = period.start.toISOString().slice(0, 10);
+  const end = period.end.toISOString().slice(0, 10);
+  return `export-caisse-${start}-${end}.${extension}`;
+}
+
+export async function exportCashToCsv(shopId: string, period: CashPeriod): Promise<void> {
+  const data = await getCashExportData(shopId, period);
+  const csvRows = [
+    ["Export comptable GogoSoft"],
+    ["Boutique", data.shopName],
+    ["Période", period.start.toLocaleDateString("fr-FR"), "au", period.end.toLocaleDateString("fr-FR")],
+    ["Date d'export", new Date().toLocaleString("fr-FR")],
+    [],
+    ["Date", "Type", "Montant (FCFA)", "Mode", "Description"],
+    ...data.rows.map((row) => [
+      new Date(row.date).toLocaleString("fr-FR"),
+      row.type,
+      String(row.amount),
+      row.method,
+      row.description,
+    ]),
+    [],
+    ["Total entrées (FCFA)", String(data.totalEntries)],
+    ["Total sorties (FCFA)", String(data.totalExits)],
+    ["Solde (FCFA)", String(data.balance)],
+  ];
+  const csv = csvRows
+    .map((row) =>
+      row
+        .map((cell) => {
+          const value = String(cell ?? "");
+          return `"${value.replace(/"/g, '""')}"`;
+        })
+        .join(";"),
+    )
+    .join("\r\n");
+  downloadExportFile(
+    exportFilename("csv", period),
+    new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }),
+  );
+}
+
+export async function exportCashToExcel(shopId: string, period: CashPeriod): Promise<void> {
+  const data = await getCashExportData(shopId, period);
+  const rows: Array<Array<string | number>> = [
+    ["Export comptable GogoSoft"],
+    ["Boutique", data.shopName],
+    ["Période", period.start.toLocaleDateString("fr-FR"), "au", period.end.toLocaleDateString("fr-FR")],
+    ["Date d'export", new Date().toLocaleString("fr-FR")],
+    [],
+    ["Date", "Type", "Montant (FCFA)", "Mode", "Description"],
+    ...data.rows.map((row) => [
+      new Date(row.date).toLocaleString("fr-FR"),
+      row.type,
+      row.amount,
+      row.method,
+      row.description,
+    ]),
+    [],
+    ["Total entrées (FCFA)", data.totalEntries],
+    ["Total sorties (FCFA)", data.totalExits],
+    ["Solde (FCFA)", data.balance],
+  ];
+  const workbook = XLSX.utils.book_new();
+  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(workbook, sheet, "Caisse");
+  const content = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  downloadExportFile(
+    exportFilename("xlsx", period),
+    new Blob([content], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+  );
+}
+
+export async function exportCashToPdf(shopId: string, period: CashPeriod): Promise<void> {
+  const data = await getCashExportData(shopId, period);
+  const pdf = new jsPDF("p", "mm", "a4");
+  const left = 14;
+  const right = 196;
+  let y = 16;
+  const addLine = (text: string, fontSize = 9) => {
+    pdf.setFontSize(fontSize);
+    const lines = pdf.splitTextToSize(text, right - left);
+    for (const line of lines as string[]) {
+      if (y > 282) {
+        pdf.addPage();
+        y = 16;
+      }
+      pdf.text(line, left, y);
+      y += fontSize > 11 ? 7 : 5;
+    }
+  };
+  addLine("Export comptable GogoSoft", 15);
+  addLine(`Boutique : ${data.shopName}`);
+  addLine(
+    `Période : ${period.start.toLocaleDateString("fr-FR")} au ${period.end.toLocaleDateString("fr-FR")}`,
+  );
+  addLine(`Date d'export : ${new Date().toLocaleString("fr-FR")}`);
+  y += 3;
+  addLine("Date | Type | Montant (FCFA) | Mode | Description", 10);
+  for (const row of data.rows) {
+    addLine(
+      `${new Date(row.date).toLocaleString("fr-FR")} | ${row.type} | ${formatExportMoney(row.amount)} | ${row.method} | ${row.description}`,
+    );
+  }
+  y += 3;
+  addLine(`Total entrées : ${formatExportMoney(data.totalEntries)} FCFA`, 10);
+  addLine(`Total sorties : ${formatExportMoney(data.totalExits)} FCFA`, 10);
+  addLine(`Solde : ${formatExportMoney(data.balance)} FCFA`, 10);
+  pdf.save(exportFilename("pdf", period));
 }
 
 export async function closeCashPeriod(

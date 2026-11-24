@@ -54,6 +54,30 @@ export interface SupplierOrder {
   received_at: string | null;
 }
 
+export interface Inventory {
+  id: string;
+  shop_id: string;
+  status: "draft" | "validated";
+  created_by: string | null;
+  validated_at: string | null;
+  created_at: string;
+}
+
+export interface InventoryLine {
+  id: string;
+  inventory_id: string;
+  stock_item_id: string;
+  theoretical_qty: number;
+  real_qty: number | null;
+  difference: number;
+  created_at: string;
+  stock_item?: Pick<StockItem, "name" | "sku">;
+}
+
+export interface InventoryDetails extends Inventory {
+  lines: InventoryLine[];
+}
+
 export interface StockItemFilters {
   category?: string;
   supplier_id?: string;
@@ -440,4 +464,122 @@ export async function deductStockForParts(
     await callStockRpc("deduct_stock_for_parts_safe", args);
   }
   return unlinkedCount;
+}
+
+export async function createInventory(shopId: string): Promise<InventoryDetails> {
+  assertStockServiceAvailable();
+  const validShopId = requireShopId(shopId);
+  const userId = await getCurrentUserId();
+  const items = await listStockItems(validShopId);
+  const { data: inventory, error: inventoryError } = await supabase
+    .from("inventories")
+    .insert({ shop_id: validShopId, created_by: userId, status: "draft" })
+    .select("*")
+    .single();
+  if (inventoryError) throw inventoryError;
+
+  if (items.length) {
+    const { error: linesError } = await supabase.from("inventory_lines").insert(
+      items.map((item) => ({
+        inventory_id: inventory.id,
+        stock_item_id: item.id,
+        theoretical_qty: item.quantity,
+        real_qty: 0,
+      })),
+    );
+    if (linesError) {
+      const { error: cleanupError } = await supabase
+        .from("inventories")
+        .delete()
+        .eq("id", inventory.id)
+        .eq("shop_id", validShopId);
+      if (cleanupError) {
+        throw new Error(
+          `Impossible de créer les lignes d'inventaire (${linesError.message}) et de nettoyer le brouillon (${cleanupError.message}).`,
+        );
+      }
+      throw linesError;
+    }
+  }
+  return getInventoryDetails(inventory.id);
+}
+
+export async function updateInventoryLine(lineId: string, realQty: number): Promise<void> {
+  assertStockServiceAvailable();
+  if (!lineId) throw new Error("La ligne d'inventaire est obligatoire.");
+  if (!Number.isFinite(realQty) || realQty < 0) {
+    throw new Error("La quantité réelle doit être positive ou nulle.");
+  }
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data: line, error: lineError } = await supabase
+    .from("inventory_lines")
+    .select("inventory_id")
+    .eq("id", lineId)
+    .maybeSingle();
+  if (lineError) throw lineError;
+  if (!line) throw new Error("Ligne d'inventaire introuvable.");
+  const { data: inventory, error: inventoryError } = await supabase
+    .from("inventories")
+    .select("status")
+    .eq("id", line.inventory_id)
+    .maybeSingle();
+  if (inventoryError) throw inventoryError;
+  if (!inventory || inventory.status !== "draft") {
+    throw new Error("Les lignes d'un inventaire validé ne peuvent plus être modifiées.");
+  }
+  const { data, error } = await supabase
+    .from("inventory_lines")
+    .update({ real_qty: realQty })
+    .eq("id", lineId)
+    .select("id")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) throw new Error("Ligne d'inventaire introuvable.");
+}
+
+export async function validateInventory(inventoryId: string): Promise<InventoryDetails> {
+  assertStockServiceAvailable();
+  if (!inventoryId) throw new Error("L'inventaire est obligatoire.");
+  const userId = await getCurrentUserId();
+  const inventory = await getInventoryDetails(inventoryId);
+  if (inventory.status !== "draft") throw new Error("Cet inventaire est déjà validé.");
+  await callStockRpc("validate_inventory_safe", {
+    p_inventory_id: inventory.id,
+    p_user_id: userId,
+  });
+  return getInventoryDetails(inventory.id);
+}
+
+export async function getInventories(shopId: string): Promise<Inventory[]> {
+  assertStockServiceAvailable();
+  const validShopId = requireShopId(shopId);
+  if (!(await hasActiveSession())) return [];
+  const { data, error } = await supabase
+    .from("inventories")
+    .select("*")
+    .eq("shop_id", validShopId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as Inventory[];
+}
+
+export async function getInventoryDetails(inventoryId: string): Promise<InventoryDetails> {
+  assertStockServiceAvailable();
+  if (!inventoryId) throw new Error("L'inventaire est obligatoire.");
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data: inventory, error: inventoryError } = await supabase
+    .from("inventories")
+    .select("*")
+    .eq("id", inventoryId)
+    .maybeSingle();
+  if (inventoryError) throw inventoryError;
+  if (!inventory) throw new Error("Inventaire introuvable.");
+
+  const { data: lines, error: linesError } = await supabase
+    .from("inventory_lines")
+    .select("*, stock_item:stock_items(name, sku)")
+    .eq("inventory_id", inventoryId)
+    .order("created_at", { ascending: true });
+  if (linesError) throw linesError;
+  return { ...(inventory as Inventory), lines: (lines ?? []) as InventoryLine[] };
 }

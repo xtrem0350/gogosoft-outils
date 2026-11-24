@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Wallet } from "lucide-react";
+import { FileDown, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
 import { CashClosureModal } from "@/components/CashClosureModal";
@@ -9,6 +9,12 @@ import { WorkshopPaymentModal } from "@/components/WorkshopPaymentModal";
 import { TicketDetailModal } from "@/components/caisse/TicketDetailModal";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -35,6 +41,9 @@ import {
   getCashClosures,
   getCashExits,
   getCashSummary,
+  exportCashToCsv,
+  exportCashToExcel,
+  exportCashToPdf,
   type CashClosure,
   type CashExit,
   type CashPeriod,
@@ -271,6 +280,21 @@ function CashPage() {
 
   const totalExits = exits.reduce((total, exit) => total + exit.amount, 0);
   const canManageCash = isOwner || isCaissier;
+
+  async function exportCash(format: "csv" | "excel" | "pdf") {
+    if (!shopId) {
+      toast.error("Aucune boutique active pour exporter la caisse.");
+      return;
+    }
+    try {
+      if (format === "csv") await exportCashToCsv(shopId, period);
+      else if (format === "excel") await exportCashToExcel(shopId, period);
+      else await exportCashToPdf(shopId, period);
+      toast.success("Export comptable téléchargé.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible d'exporter la caisse.");
+    }
+  }
 
   async function saveExit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -545,7 +569,27 @@ function CashPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHero title="Caisse" subtitle="Suivi des encaissements" icon={Wallet} iconColor="green" />
+      <PageHero
+        title="Caisse"
+        subtitle="Suivi des encaissements"
+        icon={Wallet}
+        iconColor="green"
+        action={canManageCash ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button type="button" variant="outline" disabled={!shopId}>
+                <FileDown className="mr-2 size-4" />
+                Exporter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onSelect={() => void exportCash("csv")}>CSV</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void exportCash("excel")}>Excel</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => void exportCash("pdf")}>PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : undefined}
+      />
       <CaisseSessionHeader shopId={shopId} session={cashSession} closedSummary={closedSessionSummary} openedByName={cashSession?.opened_by ? memberNames[cashSession.opened_by] : undefined} onOpen={(openingAmount) => handleOpenSession(openingAmount)} onClose={(closingAmount, notes) => handleCloseSession(closingAmount, notes)} />
       {!cashSession ? (
         <p role="status" className="text-sm text-muted-foreground">

@@ -3,8 +3,10 @@ import {
   AlertTriangle,
   Building2,
   Mail,
+  MessageSquare,
   Phone,
   Save,
+  Send,
   Settings,
   ShieldAlert,
   User,
@@ -19,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -38,6 +41,15 @@ import {
   updateShopEntryFeeConfig,
 } from "@/services/shopService";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getChatUserId,
+  getMessages,
+  getSupportRecipientId,
+  markAsRead,
+  sendMessage,
+  subscribeToChat,
+  type ChatMessage,
+} from "@/services/chatService";
 
 const PARAMETER_TABS = [
   "profil",
@@ -45,6 +57,7 @@ const PARAMETER_TABS = [
   "modules",
   "whatsapp",
   "entry-fee",
+  "support",
   "danger",
   "rangements",
 ] as const;
@@ -88,6 +101,12 @@ function ParametresPage() {
   const [entryFeeAmount, setEntryFeeAmount] = useState(2000);
   const [entryFeeEnabled, setEntryFeeEnabled] = useState(true);
   const [entryFeeRefundable, setEntryFeeRefundable] = useState(false);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatRecipientId, setChatRecipientId] = useState<string | null>(null);
+  const [chatUserId, setChatUserId] = useState<string | null>(null);
+  const [chatDraft, setChatDraft] = useState("");
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [chatBusy, setChatBusy] = useState(false);
 
   useEffect(() => {
     setTab(search.tab ?? "profil");
@@ -103,6 +122,36 @@ function ParametresPage() {
       })
       .catch(() => undefined);
   }, [isOwner, shopId]);
+
+  useEffect(() => {
+    if (!shopId || !isOwner || tab !== "support") return;
+    let active = true;
+    const refreshMessages = async () => {
+      try {
+        const [userId, recipientId, messages] = await Promise.all([
+          getChatUserId(),
+          getSupportRecipientId(),
+          getMessages(shopId),
+        ]);
+        if (!active) return;
+        setChatUserId(userId);
+        setChatRecipientId(recipientId);
+        setChatMessages(messages);
+        setChatError(null);
+        await Promise.all(
+          messages
+            .filter((message) => message.receiver_id === userId && !message.read_at)
+            .map((message) => markAsRead(message.id)),
+        );
+      } catch (reason) {
+        if (active) {
+          setChatError(reason instanceof Error ? reason.message : "Impossible de charger le support.");
+        }
+      }
+    };
+    void refreshMessages();
+    return subscribeToChat(shopId, () => void refreshMessages());
+  }, [isOwner, shopId, tab]);
 
   async function saveEntryFeeConfig() {
     if (!shopId) return;
@@ -198,6 +247,21 @@ function ParametresPage() {
     toast.success("Boutique mise à jour.");
   }
 
+  async function sendSupportMessage() {
+    if (!chatUserId || !chatRecipientId || !shopId || !chatDraft.trim()) return;
+    setChatBusy(true);
+    try {
+      await sendMessage(chatUserId, chatRecipientId, shopId, chatDraft);
+      setChatDraft("");
+      setChatMessages(await getMessages(shopId));
+      setChatError(null);
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible d'envoyer le message.");
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
   async function deleteAccount() {
     if (!window.confirm("Supprimer votre compte ? Cette action est irréversible.")) return;
     toast.info("La suppression du compte doit être traitée côté serveur / Supabase Admin.");
@@ -235,6 +299,7 @@ function ParametresPage() {
           {canAccessRangements ? <TabsTrigger value="rangements">Rangements</TabsTrigger> : null}
           {isOwner ? <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger> : null}
           {isOwner ? <TabsTrigger value="entry-fee">Frais d'entrée</TabsTrigger> : null}
+          {isOwner ? <TabsTrigger value="support">Support</TabsTrigger> : null}
           {isOwner ? <TabsTrigger value="danger">Danger</TabsTrigger> : null}
         </TabsList>
 
@@ -440,6 +505,69 @@ function ParametresPage() {
                   <Save className="size-4" />
                   Enregistrer
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ) : null}
+
+        {isOwner ? (
+          <TabsContent value="support" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="size-5" />
+                  Support SuperAdmin
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {chatError ? (
+                  <p role="alert" className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                    {chatError}
+                  </p>
+                ) : null}
+                <div
+                  aria-live="polite"
+                  className="max-h-96 min-h-40 space-y-3 overflow-y-auto rounded-lg border p-4"
+                >
+                  {chatMessages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`max-w-[85%] rounded-lg p-3 text-sm ${
+                        message.sender_id === chatUserId
+                          ? "ml-auto bg-orange-100 text-orange-950"
+                          : "bg-muted"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap">{message.message}</p>
+                      <p className="mt-1 text-right text-xs opacity-70">
+                        {new Date(message.created_at).toLocaleString("fr-FR")}
+                      </p>
+                    </div>
+                  ))}
+                  {chatMessages.length === 0 && !chatError ? (
+                    <p className="text-sm text-muted-foreground">
+                      Aucun échange. Envoyez votre première demande au support.
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex items-end gap-2">
+                  <Textarea
+                    value={chatDraft}
+                    onChange={(event) => setChatDraft(event.target.value)}
+                    placeholder="Écrivez votre message au support…"
+                    maxLength={10_000}
+                    rows={3}
+                    disabled={!chatRecipientId || chatBusy}
+                  />
+                  <Button
+                    type="button"
+                    disabled={!chatDraft.trim() || !chatRecipientId || chatBusy}
+                    onClick={() => void sendSupportMessage()}
+                  >
+                    <Send className="mr-2 size-4" />
+                    Envoyer
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
