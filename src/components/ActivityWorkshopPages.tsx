@@ -56,6 +56,7 @@ import {
   assignTicketToLocation,
   type StorageLocation,
 } from "@/services/storageService";
+import { getStockItems, type StockItem } from "@/services/stockService";
 import { searchDevices, type KnownDevice } from "@/services/workshopService";
 import { getClientById, type ClientRecord } from "@/services/clientService";
 import { getOpenCashSession } from "@/services/cashService";
@@ -121,6 +122,8 @@ const statusStyles: Record<WorkshopTicket["status"], string> = {
   livre: "bg-green-900 text-white hover:bg-green-800",
   annule: "bg-red-100 text-red-800 hover:bg-red-100",
 };
+
+type WorkshopConsumedPart = ConsumedPart & { stock_item_id?: string };
 
 export function ActivityListPage({
   activityType,
@@ -1575,16 +1578,17 @@ export function ActivityDetailsPage({
     clear: clearTechnicianForm,
   } = usePersistedFormState(`atelier-ticket-${activityType}-${id}`, {
     diagnostic: "",
-    pieces: [] as ConsumedPart[],
+    pieces: [] as WorkshopConsumedPart[],
   });
   const diagnostic = technicianForm.diagnostic;
   const pieces = technicianForm.pieces;
   const setDiagnostic = (value: string) => setTechnicianFormField("diagnostic", value);
-  const setPieces: Dispatch<SetStateAction<ConsumedPart[]>> = (value) =>
+  const setPieces: Dispatch<SetStateAction<WorkshopConsumedPart[]>> = (value) =>
     setTechnicianFormField(
       "pieces",
       typeof value === "function" ? value(technicianForm.pieces) : value,
     );
+  const [stockItems, setStockItems] = useState<StockItem[]>([]);
   const [duration, setDuration] = useState("");
   const [laborCost, setLaborCost] = useState("");
   const [partsCost, setPartsCost] = useState("");
@@ -1605,6 +1609,27 @@ export function ActivityDetailsPage({
     (Number(laborCost) || 0) + (Number(partsCost) || 0) + (Number(otherCost) || 0);
   const entryPaid = ticket?.entry_fee_paid ? (ticket.entry_fee ?? 0) : 0;
   const remainingAmount = Math.max(0, (ticket?.price_estimate ?? 0) - entryPaid);
+
+  useEffect(() => {
+    if (!shopId || activityType === "consumable" || isDemoMode()) {
+      setStockItems([]);
+      return;
+    }
+    let active = true;
+    void getStockItems(shopId)
+      .then((items) => {
+        if (active) setStockItems(items);
+      })
+      .catch((reason: unknown) => {
+        if (active) {
+          setStockItems([]);
+          toast.error(reason instanceof Error ? reason.message : "Impossible de charger le stock.");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [activityType, shopId]);
 
   useEffect(() => {
     let active = true;
@@ -1665,7 +1690,7 @@ export function ActivityDetailsPage({
         setPickupDate(defaultPickupDate());
         setTools((result.outils_utilises ?? []).join(", "));
         const resultWithPieces = result as WorkshopTicket & {
-          pieces_utilisees?: ConsumedPart[] | null;
+          pieces_utilisees?: WorkshopConsumedPart[] | null;
         };
         if (!technicianForm.pieces.length) {
           setPieces(resultWithPieces.pieces_utilisees ?? result.pieces_consommees ?? []);
@@ -1849,12 +1874,23 @@ export function ActivityDetailsPage({
       toast.error("Saisissez le prix final réel supérieur à zéro.");
       return;
     }
+    if (!shopId && !isDemoMode()) {
+      toast.error("Atelier introuvable pour cette fiche.");
+      return;
+    }
     setBusy(true);
     try {
       const completed = await finalizeRepair(
         id,
         isWarranty ? 0 : Math.round(finalPriceNumber),
         diagnostic.trim(),
+        pieces.map((part) => ({
+          name: part.name,
+          quantity: part.qty,
+          ...(part.stock_item_id ? { stock_item_id: part.stock_item_id } : {}),
+        })),
+        shopId ?? undefined,
+        activityType,
       );
       const [refreshedTicket, refreshedEvents] = await Promise.all([
         getTicketById(id, activityType),
@@ -1865,6 +1901,9 @@ export function ActivityDetailsPage({
       setTicket(refreshedTicket);
       setEvents(refreshedEvents);
       clearTechnicianForm();
+      if (pieces.some((part) => !part.stock_item_id)) {
+        toast.warning("Pièce non liée au stock, déduction impossible. L'alerte a été tracée.");
+      }
       toast.success("Réparation terminée, prêt pour retrait.");
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Mise à jour impossible.");
@@ -1897,6 +1936,21 @@ export function ActivityDetailsPage({
 
   function addConsumedPart(part: ConsumedPart) {
     setPieces((current) => [...current, part]);
+  }
+
+  function linkPartToStock(index: number, stockItemId: string) {
+    const stockItem = stockItems.find((item) => item.id === stockItemId);
+    setPieces((current) =>
+      current.map((part, partIndex) =>
+        partIndex === index
+          ? {
+              ...part,
+              stock_item_id: stockItem?.id,
+              ...(stockItem ? { name: stockItem.name, unit_price: stockItem.unit_price } : {}),
+            }
+          : part,
+      ),
+    );
   }
 
 
@@ -2005,13 +2059,32 @@ export function ActivityDetailsPage({
                 {pieces.length ? (
                   <ul className="space-y-2 text-sm">
                     {pieces.map((part, index) => (
-                      <li key={`${part.name}-${index}`} className="flex items-center justify-between rounded-lg border p-3">
+                      <li key={`${part.name}-${index}`} className="grid items-center gap-3 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.8fr)_auto]">
                         <span>
                           {part.name} x {part.qty}
                           {part.unit_price !== undefined
                             ? ` · ${formatFcfa(part.unit_price)} / unité`
                             : ""}
                         </span>
+                        <label className="grid gap-1 text-xs font-medium">
+                          Lier à un article du stock
+                          <select
+                            value={part.stock_item_id ?? ""}
+                            aria-label={`Article de stock pour ${part.name}`}
+                            onChange={(event) => linkPartToStock(index, event.target.value)}
+                            className="h-9 min-w-0 rounded-md border bg-background px-2 text-sm"
+                          >
+                            <option value="">Pièce non liée</option>
+                            {stockItems.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name} · disponible : {item.quantity}
+                              </option>
+                            ))}
+                          </select>
+                          {!part.stock_item_id ? (
+                            <span className="text-amber-700">Pièce non liée au stock, déduction impossible.</span>
+                          ) : null}
+                        </label>
                         <Button
                           type="button"
                           variant="ghost"
@@ -2151,13 +2224,32 @@ export function ActivityDetailsPage({
               {pieces.length ? (
                 <ul className="space-y-2 text-sm">
                   {pieces.map((part, index) => (
-                    <li key={`${part.name}-${index}`} className="flex items-center justify-between rounded-lg border p-2">
+                    <li key={`${part.name}-${index}`} className="grid items-center gap-3 rounded-lg border p-2 sm:grid-cols-[minmax(0,1fr)_minmax(180px,0.8fr)_auto]">
                       <span>
                         {part.name} × {part.qty}
                         {part.unit_price !== undefined
                           ? ` · ${formatFcfa(part.unit_price)} / unité`
                           : ""}
                       </span>
+                      <label className="grid gap-1 text-xs font-medium">
+                        Lier à un article du stock
+                        <select
+                          value={part.stock_item_id ?? ""}
+                          aria-label={`Article de stock pour ${part.name}`}
+                          onChange={(event) => linkPartToStock(index, event.target.value)}
+                          className="h-9 min-w-0 rounded-md border bg-background px-2 text-sm"
+                        >
+                          <option value="">Pièce non liée</option>
+                          {stockItems.map((item) => (
+                            <option key={item.id} value={item.id}>
+                              {item.name} · disponible : {item.quantity}
+                            </option>
+                          ))}
+                        </select>
+                        {!part.stock_item_id ? (
+                          <span className="text-amber-700">Pièce non liée au stock, déduction impossible.</span>
+                        ) : null}
+                      </label>
                       <Button
                         type="button"
                         variant="ghost"

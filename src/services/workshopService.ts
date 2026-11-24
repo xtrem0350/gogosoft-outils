@@ -17,6 +17,10 @@ import {
   updateDemoSession,
 } from "@/services/demoService";
 import { getShopEntryFeeConfig } from "@/services/shopService";
+import {
+  deductStockForParts,
+  type StockPart,
+} from "@/services/stockService";
 
 export type { WorkshopTicket } from "@/types/database";
 export type ActivityType = "phone" | "computer" | "consumable";
@@ -975,6 +979,9 @@ export async function finalizeRepair(
   ticketId: string,
   finalPrice: number,
   notes?: string,
+  parts: StockPart[] = [],
+  shopId?: string,
+  activityType: ActivityType = "phone",
 ): Promise<WorkshopTicket> {
   if (!Number.isFinite(finalPrice) || finalPrice < 0) {
     throw new Error("Le prix final doit être supérieur ou égal à zéro.");
@@ -996,18 +1003,16 @@ export async function finalizeRepair(
       ),
     }));
   } else {
-    if (!(await hasActiveSession())) throw new Error("NO_SESSION");
-    const { error } = await supabase
-      .from("workshop_tickets")
-      .update({
-        status: "en_attente_caissier_solde",
-        price_final: finalPrice,
-        notes: notes?.trim() || undefined,
-        updated_at: updatedAt,
-      } as never)
-      .eq("id", ticketId)
-      .eq("status", "en_cours");
-    if (error) throw error;
+    if (!shopId) throw new Error("Atelier introuvable pour cette fiche.");
+    await deductStockForParts(shopId, parts, ticketId, {
+      final_price: finalPrice,
+      notes,
+    });
+    const completed = await getTicketById(ticketId, activityType);
+    if (!completed || completed.status !== "en_attente_caissier_solde") {
+      throw new Error("La fiche n'a pas pu être finalisée.");
+    }
+    return completed;
   }
   await addEvent(ticketId, "repair_completed", `Réparation terminée. Prix final : ${finalPrice} FCFA.`);
   return (await getTicketById(ticketId)) as WorkshopTicket;
