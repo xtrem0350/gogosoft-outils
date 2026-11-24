@@ -1006,7 +1006,7 @@ export async function finalizeRepair(
     if (!shopId) throw new Error("Atelier introuvable pour cette fiche.");
     await deductStockForParts(shopId, parts, ticketId, {
       final_price: finalPrice,
-      notes,
+      ...(notes !== undefined ? { notes } : {}),
     });
     const completed = await getTicketById(ticketId, activityType);
     if (!completed || completed.status !== "en_attente_caissier_solde") {

@@ -644,8 +644,8 @@ export function StockItemsManager() {
     try {
       const [nextItems, nextSuppliers] = await Promise.all([
         listStockItems(shopId, {
-          category: categoryFilter || undefined,
-          supplier_id: supplierFilter || undefined,
+          ...(categoryFilter ? { category: categoryFilter } : {}),
+          ...(supplierFilter ? { supplier_id: supplierFilter } : {}),
           stock_bas: lowStockOnly,
           archived: showArchived,
         }),

@@ -1941,15 +1941,18 @@ export function ActivityDetailsPage({
   function linkPartToStock(index: number, stockItemId: string) {
     const stockItem = stockItems.find((item) => item.id === stockItemId);
     setPieces((current) =>
-      current.map((part, partIndex) =>
-        partIndex === index
-          ? {
-              ...part,
-              stock_item_id: stockItem?.id,
-              ...(stockItem ? { name: stockItem.name, unit_price: stockItem.unit_price } : {}),
-            }
-          : part,
-      ),
+      current.map((part, partIndex) => {
+        if (partIndex !== index) return part;
+        const updatedPart = { ...part };
+        if (stockItem) {
+          updatedPart.stock_item_id = stockItem.id;
+          updatedPart.name = stockItem.name;
+          updatedPart.unit_price = stockItem.unit_price;
+        } else {
+          delete updatedPart.stock_item_id;
+        }
+        return updatedPart;
+      }),
     );
   }
 
