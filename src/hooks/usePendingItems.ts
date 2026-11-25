@@ -109,8 +109,9 @@ export function usePendingItems(
     };
 
     void refresh();
+    const channelName = `pending_items:${shopId}:${crypto.randomUUID()}`;
     const channel = supabase
-      .channel(`pending_items:${shopId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "workshop_tickets", filter: `shop_id=eq.${shopId}` },

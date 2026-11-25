@@ -131,7 +131,8 @@ export function subscribeToChat(
   shopId: string | null,
   onMessage: () => void,
 ): () => void {
-  let channel = supabase.channel(`chat_messages:${shopId ?? "all"}`);
+  const channelName = `chat_messages:${shopId ?? "all"}:${crypto.randomUUID()}`;
+  let channel = supabase.channel(channelName);
   channel = channel.on(
     "postgres_changes",
     {
