@@ -52,7 +52,12 @@ import {
   openCashSession,
 } from "@/services/cashService";
 import { isDemoMode } from "@/services/demoService";
-import { listSales, markAsPaid, updateSale, type SalePaymentMethod } from "@/services/salesService";
+import {
+  listSales,
+  markAsPaid,
+  refundSale,
+  type SalePaymentMethod,
+} from "@/services/salesService";
 import { addEvent, isWarrantyTicket } from "@/services/workshopService";
 import { getTeamMembers } from "@/services/teamService";
 import { getShopEntryFeeConfig, type ShopEntryFeeConfig } from "@/services/shopService";
@@ -534,37 +539,19 @@ function CashPage() {
 
     setSavingRefund(true);
     try {
-      await createCashExit(shopId, {
-        type: "expense",
-        amount: refundSale.total_price,
-        description: `[REMBOURSEMENT] Vente ${refundSale.id} — ${reason}`,
-      });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Impossible d'enregistrer la sortie de remboursement.");
-      setSavingRefund(false);
-      return;
-    }
-
-    try {
-      await updateSale(refundSale.id, { payment_status: "refunded" });
-    } catch (error) {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("NO_SESSION");
+      await refundSale(refundSale.id, reason, authData.user.id);
       setRefundSale(null);
       setRefundReason("");
-      toast.error(
-        `La sortie de remboursement est enregistrée, mais la vente reste marquée payée : ${
-          error instanceof Error ? error.message : "mise à jour impossible."
-        }`,
-      );
+      toast.success("Remboursement enregistré et vente marquée comme remboursée.");
       await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Impossible de rembourser cette vente.");
+    } finally {
       setSavingRefund(false);
-      return;
     }
-
-    setRefundSale(null);
-    setRefundReason("");
-    toast.success("Remboursement enregistré et vente marquée comme remboursée.");
-    await load();
-    setSavingRefund(false);
   }
 
   return (

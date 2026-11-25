@@ -3,13 +3,19 @@ import { hasActiveSession, requireShopId } from "@/lib/supabaseGuard";
 import type { ActivityType } from "@/services/workshopService";
 import { DEMO_SHOP_ID, getDemoSales, isDemoMode, updateDemoSession } from "@/services/demoService";
 
-export type SalePaymentStatus = "pending" | "awaiting_payment" | "paid" | "refunded";
+export type SalePaymentStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "paid"
+  | "refunded"
+  | "cancelled";
 export type SaleDeliveryStatus = "pending" | "ready" | "delivered";
 export type SalePaymentMethod = "cash" | "wave" | "orange_money" | "mtn" | "moov";
 
 export interface Sale {
   id: string;
   shop_id: string;
+  product_id?: string | null;
   activity_type: ActivityType;
   product_name: string;
   product_description: string | null;
@@ -28,6 +34,10 @@ export interface Sale {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  delivered_at?: string | null;
+  delivery_notes?: string | null;
+  refunded_at?: string | null;
+  refund_reason?: string | null;
 }
 
 export type CreateSaleData = Omit<Sale, "id" | "created_by" | "created_at" | "updated_at">;
@@ -121,8 +131,95 @@ export async function markAsPaid(id: string, paymentMethod: SalePaymentMethod): 
   return updateSale(id, { payment_status: "paid", payment_method: paymentMethod });
 }
 
-export async function markAsDelivered(id: string): Promise<Sale> {
-  return updateSale(id, { delivery_status: "delivered" });
+async function getAuthenticatedUserId(): Promise<string> {
+  if (!(await hasActiveSession())) throw new Error("NO_SESSION");
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error("NO_SESSION");
+  return data.user.id;
+}
+
+async function callSalesRpc(name: string, args: Record<string, unknown>): Promise<unknown> {
+  const { data, error } = await supabase.rpc(name as never, args as never);
+  if (error) throw error;
+  return data;
+}
+
+export async function sendSaleToCashier(id: string): Promise<void> {
+  if (isDemoMode()) {
+    await updateSale(id, { payment_status: "awaiting_payment" });
+    return;
+  }
+  const userId = await getAuthenticatedUserId();
+  await callSalesRpc("send_sale_to_cashier", {
+    p_sale_id: id,
+    p_user_id: userId,
+  });
+}
+
+async function updateSaleDeliveryStatus(
+  id: string,
+  status: "ready" | "delivered",
+  notes?: string,
+): Promise<Sale> {
+  const userId = await getAuthenticatedUserId();
+  await callSalesRpc("update_sale_delivery_status", {
+    p_sale_id: id,
+    p_delivery_status: status,
+    p_delivery_notes: notes?.trim() || null,
+    p_user_id: userId,
+  });
+  const sale = await getSaleById(id);
+  if (!sale) throw new Error("Vente introuvable après la mise à jour de la livraison.");
+  return sale;
+}
+
+export async function markAsReady(id: string): Promise<Sale> {
+  if (isDemoMode()) return updateSale(id, { delivery_status: "ready" });
+  return updateSaleDeliveryStatus(id, "ready");
+}
+
+export async function markAsDelivered(id: string, notes = ""): Promise<Sale> {
+  if (notes.length > 240) throw new Error("La note de livraison ne peut pas dépasser 240 caractères.");
+  if (isDemoMode()) {
+    return updateSale(id, {
+      delivery_status: "delivered",
+      delivered_at: new Date().toISOString(),
+      delivery_notes: notes.trim() || null,
+    });
+  }
+  return updateSaleDeliveryStatus(id, "delivered", notes);
+}
+
+export async function refundSale(
+  id: string,
+  reason: string,
+  userId: string,
+): Promise<void> {
+  if (isDemoMode()) throw new Error("Les remboursements ne sont pas disponibles en mode démo.");
+  const normalizedReason = reason.trim();
+  if (!normalizedReason) throw new Error("Le motif du remboursement est obligatoire.");
+  if (normalizedReason.length > 240) {
+    throw new Error("Le motif du remboursement ne peut pas dépasser 240 caractères.");
+  }
+
+  const authenticatedUserId = await getAuthenticatedUserId();
+  if (userId !== authenticatedUserId) throw new Error("Utilisateur de remboursement invalide.");
+
+  const result = await callSalesRpc("refund_sale_with_stock_safe", {
+    p_sale_id: id,
+    p_reason: normalizedReason,
+    p_user_id: authenticatedUserId,
+  });
+  if (
+    typeof result !== "object" ||
+    result === null ||
+    Array.isArray(result) ||
+    Reflect.get(result, "success") !== true ||
+    Reflect.get(result, "sale_id") !== id
+  ) {
+    throw new Error("Réponse invalide lors du remboursement de la vente.");
+  }
 }
 
 export async function uploadSalePhoto(shopId: string, file: File): Promise<string> {

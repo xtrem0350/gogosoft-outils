@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
 
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { Button } from "@/components/ui/button";
 import { getClientPhotoUrl, getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { useAsyncList } from "./useAsyncOptions";
 
@@ -20,6 +22,7 @@ export function ClientSelect({
   refreshKey = 0,
   selectedClient,
   onSelect,
+  onCreateNew,
 }: Props) {
   const { items, loading } = useAsyncList(
     shopId ? `${shopId}:${refreshKey}` : null,
@@ -52,32 +55,42 @@ export function ClientSelect({
   }, [items, selectedClient]);
 
   return (
-    <SearchableSelect
-      options={optionsItems.map((client) => ({
-        value: client.id,
-        label: client.full_name,
-        description: client.whatsapp,
-        icon: photoUrls[client.id] ? (
-          <img
-            src={photoUrls[client.id]}
-            alt=""
-            className="size-8 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
-            {client.full_name.slice(0, 1).toUpperCase()}
-          </span>
-        ),
-      }))}
-      value={value}
-      loading={loading}
-      placeholder="Sélectionner un client"
-      searchPlaceholder="Nom ou WhatsApp..."
-      emptyMessage="Aucun client trouvé."
-      onSelect={(option) => {
-        const client = optionsItems.find((item) => item.id === option.value);
-        if (client) onSelect(client);
-      }}
-    />
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="min-w-0 flex-1">
+        <SearchableSelect
+          options={optionsItems.map((client) => ({
+            value: client.id,
+            label: client.full_name,
+            description: client.whatsapp,
+            icon: photoUrls[client.id] ? (
+              <img
+                src={photoUrls[client.id]}
+                alt=""
+                className="size-8 shrink-0 rounded-full object-cover"
+              />
+            ) : (
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">
+                {client.full_name.slice(0, 1).toUpperCase()}
+              </span>
+            ),
+          }))}
+          value={value}
+          loading={loading}
+          placeholder="Sélectionner un client"
+          searchPlaceholder="Nom ou WhatsApp..."
+          emptyMessage="Aucun client trouvé."
+          onSelect={(option) => {
+            const client = optionsItems.find((item) => item.id === option.value);
+            if (client) onSelect(client);
+          }}
+        />
+      </div>
+      {onCreateNew ? (
+        <Button type="button" variant="outline" onClick={onCreateNew} className="shrink-0">
+          <UserPlus className="size-4" />
+          Nouveau client
+        </Button>
+      ) : null}
+    </div>
   );
 }

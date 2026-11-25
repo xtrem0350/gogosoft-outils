@@ -30,8 +30,15 @@ import { ClientSelect } from "@/components/selects/ClientSelect";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { DocumentPrinter } from "@/components/documents/DocumentPrinter";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
@@ -43,13 +50,33 @@ import {
   createSale,
   listSales,
   markAsDelivered,
-  updateSale,
+  markAsReady,
+  sendSaleToCashier,
   type CreateSaleData,
   type Sale,
 } from "@/services/salesService";
 import { getPublicProducts, type OnlineProduct } from "@/services/shopOnlineService";
 import { getTodayWorkshopPayments, type ActivityType, type WorkshopPaymentRecord } from "@/services/workshopService";
 import { buildWhatsappLink, normalizeWhatsapp } from "@/lib/whatsapp";
+
+function parseSaleCreationResult(
+  value: unknown,
+): { saleId: string; total: number } | null {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    Array.isArray(value) ||
+    Reflect.get(value, "success") !== true ||
+    typeof Reflect.get(value, "sale_id") !== "string" ||
+    typeof Reflect.get(value, "total") !== "number"
+  ) {
+    return null;
+  }
+  return {
+    saleId: Reflect.get(value, "sale_id"),
+    total: Reflect.get(value, "total"),
+  };
+}
 
 export function SalesListPage({
   view = "all",
@@ -72,6 +99,8 @@ export function SalesListPage({
   const [error, setError] = useState<string | null>(null);
   const [busySaleId, setBusySaleId] = useState<string | null>(null);
   const [invoiceSale, setInvoiceSale] = useState<Sale | null>(null);
+  const [deliverySale, setDeliverySale] = useState<Sale | null>(null);
+  const [deliveryNotes, setDeliveryNotes] = useState("");
   const [search, setSearch] = useState("");
   const [deliveryFilter, setDeliveryFilter] = useState("all");
   useEffect(() => {
@@ -154,14 +183,32 @@ export function SalesListPage({
     ["delivered", "Remises"],
   ];
 
-  async function deliverSale(saleId: string) {
+  async function prepareSale(saleId: string) {
     setBusySaleId(saleId);
     try {
-      const updated = await markAsDelivered(saleId);
+      const updated = await markAsReady(saleId);
       setSales((current) => current.map((sale) => (sale.id === saleId ? updated : sale)));
-      toast.success("✅ Livraison confirmée.");
+      toast.success("Vente marquée prête à être remise.");
     } catch (reason) {
-      toast.error(`❌ ${reason instanceof Error ? reason.message : "Mise à jour impossible."}`);
+      toast.error(reason instanceof Error ? reason.message : "Impossible de préparer la vente.");
+    } finally {
+      setBusySaleId(null);
+    }
+  }
+
+  async function deliverSale(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deliverySale) return;
+    const saleId = deliverySale.id;
+    setBusySaleId(saleId);
+    try {
+      const updated = await markAsDelivered(saleId, deliveryNotes);
+      setSales((current) => current.map((sale) => (sale.id === saleId ? updated : sale)));
+      setDeliverySale(null);
+      setDeliveryNotes("");
+      toast.success("Livraison confirmée.");
+    } catch (reason) {
+      toast.error(reason instanceof Error ? reason.message : "Impossible de confirmer la livraison.");
     } finally {
       setBusySaleId(null);
     }
@@ -410,7 +457,7 @@ export function SalesListPage({
                     Envoyer le reçu au client
                   </Button>
                 ) : null}
-                {isOrders && sale.delivery_status !== "delivered" ? (
+                {isOrders && sale.delivery_status === "pending" ? (
                   <ReadOnlyGuard>
                     <Button
                       type="button"
@@ -418,10 +465,26 @@ export function SalesListPage({
                       variant="outline"
                       className="mt-2"
                       disabled={busySaleId === sale.id}
-                      onClick={() => void deliverSale(sale.id)}
+                      onClick={() => void prepareSale(sale.id)}
                     >
-                      <Check aria-hidden="true" />{" "}
-                      {busySaleId === sale.id ? "En cours…" : "Marquer remise"}
+                      {busySaleId === sale.id ? "En cours…" : "Marquer prête"}
+                    </Button>
+                  </ReadOnlyGuard>
+                ) : null}
+                {isOrders && sale.delivery_status === "ready" ? (
+                  <ReadOnlyGuard>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="mt-2"
+                      disabled={busySaleId === sale.id}
+                      onClick={() => {
+                        setDeliveryNotes(sale.delivery_notes ?? "");
+                        setDeliverySale(sale);
+                      }}
+                    >
+                      {busySaleId === sale.id ? "En cours…" : "Marquer livrée"}
                     </Button>
                   </ReadOnlyGuard>
                 ) : null}
@@ -443,6 +506,48 @@ export function SalesListPage({
             : {})}
         />
       ) : null}
+      <Dialog
+        open={Boolean(deliverySale)}
+        onOpenChange={(open) => {
+          if (!open && busySaleId !== deliverySale?.id) {
+            setDeliverySale(null);
+            setDeliveryNotes("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la livraison</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(event) => void deliverSale(event)} className="grid gap-4">
+            <label className="grid gap-2 text-sm font-medium">
+              Note de livraison (facultative)
+              <Textarea
+                value={deliveryNotes}
+                onChange={(event) => setDeliveryNotes(event.target.value)}
+                maxLength={240}
+                placeholder="Précisions sur la remise au client…"
+              />
+            </label>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busySaleId === deliverySale?.id}
+                onClick={() => {
+                  setDeliverySale(null);
+                  setDeliveryNotes("");
+                }}
+              >
+                Annuler
+              </Button>
+              <Button type="submit" disabled={busySaleId === deliverySale?.id}>
+                {busySaleId === deliverySale?.id ? "Enregistrement…" : "Confirmer la livraison"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
       <Dialog open={Boolean(invoiceSale)} onOpenChange={(open) => !open && setInvoiceSale(null)}>
         <DialogContent className="max-w-lg">
           {invoiceSale ? (
@@ -514,6 +619,7 @@ export function NewSalePage() {
   const [productsLoading, setProductsLoading] = useState(false);
   const [quantity, setQuantity] = useState("1");
   const [selectedClient, setSelectedClient] = useState<ClientRecord | null>(null);
+  const [clientRefreshKey, setClientRefreshKey] = useState(0);
   const [createClientOpen, setCreateClientOpen] = useState(false);
   const [savedSale, setSavedSale] = useState<Sale | null>(null);
   const [saving, setSaving] = useState(false);
@@ -590,6 +696,7 @@ export function NewSalePage() {
     try {
       const saleData: CreateSaleData = {
         shop_id: shopId,
+        product_id: selectedProduct.id,
         activity_type: activityType,
         product_name: selectedProduct.name,
         product_description: selectedProduct.description,
@@ -612,31 +719,29 @@ export function NewSalePage() {
       if (isDemoMode()) {
         sale = await createSale(saleData);
       } else {
-        const { data, error } = await supabase.rpc("create_sale_with_stock", {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("NO_SESSION");
+        const { data, error } = await supabase.rpc("create_sale_with_stock" as never, {
           p_shop_id: shopId,
           p_product_id: selectedProduct.id,
           p_quantity: saleQuantity,
           p_client_id: selectedClient.id,
-          p_client_name: selectedClient.full_name,
-          p_client_whatsapp: selectedClient.whatsapp,
           p_payment_method: null,
-        });
+          p_activity_type: activityType,
+          p_user_id: authData.user.id,
+        } as never);
         if (error) throw new Error(error.message);
-        if (
-          !data ||
-          typeof data !== "object" ||
-          data.success !== true ||
-          typeof data.sale_id !== "string" ||
-          typeof data.total !== "number"
-        ) {
+        const result = parseSaleCreationResult(data);
+        if (!result) {
           throw new Error("Réponse invalide lors de la création de la vente.");
         }
         const now = new Date().toISOString();
         sale = {
           ...saleData,
-          id: data.sale_id,
-          total_price: data.total,
-          created_by: null,
+          id: result.saleId,
+          total_price: result.total,
+          created_by: authData.user.id,
           created_at: now,
           updated_at: now,
         };
@@ -663,7 +768,7 @@ export function NewSalePage() {
     if (!savedSale) return;
     setSendingToCashier(true);
     try {
-      await updateSale(savedSale.id, { payment_status: "awaiting_payment" });
+      await sendSaleToCashier(savedSale.id);
       toast.success("Vente transmise à la caisse pour encaissement.");
       await router.invalidate();
       await navigate({ to: "/sales" });
@@ -782,6 +887,7 @@ export function NewSalePage() {
             <ClientSelect
               shopId={shopId}
               value={selectedClient?.id}
+              refreshKey={clientRefreshKey}
               selectedClient={selectedClient ?? undefined}
               onSelect={setSelectedClient}
               onCreateNew={() => setCreateClientOpen(true)}
@@ -817,7 +923,10 @@ export function NewSalePage() {
         open={createClientOpen}
         onOpenChange={setCreateClientOpen}
         shopId={shopId ?? ""}
-        onCreated={setSelectedClient}
+        onCreated={(client) => {
+          setSelectedClient(client);
+          setClientRefreshKey((current) => current + 1);
+        }}
       />
     </section>
   );
