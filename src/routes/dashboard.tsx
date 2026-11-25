@@ -3,7 +3,7 @@ import {
   Activity,
   AlertTriangle,
   ArrowUpRight,
-  ClipboardList,
+  BarChart3,
   CreditCard,
   Laptop,
   Package,
@@ -12,10 +12,22 @@ import {
   ShoppingCart,
   UserPlus,
   UserRound,
+  Users,
   Wallet,
   Wrench,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { EmptyState } from "@/components/EmptyState";
 import { CreateShopModal } from "@/components/CreateShopModal";
@@ -36,8 +48,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { getCashSummary, type CashSummary } from "@/services/cashService";
+import { isDemoMode } from "@/services/demoService";
+import { getStockItems } from "@/services/stockService";
+import { getTeamMembers, type TeamMember } from "@/services/teamService";
 import { isSimulationMode } from "@/services/simulationService";
-import { getCashSummary } from "@/services/cashService";
 import { getAllTenants, getExpiringSubscriptions, getGlobalStats, getRecentSignups, type AdminStats, type AdminTenant, type AdminSubscription } from "@/services/adminService";
 import { getClientsByShop, type ClientRecord } from "@/services/clientService";
 import { listSales, type Sale } from "@/services/salesService";
@@ -84,6 +99,10 @@ function formatRelativeTime(value: string | null) {
   return `Il y a ${days} j`;
 }
 
+function getLocalDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function DashboardRouter() {
   const { activeRole, loading } = useUserRoles();
   if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement...</p>;
@@ -116,6 +135,9 @@ function OwnerDashboard() {
   const [tickets, setTickets] = useState<WorkshopTicket[]>([]);
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [sales, setSales] = useState<Sale[]>([]);
+  const [cashSummary, setCashSummary] = useState<CashSummary | null>(null);
+  const [technicians, setTechnicians] = useState<TeamMember[]>([]);
+  const [lowStockCount, setLowStockCount] = useState(0);
   const [events, setEvents] = useState<WorkshopEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -138,6 +160,9 @@ function OwnerDashboard() {
       setClients([]);
       setSales([]);
       setEvents([]);
+      setCashSummary(null);
+      setTechnicians([]);
+      setLowStockCount(0);
       setError(null);
       setLoading(false);
       return;
@@ -145,7 +170,11 @@ function OwnerDashboard() {
     if (!shopId) {
       setTickets([]);
       setClients([]);
+      setSales([]);
       setEvents([]);
+      setCashSummary(null);
+      setTechnicians([]);
+      setLowStockCount(0);
       setLoading(false);
       return;
     }
@@ -160,12 +189,20 @@ function OwnerDashboard() {
         ...(hasModule("vente-telephone") ? (["phone"] as const) : []),
         ...(hasModule("vente-pc") ? (["computer"] as const) : []),
       ];
-      const [ticketLists, clientList, saleLists] = await Promise.all([
+      const periodStart = new Date();
+      periodStart.setHours(0, 0, 0, 0);
+      periodStart.setDate(periodStart.getDate() - 34);
+      const [ticketLists, clientList, saleLists, summary, teamMembers, stockItems] = await Promise.all([
         Promise.all(activityTypes.map((type) => getTickets(shopId, type))),
         activityTypes.length > 0 || saleTypes.length > 0
           ? getClientsByShop(shopId)
           : Promise.resolve([]),
         Promise.all(saleTypes.map((type) => listSales(shopId, type))),
+        getCashSummary(shopId, { start: periodStart, end: new Date() }),
+        isDemoMode() ? Promise.resolve([]) : getTeamMembers(shopId),
+        !isDemoMode() && hasModule("consommables")
+          ? getStockItems(shopId)
+          : Promise.resolve([]),
       ]);
       const ticketList = ticketLists.flat();
       const eventLists = await Promise.all(
@@ -174,6 +211,9 @@ function OwnerDashboard() {
       setTickets(ticketList);
       setClients(clientList);
       setSales(saleLists.flat());
+      setCashSummary(summary);
+      setTechnicians(teamMembers);
+      setLowStockCount(stockItems.filter((item) => item.quantity <= item.min_quantity).length);
       setEvents(
         eventLists
           .flat()
@@ -190,6 +230,9 @@ function OwnerDashboard() {
           ? reason.message
           : "Impossible de charger les données de la boutique.",
       );
+      setCashSummary(null);
+      setTechnicians([]);
+      setLowStockCount(0);
     } finally {
       setLoading(false);
     }
@@ -213,12 +256,95 @@ function OwnerDashboard() {
   const greeting =
     currentHour >= 18 || currentHour < 6 ? `Bonsoir ${firstName}` : `Bonjour ${firstName}`;
   const roleLabel = getRoleLabel("owner");
-  const todayRevenue = tickets
-    .filter((ticket) => ticket.created_at && new Date(ticket.created_at).toDateString() === new Date().toDateString())
-    .reduce((total, ticket) => total + (ticket.price_final ?? ticket.price_estimate ?? 0), 0) +
-    sales
-      .filter((sale) => sale.payment_status === "paid" && new Date(sale.created_at).toDateString() === new Date().toDateString())
-      .reduce((total, sale) => total + sale.total_price, 0);
+  const now = new Date();
+  const todayKey = getLocalDateKey(now);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = getLocalDateKey(yesterday);
+  const cashRows = useMemo(
+    () => [
+      ...(cashSummary?.workshopPayments ?? []).map(({ amount, created_at }) => ({ amount, created_at })),
+      ...(cashSummary?.sales ?? []).map(({ total_price, created_at }) => ({ amount: total_price, created_at })),
+      ...(cashSummary?.manualEntries ?? []).map(({ amount, created_at }) => ({ amount, created_at })),
+    ],
+    [cashSummary],
+  );
+  const revenueForDate = (key: string) =>
+    cashRows
+      .filter((row) => getLocalDateKey(new Date(row.created_at)) === key)
+      .reduce((total, row) => total + row.amount, 0);
+  const todayRevenue = revenueForDate(todayKey);
+  const yesterdayRevenue = revenueForDate(yesterdayKey);
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthRevenue = cashRows
+    .filter((row) => new Date(row.created_at) >= currentMonthStart)
+    .reduce((total, row) => total + row.amount, 0);
+  const monthRevenueYesterday = cashRows
+    .filter((row) => new Date(row.created_at) >= currentMonthStart && getLocalDateKey(new Date(row.created_at)) !== todayKey)
+    .reduce((total, row) => total + row.amount, 0);
+  const formatTrend = (current: number, previous: number, suffix = "vs hier") => {
+    if (previous === 0) return current > 0 ? `Nouveau ${suffix}` : `0% ${suffix}`;
+    const change = Math.round(((current - previous) / previous) * 100);
+    return `${change > 0 ? "+" : ""}${change}% ${suffix}`;
+  };
+  const repairsCreatedToday = tickets.filter(
+    (ticket) => ticket.created_at && getLocalDateKey(new Date(ticket.created_at)) === todayKey,
+  ).length;
+  const repairsCreatedYesterday = tickets.filter(
+    (ticket) => ticket.created_at && getLocalDateKey(new Date(ticket.created_at)) === yesterdayKey,
+  ).length;
+  const salesToday = sales.filter((sale) => getLocalDateKey(new Date(sale.created_at)) === todayKey);
+  const salesYesterday = sales.filter((sale) => getLocalDateKey(new Date(sale.created_at)) === yesterdayKey);
+  const chartStart = new Date(now);
+  chartStart.setHours(0, 0, 0, 0);
+  chartStart.setDate(chartStart.getDate() - 29);
+  const revenueChart = useMemo(() => {
+    const points = Array.from({ length: 30 }, (_, index) => {
+      const day = new Date(chartStart);
+      day.setDate(day.getDate() + index);
+      const key = getLocalDateKey(day);
+      const amount = cashRows
+        .filter((row) => getLocalDateKey(new Date(row.created_at)) === key)
+        .reduce((total, row) => total + row.amount, 0);
+      return { day: day.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), amount };
+    });
+    return points;
+  }, [cashRows, chartStart]);
+  const topProducts = useMemo(() => {
+    const start = new Date(chartStart);
+    const products = new Map<string, number>();
+    for (const sale of sales) {
+      if (sale.payment_status !== "paid" || new Date(sale.created_at) < start) continue;
+      products.set(sale.product_name, (products.get(sale.product_name) ?? 0) + sale.quantity);
+    }
+    return [...products.entries()]
+      .map(([name, quantity]) => ({ name, quantity }))
+      .sort((left, right) => right.quantity - left.quantity)
+      .slice(0, 5);
+  }, [sales, chartStart]);
+  const topTechnicians = useMemo(() => {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    return technicians
+      .filter((member) => member.role.toLocaleLowerCase().includes("technicien"))
+      .map((member) => ({
+        name: member.full_name ?? "Technicien",
+        repairs: tickets.filter((ticket) => {
+          const completedAt = new Date(ticket.delivered_at ?? ticket.updated_at ?? "");
+          return ticket.technicien_id === member.user_id &&
+            ticket.status === "livre" &&
+            Number.isFinite(completedAt.getTime()) &&
+            completedAt >= start;
+        }).length,
+      }))
+      .filter((member) => member.repairs > 0)
+      .sort((left, right) => right.repairs - left.repairs)
+      .slice(0, 5);
+  }, [technicians, tickets, now]);
+  const overdueRepairs = tickets.filter((ticket) => {
+    if (!ticket.created_at || ticket.status === "livre" || ticket.status === "annule") return false;
+    return now.getTime() - new Date(ticket.created_at).getTime() > 7 * 86_400_000;
+  });
+  const salesTodayCount = salesToday.length;
   const hasPhoneRepairModule = hasModule("reparation-telephone");
   const hasComputerRepairModule = hasModule("reparation-pc");
   const hasRepairModule = hasPhoneRepairModule || hasComputerRepairModule;
@@ -269,6 +395,20 @@ function OwnerDashboard() {
       label: "Voir la caisse",
       description: "Suivre les encaissements du jour",
       color: "orange" as const,
+    },
+    {
+      to: "/magasin",
+      icon: Package,
+      label: "Voir le stock",
+      description: "Contrôler les alertes et les mouvements",
+      color: "orange" as const,
+    },
+    {
+      to: "/equipe",
+      icon: Users,
+      label: "Voir l’équipe",
+      description: "Consulter les membres de la boutique",
+      color: "green" as const,
     },
     ...(hasModule("consommables")
       ? [
@@ -402,41 +542,138 @@ function OwnerDashboard() {
       ) : null}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {hasRepairModule ? <StatsCard
+        <StatsCard
+          title="Chiffre d’affaires du jour"
+          value={busy ? "…" : formatAmount.format(todayRevenue)}
+          icon={CreditCard}
+          trend={formatTrend(todayRevenue, yesterdayRevenue)}
+          color="warning"
+        />
+        <StatsCard
+          title="Chiffre d’affaires du mois"
+          value={busy ? "…" : formatAmount.format(monthRevenue)}
+          icon={Wallet}
+          trend={formatTrend(monthRevenue, monthRevenueYesterday)}
+          color="primary"
+        />
+        <StatsCard
           title="Réparations en cours"
           value={busy ? "…" : enCours}
           icon={Activity}
-          trend={`${tickets.length} fiche(s) au total`}
+          trend={`${formatTrend(repairsCreatedToday, repairsCreatedYesterday, "fiches créées vs hier")}`}
           color="success"
-        /> : null}
-        {hasClientModule ? <StatsCard
-          title="Clients enregistrés"
-          value={busy ? "…" : clients.length}
-          icon={UserRound}
-          trend="Base de la boutique"
-          color="primary"
-        /> : null}
-        {hasRepairModule || hasSalesModule ? <StatsCard
-          title="CA du jour"
-          value={busy ? "…" : formatAmount.format(todayRevenue)}
-          icon={CreditCard}
-          trend="Atelier et ventes réglées aujourd'hui"
-          color="warning"
-        /> : null}
-        {hasSalesModule ? <StatsCard
-          title="Ventes enregistrées"
-          value={busy ? "…" : sales.length}
-          icon={ShoppingCart}
-          trend="Selon les domaines de vente actifs"
-          color="success"
-        /> : null}
-        <StatsCard
-          title="Jours restants abonnement"
-          value={subLoading ? "…" : daysRemaining}
-          icon={ClipboardList}
-          trend={subscription?.plan ? `Formule ${subscription.plan}` : "Aucun abonnement"}
-          color="danger"
         />
+        <StatsCard
+          title="Ventes du jour"
+          value={busy ? "…" : salesTodayCount}
+          icon={ShoppingCart}
+          trend={formatTrend(salesTodayCount, salesYesterday.length)}
+          color="success"
+        />
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="card-3d rounded-2xl border-0">
+          <CardHeader>
+            <CardTitle>Chiffre d’affaires — 30 jours</CardTitle>
+            <p className="text-sm text-muted-foreground">Encaissements atelier, ventes réglées et entrées manuelles.</p>
+          </CardHeader>
+          <CardContent>
+            {revenueChart.some((point) => point.amount > 0) ? (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueChart} margin={{ left: 8, right: 12, top: 8, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="day" tick={{ fontSize: 11 }} minTickGap={24} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => [formatAmount.format(Number(value)), "CA"]} />
+                    <Line type="monotone" dataKey="amount" stroke="#166534" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <p className="py-12 text-center text-sm text-muted-foreground">Aucun encaissement sur les 30 derniers jours.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="card-3d rounded-2xl border-0">
+          <CardHeader><CardTitle>Top 5 produits vendus</CardTitle></CardHeader>
+          <CardContent>
+            {topProducts.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">Aucune vente réglée sur les 30 derniers jours.</p>
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topProducts} layout="vertical" margin={{ left: 12, right: 12, top: 8, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => [`${value} vendu(s)`, "Quantité"]} />
+                    <Bar dataKey="quantity" name="Quantité" fill="#f97316" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="card-3d rounded-2xl border-0">
+          <CardHeader className="flex-row items-center gap-2">
+            <BarChart3 className="size-5 text-blue-600" />
+            <CardTitle>Top 5 techniciens — ce mois</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topTechnicians.length === 0 ? (
+              <p className="py-12 text-center text-sm text-muted-foreground">Aucune réparation terminée par un technicien ce mois-ci.</p>
+            ) : (
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={topTechnicians} layout="vertical" margin={{ left: 12, right: 12, top: 8, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis type="number" allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+                    <Tooltip formatter={(value) => [`${value} réparation(s)`, "Terminées"]} />
+                    <Bar dataKey="repairs" name="Terminées" fill="#2563eb" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="card-3d rounded-2xl border-0">
+          <CardHeader><CardTitle>Alertes</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {busy || subLoading ? (
+              <p className="text-sm text-muted-foreground">Chargement des alertes…</p>
+            ) : (
+              <>
+                {lowStockCount > 0 ? (
+                  <Link to="/magasin" className="flex items-center gap-3 rounded-lg border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+                    <Package className="size-4 shrink-0" />
+                    {lowStockCount} article(s) en stock bas
+                  </Link>
+                ) : null}
+                {subscription && daysRemaining <= 30 ? (
+                  <Link to="/abonnement" search={{ activate: undefined }} className="flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                    <AlertTriangle className="size-4 shrink-0" />
+                    {daysRemaining <= 0 ? "Abonnement expiré" : `Abonnement expire dans ${daysRemaining} jour(s)`}
+                  </Link>
+                ) : null}
+                {overdueRepairs.length > 0 ? (
+                  <Link to={overdueRepairs[0]?.activity_type === "computer" ? "/computer/atelier" : "/phone/atelier"} className="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-900">
+                    <Wrench className="size-4 shrink-0" />
+                    {overdueRepairs.length} réparation(s) en retard de plus de 7 jours
+                  </Link>
+                ) : null}
+                {lowStockCount === 0 && (!subscription || daysRemaining > 30) && overdueRepairs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Aucune alerte prioritaire.</p>
+                ) : null}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {!isMobile ? (

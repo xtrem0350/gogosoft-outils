@@ -172,7 +172,7 @@ function CashPage() {
   const [receipt, setReceipt] = useState<CashReceipt | null>(null);
   const [cashSession, setCashSession] = useState<CashSession | null>(null);
   const [closedSessionSummary, setClosedSessionSummary] = useState<Awaited<ReturnType<typeof closeCashSession>> | null>(null);
-  const [refundSale, setRefundSale] = useState<CashSummary["sales"][number] | null>(null);
+  const [saleToRefund, setSaleToRefund] = useState<CashSummary["sales"][number] | null>(null);
   const [refundReason, setRefundReason] = useState("");
   const [savingRefund, setSavingRefund] = useState(false);
   const [entryModalOpen, setEntryModalOpen] = useState(false);
@@ -527,7 +527,7 @@ function CashPage() {
       toast.error("Seul le propriétaire ou le caissier peut rembourser une vente.");
       return;
     }
-    if (!shopId || !cashSession || !refundSale) {
+    if (!shopId || !cashSession || !saleToRefund) {
       toast.error("Ouvrez une session de caisse avant de rembourser.");
       return;
     }
@@ -542,8 +542,8 @@ function CashPage() {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       if (!authData.user) throw new Error("NO_SESSION");
-      await refundSale(refundSale.id, reason, authData.user.id);
-      setRefundSale(null);
+      await refundSale(saleToRefund.id, reason, authData.user.id);
+      setSaleToRefund(null);
       setRefundReason("");
       toast.success("Remboursement enregistré et vente marquée comme remboursée.");
       await load();
@@ -607,7 +607,7 @@ function CashPage() {
           <TabsTrigger value="historique">Historique</TabsTrigger>
         </TabsList>
         <TabsContent value="encaissements">
-          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onRefundSale={(saleId) => setRefundSale(summary?.sales.find((sale) => sale.id === saleId) ?? null)} canRefundSale={canManageCash} onReceipt={(draft: CashReceiptDraft) => {
+          {!demo ? <CaisseEntriesTab summary={summary} pendingSales={pendingSales} paymentMethodsBySale={paymentMethodsBySale} onPaymentMethodChange={(saleId, method) => setPaymentMethodsBySale((current) => ({ ...current, [saleId]: method }))} onCollectSale={(saleId) => void collectSale(saleId)} onRefundSale={(saleId) => setSaleToRefund(summary?.sales.find((sale) => sale.id === saleId) ?? null)} canRefundSale={canManageCash} onReceipt={(draft: CashReceiptDraft) => {
             if (!shopId) {
               toast.error("Aucune boutique active pour émettre le reçu.");
               return;
@@ -668,10 +668,10 @@ function CashPage() {
         </DialogContent>
       </Dialog>
       <Dialog
-        open={Boolean(refundSale)}
+        open={Boolean(saleToRefund)}
         onOpenChange={(open) => {
           if (!open && !savingRefund) {
-            setRefundSale(null);
+            setSaleToRefund(null);
             setRefundReason("");
           }
         }}
@@ -680,10 +680,10 @@ function CashPage() {
           <DialogHeader>
             <DialogTitle>Rembourser la vente</DialogTitle>
           </DialogHeader>
-          {refundSale ? (
+          {saleToRefund ? (
             <form onSubmit={(event) => void submitRefund(event)} className="grid gap-4">
               <p>
-                {refundSale.product_name} · {formatMoney(refundSale.total_price)}
+                {saleToRefund.product_name} · {formatMoney(saleToRefund.total_price)}
               </p>
               <label className="grid gap-2 text-sm font-medium">
                 Motif du remboursement
@@ -699,7 +699,7 @@ function CashPage() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setRefundSale(null);
+                    setSaleToRefund(null);
                     setRefundReason("");
                   }}
                   disabled={savingRefund}

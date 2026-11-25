@@ -89,6 +89,7 @@ Structure du projet (avec glob)
 │   │   ├── 📄 demoService.ts
 │   │   ├── 📄 clientService.ts
 │   │   ├── 📄 checkoutService.ts
+│   │   ├── 📄 chatService.ts
 │   │   ├── 📄 cashService.ts
 │   │   ├── 📄 authService.ts
 │   │   └── 📄 adminService.ts

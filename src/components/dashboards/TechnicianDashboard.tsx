@@ -1,6 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CheckCircle2, Clock, Plus, Wrench } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
@@ -52,8 +61,7 @@ export function TechnicianDashboard() {
           [...phoneTickets, ...computerTickets]
             .sort((left, right) =>
               (right.created_at ?? "").localeCompare(left.created_at ?? ""),
-            )
-            .slice(0, 20),
+            ),
         );
         setUnassigned(unassignedTickets);
       })
@@ -76,12 +84,44 @@ export function TechnicianDashboard() {
   }, [refreshKey, shopId, user]);
 
   const currentTickets = assigned.filter((ticket) => ticket.status !== "livre" && ticket.status !== "annule");
-  const today = new Date().toISOString().slice(0, 10);
   const inProgress = assigned.filter((ticket) => ticket.status === "en_cours").length;
-  const done = assigned.filter((ticket) =>
-    ticket.status === "livre" &&
-    (ticket.delivered_at ?? ticket.updated_at ?? "").slice(0, 10) === today,
-  ).length;
+  const weekStart = new Date();
+  weekStart.setHours(0, 0, 0, 0);
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  const doneThisWeek = assigned.filter((ticket) => {
+    if (ticket.status !== "livre") return false;
+    const completedAt = new Date(ticket.delivered_at ?? ticket.updated_at ?? "");
+    return Number.isFinite(completedAt.getTime()) && completedAt >= weekStart;
+  }).length;
+  const repairDurationByWeek = useMemo(() => {
+    const currentWeekStart = new Date();
+    currentWeekStart.setHours(0, 0, 0, 0);
+    currentWeekStart.setDate(currentWeekStart.getDate() - ((currentWeekStart.getDay() + 6) % 7));
+    const weeks = Array.from({ length: 4 }, (_, index) => {
+      const start = new Date(currentWeekStart);
+      start.setDate(start.getDate() - (3 - index) * 7);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+      return { start, end, label: start.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit" }), durations: [] as number[] };
+    });
+    for (const ticket of assigned) {
+      if (ticket.status !== "livre" || !ticket.created_at) continue;
+      const createdAt = new Date(ticket.created_at);
+      const completedAt = new Date(ticket.delivered_at ?? ticket.updated_at ?? "");
+      if (!Number.isFinite(createdAt.getTime()) || !Number.isFinite(completedAt.getTime())) continue;
+      const durationDays = (completedAt.getTime() - createdAt.getTime()) / 86_400_000;
+      if (durationDays < 0) continue;
+      const week = weeks.find(({ start, end }) => completedAt >= start && completedAt < end);
+      week?.durations.push(durationDays);
+    }
+    return weeks.map(({ label, durations }) => ({
+      week: label,
+      averageDays: durations.length
+        ? Number((durations.reduce((total, duration) => total + duration, 0) / durations.length).toFixed(1))
+        : 0,
+      repairs: durations.length,
+    }));
+  }, [assigned]);
 
   async function takeTicket(ticket: WorkshopTicket) {
     if (!user) {
@@ -134,26 +174,50 @@ export function TechnicianDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Tickets assignés</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">Mes réparations en cours</CardTitle>
             <Wrench className="size-4 text-slate-600 dark:text-slate-400" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold">{assigned.length}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold">{loading ? "…" : inProgress}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">En cours</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">En attente de pièces</CardTitle>
             <Clock className="size-4 text-orange-500" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold">{inProgress}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold">{loading ? "…" : assigned.filter((ticket) => ticket.status === "en_attente_pieces").length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500">Terminées aujourd'hui</CardTitle>
+            <CardTitle className="text-sm font-medium text-slate-500">Terminées cette semaine</CardTitle>
             <CheckCircle2 className="size-4 text-green-800" />
           </CardHeader>
-          <CardContent><div className="text-3xl font-bold">{done}</div></CardContent>
+          <CardContent><div className="text-3xl font-bold">{loading ? "…" : doneThisWeek}</div></CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Temps moyen de réparation</CardTitle>
+          <p className="text-sm text-muted-foreground">Durée en jours, selon la semaine de livraison.</p>
+        </CardHeader>
+        <CardContent>
+          {repairDurationByWeek.every((week) => week.repairs === 0) ? (
+            <p className="py-12 text-center text-sm text-muted-foreground">Aucune réparation terminée sur les quatre dernières semaines.</p>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={repairDurationByWeek} margin={{ left: 8, right: 12, top: 8, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="week" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} unit=" j" />
+                  <Tooltip formatter={(value) => [`${value} jour(s)`, "Durée moyenne"]} />
+                  <Bar dataKey="averageDays" name="Durée moyenne" fill="#2563eb" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader><CardTitle>Mes fiches assignées</CardTitle></CardHeader>
@@ -164,7 +228,7 @@ export function TechnicianDashboard() {
             <p className="text-sm text-slate-500">Aucune fiche assignée pour l’instant.</p>
           ) : (
             <div className="space-y-2">
-              {currentTickets.map((ticket) => (
+              {currentTickets.slice(0, 20).map((ticket) => (
                 <Link
                   key={ticket.id}
                   to={ticket.activity_type === "computer" ? "/computer/atelier/$id" : "/phone/atelier/$id"}
