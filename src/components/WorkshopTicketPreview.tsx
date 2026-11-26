@@ -1,5 +1,7 @@
 import { DocumentPrintActions } from "@/components/documents/DocumentPrinter";
 import { Button } from "@/components/ui/button";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
+import type { Shop } from "@/services/shopService";
 import type { WorkshopTicket } from "@/types/database";
 
 export type WorkshopTicketPreviewMode = "reception" | "diagnostic" | "final";
@@ -17,6 +19,7 @@ interface WorkshopTicketPreviewProps {
   shopName?: string | undefined;
   shopAddress?: string | null | undefined;
   shopPhone?: string | null | undefined;
+  shop?: Shop | null;
   laborCost?: number;
   partsCost?: number;
   otherCost?: number;
@@ -47,13 +50,25 @@ export function WorkshopTicketPreview({
   shopName,
   shopAddress,
   shopPhone,
+  shop,
   laborCost,
   partsCost,
   otherCost,
 }: WorkshopTicketPreviewProps) {
+  const { shop: currentShop } = useCurrentShop();
+  const footerShop = shop ?? currentShop;
   const deviceName = [ticket.device_brand, ticket.device_model].filter(Boolean).join(" ") || "—";
   const parts = ticket.pieces_consommees ?? [];
   const isClientReceipt = audience === "client";
+  const hasLegalFooter = Boolean(
+    footerShop &&
+      ((footerShop.raison_sociale && footerShop.capital_social != null) ||
+        footerShop.rc ||
+        footerShop.cc ||
+        footerShop.adresse_bp ||
+        footerShop.localisation_physique),
+  );
+  const hasFallbackShopInfo = Boolean(shopName || shopAddress || shopPhone);
 
   return (
     <>
@@ -195,6 +210,38 @@ export function WorkshopTicketPreview({
               <p className="mt-6 border-t border-black pt-2">Signature</p>
             )}
           </section>
+        ) : null}
+        {footerShop ? (
+          hasLegalFooter ? (
+            <div className="mt-4 border-t border-gray-300 pt-2 text-xs text-gray-500">
+              {footerShop.raison_sociale && footerShop.capital_social != null ? (
+                <p>
+                  {footerShop.raison_sociale} — Capital{" "}
+                  {footerShop.capital_social.toLocaleString("fr-FR")} FCFA
+                </p>
+              ) : null}
+              {footerShop.rc || footerShop.cc ? (
+                <p>
+                  {footerShop.rc ? <>RC {footerShop.rc}</> : null}
+                  {footerShop.rc && footerShop.cc ? " — " : null}
+                  {footerShop.cc ? <>CC {footerShop.cc}</> : null}
+                </p>
+              ) : null}
+              {footerShop.adresse_bp || footerShop.localisation_physique ? (
+                <p>
+                  {footerShop.adresse_bp ? <>BP {footerShop.adresse_bp}</> : null}
+                  {footerShop.adresse_bp && footerShop.localisation_physique ? " — " : null}
+                  {footerShop.localisation_physique}
+                </p>
+              ) : null}
+            </div>
+          ) : null
+        ) : hasFallbackShopInfo ? (
+          <div className="mt-4 border-t border-gray-300 pt-2 text-xs text-gray-500">
+            {shopName ? <p>{shopName}</p> : null}
+            {shopAddress ? <p>{shopAddress}</p> : null}
+            {shopPhone ? <p>Téléphone : {shopPhone}</p> : null}
+          </div>
         ) : null}
       </article>
     </>

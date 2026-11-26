@@ -4,6 +4,7 @@ import { jsPDF } from "jspdf";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import type { Shop } from "@/services/shopService";
 
 export type PrintableDocumentType = "receipt" | "invoice" | "quote" | "certificate";
 
@@ -12,6 +13,7 @@ interface DocumentPrinterProps {
   documentId: string;
   data: Record<string, unknown>;
   onClose?: () => void;
+  shop?: Shop | null;
 }
 
 interface DocumentPrintActionsProps {
@@ -160,10 +162,19 @@ export function DocumentPrinter({
   documentId,
   data,
   onClose,
+  shop,
 }: DocumentPrinterProps) {
   const fields = Object.entries(data).filter(([, value]) => value !== undefined);
   const hasReference = fields.some(([key]) => key === "reference" || key === "id");
   const reference = String(data["reference"] ?? data["id"] ?? documentId);
+  const hasLegalFooter = Boolean(
+    shop &&
+      ((shop.raison_sociale && shop.capital_social != null) ||
+        shop.rc ||
+        shop.cc ||
+        shop.adresse_bp ||
+        shop.localisation_physique),
+  );
 
   return (
     <>
@@ -208,6 +219,30 @@ export function DocumentPrinter({
           </div>
         ) : null}
         <DocumentPrintActions onClose={onClose} reference={reference} />
+        {hasLegalFooter && shop ? (
+          <div className="mt-4 border-t border-gray-300 pt-2 text-xs text-gray-500">
+            {shop.raison_sociale && shop.capital_social != null ? (
+              <p>
+                {shop.raison_sociale} — Capital{" "}
+                {shop.capital_social.toLocaleString("fr-FR")} FCFA
+              </p>
+            ) : null}
+            {shop.rc || shop.cc ? (
+              <p>
+                {shop.rc ? <>RC {shop.rc}</> : null}
+                {shop.rc && shop.cc ? " — " : null}
+                {shop.cc ? <>CC {shop.cc}</> : null}
+              </p>
+            ) : null}
+            {shop.adresse_bp || shop.localisation_physique ? (
+              <p>
+                {shop.adresse_bp ? <>BP {shop.adresse_bp}</> : null}
+                {shop.adresse_bp && shop.localisation_physique ? " — " : null}
+                {shop.localisation_physique}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
       </article>
     </>
   );

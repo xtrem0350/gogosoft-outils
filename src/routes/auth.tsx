@@ -11,7 +11,7 @@ import { PasswordStrengthBar } from "@/components/PasswordStrengthBar";
 import { CheckoutModal, type CheckoutSubmission } from "@/components/CheckoutModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -107,7 +107,7 @@ function readNewPricingSelection(): {
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({
-    mode: z.enum(["login", "signup"]).optional(),
+    signup: z.literal("1").optional(),
     redirect: z.string().optional(),
   }),
   component: AuthPage,
@@ -117,10 +117,8 @@ function AuthPage() {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { refresh: refreshShops } = useCurrentShop();
-  const { mode } = Route.useSearch();
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">(() =>
-    mode === "signup" ? "signup" : "signin",
-  );
+  const { signup } = Route.useSearch();
+  const signupEnabled = signup === "1" && !isMobile;
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -136,7 +134,7 @@ function AuthPage() {
   const [paymentDomainIds, setPaymentDomainIds] = useState<WelcomeDomainId[]>([]);
   const [busy, setBusy] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const currentTab = isMobile ? "signin" : activeTab;
+  const currentTab = signupEnabled ? "signup" : "signin";
 
   useEffect(() => {
     const savedIdentifier = window.localStorage.getItem("gogosoft.rememberedIdentifier");
@@ -421,7 +419,7 @@ function AuthPage() {
           <div className="grid gap-0 md:grid-cols-[0.9fr_1.1fr]">
             <section className="hidden min-h-[280px] flex-col justify-center bg-slate-900/70 p-8 text-white md:flex lg:min-h-[640px] lg:p-10">
               <div className="flex flex-col items-center justify-center gap-5 text-center">
-                {activeTab === "signup" ? (
+                {currentTab === "signup" ? (
                   <>
                     <button
                       type="button"
@@ -514,31 +512,13 @@ function AuthPage() {
 
                 <Tabs
                   value={currentTab}
-                  onValueChange={(value) => {
-                    if (!isMobile) setActiveTab(value as "signin" | "signup");
-                  }}
                   className="w-full"
                 >
                   {isMobile ? (
                     <p className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm text-slate-300">
                       Pour créer un compte, demandez une invitation à votre responsable.
                     </p>
-                  ) : (
-                    <TabsList className="grid h-11 w-full grid-cols-2 bg-white/5">
-                      <TabsTrigger
-                        value="signin"
-                        className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
-                      >
-                        Connexion
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="signup"
-                        className="text-white data-[state=active]:bg-white data-[state=active]:text-slate-900"
-                      >
-                        Inscription
-                      </TabsTrigger>
-                    </TabsList>
-                  )}
+                  ) : null}
 
                   <form
                     onSubmit={(event) => {
@@ -549,6 +529,7 @@ function AuthPage() {
                       }
                     }}
                   >
+                    {currentTab === "signin" ? (
                     <TabsContent value="signin" className="space-y-4 pt-5">
                       <div className="space-y-2">
                         <div className="relative">
@@ -603,9 +584,30 @@ function AuthPage() {
                         Se connecter
                         <ArrowRight className="size-4" />
                       </Button>
-                    </TabsContent>
 
-                    {!isMobile ? (
+                      <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-white/20" />
+                        </div>
+                        <div className="relative flex justify-center text-xs">
+                          <span className="bg-slate-950 px-2 text-slate-400">OU</span>
+                        </div>
+                      </div>
+                      <p className="mb-2 text-center text-sm text-slate-300">
+                        Vous avez reçu un code d&apos;invitation ?
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-12 w-full border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                        onClick={() => void navigate({ to: "/rejoindre" })}
+                      >
+                        J&apos;ai une invitation
+                      </Button>
+                    </TabsContent>
+                    ) : null}
+
+                    {signupEnabled ? (
                     <TabsContent value="signup" className="space-y-4 pt-5">
                       <div className="space-y-4">
                         <div className="relative">

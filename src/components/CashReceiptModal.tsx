@@ -7,6 +7,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
+import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { archiveCashReceipt, type CashReceiptRecord } from "@/services/cashService";
 
 export type CashReceipt = CashReceiptRecord;
@@ -27,6 +28,8 @@ interface CashReceiptModalProps {
 }
 
 export function CashReceiptModal({ receipt, onClose }: CashReceiptModalProps) {
+  const { shop } = useCurrentShop();
+
   useEffect(() => {
     if (!receipt) return;
     try {
@@ -54,6 +57,7 @@ export function CashReceiptModal({ receipt, onClose }: CashReceiptModalProps) {
             shop_name: receipt.shop_name,
             payment_method: receipt.paymentMethod,
           }}
+          shop={shop}
           onClose={onClose}
         />
       </DialogContent>

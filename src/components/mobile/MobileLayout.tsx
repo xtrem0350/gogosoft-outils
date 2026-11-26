@@ -12,7 +12,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import logo from "@/assets/images/leprofile.png";
@@ -91,6 +91,16 @@ export function MobileLayout({ children }: { children: ReactNode }) {
   const { shop } = useCurrentShop();
   const { roles, activeRole, setActiveRole, isOwner } = useUserRoles();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+
+    return () => {
+      root.classList.toggle("dark", wasDark);
+    };
+  }, []);
 
   // CORRECTION ICI : accès via crochets pour respecter l'index signature TypeScript
   const mobileNavigationItems = navigationByRole[activeRole] ?? navigationByRole["owner"]!;

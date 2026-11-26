@@ -268,7 +268,10 @@ function DesktopHomePage() {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(selectedDomains));
       window.sessionStorage.setItem(PRICING_MODE_STORAGE_KEY, pricingMode);
     }
-    await navigate({ to: "/auth", search: { mode } });
+    await navigate({
+      to: "/auth",
+      search: mode === "signup" ? { signup: "1" } : {},
+    });
   }
 
   async function handleStartDemo() {
