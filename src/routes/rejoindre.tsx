@@ -34,6 +34,19 @@ function JoinInvitationPage() {
   const [emailConfirmationRequired, setEmailConfirmationRequired] = useState(false);
 
   useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    const hadLight = root.classList.contains("light");
+    root.classList.remove("dark");
+    root.classList.add("light");
+
+    return () => {
+      if (wasDark) root.classList.add("dark");
+      if (!hadLight) root.classList.remove("light");
+    };
+  }, []);
+
+  useEffect(() => {
     const pendingCode = window.sessionStorage.getItem("gogosoft.pendingInvitationCode");
     if (!pendingCode) return;
 
@@ -179,7 +192,7 @@ function JoinInvitationPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-orange-50 via-white to-green-50 px-4 py-8 text-black dark:from-slate-950 dark:via-slate-900 dark:to-green-950 sm:px-6">
       <div className="grid w-full max-w-5xl grid-cols-1 overflow-hidden rounded-2xl border bg-background shadow-2xl md:min-h-[620px] md:grid-cols-[0.8fr_1.2fr]">
         <aside className="hidden flex-col items-center justify-center gap-5 bg-slate-900 p-8 text-center text-white md:flex md:items-start md:text-left">
           <img src={authLogo} alt="GogoSoft" className="size-16 rounded-full object-cover" />

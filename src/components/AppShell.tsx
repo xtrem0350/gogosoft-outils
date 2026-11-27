@@ -549,7 +549,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             ) : null}
             {!isSuperAdmin ? <ShopSelector /> : null}
-            <ThemeToggle />
+            {isAuthRoute || location.pathname === "/" ? null : <ThemeToggle />}
             <UserMenu />
           </div>
         </header>

@@ -182,6 +182,19 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const isMobile = useIsMobile();
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    const hadLight = root.classList.contains("light");
+    root.classList.remove("dark");
+    root.classList.add("light");
+
+    return () => {
+      if (wasDark) root.classList.add("dark");
+      if (!hadLight) root.classList.remove("light");
+    };
+  }, []);
+
   if (isMobile) {
     return <MobileRedirectGuard target="/auth" />;
   }
@@ -310,7 +323,7 @@ function DesktopHomePage() {
 
   return (
     <>
-      <main className="relative isolate min-h-screen overflow-x-hidden bg-slate-950 text-slate-900">
+      <main className="relative isolate min-h-screen overflow-x-hidden bg-white text-black">
         <div
           aria-hidden="true"
           className="absolute inset-0 bg-center"
