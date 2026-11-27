@@ -5,16 +5,15 @@ import {
   Gift,
   Laptop,
   Lock,
-  Mail,
-  Phone,
   ShoppingCart,
   Smartphone,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import profileLogo from "@/assets/images/leprofile.png";
-import profilePhoto from "@/assets/images/profile.png";
+import { AboutDeveloperModal } from "@/components/AboutDeveloperModal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -211,6 +210,7 @@ function DesktopHomePage() {
   const [selectedDomains, setSelectedDomains] = useState<ModuleId[]>(readSelectedModules);
   const [pricingMode, setPricingMode] =
     useState<Exclude<PricingMode, null>>(readInitialPricingMode);
+  const [aboutDeveloperOpen, setAboutDeveloperOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -309,16 +309,17 @@ function DesktopHomePage() {
     : moduleCount > 0;
 
   return (
-    <main className="relative isolate min-h-screen overflow-x-hidden bg-slate-950 text-slate-900">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-center"
-        style={{
-          backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
-          backgroundSize: "100% 100%",
-        }}
-      />
-      <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
+    <>
+      <main className="relative isolate min-h-screen overflow-x-hidden bg-slate-950 text-slate-900">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-center"
+          style={{
+            backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
+            backgroundSize: "100% 100%",
+          }}
+        />
+        <div aria-hidden="true" className="absolute inset-0 bg-black/60" />
 
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center justify-center px-4 py-4 sm:px-6 lg:px-8">
         <div className="grid w-full max-w-6xl min-w-0 overflow-hidden rounded-3xl border border-white/10 bg-white/10 shadow-2xl backdrop-blur-md lg:h-[min(820px,calc(100vh-2rem))] lg:grid-cols-[0.8fr_1.55fr]">
@@ -547,75 +548,28 @@ function DesktopHomePage() {
         </div>
       </div>
 
-      <section
-        aria-labelledby="developer-title"
-        className="relative z-10 mx-auto w-full max-w-6xl space-y-6 px-4 pb-8 sm:px-6 lg:px-8"
-      >
-        <div>
-          <h2 id="developer-title" className="text-2xl font-bold text-white sm:text-3xl">
-            À propos du développeur
-          </h2>
-        </div>
-        <Card className="overflow-hidden border-white/30 bg-white/95 shadow-2xl">
-          <CardContent className="flex flex-col gap-6 p-5 sm:flex-row sm:items-center sm:p-8">
-            <img
-              src={profilePhoto}
-              alt="Portrait de Thierry Gogo"
-              className="size-32 shrink-0 rounded-2xl object-cover"
-            />
-            <div className="min-w-0">
-              <h3 className="text-xl font-bold text-slate-950">Thierry Gogo</h3>
-              <p className="mt-1 font-medium text-orange-700">Développeur Web</p>
-              <p className="mt-4 max-w-3xl text-sm leading-6 text-slate-700">
-                Passionné par le développement d&apos;outils numériques adaptés aux réalités
-                africaines, je conçois des solutions simples et efficaces pour les réparateurs et
-                commerçants.
-              </p>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-                <a
-                  href="tel:0758966156"
-                  className="inline-flex items-center gap-2 font-medium text-slate-800 hover:text-orange-700"
-                >
-                  <Phone className="size-4" />
-                  0758966156
-                </a>
-                <a
-                  href="mailto:2024dibo@gmail.com"
-                  className="inline-flex items-center gap-2 font-medium text-slate-800 hover:text-orange-700"
-                >
-                  <Mail className="size-4" />
-                  2024dibo@gmail.com
-                </a>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div>
-          <h3 className="text-lg font-semibold text-white">
-            Quelques captures de mes réalisations
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }, (_, index) => (
-              <div
-                key={index}
-                role="img"
-                aria-label={`Capture ${index + 1} à venir`}
-                className="grid aspect-video place-items-center rounded-xl border border-white/30 bg-muted text-sm font-medium text-muted-foreground"
-              >
-                Capture à venir
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <footer className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 pb-8 text-xs text-slate-300 sm:px-6 lg:px-8">
         <span>© 2026 GogoSoft · Solution ivoirienne</span>
         <Link to="/legal" className="hover:underline">
           Informations légales
         </Link>
       </footer>
-    </main>
+      </main>
+      <Button
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={aboutDeveloperOpen}
+        title="À propos du développeur"
+        className="fixed bottom-6 right-6 z-50 rounded-full bg-primary px-4 text-white shadow-lg transition-transform hover:scale-105 hover:bg-primary/90"
+        onClick={() => setAboutDeveloperOpen(true)}
+      >
+        <UserRound className="size-4" />
+        Développeur
+      </Button>
+      <AboutDeveloperModal
+        open={aboutDeveloperOpen}
+        onOpenChange={setAboutDeveloperOpen}
+      />
+    </>
   );
 }
