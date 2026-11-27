@@ -110,7 +110,13 @@ export function useUserRoles(): UseUserRolesResult {
 
         const stored = typeof window !== "undefined" ? window.sessionStorage.getItem(STORAGE_KEY) : null;
         const fallbackRole = nextRoles[0] ?? "";
-        const nextActiveRole = nextRoles.includes(stored ?? "") ? stored! : fallbackRole;
+        const nextActiveRole =
+          stored &&
+          (nextRoles.includes(stored) ||
+            (nextRoles.includes("owner") &&
+              OWNER_SWITCHABLE_ROLES.some((role) => role === stored)))
+            ? stored
+            : fallbackRole;
         setActiveRoleState(nextActiveRole);
       } catch {
         if (active) {
@@ -168,7 +174,10 @@ export function useUserRoles(): UseUserRolesResult {
       setActiveRoleState("");
       return;
     }
-    if (!roles.includes(activeRole)) {
+    const isOwnerSwitchableRole =
+      roles.includes("owner") &&
+      OWNER_SWITCHABLE_ROLES.some((role) => role === activeRole);
+    if (!roles.includes(activeRole) && !isOwnerSwitchableRole) {
       const firstRole = roles[0];
       if (firstRole) {
         setActiveRoleState(firstRole);

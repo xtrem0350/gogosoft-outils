@@ -51,6 +51,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
   } = values;
   const [submitting, setSubmitting] = useState(false);
   const [locationPhoto, setLocationPhoto] = useState<File | null>(null);
+  const [isLegalOpen, setIsLegalOpen] = useState(true);
 
   async function handleCreate() {
     const trimmedName = name.trim();
@@ -186,82 +187,92 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
               </div>
             ) : null}
           </div>
-          <details open className="rounded-lg border border-orange-100 p-4">
-            <summary className="cursor-pointer text-sm font-semibold">
-              Informations légales (champs marqués * obligatoires)
-            </summary>
-            <div className="mt-4 grid gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-raison-sociale">Raison sociale *</Label>
-                <Input
-                  id="create-shop-raison-sociale"
-                  type="text"
-                  value={raisonSociale}
-                  onChange={(event) => setField("raisonSociale", event.target.value)}
-                  required
-                />
+          <section className="rounded-lg border border-orange-100 p-4">
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full justify-start px-0 text-left"
+              aria-expanded={isLegalOpen}
+              aria-controls="create-shop-legal-fields"
+              onClick={() => setIsLegalOpen((open) => !open)}
+            >
+              {isLegalOpen ? "Masquer" : "Afficher"} les informations légales
+              {!isLegalOpen ? " (champs marqués * obligatoires)" : ""}
+            </Button>
+            {isLegalOpen ? (
+              <div id="create-shop-legal-fields" className="mt-4 grid gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-raison-sociale">Raison sociale *</Label>
+                  <Input
+                    id="create-shop-raison-sociale"
+                    type="text"
+                    value={raisonSociale}
+                    onChange={(event) => setField("raisonSociale", event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-capital-social">Capital social (FCFA) *</Label>
+                  <Input
+                    id="create-shop-capital-social"
+                    type="number"
+                    min={0}
+                    value={capitalSocial}
+                    onChange={(event) => setField("capitalSocial", event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-rc">Numéro RC *</Label>
+                  <Input
+                    id="create-shop-rc"
+                    type="text"
+                    value={rc}
+                    onChange={(event) => setField("rc", event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-cc">Numéro CC *</Label>
+                  <Input
+                    id="create-shop-cc"
+                    type="text"
+                    value={cc}
+                    onChange={(event) => setField("cc", event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-adresse-bp">Adresse BP</Label>
+                  <Input
+                    id="create-shop-adresse-bp"
+                    type="text"
+                    value={adresseBp}
+                    onChange={(event) => setField("adresseBp", event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-localisation">Localisation physique *</Label>
+                  <Input
+                    id="create-shop-localisation"
+                    type="text"
+                    value={localisationPhysique}
+                    onChange={(event) => setField("localisationPhysique", event.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="create-shop-location-photo">Photo GPS</Label>
+                  <Input
+                    id="create-shop-location-photo"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => setLocationPhoto(event.target.files?.[0] ?? null)}
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-capital-social">Capital social (FCFA) *</Label>
-                <Input
-                  id="create-shop-capital-social"
-                  type="number"
-                  min={0}
-                  value={capitalSocial}
-                  onChange={(event) => setField("capitalSocial", event.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-rc">Numéro RC *</Label>
-                <Input
-                  id="create-shop-rc"
-                  type="text"
-                  value={rc}
-                  onChange={(event) => setField("rc", event.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-cc">Numéro CC *</Label>
-                <Input
-                  id="create-shop-cc"
-                  type="text"
-                  value={cc}
-                  onChange={(event) => setField("cc", event.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-adresse-bp">Adresse BP</Label>
-                <Input
-                  id="create-shop-adresse-bp"
-                  type="text"
-                  value={adresseBp}
-                  onChange={(event) => setField("adresseBp", event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-localisation">Localisation physique *</Label>
-                <Input
-                  id="create-shop-localisation"
-                  type="text"
-                  value={localisationPhysique}
-                  onChange={(event) => setField("localisationPhysique", event.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="create-shop-location-photo">Photo GPS</Label>
-                <Input
-                  id="create-shop-location-photo"
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => setLocationPhoto(event.target.files?.[0] ?? null)}
-                />
-              </div>
-            </div>
-          </details>
+            ) : null}
+          </section>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
