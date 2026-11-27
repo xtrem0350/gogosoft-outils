@@ -76,15 +76,6 @@ const SWITCHABLE_OWNER_ROLES = [
   "magasinier",
   "vendeur",
 ];
-const ROLE_ROUTE_MAP: Record<string, string> = {
-  owner: "/dashboard",
-  receptionniste: "/reception",
-  caissier: "/caisse",
-  technicien: "/phone/atelier",
-  magasinier: "/magasin",
-  vendeur: "/sales",
-};
-
 export function MobileLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -108,7 +99,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
 
   function switchRole(role: string) {
     setActiveRole(role);
-    void navigate({ to: ROLE_ROUTE_MAP[role] ?? "/dashboard" });
+    void navigate({ to: "/dashboard" });
   }
 
   async function handleSignOut() {
@@ -139,7 +130,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b px-4">
+      <header className="flex h-[calc(4rem_+_env(safe-area-inset-top))] shrink-0 items-center justify-between gap-3 border-b px-4 pt-[env(safe-area-inset-top)]">
         <div className="flex min-w-0 items-center gap-3">
           <img src={logo} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
           <div className="min-w-0">
@@ -147,7 +138,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
             <p className="truncate text-xs text-muted-foreground">Tools Manager</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-3">
           {availableRoles.length > 1 || isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -156,9 +147,9 @@ export function MobileLayout({ children }: { children: ReactNode }) {
                   variant="ghost"
                   size="sm"
                   aria-label="Changer de rôle"
-                  className="max-w-32 gap-1 px-2"
+                  className="max-w-32 gap-2 px-2"
                 >
-                  <UserCog className="size-4 shrink-0" />
+                  <UserCog className="size-5 shrink-0" />
                   <span className="truncate text-xs">{getRoleLabel(activeRole)}</span>
                 </Button>
               </DropdownMenuTrigger>

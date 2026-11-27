@@ -26,7 +26,9 @@ export function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
         <p className="mb-4 text-sm text-slate-500">
           Contactez le propriétaire de la boutique pour obtenir un accès.
         </p>
-        <Button onClick={() => window.location.reload()}>
+        <Button
+          onClick={() => window.dispatchEvent(new Event("gogosoft:role-changed"))}
+        >
           Réessayer
         </Button>
       </div>

@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { createShop } from "@/services/shopService";
+import { supabase } from "@/integrations/supabase/client";
+import { createShop, updateShop } from "@/services/shopService";
 import { usePersistedFormState } from "@/hooks/usePersistedFormState";
 
 interface CreateShopModalProps {
@@ -28,14 +29,47 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
     phone: "",
     entryFeeEnabled: false,
     entryFeeAmount: 2000,
+    raisonSociale: "",
+    capitalSocial: "",
+    rc: "",
+    cc: "",
+    adresseBp: "",
+    localisationPhysique: "",
   });
-  const { name, address, phone, entryFeeEnabled, entryFeeAmount } = values;
+  const {
+    name,
+    address,
+    phone,
+    entryFeeEnabled,
+    entryFeeAmount,
+    raisonSociale,
+    capitalSocial,
+    rc,
+    cc,
+    adresseBp,
+    localisationPhysique,
+  } = values;
   const [submitting, setSubmitting] = useState(false);
+  const [locationPhoto, setLocationPhoto] = useState<File | null>(null);
 
   async function handleCreate() {
     const trimmedName = name.trim();
     if (trimmedName.length < 2) {
       toast.error("Le nom de la boutique doit contenir au moins 2 caractères.");
+      return;
+    }
+
+    const parsedCapital = Number(capitalSocial);
+    if (
+      !raisonSociale.trim() ||
+      !capitalSocial.trim() ||
+      !Number.isFinite(parsedCapital) ||
+      parsedCapital < 0 ||
+      !rc.trim() ||
+      !cc.trim() ||
+      !localisationPhysique.trim()
+    ) {
+      toast.error("Veuillez renseigner les informations légales obligatoires.");
       return;
     }
 
@@ -47,9 +81,41 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
         phone: phone.trim() || null,
         entry_fee_enabled: entryFeeEnabled,
         entry_fee_amount: entryFeeEnabled ? entryFeeAmount : 0,
+        raison_sociale: raisonSociale.trim(),
+        capital_social: parsedCapital,
+        rc: rc.trim(),
+        cc: cc.trim(),
+        adresse_bp: adresseBp.trim() || null,
+        localisation_physique: localisationPhysique.trim(),
       });
-      toast.success("Boutique créée.");
+      let locationPhotoSaved = true;
+      if (locationPhoto) {
+        const photoPath = `${shop.id}/location.jpg`;
+        try {
+          const { error: uploadError } = await supabase.storage
+            .from("shop-locations")
+            .upload(photoPath, locationPhoto, {
+              contentType: locationPhoto.type || "image/jpeg",
+            });
+          if (uploadError) throw uploadError;
+
+          const { data: photoData } = supabase.storage
+            .from("shop-locations")
+            .getPublicUrl(photoPath);
+          await updateShop(shop.id, { location_photo_url: photoData.publicUrl });
+        } catch (error) {
+          locationPhotoSaved = false;
+          console.error("[CreateShopModal] Impossible d'enregistrer la photo GPS.", error);
+          toast.error(
+            error instanceof Error
+              ? `Boutique créée, mais la photo GPS n'a pas été enregistrée : ${error.message}`
+              : "Boutique créée, mais la photo GPS n'a pas été enregistrée.",
+          );
+        }
+      }
+      if (locationPhotoSaved) toast.success("Boutique créée.");
       clear();
+      setLocationPhoto(null);
       onSuccess(shop.id);
       onClose();
     } catch (error) {
@@ -61,7 +127,7 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
 
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && !submitting && onClose()}>
-      <DialogContent className="card-3d border-orange-100 bg-gradient-to-br from-orange-50/40 via-white to-green-50/40 sm:max-w-md">
+      <DialogContent className="card-3d max-h-[90vh] overflow-y-auto border-orange-100 bg-gradient-to-br from-orange-50/40 via-white to-green-50/40 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Créer une boutique</DialogTitle>
         </DialogHeader>
@@ -120,6 +186,82 @@ export function CreateShopModal({ open, onClose, onSuccess }: CreateShopModalPro
               </div>
             ) : null}
           </div>
+          <details open className="rounded-lg border border-orange-100 p-4">
+            <summary className="cursor-pointer text-sm font-semibold">
+              Informations légales (champs marqués * obligatoires)
+            </summary>
+            <div className="mt-4 grid gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-raison-sociale">Raison sociale *</Label>
+                <Input
+                  id="create-shop-raison-sociale"
+                  type="text"
+                  value={raisonSociale}
+                  onChange={(event) => setField("raisonSociale", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-capital-social">Capital social (FCFA) *</Label>
+                <Input
+                  id="create-shop-capital-social"
+                  type="number"
+                  min={0}
+                  value={capitalSocial}
+                  onChange={(event) => setField("capitalSocial", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-rc">Numéro RC *</Label>
+                <Input
+                  id="create-shop-rc"
+                  type="text"
+                  value={rc}
+                  onChange={(event) => setField("rc", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-cc">Numéro CC *</Label>
+                <Input
+                  id="create-shop-cc"
+                  type="text"
+                  value={cc}
+                  onChange={(event) => setField("cc", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-adresse-bp">Adresse BP</Label>
+                <Input
+                  id="create-shop-adresse-bp"
+                  type="text"
+                  value={adresseBp}
+                  onChange={(event) => setField("adresseBp", event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-localisation">Localisation physique *</Label>
+                <Input
+                  id="create-shop-localisation"
+                  type="text"
+                  value={localisationPhysique}
+                  onChange={(event) => setField("localisationPhysique", event.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-shop-location-photo">Photo GPS</Label>
+                <Input
+                  id="create-shop-location-photo"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => setLocationPhoto(event.target.files?.[0] ?? null)}
+                />
+              </div>
+            </div>
+          </details>
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>

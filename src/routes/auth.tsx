@@ -506,7 +506,9 @@ function AuthPage() {
                   <p className="text-sm font-medium text-blue-300">Bienvenue</p>
                   <h2 className="mt-2 text-3xl font-bold text-white">GogoSoft Tools Manager</h2>
                   <p className="mt-2 text-sm text-slate-300">
-                    Connectez-vous pour gérer votre atelier.
+                    {currentTab === "signin"
+                      ? "Connectez-vous pour gérer votre atelier."
+                      : "Inscrivez-vous pour afficher votre tableau de bord."}
                   </p>
                 </div>
 

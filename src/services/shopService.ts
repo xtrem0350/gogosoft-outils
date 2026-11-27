@@ -83,6 +83,13 @@ export interface CreateShopData {
   entry_fee_enabled?: boolean;
   entry_fee_amount?: number;
   entry_fee_refundable?: boolean;
+  raison_sociale?: string | null;
+  capital_social?: number | null;
+  rc?: string | null;
+  cc?: string | null;
+  adresse_bp?: string | null;
+  localisation_physique?: string | null;
+  location_photo_url?: string | null;
 }
 
 /** Récupère toutes les boutiques de l'utilisateur courant, propriétaire ou membre. */
