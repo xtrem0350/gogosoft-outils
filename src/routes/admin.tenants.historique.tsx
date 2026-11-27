@@ -29,6 +29,7 @@ function TenantHistoryPage() {
         title="Historique abonnements"
         subtitle="Journal des changements enregistrés sur les abonnements"
         icon={History}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       {error ? (
         <p role="alert" className="text-sm text-red-700">

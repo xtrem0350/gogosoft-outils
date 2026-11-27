@@ -419,9 +419,10 @@ function AuthPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-white text-black">
       <div
-        className="absolute inset-0 hidden bg-cover bg-center md:block"
+        className="absolute inset-0 bg-center"
         style={{
           backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
+          backgroundSize: "100% 100%",
         }}
       />
       <div className="absolute inset-0 bg-black/60" />

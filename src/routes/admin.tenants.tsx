@@ -89,6 +89,7 @@ function AdminTenantsPage() {
         title="Tous les abonnés"
         subtitle="Comptes, ateliers, forfaits et domaines de la plateforme"
         icon={Users}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       {error ? (
         <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">

@@ -25,6 +25,7 @@ function TenantDetailsPage() {
         title={tenant?.name ?? "Détail abonné"}
         subtitle={tenant?.email ?? "Informations du compte"}
         icon={UserRound}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       {error ? (
         <p role="alert" className="text-sm text-red-700">

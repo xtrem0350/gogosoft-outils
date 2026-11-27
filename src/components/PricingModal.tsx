@@ -217,9 +217,10 @@ export function PricingModal({
 
         <div className="relative flex max-h-[90vh] min-h-[min(500px,90vh)] w-full flex-col overflow-hidden rounded-[28px] shadow-3d">
           <div
-            className="absolute inset-0 bg-cover bg-center"
+            className="absolute inset-0 bg-center"
             style={{
               backgroundImage: `url(${new URL("../assets/images/background-tarification-atelier.jpg", import.meta.url).href})`,
+              backgroundSize: "100% 100%",
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-br from-orange-900/75 via-black/60 to-green-900/70" />

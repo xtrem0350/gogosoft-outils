@@ -309,7 +309,7 @@ export function PublicShopPage({
               new URL("../assets/images/hero-boutique-publique-abidjan.jpg", import.meta.url).href
             }
             alt=""
-            className="absolute inset-0 size-full object-cover"
+            className="absolute inset-0 size-full object-fill"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
           <div className="relative max-w-2xl">

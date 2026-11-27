@@ -308,9 +308,10 @@ function DesktopHomePage() {
     <main className="relative isolate min-h-screen overflow-x-hidden bg-slate-950 text-slate-900">
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-center"
         style={{
           backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
+          backgroundSize: "100% 100%",
         }}
       />
       <div aria-hidden="true" className="absolute inset-0 bg-black/60" />

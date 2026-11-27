@@ -167,7 +167,12 @@ function PaymentsPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHero title="Toutes les factures" subtitle="Validation des paiements manuels" icon={CreditCard} />
+      <PageHero
+        title="Toutes les factures"
+        subtitle="Validation des paiements manuels"
+        icon={CreditCard}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
+      />
       {error ? <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
       <Card>
         <CardContent className="space-y-4 p-4">

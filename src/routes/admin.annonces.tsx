@@ -9,6 +9,7 @@ export const Route = createFileRoute("/admin/annonces")({
       title="Annonces"
       description="Publiez une annonce plateforme à tous les abonnés."
       icon={Megaphone}
+      imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       destination="/admin/notifications"
       action="Publier une annonce"
     />

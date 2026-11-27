@@ -12,8 +12,7 @@ interface PageHeroProps {
   subtitle?: string;
   icon?: LucideIcon;
   iconColor?: "orange" | "green" | "blue" | "red" | "purple";
-  imageSrc?: string;
-  imageUrl?: string;
+  imageSrc: string;
   showBack?: boolean;
   action?: ReactNode;
   breadcrumb?: BreadcrumbItem[];
@@ -28,7 +27,6 @@ export function PageHero({
   icon,
   iconColor = "orange",
   imageSrc,
-  imageUrl,
   showBack = false,
   action,
   breadcrumb,
@@ -36,19 +34,19 @@ export function PageHero({
   titleClassName = "text-white",
   subtitleClassName = "text-slate-100",
 }: PageHeroProps) {
-  const defaultImage =
-    "https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1200&auto=format&fit=crop";
-
   return (
     <div
-      className={cn("relative mb-6 overflow-hidden rounded-2xl bg-slate-900 shadow-3d", className)}
+      className={cn(
+        "relative mb-6 min-h-40 w-full overflow-hidden rounded-2xl bg-slate-900 shadow-3d",
+        className,
+      )}
     >
       <img
         loading="lazy"
         decoding="async"
-        src={imageSrc ?? imageUrl ?? defaultImage}
+        src={imageSrc}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-fill"
       />
       <div className="absolute inset-0 bg-gradient-to-r from-orange-900/70 via-orange-800/50 to-green-900/60" />
       {breadcrumb && breadcrumb.length > 0 ? (

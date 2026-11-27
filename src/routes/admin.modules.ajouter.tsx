@@ -61,6 +61,7 @@ function AddModulePage() {
         title="Ajouter un domaine à un abonné"
         subtitle="Attribuez un domaine à un atelier et consignez le motif"
         icon={PackagePlus}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       <Card>
         <CardContent className="p-6">

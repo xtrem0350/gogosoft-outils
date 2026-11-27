@@ -39,6 +39,7 @@ function NewModulePage() {
         title="Créer un nouveau domaine"
         subtitle="Ajoutez une fonctionnalité au catalogue de la plateforme"
         icon={PackagePlus}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       <Card>
         <CardContent className="p-6">

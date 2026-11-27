@@ -85,7 +85,7 @@ function AdminDashboard() {
         title="Dashboard plateforme"
         subtitle="Suivi des abonnés, des revenus et de l'activité récente"
         icon={Users}
-        imageUrl="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&auto=format&fit=crop"
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       {isSuperAdmin ? (
         <Card className="border-destructive/50">

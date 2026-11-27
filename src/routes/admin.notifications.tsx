@@ -45,6 +45,7 @@ function NotificationsPage() {
         title="Notifications"
         subtitle="Diffusez une information à tous les abonnés"
         icon={Bell}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       <Card>
         <CardHeader>

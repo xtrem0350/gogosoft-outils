@@ -448,31 +448,34 @@ function OwnerDashboard() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      {!isMobile ? (
-        <div className="bg-hero-ivoirien relative overflow-hidden rounded-2xl p-6 shadow-3d sm:p-8">
-        <div className="relative flex flex-wrap items-center justify-between gap-6">
+      <div
+        className="relative min-h-48 w-full overflow-hidden rounded-2xl p-5 shadow-3d sm:p-8"
+        style={{
+          backgroundImage: `url(${new URL("../assets/images/hero-boutique-publique-abidjan.jpg", import.meta.url).href})`,
+          backgroundSize: "100% 100%",
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/20" />
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-6">
           <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wide text-slate-700/75">
+            <p className="text-xs font-bold uppercase tracking-wide text-white/80">
               Espace de travail
             </p>
-            <h1 className="mt-2 text-3xl font-bold text-slate-900 sm:text-4xl">
+            <h1 className="mt-2 text-2xl font-bold text-white sm:text-4xl">
               {greeting} <span className="inline-block animate-pulse">👋</span>
             </h1>
-            <p className="mt-2 text-base text-slate-700">Que voulez-vous faire aujourd'hui ?</p>
+            <p className="mt-2 text-base text-white">Que voulez-vous faire aujourd'hui ?</p>
             {subscription ? <SubscriptionBadge subscription={subscription} /> : null}
-            <p className="mt-3 text-sm font-medium text-slate-700/80">
+            <p className="mt-3 text-sm font-medium text-white/80">
               {roleLabel} · {shop?.name ?? "Votre atelier"}
             </p>
           </div>
           <div className="hidden rounded-2xl border border-white/60 bg-white/35 p-3 shadow-3d sm:block">
             <IconBadge3D icon={Wrench} size="lg" color="orange" />
           </div>
-          <div className="absolute bottom-4 right-4 sm:relative sm:bottom-auto sm:right-auto">
-            {createShopAction}
-          </div>
+          {!isMobile ? createShopAction : null}
         </div>
-        </div>
-      ) : null}
+      </div>
       {!isMobile ? (
         <CreateShopModal
           open={createOpen}

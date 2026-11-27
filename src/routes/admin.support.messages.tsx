@@ -9,6 +9,7 @@ export const Route = createFileRoute("/admin/support/messages")({
       title="Messages de support"
       description="Les échanges entrants sont regroupés dans la file des tickets."
       icon={MessageSquare}
+      imageSrc={new URL("../assets/images/hero-centre-aide.jpg", import.meta.url).href}
       destination="/admin/support"
       action="Voir les tickets"
     />

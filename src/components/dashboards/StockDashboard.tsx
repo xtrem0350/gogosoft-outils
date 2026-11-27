@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
@@ -140,16 +141,17 @@ export function StockDashboard() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Mon espace magasin</h1>
-          <p className="text-sm text-slate-500">Stock et approvisionnements</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild><Link to="/magasin"><Plus className="mr-2 size-4" />Nouvel article</Link></Button>
-          <Button variant="outline" asChild><Link to="/magasin"><Boxes className="mr-2 size-4" />Nouvel inventaire</Link></Button>
-          <Button asChild><Link to="/magasin"><Truck className="mr-2 size-4" />Fournisseurs</Link></Button>
-        </div>
+      <PageHero
+        title="Mon espace magasin"
+        subtitle="Stock et approvisionnements"
+        icon={Boxes}
+        iconColor="green"
+        imageSrc={new URL("../../assets/images/hero-magasinier-consommables.jpg", import.meta.url).href}
+      />
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" asChild><Link to="/magasin"><Plus className="mr-2 size-4" />Nouvel article</Link></Button>
+        <Button variant="outline" asChild><Link to="/magasin"><Boxes className="mr-2 size-4" />Nouvel inventaire</Link></Button>
+        <Button asChild><Link to="/magasin"><Truck className="mr-2 size-4" />Fournisseurs</Link></Button>
       </div>
 
       {error ? (

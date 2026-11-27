@@ -96,10 +96,11 @@ const activityLabels: Record<ActivityType, { noun: string; title: string; create
 };
 
 function getActivityHeroImage(activityType: ActivityType): string {
-  if (activityType === "phone") {
+  const isPhone = activityType === "phone";
+  if (isPhone) {
     return new URL("../assets/images/hero-technicien-telephone.jpg", import.meta.url).href;
   }
-  if (activityType === "computer") {
+  if (activityType !== "consumable") {
     return new URL("../assets/images/hero-technicien-pc.jpg", import.meta.url).href;
   }
   return new URL("../assets/images/hero-magasinier-consommables.jpg", import.meta.url).href;

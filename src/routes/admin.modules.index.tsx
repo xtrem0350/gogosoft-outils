@@ -33,6 +33,7 @@ function AdminModulesPage() {
         title="Domaines disponibles"
         subtitle="Catalogue de fonctionnalités et adoption par les abonnés"
         icon={Package}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
         action={
           <Button onClick={() => void navigate({ to: "/admin/modules/nouveau" as any })}>
             <Plus /> Créer un domaine

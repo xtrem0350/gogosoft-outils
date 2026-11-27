@@ -9,18 +9,20 @@ export function AdminInfoPage({
   title,
   description,
   icon: Icon,
+  imageSrc,
   destination,
   action,
 }: {
   title: string;
   description: string;
   icon: LucideIcon;
+  imageSrc: string;
   destination: string;
   action: string;
 }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHero title={title} subtitle={description} icon={Icon} />
+      <PageHero title={title} subtitle={description} icon={Icon} imageSrc={imageSrc} />
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
           <p className="max-w-2xl text-sm text-muted-foreground">

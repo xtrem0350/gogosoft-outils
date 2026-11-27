@@ -107,7 +107,12 @@ function SupportPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
-      <PageHero title="Support" subtitle="Demandes ouvertes des abonnés" icon={MessageSquare} />
+      <PageHero
+        title="Support"
+        subtitle="Demandes ouvertes des abonnés"
+        icon={MessageSquare}
+        imageSrc={new URL("../assets/images/hero-centre-aide.jpg", import.meta.url).href}
+      />
       {error ? (
         <p role="alert" className="rounded-md bg-red-50 p-4 text-sm text-red-700">
           {error}

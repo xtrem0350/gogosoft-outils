@@ -54,6 +54,7 @@ function PricingPage() {
         title="Configuration des prix"
         subtitle="Tarifs mensuels et annuels des forfaits de la plateforme"
         icon={DollarSign}
+        imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
       <div className="grid gap-4 lg:grid-cols-3">
         {plans.map((plan) => (
