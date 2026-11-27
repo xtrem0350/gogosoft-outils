@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, CreditCard, Users, UserPlus } from "lucide-react";
+import { AlertTriangle, CreditCard, RefreshCw, Users, UserPlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getErrorMessage, withTimeout } from "@/lib/error-utils";
 import { useAuth } from "@/hooks/useAuth";
 import {
   getAllPayments,
@@ -38,6 +39,9 @@ function AdminDashboard() {
   const [tenants, setTenants] = useState<AdminTenant[]>([]);
   const [payments, setPayments] = useState<AdminPayment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [tenantsError, setTenantsError] = useState<string | null>(null);
+  const [paymentsError, setPaymentsError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [resetOpen, setResetOpen] = useState(false);
   const [resetConfirmation, setResetConfirmation] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -46,17 +50,48 @@ function AdminDashboard() {
   useEffect(() => {
     let active = true;
     setError(null);
-    void Promise.all([getGlobalStats(), getRecentSignups(5), getAllPayments(5)])
-      .then(([nextStats, nextTenants, nextPayments]) => {
+    setTenantsError(null);
+    setPaymentsError(null);
+    setLoading(true);
+    void Promise.allSettled([
+      withTimeout(getGlobalStats(), "Statistiques SuperAdmin"),
+      withTimeout(getRecentSignups(5), "Liste des abonnés"),
+      withTimeout(getAllPayments(5), "Liste des paiements"),
+    ])
+      .then(([statsResult, tenantsResult, paymentsResult]) => {
         if (!active) return;
-        setStats(nextStats);
-        setTenants(nextTenants);
-        setPayments(nextPayments);
+        const failures: string[] = [];
+        if (statsResult.status === "fulfilled") {
+          setStats(statsResult.value);
+        } else {
+          failures.push(getErrorMessage(statsResult.reason, "Impossible de charger les statistiques."));
+        }
+
+        if (tenantsResult.status === "fulfilled") {
+          setTenants(tenantsResult.value);
+        } else {
+          const nextTenantsError = getErrorMessage(tenantsResult.reason, "Impossible de charger les abonnés.");
+          setTenantsError(nextTenantsError);
+          failures.push(nextTenantsError);
+        }
+
+        if (paymentsResult.status === "fulfilled") {
+          setPayments(paymentsResult.value);
+        } else {
+          const nextPaymentsError = getErrorMessage(paymentsResult.reason, "Impossible de charger les paiements.");
+          setPaymentsError(nextPaymentsError);
+          failures.push(nextPaymentsError);
+        }
+
+        setError(failures.length ? failures.join(" · ") : null);
       })
       .catch((reason: unknown) => {
         if (active) {
-          setError(reason instanceof Error ? reason.message : "Chargement impossible.");
+          setError(getErrorMessage(reason, "Impossible d'actualiser le tableau de bord."));
         }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
@@ -72,8 +107,8 @@ function AdminDashboard() {
       setResetOpen(false);
       setResetConfirmation("");
       setRefreshVersion((current) => current + 1);
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Réinitialisation impossible.");
+    } catch (reason: unknown) {
+      toast.error(getErrorMessage(reason, "Réinitialisation impossible."));
     } finally {
       setResetting(false);
     }
@@ -87,6 +122,17 @@ function AdminDashboard() {
         icon={Users}
         imageSrc={new URL("../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
       />
+      <div className="flex justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={loading}
+          onClick={() => setRefreshVersion((current) => current + 1)}
+        >
+          <RefreshCw className={`mr-2 size-4 ${loading ? "animate-spin" : ""}`} />
+          {loading ? "Actualisation…" : "Rafraîchir"}
+        </Button>
+      </div>
       {isSuperAdmin ? (
         <Card className="border-destructive/50">
           <CardHeader>
@@ -109,22 +155,26 @@ function AdminDashboard() {
         </p>
       ) : null}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Total abonnés" value={stats?.total_tenants ?? "…"} icon={Users} />
+        <StatsCard
+          title="Total abonnés"
+          value={stats?.total_tenants ?? (loading ? "…" : "—")}
+          icon={Users}
+        />
         <StatsCard
           title="MRR (FCFA)"
-          value={stats?.mrr_fcfa.toLocaleString("fr-FR") ?? "…"}
+          value={stats ? stats.mrr_fcfa.toLocaleString("fr-FR") : loading ? "…" : "—"}
           icon={CreditCard}
           color="warning"
         />
         <StatsCard
           title="Taux de conversion"
-          value={stats ? `${100 - stats.churn_rate}%` : "…"}
+          value={stats ? `${100 - stats.churn_rate}%` : loading ? "…" : "—"}
           icon={UserPlus}
           color="success"
         />
         <StatsCard
           title="Abonnements en retard"
-          value={stats ? stats.total_tenants - stats.active_tenants : "…"}
+          value={stats ? stats.total_tenants - stats.active_tenants : loading ? "…" : "—"}
           icon={AlertTriangle}
           color="danger"
         />
@@ -152,6 +202,10 @@ function AdminDashboard() {
                   </span>
                 </div>
               ))
+            ) : loading ? (
+              <p className="text-sm text-muted-foreground">Chargement des abonnés…</p>
+            ) : tenantsError ? (
+              <p role="alert" className="text-sm text-destructive">{tenantsError}</p>
             ) : (
               <p className="text-sm text-muted-foreground">Aucun abonné récent.</p>
             )}
@@ -181,6 +235,10 @@ function AdminDashboard() {
                   </span>
                 </div>
               ))
+            ) : loading ? (
+              <p className="text-sm text-muted-foreground">Chargement des paiements…</p>
+            ) : paymentsError ? (
+              <p role="alert" className="text-sm text-destructive">{paymentsError}</p>
             ) : (
               <p className="text-sm text-muted-foreground">Aucun paiement enregistré.</p>
             )}

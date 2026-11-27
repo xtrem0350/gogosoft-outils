@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { getErrorMessage, withTimeout } from "@/lib/error-utils";
 import { validateCashPayment } from "@/services/adminService";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -42,6 +43,7 @@ function PaymentsPage() {
   const { isSuperAdmin } = useUserRole();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Invoice | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<Invoice["payment_method"]>("cash");
   const [paymentReference, setPaymentReference] = useState("");
@@ -52,53 +54,68 @@ function PaymentsPage() {
   const [to, setTo] = useState("");
 
   async function refreshInvoices() {
+    setLoading(true);
     setError(null);
-    const { data, error: loadError } = await supabase
-      .from("subscription_invoices")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (loadError) throw loadError;
+    try {
+      const { data, error: loadError } = await withTimeout(
+        Promise.resolve(
+          supabase
+            .from("subscription_invoices")
+            .select("*")
+            .order("created_at", { ascending: false }),
+        ),
+        "Chargement des factures",
+      );
+      if (loadError) throw loadError;
 
-    const rows = (data ?? []) as Array<{
-      id: string;
-      user_id: string;
-      shop_id: string | null;
-      total_amount: number;
-      payment_method: Invoice["payment_method"];
-      payment_reference: string | null;
-      payment_status: InvoiceStatus;
-      created_at: string;
-    }>;
-    const userIds = [...new Set(rows.map((row) => row.user_id))];
-    const { data: profiles, error: profilesError } = userIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id, full_name, email, phone")
-          .in("id", userIds)
-      : { data: [], error: null };
-    if (profilesError) throw profilesError;
+      const rows = (data ?? []) as Array<{
+        id: string;
+        user_id: string;
+        shop_id: string | null;
+        total_amount: number;
+        payment_method: Invoice["payment_method"];
+        payment_reference: string | null;
+        payment_status: InvoiceStatus;
+        created_at: string;
+      }>;
+      const userIds = [...new Set(rows.map((row) => row.user_id))];
+      const { data: profiles, error: profilesError } = userIds.length
+        ? await withTimeout(
+            Promise.resolve(
+              supabase
+                .from("profiles")
+                .select("id, full_name, email, phone")
+                .in("id", userIds),
+            ),
+            "Chargement des propriétaires",
+          )
+        : { data: [], error: null };
+      if (profilesError) throw profilesError;
 
-    const names = new Map(
-      (profiles ?? []).map((profile) => [
-        profile.id,
-        {
-          name: profile.full_name ?? profile.email ?? profile.id,
-          email: profile.email,
-          phone: profile.phone,
-        },
-      ]),
-    );
-    setInvoices(rows.map((row) => ({
-      ...row,
-      owner_name: names.get(row.user_id)?.name ?? row.user_id,
-      owner_email: names.get(row.user_id)?.email ?? null,
-      owner_phone: names.get(row.user_id)?.phone ?? null,
-    })));
+      const names = new Map(
+        (profiles ?? []).map((profile) => [
+          profile.id,
+          {
+            name: profile.full_name ?? profile.email ?? profile.id,
+            email: profile.email,
+            phone: profile.phone,
+          },
+        ]),
+      );
+      setInvoices(rows.map((row) => ({
+        ...row,
+        owner_name: names.get(row.user_id)?.name ?? row.user_id,
+        owner_email: names.get(row.user_id)?.email ?? null,
+        owner_phone: names.get(row.user_id)?.phone ?? null,
+      })));
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {
     void refreshInvoices().catch((reason: unknown) =>
-      setError(reason instanceof Error ? reason.message : "Chargement impossible."),
+      setError(getErrorMessage(reason, "Impossible de charger les factures.")),
     );
   }, []);
 
@@ -114,9 +131,18 @@ function PaymentsPage() {
       toast.success("Paiement validé et abonnement activé.");
       setSelected(null);
       setPaymentReference("");
+    } catch (reason: unknown) {
+      toast.error(getErrorMessage(reason, "Impossible de valider la facture."));
+      setValidating(false);
+      return;
+    }
+
+    try {
       await refreshInvoices();
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Impossible de valider la facture.");
+    } catch (reason: unknown) {
+      const message = getErrorMessage(reason, "Impossible de recharger les factures.");
+      setError(message);
+      toast.error(`Paiement validé, mais ${message}`);
     } finally {
       setValidating(false);
     }
@@ -128,17 +154,25 @@ function PaymentsPage() {
       return;
     }
     if (!window.confirm("Annuler cette facture ?")) return;
-    const { error: cancelError } = await supabase
-      .from("subscription_invoices")
-      .update({ payment_status: "annulee", updated_at: new Date().toISOString() })
-      .eq("id", invoice.id)
-      .eq("payment_status", "en_attente_paiement_espece");
-    if (cancelError) {
-      toast.error(cancelError.message);
-      return;
+    try {
+      const { error: cancelError } = await supabase
+        .from("subscription_invoices")
+        .update({ payment_status: "annulee", updated_at: new Date().toISOString() })
+        .eq("id", invoice.id)
+        .eq("payment_status", "en_attente_paiement_espece");
+      if (cancelError) throw cancelError;
+
+      toast.success("Facture annulée.");
+      try {
+        await refreshInvoices();
+      } catch (reason: unknown) {
+        const message = getErrorMessage(reason, "Impossible de recharger les factures.");
+        setError(message);
+        toast.error(`Facture annulée, mais ${message}`);
+      }
+    } catch (reason: unknown) {
+      toast.error(getErrorMessage(reason, "Impossible d’annuler la facture."));
     }
-    toast.success("Facture annulée.");
-    await refreshInvoices();
   }
 
   function relaunchWhatsApp(invoice: Invoice) {
@@ -227,7 +261,10 @@ function PaymentsPage() {
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 ? (
+                {loading && filtered.length === 0 ? (
+                  <tr><td colSpan={7} className="px-3 py-10 text-center text-muted-foreground">Chargement des factures…</td></tr>
+                ) : null}
+                {!loading && !error && filtered.length === 0 ? (
                   <tr><td colSpan={7} className="px-3 py-10 text-center text-muted-foreground">Aucune facture trouvée.</td></tr>
                 ) : null}
               </tbody>

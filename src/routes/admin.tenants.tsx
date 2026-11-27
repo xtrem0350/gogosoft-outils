@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { getErrorMessage, withTimeout } from "@/lib/error-utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,17 +38,34 @@ function AdminTenantsPage() {
   });
   const [tenants, setTenants] = useState<AdminTenant[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<AdminTenant | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
+    let active = true;
     const status =
       search.status === "active" || search.status === "late" ? search.status : undefined;
-    void getAllTenants(status ? { status } : {})
-      .then(setTenants)
+    setLoading(true);
+    setError(null);
+    void withTimeout(
+      getAllTenants(status ? { status } : {}),
+      "Chargement des abonnés",
+    )
+      .then((rows) => {
+        if (active) setTenants(rows);
+      })
       .catch((reason: unknown) =>
-        setError(reason instanceof Error ? reason.message : "Chargement impossible."),
-      );
+        active
+          ? setError(getErrorMessage(reason, "Impossible de charger les abonnés."))
+          : undefined,
+      )
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
   }, [search.status]);
 
   if (pathname !== "/admin/tenants" && pathname !== "/admin/tenants/") return <Outlet />;
@@ -62,9 +80,14 @@ function AdminTenantsPage() {
       toast.success("Abonnement révoqué.");
       const status =
         search.status === "active" || search.status === "late" ? search.status : undefined;
-      setTenants(await getAllTenants(status ? { status } : {}));
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Révocation impossible.");
+      setTenants(
+        await withTimeout(
+          getAllTenants(status ? { status } : {}),
+          "Actualisation des abonnés",
+        ),
+      );
+    } catch (reason: unknown) {
+      toast.error(getErrorMessage(reason, "Révocation impossible."));
     }
   }
 
@@ -76,8 +99,8 @@ function AdminTenantsPage() {
       setTenants((current) => current.filter((tenant) => tenant.id !== deleteTarget.id));
       setDeleteTarget(null);
       toast.success("Compte et données associés supprimés.");
-    } catch (reason) {
-      toast.error(reason instanceof Error ? reason.message : "Suppression impossible.");
+    } catch (reason: unknown) {
+      toast.error(getErrorMessage(reason, "Suppression impossible."));
     } finally {
       setDeleting(false);
     }
@@ -175,7 +198,14 @@ function AdminTenantsPage() {
                   </td>
                 </tr>
               ))}
-              {tenants.length === 0 ? (
+              {tenants.length === 0 && loading ? (
+                <tr>
+                  <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                    Chargement des abonnés…
+                  </td>
+                </tr>
+              ) : null}
+              {tenants.length === 0 && !loading && !error ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
                     Aucun abonné pour ce filtre.

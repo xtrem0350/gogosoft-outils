@@ -1,332 +1,257 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  AlertCircle,
-  ArrowRight,
-  BadgeCheck,
-  Bell,
   BookOpen,
-  BriefcaseBusiness,
   Building2,
-  ChevronRight,
-  CircleHelp,
   CreditCard,
-  FileText,
-  HelpCircle,
-  Laptop,
+  Mail,
   Package,
-  Palette,
   Phone,
-  Plus,
-  Search,
-  ShieldCheck,
-  ShoppingCart,
-  Smartphone,
-  Sparkles,
   Store,
-  UserCheck,
   Users,
+  Wallet,
   Wrench,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { PageHero } from "@/components/PageHero";
-import { APP_VERSION } from "@/lib/version";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { APP_VERSION } from "@/lib/version";
 
-export const Route = createFileRoute("/aide")({
-  component: AidePage,
-});
+export const Route = createFileRoute("/aide")({ component: AidePage });
 
-type HelpStep = {
+type HelpItem = {
   title: string;
   description: string;
-  to: string;
-  icon: typeof Sparkles;
+  to?: string;
+  action?: string;
 };
 
 type HelpSection = {
   id: string;
   title: string;
-  subtitle: string;
   description: string;
-  accent: string;
   icon: typeof BookOpen;
-  items: HelpStep[];
+  items: HelpItem[];
 };
-
-const quickStartSteps: HelpStep[] = [
-  {
-    title: "Créer votre compte",
-    description: "En 2 minutes, ouvrez votre compte à partir de /auth.",
-    to: "/auth",
-    icon: UserCheck,
-  },
-  {
-    title: "Créer votre premier atelier",
-    description: "Ajoutez votre boutique ou votre atelier de réparation.",
-    to: "/boutiques/nouveau",
-    icon: Building2,
-  },
-  {
-    title: "Ajouter votre premier client",
-    description: "Renseignez le nom, le WhatsApp et l'historique de client.",
-    to: "/clients/nouveau",
-    icon: Users,
-  },
-  {
-    title: "Créer votre première fiche",
-    description: "Démarrez une réparation téléphone ou ordinateur.",
-    to: "/phone/atelier/nouveau",
-    icon: Smartphone,
-  },
-  {
-    title: "Configurer votre forfait",
-    description: "Choisissez votre plan et activez votre accès complet.",
-    to: "/abonnement",
-    icon: CreditCard,
-  },
-];
 
 const helpSections: HelpSection[] = [
   {
-    id: "demarrage",
-    title: "Démarrage rapide",
-    subtitle: "Tout commence en quelques minutes",
-    description: "Apprenez le chemin le plus simple pour lancer votre atelier GogoSoft.",
-    accent: "bg-orange-100 text-orange-700",
-    icon: Sparkles,
-    items: quickStartSteps,
-  },
-  {
-    id: "interface",
-    title: "Comprendre l'interface",
-    subtitle: "Naviguer en mode pro",
+    id: "premiers-pas",
+    title: "Premiers pas",
     description:
-      "Le header, le sidebar, le UserMenu et le dashboard sont pensés pour gagner du temps.",
-    accent: "bg-blue-100 text-blue-700",
-    icon: Palette,
-    items: [],
+      "Créez votre compte, ouvrez votre atelier et préparez l’espace de travail avant d’inviter votre équipe.",
+    icon: Building2,
+    items: [
+      {
+        title: "Créer un compte",
+        description: "Inscrivez-vous ou connectez-vous avec votre adresse e-mail.",
+        to: "/auth",
+        action: "Accéder à l’authentification",
+      },
+      {
+        title: "Configurer un atelier",
+        description: "Ajoutez le nom et les coordonnées de votre boutique ou atelier.",
+        to: "/boutiques/nouveau",
+        action: "Créer un atelier",
+      },
+      {
+        title: "Préparer votre espace",
+        description: "Choisissez les domaines utiles, puis ajoutez vos clients et membres d’équipe.",
+        to: "/equipe",
+        action: "Gérer l’équipe",
+      },
+    ],
   },
   {
-    id: "telephone",
-    title: "Gérer les réparations (Téléphone)",
-    subtitle: "Créer, suivre et livrer",
-    description: "Gérez les fiches téléphone, assignations, diagnostics et livraisons.",
-    accent: "bg-green-100 text-green-700",
-    icon: Smartphone,
-    items: [],
+    id: "atelier",
+    title: "Gestion de l’atelier",
+    description:
+      "Les espaces Téléphone et Ordinateur séparent les fiches par activité et gardent les diagnostics et interventions au même endroit.",
+    icon: Wrench,
+    items: [
+      {
+        title: "Fiches téléphone",
+        description: "Enregistrez le client, l’appareil, la panne constatée et l’emplacement de rangement.",
+        to: "/phone/atelier",
+        action: "Ouvrir l’atelier téléphone",
+      },
+      {
+        title: "Fiches PC",
+        description: "Suivez les ordinateurs, leurs caractéristiques, diagnostics, pièces et interventions.",
+        to: "/computer/atelier",
+        action: "Ouvrir l’atelier PC",
+      },
+      {
+        title: "Statuts et carnet",
+        description:
+          "Faites progresser chaque fiche selon son état de traitement et consignez les notes utiles dans le carnet d’expérience.",
+        to: "/phone/carnet",
+        action: "Ouvrir le carnet téléphone",
+      },
+    ],
   },
   {
-    id: "ordinateur",
-    title: "Gérer les réparations (Ordinateur)",
-    subtitle: "Spécificités PC et diagnostics",
-    description: "Suivez les réparations PC avec modèles, pannes et spécifications techniques.",
-    accent: "bg-violet-100 text-violet-700",
-    icon: Laptop,
-    items: [],
+    id: "caisse-ventes",
+    title: "Caisse et ventes",
+    description:
+      "Suivez les encaissements dans la caisse et distinguez les paiements des réparations de ceux des ventes.",
+    icon: Wallet,
+    items: [
+      {
+        title: "Sessions de caisse",
+        description: "Ouvrez une session, enregistrez les entrées et sorties, puis consultez le récapitulatif.",
+        to: "/caisse",
+        action: "Ouvrir la caisse",
+      },
+      {
+        title: "Ventes et commandes",
+        description: "Créez une vente, suivez son paiement et consultez les commandes ou livraisons.",
+        to: "/sales",
+        action: "Accéder aux ventes",
+      },
+      {
+        title: "Paiements mobiles",
+        description:
+          "Enregistrez le moyen réellement reçu (Wave, Orange Money, MTN ou Moov) et sa référence lorsque nécessaire.",
+      },
+    ],
   },
   {
-    id: "consommables",
-    title: "Gérer les consommables",
-    subtitle: "Stock, seuils et alertes",
-    description: "Suivez les pièces, écrans, batteries et accessoires pour éviter les ruptures.",
-    accent: "bg-emerald-100 text-emerald-700",
+    id: "stock-magasin",
+    title: "Stock et magasin",
+    description:
+      "Gérez les articles et consommables, surveillez les seuils de stock et préparez les réceptions.",
     icon: Package,
-    items: [],
+    items: [
+      {
+        title: "Consommables",
+        description: "Suivez les pièces, batteries, écrans et accessoires utilisés dans les réparations.",
+        to: "/consumable/stock",
+        action: "Gérer les consommables",
+      },
+      {
+        title: "Magasin",
+        description: "Consultez les quantités, mouvements, alertes et approvisionnements.",
+        to: "/magasin",
+        action: "Ouvrir le magasin",
+      },
+      {
+        title: "Réception des appareils",
+        description: "Enregistrez l’arrivée d’un appareil et son rangement avant le diagnostic.",
+        to: "/reception",
+        action: "Créer une réception",
+      },
+    ],
   },
   {
-    id: "ventes",
-    title: "Gérer les ventes",
-    subtitle: "Commandes, livraisons et ventes",
-    description: "Enregistrez des ventes, suivez les livraisons et gérez les paiements.",
-    accent: "bg-amber-100 text-amber-700",
-    icon: ShoppingCart,
-    items: [],
-  },
-  {
-    id: "clients",
-    title: "Gérer les clients",
-    subtitle: "Historique, recherche et contact",
-    description: "Conservez l'historique client et communiquez rapidement par WhatsApp.",
-    accent: "bg-pink-100 text-pink-700",
-    icon: Users,
-    items: [],
-  },
-  {
-    id: "emplacements",
-    title: "Gérer les emplacements",
-    subtitle: "Organisation de l'atelier",
-    description: "Attribuez des cartons, tiroirs ou étagères pour chaque réparation.",
-    accent: "bg-cyan-100 text-cyan-700",
+    id: "boutique-en-ligne",
+    title: "Boutique en ligne",
+    description:
+      "Configurez la vitrine publique, publiez vos produits et suivez les commandes reçues.",
     icon: Store,
-    items: [],
+    items: [
+      {
+        title: "Configurer la vitrine",
+        description: "Renseignez les informations publiques et les options de commande de la boutique.",
+        to: "/admin/boutique",
+        action: "Configurer la boutique",
+      },
+      {
+        title: "Produits et commandes",
+        description: "Gérez le catalogue visible en ligne, puis traitez les commandes et leur livraison.",
+        to: "/admin/boutique/commandes",
+        action: "Voir les commandes",
+      },
+      {
+        title: "Lien public",
+        description:
+          "Partagez l’adresse publique de votre vitrine avec vos clients. Les commandes apparaissent dans votre espace de gestion.",
+      },
+    ],
   },
   {
-    id: "ateliers",
-    title: "Gérer les ateliers",
-    subtitle: "Multi-boutiques et multi-équipe",
-    description: "Passez d'un atelier à l'autre et gérez les statistiques par site.",
-    accent: "bg-indigo-100 text-indigo-700",
-    icon: BriefcaseBusiness,
-    items: [],
+    id: "roles",
+    title: "Rôles et permissions",
+    description:
+      "Les menus et actions disponibles dépendent du rôle attribué et des domaines activés pour l’atelier.",
+    icon: Users,
+    items: [
+      {
+        title: "Owner / propriétaire",
+        description: "Gère l’atelier, les paramètres, l’équipe, les modules et l’abonnement.",
+        to: "/equipe",
+        action: "Gérer l’équipe",
+      },
+      {
+        title: "Technicien et réceptionniste",
+        description: "Le technicien suit les interventions ; le réceptionniste accueille les clients et enregistre les appareils.",
+      },
+      {
+        title: "Caissier, magasinier et vendeur",
+        description: "Le caissier suit les encaissements, le magasinier gère le stock et le vendeur traite les ventes.",
+      },
+      {
+        title: "SuperAdmin",
+        description: "Accède à la gestion de la plateforme, des abonnés, des paiements et des domaines.",
+        to: "/admin",
+        action: "Ouvrir l’espace admin",
+      },
+    ],
   },
   {
-    id: "forfait",
-    title: "Forfait et paiement",
-    subtitle: "Abonnement, essai et plan d'accès",
-    description: "Choisissez le bon plan, vérifiez les avantages et suivez vos paiements.",
-    accent: "bg-rose-100 text-rose-700",
+    id: "abonnement-facturation",
+    title: "Abonnement et facturation",
+    description:
+      "Consultez votre forfait, sa période de validité et les options disponibles pour votre espace.",
     icon: CreditCard,
-    items: [],
-  },
-  {
-    id: "securite",
-    title: "Sécurité et confidentialité",
-    subtitle: "Protection des données et accès",
-    description: "Gérez l'accès, la déconnexion automatique et la confidentialité des données.",
-    accent: "bg-slate-100 text-slate-700",
-    icon: ShieldCheck,
-    items: [],
-  },
-  {
-    id: "faq",
-    title: "FAQ",
-    subtitle: "Questions fréquentes",
-    description: "Les réponses les plus utiles pour les réparateurs et gestionnaires d'atelier.",
-    accent: "bg-red-100 text-red-700",
-    icon: CircleHelp,
-    items: [],
-  },
-  {
-    id: "support",
-    title: "Contacter le support",
-    subtitle: "Aide humaine",
-    description: "Trouvez le bon canal pour obtenir de l'assistance rapide.",
-    accent: "bg-teal-100 text-teal-700",
-    icon: HelpCircle,
-    items: [],
+    items: [
+      {
+        title: "Gérer l’abonnement",
+        description: "Consultez votre offre et les options de renouvellement depuis votre espace.",
+        to: "/abonnement",
+        action: "Voir mon abonnement",
+      },
+      {
+        title: "Factures et paiements",
+        description:
+          "Suivez l’état d’une facture et conservez la référence de transaction pour tout paiement mobile.",
+      },
+      {
+        title: "Utilisation sur mobile",
+        description:
+          "GogoSoft s’adapte aux écrans de téléphone et de tablette ; les menus et actions suivent le rôle actif.",
+      },
+    ],
   },
 ];
 
-const faqs = [
-  {
-    question: "L'app fonctionne-t-elle sans internet ?",
-    answer:
-      "Oui, elle reste consultable localement, mais la synchronisation et les données partagées nécessitent une connexion active.",
-  },
-  {
-    question: "Puis-je avoir plusieurs ateliers ?",
-    answer:
-      "Oui, GogoSoft est conçu pour gérer plusieurs boutiques ou ateliers depuis un seul compte.",
-  },
-  {
-    question: "Comment bloquer un utilisateur abusif ?",
-    answer:
-      "Contactez le support ou le gestionnaire de compte pour sécuriser l'accès et corriger les droits.",
-  },
-  {
-    question: "Puis-je exporter mes données ?",
-    answer:
-      "Oui, la plupart des exports et vérifications de données passent par les paramètres de votre compte.",
-  },
-  {
-    question: "Comment ajouter un technicien à mon équipe ?",
-    answer: "Dans /equipe, vous pouvez inviter un technicien et suivre ses interventions.",
-  },
-  {
-    question: "Comment changer de forfait ?",
-    answer:
-      "Depuis /abonnement, choisissez votre plan et suivez la mise à jour pour activer votre accès.",
-  },
-  {
-    question: "Que se passe-t-il si mon abonnement expire ?",
-    answer:
-      "Vos données restent stockées, mais l'accès à certaines fonctions peut être limité tant que le forfait est renouvelé.",
-  },
-  {
-    question: "Puis-je utiliser GogoSoft sur mon téléphone ?",
-    answer:
-      "Oui, l'application est responsive et fonctionne bien sur smartphone, tablette et ordinateur.",
-  },
-  {
-    question: "Comment contacter un client rapidement ?",
-    answer:
-      "Depuis la fiche client ou la fiche réparation, utilisez le bouton WhatsApp pour envoyer un message direct.",
-  },
-  {
-    question: "Puis-je vendre des accessoires ?",
-    answer: "Oui, le domaine Ventes permet de suivre les ventes d'accessoires, appareils et pièces.",
-  },
-  {
-    question: "Comment ajouter une photo à un client ?",
-    answer: "Lors de la création du client, vous pouvez ajouter une photo depuis le formulaire.",
-  },
-  {
-    question: "Le diagnostic est-il obligatoire ?",
-    answer:
-      "Oui, il est fortement recommandé et souvent exigé pour bien documenter la panne constatée.",
-  },
-  {
-    question: "Comment imprimer une facture ?",
-    answer:
-      "Depuis la fiche ou le domaine de vente, utilisez l'option PDF ou la génération de document disponible.",
-  },
-  {
-    question: "Puis-je restaurer une fiche supprimée ?",
-    answer:
-      "Une confirmation est demandée avant la suppression, et la restauration directe n'est pas prévue pour éviter les erreurs.",
-  },
-  {
-    question: "Comment changer mon nom affiché ?",
-    answer:
-      "Passez par /profil pour modifier votre nom complet et les informations publicitaires du compte.",
-  },
-] as const;
-
 function AidePage() {
   const [searchQuery, setSearchQuery] = useState("");
-
   const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visibleSections = useMemo(
+    () =>
+      normalizedQuery
+        ? helpSections.filter((section) =>
+            `${section.title} ${section.description} ${section.items
+              .map((item) => `${item.title} ${item.description}`)
+              .join(" ")}`
+              .toLowerCase()
+              .includes(normalizedQuery),
+          )
+        : helpSections,
+    [normalizedQuery],
+  );
 
-  const visibleSections = useMemo(() => {
-    if (!normalizedQuery) return helpSections;
-
-    return helpSections.filter((section) => {
-      const baseText = `${section.title} ${section.subtitle} ${section.description}`.toLowerCase();
-      if (baseText.includes(normalizedQuery)) return true;
-      if (section.items.length === 0) return false;
-      return section.items.some((item) => {
-        const itemText = `${item.title} ${item.description}`.toLowerCase();
-        return itemText.includes(normalizedQuery);
-      });
-    });
-  }, [normalizedQuery]);
-
-  const visibleFaqs = useMemo(() => {
-    if (!normalizedQuery) return faqs;
-    return faqs.filter((item) => {
-      const text = `${item.question} ${item.answer}`.toLowerCase();
-      return text.includes(normalizedQuery);
-    });
-  }, [normalizedQuery]);
-
-  const hasAnyResult = visibleSections.length > 0 || visibleFaqs.length > 0;
+  const supportMessage = encodeURIComponent("Bonjour, j’ai besoin d’aide avec GogoSoft.");
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 pb-12">
       <PageHero
-        title="📚 Centre d'aide"
-        subtitle="Tout ce qu'il faut savoir pour utiliser GogoSoft"
+        title="Centre d’aide"
+        subtitle="Guides pratiques pour configurer et utiliser GogoSoft au quotidien."
         icon={BookOpen}
         iconColor="orange"
         imageSrc={new URL("../assets/images/hero-centre-aide.jpg", import.meta.url).href}
@@ -335,428 +260,93 @@ function AidePage() {
 
       <div className="rounded-2xl border bg-card p-4 shadow-sm">
         <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Rechercher une aide..."
-            aria-label="Rechercher une aide"
-            className="h-12 rounded-xl pl-11 text-base"
+            placeholder="Rechercher dans les guides…"
+            aria-label="Rechercher dans les guides d’aide"
+            className="h-12 rounded-xl"
           />
         </label>
       </div>
 
-      {!hasAnyResult ? (
-        <Alert variant="destructive" className="border-amber-200 bg-amber-50 text-amber-900">
-          <AlertCircle className="size-4" />
-          <AlertDescription>
-            Aucun résultat pour "{searchQuery}". Contactez le support pour obtenir une réponse
-            rapide.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      <div className="grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-6 lg:self-start">
-          <div className="rounded-2xl border bg-card p-4 shadow-sm">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-              Sommaire
-            </p>
-            <nav className="space-y-2">
-              {visibleSections.map((section) => {
-                const Icon = section.icon;
-                return (
-                  <a
-                    key={section.id}
-                    href={`#${section.id}`}
-                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Icon className="size-4" />
-                    {section.title}
-                  </a>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
-
-        <main className="space-y-8">
-          {visibleSections.map((section) => {
-            const Icon = section.icon;
-            return (
-              <section key={section.id} id={section.id} className="scroll-mt-24 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex size-10 items-center justify-center rounded-xl ${section.accent}`}
-                  >
-                    <Icon className="size-5" />
-                  </div>
-                  <div>
-                    <Badge variant="secondary">{section.title}</Badge>
-                    <h2 className="mt-2 text-2xl font-bold tracking-tight">{section.title}</h2>
-                    <p className="text-sm text-muted-foreground">{section.subtitle}</p>
-                  </div>
-                </div>
-
-                <Card>
-                  <CardContent className="space-y-5 p-5 sm:p-6">
-                    <p className="text-base text-muted-foreground">{section.description}</p>
-
-                    {section.id === "demarrage" ? (
-                      <div className="space-y-4">
-                        <div className="rounded-xl border bg-gradient-to-r from-orange-50 to-green-50 p-4">
-                          <h3 className="text-xl font-semibold">👋 Bienvenue sur GogoSoft</h3>
-                          <p className="mt-2 text-sm text-muted-foreground">
-                            En 5 minutes, découvrez comment gérer votre atelier comme un pro.
-                          </p>
-                          <Button asChild className="mt-4">
-                            <Link to="/auth">Démarrer l'essai gratuit</Link>
-                          </Button>
-                        </div>
-
-                        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                          {quickStartSteps.map((step, index) => {
-                            const StepIcon = step.icon;
-                            return (
-                              <Link key={step.to} to={step.to} className="block">
-                                <Card className="h-full transition-colors hover:border-orange-300">
-                                  <CardContent className="flex h-full flex-col gap-3 p-4">
-                                    <div className="flex items-center justify-between gap-2">
-                                      <div className="flex size-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
-                                        <StepIcon className="size-5" />
-                                      </div>
-                                      <Badge variant="outline">Étape {index + 1}</Badge>
-                                    </div>
-                                    <div>
-                                      <h3 className="font-semibold">{step.title}</h3>
-                                      <p className="mt-1 text-sm text-muted-foreground">
-                                        {step.description}
-                                      </p>
-                                    </div>
-                                    <span className="mt-auto inline-flex items-center gap-1 text-sm font-medium text-orange-700">
-                                      Ouvrir <ArrowRight className="size-4" />
-                                    </span>
-                                  </CardContent>
-                                </Card>
-                              </Link>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {section.id === "interface" ? (
-                      <div className="space-y-5">
-                        <div className="grid gap-4 xl:grid-cols-2">
-                          <Card className="border-dashed">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <Bell className="size-4 text-orange-500" /> Le Header
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>
-                                Le header affiche le logo, le nom de l’application, le titre actif
-                                et la recherche globale.
-                              </p>
-                              <p>
-                                Vous pouvez lancer une recherche rapide, vérifier les notifications,
-                                créer un nouveau client ou un nouveau document et changer le thème.
-                              </p>
-                            </CardContent>
-                          </Card>
-
-                          <Card className="border-dashed">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <Wrench className="size-4 text-orange-500" /> Le Sidebar
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>
-                                Le sidebar regroupe les fonctions essentielles par famille :
-                                accueil, téléphone, ordinateur, consommables, ventes, clients et
-                                compte.
-                              </p>
-                              <p>
-                                Chaque groupe aide à retrouver rapidement l’outil dont vous avez
-                                besoin.
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-
-                        <div className="grid gap-4 xl:grid-cols-2">
-                          <Card className="border-dashed">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <Users className="size-4 text-orange-500" /> Le UserMenu
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>
-                                À partir du menu avatar, accédez à votre profil, aux paramètres, à
-                                l’aide, aux nouveautés et à la déconnexion.
-                              </p>
-                              <p>Le super admin voit aussi l’espace admin dédié.</p>
-                            </CardContent>
-                          </Card>
-
-                          <Card className="border-dashed">
-                            <CardHeader>
-                              <CardTitle className="flex items-center gap-2 text-base">
-                                <FileText className="size-4 text-orange-500" /> Le Dashboard
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm text-muted-foreground">
-                              <p>
-                                Le dashboard centralise votre activité, vos statistiques et les
-                                alertes intelligentes sur les stocks et les réparations.
-                              </p>
-                              <p>Il sert de point de départ pour toute la journée de travail.</p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {section.id === "telephone" ? (
-                      <div className="space-y-4">
-                        <ol className="grid gap-3">
-                          {[
-                            "Cliquer sur TÉLÉPHONE dans le Sidebar",
-                            "Cliquer sur + Nouvelle fiche",
-                            "Choisir le client ou créer un client si absent",
-                            "Sélectionner l’appareil ou renseigner un modèle libre",
-                            "Cocher les pannes constatées et choisir un emplacement",
-                            "Ajouter le montant du diagnostic et enregistrer",
-                          ].map((item, index) => (
-                            <li key={item} className="flex gap-3 rounded-xl border p-3 text-sm">
-                              <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-100 font-semibold text-orange-700">
-                                {index + 1}
-                              </span>
-                              <span className="text-muted-foreground">{item}</span>
-                            </li>
-                          ))}
-                        </ol>
-                        <Alert className="border-orange-200 bg-orange-50">
-                          <BadgeCheck className="size-4 text-orange-700" />
-                          <AlertDescription>
-                            Le suivi de réparation passe par la timeline, les événements de statut
-                            et le bouton WhatsApp pour informer le client.
-                          </AlertDescription>
-                        </Alert>
-                      </div>
-                    ) : null}
-
-                    {section.id === "ordinateur" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Pour les PC, utilisez le même workflow que les téléphones en adaptant les
-                          modèles et pannes typiques :
-                        </p>
-                        <ul className="grid gap-2 pl-5 list-disc">
-                          <li>Modèles populaires : HP, Dell, Lenovo, Asus, Acer et MacBook.</li>
-                          <li>
-                            Pannes fréquentes : écran, clavier, batterie, OS, RAM ou disque SSD.
-                          </li>
-                          <li>
-                            Spécificités : processeur, mémoire RAM, version OS et composants de
-                            remplacement.
-                          </li>
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {section.id === "consommables" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Le domaine stock permet d’ajouter des pièces, batteries, écrans et câbles,
-                          puis d’alerter à partir d’un seuil.
-                        </p>
-                        <div className="grid gap-3 md:grid-cols-3">
-                          {["Suivre les entrées", "Suivre les sorties", "Réapprovisionner"].map(
-                            (label) => (
-                              <div
-                                key={label}
-                                className="rounded-xl border p-3 text-center font-medium text-foreground"
-                              >
-                                {label}
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {section.id === "ventes" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Pour créer une vente, ouvrez le domaine Ventes, choisissez le type de
-                          produit, définissez le prix, ajoutez une photo et validez avec le bon mode
-                          de paiement.
-                        </p>
-                        <div className="grid gap-3 md:grid-cols-2">
-                          <Card className="border-dashed">
-                            <CardContent className="p-4">
-                              <p className="font-semibold text-foreground">Nouvelle vente</p>
-                              <p className="mt-1">
-                                Produit, quantité, prix, paiement et validation.
-                              </p>
-                            </CardContent>
-                          </Card>
-                          <Card className="border-dashed">
-                            <CardContent className="p-4">
-                              <p className="font-semibold text-foreground">Suivi des commandes</p>
-                              <p className="mt-1">
-                                Commandes à préparer, livraisons prêtes et ventes livrées.
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {section.id === "clients" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Un client bien géré définit la qualité de la relation. Gardez son
-                          identité, son WhatsApp, son historique d’achats et de réparations.
-                        </p>
-                        <ul className="grid gap-2 pl-5 list-disc">
-                          <li>Ajouter un client depuis la liste ou le formulaire dédié.</li>
-                          <li>Recherche rapide par nom, WhatsApp ou historique.</li>
-                          <li>Contact direct par WhatsApp en 1 clic.</li>
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {section.id === "emplacements" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Les emplacements permettent de suivre le stockage physique d’un atelier.
-                          Pour chaque réparation, choisissez un carton ou un tiroir dédié.
-                        </p>
-                        <ul className="grid gap-2 pl-5 list-disc">
-                          <li>Créer des emplacements : C1, Tiroir-A, Carton-1.</li>
-                          <li>Définir le type : carton, étagère, tiroir, sac, autre.</li>
-                          <li>Libérer automatiquement le lieu à la livraison.</li>
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {section.id === "ateliers" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Le sélectionneur d’atelier en haut de votre interface permet de passer
-                          d’un site à un autre et d’adapter les statistiques et les opérations.
-                        </p>
-                        <div className="rounded-xl border p-4">
-                          <p className="font-medium text-foreground">Bonnes pratiques</p>
-                          <p className="mt-2">
-                            Gardez un atelier par localité, attribuez les techniciens et comparez
-                            les performances pour mieux piloter votre entreprise.
-                          </p>
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {section.id === "forfait" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Le forfait current est visible dans le header, et le système propose un
-                          essai gratuit pour tester GogoSoft avant de choisir votre plan.
-                        </p>
-                        <ul className="grid gap-2 pl-5 list-disc">
-                          <li>Essai gratuit : 7 jours.</li>
-                          <li>Mensuel : 5 000 FCFA.</li>
-                          <li>Annuel : 50 000 FCFA.</li>
-                          <li>Paiement possible en Wave, Orange Money, MTN ou Moov.</li>
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {section.id === "securite" ? (
-                      <div className="space-y-4 text-sm text-muted-foreground">
-                        <p>
-                          Les données de chaque atelier sont séparées. La déconnexion automatique
-                          sécurise les sessions inactives.
-                        </p>
-                        <ul className="grid gap-2 pl-5 list-disc">
-                          <li>Protection par atelier via les règles de sécurité de la base.</li>
-                          <li>Déconnexion automatique après 30 minutes d’inactivité.</li>
-                          <li>
-                            Mot de passe et réinitialisation rapides depuis /parametres et /auth.
-                          </li>
-                        </ul>
-                      </div>
-                    ) : null}
-
-                    {section.id === "faq" ? (
-                      <Accordion type="single" collapsible className="w-full">
-                        {visibleFaqs.map((item, index) => (
-                          <AccordionItem key={`${item.question}-${index}`} value={`faq-${index}`}>
-                            <AccordionTrigger className="text-left font-medium">
-                              {item.question}
-                            </AccordionTrigger>
-                            <AccordionContent className="text-sm text-muted-foreground">
-                              {item.answer}
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
-                    ) : null}
-
-                    {section.id === "support" ? (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <Card className="border-dashed">
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                              <Phone className="size-4 text-emerald-600" /> Contact direct
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <p>WhatsApp : +225 XX XX XX XX</p>
-                            <p>Email : support@gogosoft.ci</p>
-                            <p>Horaires : Lundi au samedi, 8h - 18h</p>
-                            <a
-                              href="https://wa.me/225XXXXXXXXX"
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 font-medium text-emerald-700"
-                            >
-                              Ouvrir WhatsApp <ChevronRight className="size-4" />
-                            </a>
+      {visibleSections.length ? (
+        <Card>
+          <Accordion type="single" collapsible className="w-full">
+            {visibleSections.map((section) => {
+              const Icon = section.icon;
+              return (
+                <AccordionItem key={section.id} value={section.id} className="px-5 last:border-0">
+                  <AccordionTrigger className="text-left hover:no-underline">
+                    <span className="flex items-center gap-3">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-orange-100 text-orange-700">
+                        <Icon className="size-5" />
+                      </span>
+                      <span>
+                        <span className="block font-semibold">{section.title}</span>
+                        <span className="mt-1 block text-sm font-normal text-muted-foreground">
+                          {section.description}
+                        </span>
+                      </span>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="grid gap-3 pb-3 md:grid-cols-2">
+                      {section.items.map((item) => (
+                        <Card key={item.title} className="h-full border-dashed">
+                          <CardContent className="flex h-full flex-col items-start gap-3 p-4">
+                            <h3 className="font-semibold">{item.title}</h3>
+                            <p className="text-sm text-muted-foreground">{item.description}</p>
+                            {item.to ? (
+                              <Button asChild variant="outline" size="sm" className="mt-auto">
+                                <Link to={item.to}>{item.action ?? "Ouvrir"}</Link>
+                              </Button>
+                            ) : null}
                           </CardContent>
                         </Card>
-                        <Card className="border-dashed">
-                          <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                              <AlertCircle className="size-4 text-orange-500" /> Avant de contacter
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-2 text-sm text-muted-foreground">
-                            <p>
-                              Vérifiez votre connexion, votre atelier actif et votre abonnement.
-                            </p>
-                            <p>
-                              Préparez le nom du domaine, l’URL de la page et un message détaillé
-                              pour une réponse rapide.
-                            </p>
-                          </CardContent>
-                        </Card>
-                      </div>
-                    ) : null}
-                  </CardContent>
-                </Card>
-              </section>
-            );
-          })}
-        </main>
-      </div>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        </Card>
+      ) : (
+        <p className="rounded-xl border bg-card p-6 text-center text-sm text-muted-foreground">
+          Aucun guide ne correspond à « {searchQuery} ».
+        </p>
+      )}
+
+      <section id="support" className="rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+        <div className="max-w-2xl">
+          <h2 className="text-2xl font-bold">Contacter le support</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Décrivez votre besoin et, si possible, indiquez le nom de votre atelier et l’écran concerné.
+          </p>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <Button asChild>
+            <a
+              href={`https://wa.me/2250758966156?text=${supportMessage}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Phone className="mr-2 size-4" />
+              WhatsApp
+            </a>
+          </Button>
+          <Button asChild variant="outline">
+            <a href="mailto:2024dibo@gmail.com?subject=Support%20GogoSoft">
+              <Mail className="mr-2 size-4" />
+              Envoyer un e-mail
+            </a>
+          </Button>
+        </div>
+      </section>
 
       <footer className="border-t pt-6 text-sm text-muted-foreground">
-        <p>Version de l'application : v{APP_VERSION}</p>
+        <p>Version de l’application : v{APP_VERSION}</p>
         <p className="mt-2">
           Pour voir toutes les nouveautés :{" "}
           <Link to="/nouveautes" className="text-orange-700 hover:underline">
