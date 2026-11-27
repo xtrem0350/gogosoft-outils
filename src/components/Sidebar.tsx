@@ -530,7 +530,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
         void navigate({ to: nextMode === "admin" ? "/admin" : "/dashboard" });
       }}
       title={viewMode === "admin" ? "Voir mon atelier" : "Mode admin"}
-      className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
+      className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 transition-all duration-200 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
     >
       {viewMode === "admin" ? <Store className="size-4" /> : <Settings className="size-4" />}
       {!collapsed ? (viewMode === "admin" ? "Voir mon atelier" : "Mode admin") : null}
@@ -541,7 +541,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
         <Button
           type="button"
           variant="ghost"
-          className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
+          className={cn("mb-2 w-full justify-start gap-3 text-sm text-sidebar-foreground/70 transition-all duration-200 hover:bg-sidebar-accent", collapsed && "justify-center px-0")}
         >
           <UserCog className="size-4" />
           {!collapsed ? (
@@ -577,7 +577,10 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
                 setActiveRole(item);
                 void navigate({ to: roleRouteMap[item] ?? "/dashboard" });
               }}
-              className={cn(item === activeRole && "bg-orange-50 text-orange-700")}
+              className={cn(
+                "transition-all duration-200",
+                item === activeRole && "rounded-md bg-primary font-medium text-primary-foreground",
+              )}
             >
               <span className="flex-1">{labelMap[item] ?? item}</span>
               {item === activeRole ? <span className="size-2 rounded-full bg-orange-500" /> : null}

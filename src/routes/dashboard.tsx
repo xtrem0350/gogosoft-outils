@@ -16,7 +16,7 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -113,15 +113,28 @@ function DashboardRouter() {
       description="Contactez le propriétaire de la boutique pour obtenir un accès."
     />
   );
-  if (activeRole === "") return noRoleState;
-  if (activeRole === "owner") return <OwnerDashboard />;
-  if (activeRole === "technicien") return <TechnicianDashboard />;
-  if (activeRole === "caissier") return <CashierDashboard />;
-  if (activeRole === "receptionniste") return <ReceptionDashboard />;
-  if (activeRole === "magasinier") return <StockDashboard />;
-  if (activeRole === "vendeur") return <SalesDashboard />;
-  if (activeRole === "super_admin") return <PlatformDashboard />;
-  return noRoleState;
+  const dashboard = (() => {
+    switch (activeRole) {
+      case "owner":
+        return <OwnerDashboard />;
+      case "technicien":
+        return <TechnicianDashboard />;
+      case "caissier":
+        return <CashierDashboard />;
+      case "receptionniste":
+        return <ReceptionDashboard />;
+      case "magasinier":
+        return <StockDashboard />;
+      case "vendeur":
+        return <SalesDashboard />;
+      case "super_admin":
+        return <PlatformDashboard />;
+      default:
+        return noRoleState;
+    }
+  })();
+
+  return <Fragment key={activeRole}>{dashboard}</Fragment>;
 }
 
 function OwnerDashboard() {

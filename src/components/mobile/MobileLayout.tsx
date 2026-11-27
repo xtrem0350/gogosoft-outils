@@ -130,15 +130,15 @@ export function MobileLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      <header className="flex w-full h-[calc(4rem_+_env(safe-area-inset-top))] shrink-0 items-center justify-between gap-2 border-b px-4 pt-[env(safe-area-inset-top)] sm:gap-3">
+      <header className="flex h-[calc(4rem_+_env(safe-area-inset-top))] w-full shrink-0 items-center justify-between gap-2 border-b px-4 pt-[env(safe-area-inset-top)] sm:gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           <img src={logo} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 truncate">
             <p className="truncate text-sm font-semibold">{shop?.name ?? "GogoSoft"}</p>
             <p className="truncate text-xs text-muted-foreground">Tools Manager</p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+        <div className="flex min-w-[80px] shrink-0 items-center gap-2">
           {availableRoles.length > 1 || isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

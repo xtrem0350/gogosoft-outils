@@ -137,6 +137,19 @@ function AuthPage() {
   const currentTab = signupEnabled ? "signup" : "signin";
 
   useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    const hadLight = root.classList.contains("light");
+    root.classList.remove("dark");
+    root.classList.add("light");
+
+    return () => {
+      if (wasDark) root.classList.add("dark");
+      if (!hadLight) root.classList.remove("light");
+    };
+  }, []);
+
+  useEffect(() => {
     const savedIdentifier = window.localStorage.getItem("gogosoft.rememberedIdentifier");
     if (savedIdentifier) {
       setIdentifier(savedIdentifier);
@@ -404,7 +417,7 @@ function AuthPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-slate-950">
+    <main className="relative min-h-screen overflow-hidden bg-white text-black">
       <div
         className="absolute inset-0 hidden bg-cover bg-center md:block"
         style={{

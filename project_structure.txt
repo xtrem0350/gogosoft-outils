@@ -439,6 +439,7 @@ Structure du projet (avec glob)
 │   ├── 📄 missions.md
 │   ├── 📄 migrationtri.md
 │   ├── 📄 master-migration.sql
+│   ├── 📄 gide01.md
 │   └── 📄 domain-workflow.md
 ├── 📄 vite.config.ts
 ├── 📄 vercel.json

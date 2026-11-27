@@ -14,7 +14,7 @@ export function HelpButton() {
       aria-label="Besoin d'aide ?"
       title="Besoin d'aide ?"
       onClick={() => void navigate({ to: "/aide" as any })}
-      className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-ivoirien shadow-3d transition-all hover:scale-105 hover:bg-ivoirien-hover"
+      className="fixed bottom-20 right-6 z-50 h-14 w-14 rounded-full bg-ivoirien shadow-3d transition-all hover:scale-105 hover:bg-ivoirien-hover sm:bottom-6"
     >
       <HelpCircle className="size-6 text-white" />
     </Button>
