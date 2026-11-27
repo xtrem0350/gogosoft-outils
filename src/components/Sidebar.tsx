@@ -45,7 +45,7 @@ import { DEMO_SHOP_SLUG, endDemo, isDemoMode } from "@/services/demoService";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
-import { useUserRoles } from "@/hooks/useUserRoles";
+import { useUserRoleContext } from "@/contexts/UserRoleContext";
 import { useSectorVocabulary } from "@/hooks/useSectorVocabulary";
 import { usePendingItems } from "@/hooks/usePendingItems";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -340,7 +340,7 @@ export function Sidebar({ mobileTrigger }: { mobileTrigger?: ReactNode } = {}) {
   const { activeModules, loading: modulesLoading, isDemo: demo } = useActiveModules();
   const { shop } = useCurrentShop();
   const { role, isSuperAdminAccount, viewMode, setViewMode } = useUserRole();
-  const { roles, activeRole, setActiveRole } = useUserRoles();
+  const { roles, activeRole, setActiveRole } = useUserRoleContext();
   const pendingItems = usePendingItems(activeRole);
   const vocabulary = useSectorVocabulary();
   const navigationGroups = getNavigationGroups(

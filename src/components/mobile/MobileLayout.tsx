@@ -24,7 +24,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
-import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
+import { useUserRoleContext } from "@/contexts/UserRoleContext";
+import { getRoleLabel } from "@/hooks/useUserRoles";
 import { signOut } from "@/services/authService";
 import { endDemo, isDemoMode } from "@/services/demoService";
 
@@ -80,7 +81,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { shop } = useCurrentShop();
-  const { roles, activeRole, setActiveRole, isOwner } = useUserRoles();
+  const { roles, activeRole, setActiveRole, isOwner } = useUserRoleContext();
   const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
@@ -93,7 +94,6 @@ export function MobileLayout({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // CORRECTION ICI : accès via crochets pour respecter l'index signature TypeScript
   const mobileNavigationItems = navigationByRole[activeRole] ?? navigationByRole["owner"]!;
   const availableRoles = isOwner ? SWITCHABLE_OWNER_ROLES : roles;
 
@@ -130,7 +130,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
-      <header className="flex h-[calc(4rem_+_env(safe-area-inset-top))] w-full shrink-0 items-center justify-between gap-2 border-b px-4 pt-[env(safe-area-inset-top)] sm:gap-3">
+      <header className="flex h-[calc(4rem_+_env(safe-area-inset-top))] w-full shrink-0 items-center justify-between gap-2 border-b px-3 pt-[env(safe-area-inset-top)]">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           <img src={logo} alt="" className="size-10 shrink-0 rounded-lg object-cover" />
           <div className="min-w-0 flex-1 truncate">
@@ -138,7 +138,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
             <p className="truncate text-xs text-muted-foreground">Tools Manager</p>
           </div>
         </div>
-        <div className="flex min-w-[80px] shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-3">
           {availableRoles.length > 1 || isOwner ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -177,7 +177,7 @@ export function MobileLayout({ children }: { children: ReactNode }) {
             disabled={loggingOut}
             onClick={() => void handleSignOut()}
           >
-            <LogOut className="size-5" />
+            <LogOut className="size-5 shrink-0" />
           </Button>
         </div>
       </header>

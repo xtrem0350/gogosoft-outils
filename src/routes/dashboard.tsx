@@ -45,7 +45,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getRoleLabel, useUserRoles } from "@/hooks/useUserRoles";
+import { useUserRoleContext } from "@/contexts/UserRoleContext";
+import { getRoleLabel } from "@/hooks/useUserRoles";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { getCashSummary, type CashSummary } from "@/services/cashService";
@@ -104,7 +105,7 @@ function getLocalDateKey(date: Date): string {
 }
 
 function DashboardRouter() {
-  const { activeRole, loading } = useUserRoles();
+  const { activeRole, loading } = useUserRoleContext();
   if (loading) return <p className="p-8 text-center text-sm text-muted-foreground">Chargement...</p>;
   const noRoleState = (
     <EmptyState

@@ -16,6 +16,7 @@ import { AppShell } from "@/components/AppShell";
 import { ModuleRouteGuard } from "@/components/ModuleRouteGuard";
 import { CartProvider } from "@/contexts/CartContext";
 import { ActiveModulesProvider } from "@/contexts/ActiveModulesContext";
+import { UserRoleProvider } from "@/contexts/UserRoleContext";
 import { SplashScreen } from "@/components/SplashScreen";
 import { AuthProvider } from "@/hooks/useAuth";
 import { useAuth } from "@/hooks/useAuth";
@@ -185,15 +186,17 @@ function RootComponent() {
         <AuthProvider>
           <CurrentShopProvider>
             <ActiveModulesProvider>
-              <SuperAdminRedirect>
-                {isStandalonePage || isPublicShopRoute || isMobileDesktopOnlyRoute ? (
-                  routeOutlet
-                ) : (
-                  <ModuleRouteGuard>
-                    <AppShell>{routeOutlet}</AppShell>
-                  </ModuleRouteGuard>
-                )}
-              </SuperAdminRedirect>
+              <UserRoleProvider>
+                <SuperAdminRedirect>
+                  {isStandalonePage || isPublicShopRoute || isMobileDesktopOnlyRoute ? (
+                    routeOutlet
+                  ) : (
+                    <ModuleRouteGuard>
+                      <AppShell>{routeOutlet}</AppShell>
+                    </ModuleRouteGuard>
+                  )}
+                </SuperAdminRedirect>
+              </UserRoleProvider>
             </ActiveModulesProvider>
           </CurrentShopProvider>
           <Toaster position="bottom-right" />

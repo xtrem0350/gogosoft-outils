@@ -57,7 +57,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole, type UserRole } from "@/hooks/useUserRole";
-import { useUserRoles } from "@/hooks/useUserRoles";
+import { useUserRoleContext } from "@/contexts/UserRoleContext";
 import { useActiveModules } from "@/contexts/ActiveModulesContext";
 import { useCurrentShop } from "@/hooks/useCurrentShop";
 import { useInactivityLogout } from "@/hooks/useInactivityLogout";
@@ -135,7 +135,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
   const { isSuperAdmin, role, loading: roleLoading } = useUserRole();
-  const { activeRole } = useUserRoles();
+  const { activeRole } = useUserRoleContext();
   usePendingItems(activeRole, ({ table, pendingCount, pendingSalesCount }) => {
     if (table === "sales") {
       toast.info(
