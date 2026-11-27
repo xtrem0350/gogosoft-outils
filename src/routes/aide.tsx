@@ -329,6 +329,7 @@ function AidePage() {
         subtitle="Tout ce qu'il faut savoir pour utiliser GogoSoft"
         icon={BookOpen}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-centre-aide.jpg", import.meta.url).href}
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Aide" }]}
       />
 

@@ -14,6 +14,7 @@ function LegalPage() {
         title="Informations légales"
         subtitle="Conditions d'utilisation et informations sur la protection de vos données"
         icon={Scale}
+        imageSrc={new URL("../assets/images/hero-informations-legales.jpg", import.meta.url).href}
       />
 
       <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">

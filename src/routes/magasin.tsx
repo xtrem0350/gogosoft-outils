@@ -375,6 +375,7 @@ function MagasinPage() {
         subtitle="Suivi du stock et des commandes fournisseurs"
         icon={Warehouse}
         iconColor="green"
+        imageSrc={new URL("../assets/images/hero-magasin-stock.jpg", import.meta.url).href}
         action={
           <Button
             variant="outline"

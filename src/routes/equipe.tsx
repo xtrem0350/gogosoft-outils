@@ -234,6 +234,7 @@ function EquipePage() {
         subtitle="Collaborez avec votre équipe et gérez les accès."
         icon={UserCog}
         iconColor="green"
+        imageSrc={new URL("../assets/images/hero-owner-espace-atelier.jpg", import.meta.url).href}
         action={
           <div className="flex flex-wrap gap-2">
             {isOwner ? (

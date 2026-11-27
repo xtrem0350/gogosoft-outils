@@ -78,7 +78,7 @@ export function DeviceCatalogPage() {
   const defaultCategory = defaultCategoryOverride ?? (filterCategory === "all" ? undefined : filterCategory);
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <PageHero title="Catalogue appareils" subtitle={`${devices.length} appareil${devices.length === 1 ? "" : "s"} · Modèles disponibles pour vos fiches de réparation.`} icon={BookOpen} iconColor="orange" action={isOwner ? <Button type="button" onClick={() => openAdd()} className="bg-ivoirien bg-ivoirien-hover shadow-3d"><Plus className="mr-2 size-4" /> Ajouter un appareil</Button> : undefined} />
+      <PageHero title="Catalogue appareils" subtitle={`${devices.length} appareil${devices.length === 1 ? "" : "s"} · Modèles disponibles pour vos fiches de réparation.`} icon={BookOpen} iconColor="orange" imageSrc={new URL("../assets/images/hero-catalogue-appareils.jpg", import.meta.url).href} action={isOwner ? <Button type="button" onClick={() => openAdd()} className="bg-ivoirien bg-ivoirien-hover shadow-3d"><Plus className="mr-2 size-4" /> Ajouter un appareil</Button> : undefined} />
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex gap-2" role="group" aria-label="Filtrer le catalogue">
           {visibleFilters.map(({ value, label }) => <Button key={value} type="button" variant={filterCategory === value ? "default" : "outline"} aria-pressed={filterCategory === value} onClick={() => setFilterCategory(value)} className={filterCategory === value ? "bg-ivoirien text-white" : ""}>{label}</Button>)}

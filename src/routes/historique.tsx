@@ -49,6 +49,7 @@ function HistoriquePage() {
         subtitle="Qui a lancé quoi, et quand le catalogue a changé."
         icon={History}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-historique-atelier.jpg", import.meta.url).href}
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Historique" }]}
       />
 

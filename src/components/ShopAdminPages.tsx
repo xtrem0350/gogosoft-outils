@@ -218,6 +218,7 @@ function ShopSettingsForm({ shop }: { shop: Shop }) {
         subtitle="Configurez votre vitrine et les options de commande."
         icon={Store}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-boutique-en-ligne.jpg", import.meta.url).href}
       />
       <form onSubmit={(event) => void save(event)} className="space-y-5">
         <Card className="card-3d rounded-lg">
@@ -464,6 +465,7 @@ function ProductsList({ shop }: { shop: Shop }) {
         subtitle="Gérez les produits visibles dans votre vitrine."
         icon={Package}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-boutique-en-ligne.jpg", import.meta.url).href}
         action={
           <Button
             onClick={() => void navigate({ to: "/admin/boutique/produits/nouveau" })}
@@ -711,6 +713,7 @@ function ProductEditor({ shop, productId }: { shop: Shop; productId?: string }) 
         subtitle="Les informations et photos seront visibles dans la vitrine selon sa disponibilité."
         icon={Package}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-boutique-en-ligne.jpg", import.meta.url).href}
       />
       <form
         onSubmit={(event) => void save(event)}
@@ -910,6 +913,7 @@ function OrdersList({ shop }: { shop: Shop }) {
         subtitle="Consultez les commandes reçues depuis la vitrine."
         icon={Package}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-boutique-en-ligne.jpg", import.meta.url).href}
       />
       <div className="grid gap-3 rounded-lg border bg-white p-4 sm:grid-cols-2">
         <label className="grid gap-1 text-sm font-semibold">
@@ -1064,6 +1068,7 @@ function OrderDetail({ shop, orderId }: { shop: Shop; orderId: string }) {
         subtitle={`Commande de ${order.client_name} · ${new Date(order.created_at).toLocaleString("fr-FR")}`}
         icon={Package}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-boutique-en-ligne.jpg", import.meta.url).href}
       />
       <div className="grid gap-6 md:grid-cols-[1fr_300px]">
         <section className="rounded-lg border bg-white p-5">

@@ -310,8 +310,7 @@ function DesktopHomePage() {
         aria-hidden="true"
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
+          backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
         }}
       />
       <div aria-hidden="true" className="absolute inset-0 bg-black/60" />

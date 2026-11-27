@@ -284,6 +284,7 @@ function ParametresPage() {
         subtitle="Configurez votre profil, votre boutique et les options de communication."
         icon={Settings}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-espace-atelier.jpg", import.meta.url).href}
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Paramètres" }]}
       />
 

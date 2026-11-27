@@ -421,8 +421,7 @@ function AuthPage() {
       <div
         className="absolute inset-0 hidden bg-cover bg-center md:block"
         style={{
-          backgroundImage:
-            "url(https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=1920&auto=format&fit=crop)",
+          backgroundImage: `url(${new URL("../assets/images/hero-visiteur-accueil-abidjan.jpg", import.meta.url).href})`,
         }}
       />
       <div className="absolute inset-0 bg-black/60" />

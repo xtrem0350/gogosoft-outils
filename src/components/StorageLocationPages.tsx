@@ -186,6 +186,7 @@ export function StorageLocationsPage({
         <PageHero
           title={heading.title}
           subtitle={heading.subtitle}
+          imageSrc={new URL("../assets/images/hero-rangements-atelier.jpg", import.meta.url).href}
           action={
             canManageLocations ? (
               <ReadOnlyGuard>

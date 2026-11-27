@@ -365,6 +365,7 @@ function AbonnementContent() {
         subtitle="Suivez votre accès, vos domaines et vos renouvellements."
         icon={CreditCard}
         iconColor="green"
+        imageSrc={new URL("../assets/images/hero-owner-espace-atelier.jpg", import.meta.url).href}
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Mon forfait" }]}
       />
 

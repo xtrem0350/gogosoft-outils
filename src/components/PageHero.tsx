@@ -12,6 +12,7 @@ interface PageHeroProps {
   subtitle?: string;
   icon?: LucideIcon;
   iconColor?: "orange" | "green" | "blue" | "red" | "purple";
+  imageSrc?: string;
   imageUrl?: string;
   showBack?: boolean;
   action?: ReactNode;
@@ -26,6 +27,7 @@ export function PageHero({
   subtitle,
   icon,
   iconColor = "orange",
+  imageSrc,
   imageUrl,
   showBack = false,
   action,
@@ -44,7 +46,7 @@ export function PageHero({
       <img
         loading="lazy"
         decoding="async"
-        src={imageUrl ?? defaultImage}
+        src={imageSrc ?? imageUrl ?? defaultImage}
         alt=""
         className="absolute inset-0 h-full w-full object-cover"
       />

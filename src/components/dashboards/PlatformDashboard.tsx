@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { CreditCard, Store, TrendingUp, Users } from "lucide-react";
 
+import { PageHero } from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -87,18 +88,20 @@ export function PlatformDashboard() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard plateforme</h1>
-          <p className="text-sm text-slate-500">Vue globale GogoSoft</p>
-        </div>
-        <Button asChild>
-          <Link to="/admin/tenants">
-            <Store className="mr-2 size-4" />
-            Voir toutes les boutiques
-          </Link>
-        </Button>
-      </div>
+      <PageHero
+        title="Dashboard plateforme"
+        subtitle="Vue globale GogoSoft"
+        icon={Store}
+        imageSrc={new URL("../../assets/images/hero-super-admin-plateforme.jpg", import.meta.url).href}
+        action={
+          <Button asChild>
+            <Link to="/admin/tenants">
+              <Store className="mr-2 size-4" />
+              Voir toutes les boutiques
+            </Link>
+          </Button>
+        }
+      />
 
       {error ? (
         <p role="alert" className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

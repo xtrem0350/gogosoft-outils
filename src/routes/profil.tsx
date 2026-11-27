@@ -128,6 +128,7 @@ function ProfilPage() {
         subtitle="Gérez vos informations et vos accès à GogoSoft Tools Manager."
         icon={User}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-owner-espace-atelier.jpg", import.meta.url).href}
         breadcrumb={[{ label: "Accueil", to: "/dashboard" }, { label: "Mon profil" }]}
       />
       <div className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">

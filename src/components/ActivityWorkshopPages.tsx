@@ -95,6 +95,16 @@ const activityLabels: Record<ActivityType, { noun: string; title: string; create
   },
 };
 
+function getActivityHeroImage(activityType: ActivityType): string {
+  if (activityType === "phone") {
+    return new URL("../assets/images/hero-technicien-telephone.jpg", import.meta.url).href;
+  }
+  if (activityType === "computer") {
+    return new URL("../assets/images/hero-technicien-pc.jpg", import.meta.url).href;
+  }
+  return new URL("../assets/images/hero-magasinier-consommables.jpg", import.meta.url).href;
+}
+
 const statusLabels: Record<WorkshopTicket["status"], string> = {
   en_attente_caissier_entree: "⏳ Entrée en caisse",
   en_attente_technicien: "🔧 En attente technicien",
@@ -260,6 +270,7 @@ export function ActivityListPage({
         }
         icon={heroIcon}
         iconColor={heroColor}
+        imageSrc={getActivityHeroImage(activityType)}
         action={
           !history ? (
             <Button
@@ -540,6 +551,7 @@ function ExistingNewActivityPage({ activityType }: { activityType: ActivityType 
         }
         icon={isConsumable ? Package : Wrench}
         iconColor={isConsumable ? "green" : "orange"}
+        imageSrc={getActivityHeroImage(activityType)}
         breadcrumb={
           isConsumable
             ? [
@@ -1085,6 +1097,7 @@ function NewWorkshopTicketPage({
         subtitle="Enregistrez la réception de l'appareil en cinq étapes."
         icon={activityType === "phone" ? Smartphone : Laptop}
         iconColor="orange"
+        imageSrc={getActivityHeroImage(activityType)}
         breadcrumb={[
           { label: "Accueil", to: "/dashboard" },
           {
@@ -1977,6 +1990,7 @@ export function ActivityDetailsPage({
         subtitle="Détails de la fiche et suivi de l'intervention."
         icon={activityType === "phone" ? Smartphone : activityType === "computer" ? Laptop : Package}
         iconColor={activityType === "consumable" ? "green" : "orange"}
+        imageSrc={getActivityHeroImage(activityType)}
         breadcrumb={
           activityType === "consumable"
             ? [
@@ -2374,6 +2388,7 @@ export function ExperienceBookPage({
         subtitle={`Historique et notes de travail pour le ${activityLabels[activityType].noun}.`}
         icon={activityType === "phone" ? Smartphone : Laptop}
         iconColor="blue"
+        imageSrc={getActivityHeroImage(activityType)}
         breadcrumb={
           activityType === "phone"
             ? [

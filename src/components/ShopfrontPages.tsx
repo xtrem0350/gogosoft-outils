@@ -303,13 +303,14 @@ export function PublicShopPage({
       {isPaused ? <ShopPausedBanner /> : null}
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <section className="relative flex min-h-56 items-end overflow-hidden rounded-lg bg-slate-900 p-6 text-white sm:min-h-72 sm:p-10">
-          {shop["shop_banner_url"] ? (
-            <img
-              src={shop["shop_banner_url"]}
-              alt=""
-              className="absolute inset-0 size-full object-cover"
-            />
-          ) : null}
+          <img
+            src={
+              shop["shop_banner_url"] ||
+              new URL("../assets/images/hero-boutique-publique-abidjan.jpg", import.meta.url).href
+            }
+            alt=""
+            className="absolute inset-0 size-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/40 to-transparent" />
           <div className="relative max-w-2xl">
             <p className="text-sm font-semibold uppercase text-orange-200">Boutique en ligne</p>

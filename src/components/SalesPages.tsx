@@ -256,6 +256,7 @@ export function SalesListPage({
         subtitle={subtitle}
         icon={HeadingIcon}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-vendeur-ventes.jpg", import.meta.url).href}
         action={
           view === "all" && canCreateSales ? (
             <Button
@@ -794,6 +795,7 @@ export function NewSalePage() {
         subtitle="Choisissez un produit du catalogue et transmettez le paiement à la caisse."
         icon={ShoppingCart}
         iconColor="orange"
+        imageSrc={new URL("../assets/images/hero-vendeur-ventes.jpg", import.meta.url).href}
         breadcrumb={[
           { label: "Accueil", to: "/dashboard" },
           { label: "Ventes", to: "/sales" },

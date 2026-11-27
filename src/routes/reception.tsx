@@ -402,6 +402,7 @@ function ReceptionPage() {
         subtitle="Suivi des clients en attente et des appareils au casier"
         icon={UserRound}
         iconColor="blue"
+        imageSrc={new URL("../assets/images/hero-receptionniste-atelier.jpg", import.meta.url).href}
         action={
           <ReadOnlyGuard>
             <Button className="bg-ivoirien hover:bg-ivoirien-hover" onClick={() => setOpenCreate(true)}>

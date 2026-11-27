@@ -561,6 +561,7 @@ function CashPage() {
         subtitle="Suivi des encaissements"
         icon={Wallet}
         iconColor="green"
+        imageSrc={new URL("../assets/images/hero-caissier-caisse.jpg", import.meta.url).href}
         action={canManageCash ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
